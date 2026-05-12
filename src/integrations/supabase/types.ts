@@ -14,16 +14,283 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      claims: {
+        Row: {
+          base_reward: number
+          created_at: string
+          error: string | null
+          event_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          quiz_reward: number
+          referral_reward: number
+          status: Database["public"]["Enums"]["claim_status"]
+          total: number
+          tx_hash: string | null
+          user_id: string
+          wallet_address: string
+        }
+        Insert: {
+          base_reward?: number
+          created_at?: string
+          error?: string | null
+          event_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          quiz_reward?: number
+          referral_reward?: number
+          status?: Database["public"]["Enums"]["claim_status"]
+          total?: number
+          tx_hash?: string | null
+          user_id: string
+          wallet_address: string
+        }
+        Update: {
+          base_reward?: number
+          created_at?: string
+          error?: string | null
+          event_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          quiz_reward?: number
+          referral_reward?: number
+          status?: Database["public"]["Enums"]["claim_status"]
+          total?: number
+          tx_hash?: string | null
+          user_id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claims_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_quiz_questions: {
+        Row: {
+          correct_index: number
+          created_at: string
+          event_id: string
+          id: string
+          options: Json
+          position: number
+          question: string
+          reward: number
+        }
+        Insert: {
+          correct_index: number
+          created_at?: string
+          event_id: string
+          id?: string
+          options: Json
+          position?: number
+          question: string
+          reward?: number
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          event_id?: string
+          id?: string
+          options?: Json
+          position?: number
+          question?: string
+          reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_quiz_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          base_reward: number
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          radius_m: number
+          referral_reward: number
+          start_at: string
+          updated_at: string
+        }
+        Insert: {
+          base_reward?: number
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          radius_m?: number
+          referral_reward?: number
+          start_at: string
+          updated_at?: string
+        }
+        Update: {
+          base_reward?: number
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          radius_m?: number
+          referral_reward?: number
+          start_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pop_balance_mirror: {
+        Row: {
+          balance: number
+          events_attended: number
+          last_synced_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          events_attended?: number
+          last_synced_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          events_attended?: number
+          last_synced_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          username: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          referee_id: string
+          referrer_id: string
+          reward: number
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          referee_id: string
+          referrer_id: string
+          reward?: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          referee_id?: string
+          referrer_id?: string
+          reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      claim_status: "pending" | "minted" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +417,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      claim_status: ["pending", "minted", "failed"],
+    },
   },
 } as const
