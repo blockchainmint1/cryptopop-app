@@ -51,6 +51,7 @@ export type ClaimResult =
       coverUrl: string | null;
       reward: number;
       newBalance: number;
+      txHash: string | null;
     }
   | { ok: false; reason: ClaimError };
 
