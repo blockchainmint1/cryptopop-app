@@ -166,6 +166,31 @@ export const claimPop = createServerFn({ method: "POST" })
       );
     if (mirrorErr) throw new Error(mirrorErr.message);
 
+    // Stage 2 — mint on TXC. Inline await keeps it simple and works in the
+    // Worker runtime (background tasks die after the response). User waits
+    // an extra ~1–3s but gets a real tx hash back.
+    let txHash: string | null = null;
+    try {
+      const result = await mintGrant({
+        amount: reward,
+        toAddress: profile.wallet_address,
+      });
+      txHash = result.txHash;
+      await supabaseAdmin
+        .from("claims")
+        .update({ status: "minted", tx_hash: txHash })
+        .eq("id", claimRow.id);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("mintGrant failed:", msg);
+      await supabaseAdmin
+        .from("claims")
+        .update({ status: "failed", error: msg })
+        .eq("id", claimRow.id);
+      // Don't fail the user-facing claim — POP is already credited; the mint
+      // can be retried from an admin tool later.
+    }
+
     return {
       ok: true,
       eventId: event.id,
@@ -173,5 +198,6 @@ export const claimPop = createServerFn({ method: "POST" })
       coverUrl: event.cover_url,
       reward,
       newBalance,
+      txHash,
     };
   });
