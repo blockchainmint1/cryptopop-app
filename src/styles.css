@@ -72,14 +72,6 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-:root {
   --radius: 0.875rem;
   /* CryptoPOP — bone background, ink foreground, electric coral POP */
   --bone: oklch(0.985 0.005 85);
