@@ -146,7 +146,7 @@ export async function mintGrant(opts: {
   // 1. Get omni payload
   const amountStr = formatDivisibleAmount(opts.amount);
   const payloadHex = await rpc<string>("omni_createpayload_grant", [
-    PROPERTY_ID,
+    getPropertyId(),
     amountStr,
   ]);
 
