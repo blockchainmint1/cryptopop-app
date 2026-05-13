@@ -74,8 +74,8 @@ export const claimPop = createServerFn({ method: "POST" })
     const secret = process.env.QR_HMAC_SECRET;
     if (!secret) throw new Error("QR_HMAC_SECRET not configured");
 
-    // GPS sanity
-    if (data.accuracy !== undefined && data.accuracy > 100) {
+    // GPS sanity — generous to accommodate indoor venues / wifi-only fixes
+    if (data.accuracy !== undefined && data.accuracy > 500) {
       return { ok: false, reason: "low_gps_accuracy" };
     }
 
