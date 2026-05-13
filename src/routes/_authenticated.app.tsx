@@ -28,6 +28,8 @@ function WalletHome() {
   const [eventsAttended, setEventsAttended] = useState<number>(0);
   const [copied, setCopied] = useState(false);
   const [showMnemonic, setShowMnemonic] = useState(false);
+  const [claims, setClaims] = useState<RecentClaim[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Provision wallet on first login
   useEffect(() => {
@@ -59,6 +61,24 @@ function WalletHome() {
         setBalance(Number(bal.balance));
         setEventsAttended(bal.events_attended);
       }
+
+      // Recent claims + admin check (parallel)
+      const [{ data: cl }, { data: roleRow }] = await Promise.all([
+        supabase
+          .from("claims")
+          .select("id, total, created_at, events(name)")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle(),
+      ]);
+      if (cl) setClaims(cl as unknown as RecentClaim[]);
+      setIsAdmin(!!roleRow);
     })();
   }, [user]);
 
