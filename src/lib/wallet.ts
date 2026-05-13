@@ -10,7 +10,7 @@ import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "bip39";
 import { BIP32Factory } from "bip32";
 import * as ecc from "@bitcoinerlab/secp256k1";
 import bs58check from "bs58check";
-import { ripemd160 } from "@noble/hashes/ripemd160";
+import { ripemd160 } from "@noble/hashes/legacy";
 import { sha256 } from "@noble/hashes/sha2";
 
 const MNEMONIC_KEY = "cryptopop:mnemonic";
