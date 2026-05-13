@@ -9,8 +9,6 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/hooks/use-auth";
-import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -75,12 +73,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "CryptoPOP — Proof of Participation" },
-      { name: "description", content: "Scan in. Show up. Earn POP. The proof-of-participation wallet for events on TXC." },
+      { name: "description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
       { name: "theme-color", content: "#FF3B30" },
       { property: "og:title", content: "CryptoPOP — Proof of Participation" },
-      { property: "og:description", content: "Scan in. Show up. Earn POP." },
+      { property: "og:description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "CryptoPOP — Proof of Participation" },
+      { name: "twitter:description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/480d7cb5-bdd0-4dc6-b1d5-a67cc85222e8/id-preview-76fd0efe--61638397-bf4f-48a5-9653-a3fa885ac8d2.lovable.app-1778660069362.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/480d7cb5-bdd0-4dc6-b1d5-a67cc85222e8/id-preview-76fd0efe--61638397-bf4f-48a5-9653-a3fa885ac8d2.lovable.app-1778660069362.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -111,10 +113,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Outlet />
-        <Toaster richColors position="top-center" />
-      </AuthProvider>
+      <Outlet />
     </QueryClientProvider>
   );
 }
