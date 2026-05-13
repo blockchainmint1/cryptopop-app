@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   signEventId,
@@ -13,7 +14,7 @@ import {
 const SignInput = z.object({ eventId: z.string().uuid() });
 
 export const signEventQr = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((input) => SignInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -64,7 +65,7 @@ export type ClaimError =
   | "no_wallet";
 
 export const claimPop = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((input) => ClaimInput.parse(input))
   .handler(async ({ data, context }): Promise<ClaimResult> => {
     const { userId } = context;
