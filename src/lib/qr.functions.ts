@@ -10,6 +10,7 @@ import {
   buildQrPayload,
   distanceMeters,
 } from "./qr.server";
+import { mintGrant } from "./txc.server";
 
 const SignInput = z.object({ eventId: z.string().uuid() });
 
