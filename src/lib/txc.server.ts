@@ -184,10 +184,10 @@ export async function mintGrant(opts: {
   if (change < 0) throw new Error("insufficient TXC funds for mint fee");
 
   // Outputs (Omni Class C ordering: OP_RETURN first, then reference output)
-  psbt.addOutput({ script: opReturnScript, value: 0 });
-  psbt.addOutput({ address: opts.toAddress, value: DUST_SATS });
+  psbt.addOutput({ script: opReturnScript, value: 0n });
+  psbt.addOutput({ address: opts.toAddress, value: BigInt(DUST_SATS) });
   if (change >= DUST_SATS) {
-    psbt.addOutput({ address: issuer, value: change });
+    psbt.addOutput({ address: issuer, value: BigInt(change) });
   }
 
   // Sign all inputs
