@@ -8,8 +8,8 @@
 //   4. Sign every input with MINTER_WIF (bitcoinjs-lib Psbt)
 //   5. POST raw hex to esplora /tx (broadcast), returns txid
 //
-// Env: TXC_RPC_URL, TXC_RPC_USER, TXC_RPC_PASS, MINTER_WIF
-// Constants are hard-coded for token #19 ("NestB", divisible, managed).
+// Env: TXC_RPC_URL, TXC_RPC_USER, TXC_RPC_PASS, MINTER_WIF, TXC_TOKEN_ID
+// Token defaults to #19 ("NestB", divisible, managed) if TXC_TOKEN_ID unset.
 
 import * as bitcoin from "bitcoinjs-lib";
 import { ECPairFactory } from "ecpair";
