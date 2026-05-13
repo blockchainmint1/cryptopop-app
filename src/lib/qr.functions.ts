@@ -123,7 +123,10 @@ export const claimPop = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) return { ok: false, reason: "already_claimed" };
 
-    const reward = Number(event.base_reward);
+    const envReward = Number(process.env.SCAN_REWARD);
+    const reward = Number.isFinite(envReward) && envReward > 0
+      ? envReward
+      : Number(event.base_reward);
 
     // Insert claim (status pending — chain settle happens after)
     const { data: claimRow, error: claimErr } = await supabaseAdmin
