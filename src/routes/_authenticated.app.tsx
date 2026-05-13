@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getOrCreateMnemonic, deriveTxcAddress } from "@/lib/wallet";
+import { getOrCreateMnemonic, deriveTxcAddress, isValidTxcAddress } from "@/lib/wallet";
 
 type RecentClaim = {
   id: string;
