@@ -13,6 +13,8 @@ type RecentClaim = {
   id: string;
   total: number;
   created_at: string;
+  status: "pending" | "minted" | "failed";
+  tx_hash: string | null;
   events: { name: string } | null;
 };
 
