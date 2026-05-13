@@ -138,7 +138,7 @@ export const claimPop = createServerFn({ method: "POST" })
     const { error: claimErr } = await supabaseAdmin.from("claims").insert({
       user_id: userId,
       event_id: event.id,
-      wallet_address: profile.wallet_address,
+      wallet_address: profile.wallet_address!,
       lat: data.lat,
       lng: data.lng,
       base_reward: reward,
