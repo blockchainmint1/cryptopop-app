@@ -1,26 +1,25 @@
-// Non-custodial TXC wallet — STUB.
-// Generates a BIP39 mnemonic on first use, stored in localStorage.
-// The on-chain address is a deterministic placeholder derived from the
-// mnemonic; real secp256k1 + TXC base58check derivation is wired in at the
-// end of the build (see plan).
+// Non-custodial TXC wallet (browser side).
+// BIP39 mnemonic → BIP32 HD seed → secp256k1 pubkey → HASH160 → base58check
+// with TXC's P2PKH version byte (0x42, "T" prefix).
+//
+// Path: m/44'/0'/0'/0/0  (TXC has no registered SLIP-44 coin type that we
+// could verify; using 0' until we have confirmation. The mnemonic remains
+// authoritative — we can re-derive on any path later.)
 
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "bip39";
+import { BIP32Factory } from "bip32";
+import * as ecc from "@bitcoinerlab/secp256k1";
+import bs58check from "bs58check";
+import { ripemd160 } from "@noble/hashes/ripemd160";
+import { sha256 } from "@noble/hashes/sha2";
 
 const MNEMONIC_KEY = "cryptopop:mnemonic";
+const TXC_P2PKH = 0x42;
 
-const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const bip32 = BIP32Factory(ecc);
 
-function toBase58(bytes: Uint8Array, length: number): string {
-  let out = "";
-  let acc = 0n;
-  for (const b of bytes) acc = (acc << 8n) | BigInt(b);
-  while (out.length < length) {
-    const rem = Number(acc % 58n);
-    acc = acc / 58n;
-    out = BASE58[rem] + out;
-    if (acc === 0n) acc = BigInt(bytes[out.length % bytes.length] ?? 1);
-  }
-  return out.slice(0, length);
+function hash160(buf: Uint8Array): Uint8Array {
+  return ripemd160(sha256(buf));
 }
 
 export function getOrCreateMnemonic(): string {
@@ -33,11 +32,25 @@ export function getOrCreateMnemonic(): string {
 }
 
 export function deriveTxcAddress(mnemonic: string): string {
-  // STUB: deterministic placeholder. Real impl will use bitcoinjs-lib with
-  // TXC network params (P2PKH version byte → "T..." legacy address).
   const seed = mnemonicToSeedSync(mnemonic);
-  const tail = toBase58(seed.slice(0, 24), 33);
-  return "T" + tail;
+  const root = bip32.fromSeed(seed);
+  const child = root.derivePath("m/44'/0'/0'/0/0");
+  const pubkey = child.publicKey;
+  const h160 = hash160(pubkey);
+  const payload = new Uint8Array(21);
+  payload[0] = TXC_P2PKH;
+  payload.set(h160, 1);
+  return bs58check.encode(payload);
+}
+
+// True iff `addr` decodes to a valid P2PKH address with TXC's version byte.
+export function isValidTxcAddress(addr: string): boolean {
+  try {
+    const decoded = bs58check.decode(addr);
+    return decoded.length === 21 && decoded[0] === TXC_P2PKH;
+  } catch {
+    return false;
+  }
 }
 
 export function clearWallet() {
