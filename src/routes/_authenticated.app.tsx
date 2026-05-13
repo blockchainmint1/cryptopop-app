@@ -130,11 +130,26 @@ function WalletHome() {
             </h2>
             <ul className="mt-4 divide-y divide-border">
               {claims.map((c) => (
-                <li key={c.id} className="flex items-center justify-between py-3">
-                  <div className="min-w-0">
+                <li key={c.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{c.events?.name ?? "Event"}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(c.created_at).toLocaleString()}
+                      {c.status === "pending" && " · settling…"}
+                      {c.status === "failed" && " · mint failed"}
+                      {c.tx_hash && (
+                        <>
+                          {" · "}
+                          <a
+                            href={`https://mempool.texitcoin.org/tx/${c.tx_hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            tx
+                          </a>
+                        </>
+                      )}
                     </p>
                   </div>
                   <span className="font-display text-sm font-bold text-primary">
