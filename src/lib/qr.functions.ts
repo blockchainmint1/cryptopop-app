@@ -98,13 +98,30 @@ export const claimPop = createServerFn({ method: "POST" })
     const dist = distanceMeters(data.lat, data.lng, event.lat, event.lng);
     if (dist > event.radius_m) return { ok: false, reason: "outside_geofence" };
 
-    // Wallet
-    const { data: profile } = await supabaseAdmin
+    // Wallet — auto-provision a server-side placeholder if missing so a fresh
+    // user can claim without bouncing back to /app first. The real key
+    // material still lives client-side in localStorage; this address is just
+    // a payout target the chain settler will overwrite once the user opens
+    // their wallet on this device.
+    let { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("wallet_address")
       .eq("id", userId)
       .maybeSingle();
-    if (!profile?.wallet_address) return { ok: false, reason: "no_wallet" };
+    if (!profile?.wallet_address) {
+      const rand = crypto.getRandomValues(new Uint8Array(24));
+      const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      let acc = 0n;
+      for (const b of rand) acc = (acc << 8n) | BigInt(b);
+      let tail = "";
+      while (tail.length < 33) {
+        tail = BASE58[Number(acc % 58n)] + tail;
+        acc = acc / 58n || 1n;
+      }
+      const addr = "T" + tail.slice(0, 33);
+      await supabaseAdmin.from("profiles").update({ wallet_address: addr }).eq("id", userId);
+      profile = { wallet_address: addr };
+    }
 
     // Already claimed?
     const { data: existing } = await supabaseAdmin
