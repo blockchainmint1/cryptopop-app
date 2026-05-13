@@ -42,13 +42,12 @@ function WalletHome() {
         .maybeSingle();
 
       let addr = profile?.wallet_address ?? null;
-      if (!addr) {
-        const mnemonic = getOrCreateMnemonic();
+      // Always ensure a local mnemonic exists; re-derive if address is missing
+      // OR is an invalid placeholder from earlier builds.
+      const mnemonic = getOrCreateMnemonic();
+      if (!addr || !isValidTxcAddress(addr)) {
         addr = deriveTxcAddress(mnemonic);
         await supabase.from("profiles").update({ wallet_address: addr }).eq("id", user.id);
-      } else {
-        // Ensure local mnemonic exists for future signing
-        getOrCreateMnemonic();
       }
       setAddress(addr);
 
