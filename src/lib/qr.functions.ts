@@ -10,6 +10,7 @@ import {
   buildQrPayload,
   distanceMeters,
 } from "./qr.server";
+import { mintGrant } from "./txc.server";
 
 const SignInput = z.object({ eventId: z.string().uuid() });
 
@@ -50,6 +51,7 @@ export type ClaimResult =
       coverUrl: string | null;
       reward: number;
       newBalance: number;
+      txHash: string | null;
     }
   | { ok: false; reason: ClaimError };
 
@@ -99,29 +101,17 @@ export const claimPop = createServerFn({ method: "POST" })
     const dist = distanceMeters(data.lat, data.lng, event.lat, event.lng);
     if (dist > event.radius_m) return { ok: false, reason: "outside_geofence" };
 
-    // Wallet — auto-provision a server-side placeholder if missing so a fresh
-    // user can claim without bouncing back to /app first. The real key
-    // material still lives client-side in localStorage; this address is just
-    // a payout target the chain settler will overwrite once the user opens
-    // their wallet on this device.
-    let { data: profile } = await supabaseAdmin
+    // Wallet — must be present and valid (provisioned client-side on /app
+    // first load; we no longer fabricate a server-side placeholder because
+    // those weren't real TXC addresses and would cause minted POP to be
+    // unspendable).
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("wallet_address")
       .eq("id", userId)
       .maybeSingle();
     if (!profile?.wallet_address) {
-      const rand = crypto.getRandomValues(new Uint8Array(24));
-      const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-      let acc = 0n;
-      for (const b of rand) acc = (acc << 8n) | BigInt(b);
-      let tail = "";
-      while (tail.length < 33) {
-        tail = BASE58[Number(acc % 58n)] + tail;
-        acc = acc / 58n || 1n;
-      }
-      const addr = "T" + tail.slice(0, 33);
-      await supabaseAdmin.from("profiles").update({ wallet_address: addr }).eq("id", userId);
-      profile = { wallet_address: addr };
+      return { ok: false, reason: "no_wallet" };
     }
 
     // Already claimed?
@@ -135,20 +125,24 @@ export const claimPop = createServerFn({ method: "POST" })
 
     const reward = Number(event.base_reward);
 
-    // Insert claim (status pending — chain settle happens later)
-    const { error: claimErr } = await supabaseAdmin.from("claims").insert({
-      user_id: userId,
-      event_id: event.id,
-      wallet_address: profile.wallet_address!,
-      lat: data.lat,
-      lng: data.lng,
-      base_reward: reward,
-      quiz_reward: 0,
-      referral_reward: 0,
-      total: reward,
-      status: "pending",
-    });
-    if (claimErr) throw new Error(claimErr.message);
+    // Insert claim (status pending — chain settle happens after)
+    const { data: claimRow, error: claimErr } = await supabaseAdmin
+      .from("claims")
+      .insert({
+        user_id: userId,
+        event_id: event.id,
+        wallet_address: profile.wallet_address,
+        lat: data.lat,
+        lng: data.lng,
+        base_reward: reward,
+        quiz_reward: 0,
+        referral_reward: 0,
+        total: reward,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+    if (claimErr || !claimRow) throw new Error(claimErr?.message ?? "claim insert failed");
 
     // Upsert balance mirror
     const { data: prev } = await supabaseAdmin
@@ -173,6 +167,31 @@ export const claimPop = createServerFn({ method: "POST" })
       );
     if (mirrorErr) throw new Error(mirrorErr.message);
 
+    // Stage 2 — mint on TXC. Inline await keeps it simple and works in the
+    // Worker runtime (background tasks die after the response). User waits
+    // an extra ~1–3s but gets a real tx hash back.
+    let txHash: string | null = null;
+    try {
+      const result = await mintGrant({
+        amount: reward,
+        toAddress: profile.wallet_address,
+      });
+      txHash = result.txHash;
+      await supabaseAdmin
+        .from("claims")
+        .update({ status: "minted", tx_hash: txHash })
+        .eq("id", claimRow.id);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("mintGrant failed:", msg);
+      await supabaseAdmin
+        .from("claims")
+        .update({ status: "failed", error: msg })
+        .eq("id", claimRow.id);
+      // Don't fail the user-facing claim — POP is already credited; the mint
+      // can be retried from an admin tool later.
+    }
+
     return {
       ok: true,
       eventId: event.id,
@@ -180,5 +199,6 @@ export const claimPop = createServerFn({ method: "POST" })
       coverUrl: event.cover_url,
       reward,
       newBalance,
+      txHash,
     };
   });

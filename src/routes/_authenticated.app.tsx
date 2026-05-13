@@ -7,12 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getOrCreateMnemonic, deriveTxcAddress } from "@/lib/wallet";
+import { getOrCreateMnemonic, deriveTxcAddress, isValidTxcAddress } from "@/lib/wallet";
 
 type RecentClaim = {
   id: string;
   total: number;
   created_at: string;
+  status: "pending" | "minted" | "failed";
+  tx_hash: string | null;
   events: { name: string } | null;
 };
 
@@ -42,13 +44,12 @@ function WalletHome() {
         .maybeSingle();
 
       let addr = profile?.wallet_address ?? null;
-      if (!addr) {
-        const mnemonic = getOrCreateMnemonic();
+      // Always ensure a local mnemonic exists; re-derive if address is missing
+      // OR is an invalid placeholder from earlier builds.
+      const mnemonic = getOrCreateMnemonic();
+      if (!addr || !isValidTxcAddress(addr)) {
         addr = deriveTxcAddress(mnemonic);
         await supabase.from("profiles").update({ wallet_address: addr }).eq("id", user.id);
-      } else {
-        // Ensure local mnemonic exists for future signing
-        getOrCreateMnemonic();
       }
       setAddress(addr);
 
@@ -66,7 +67,7 @@ function WalletHome() {
       const [{ data: cl }, { data: roleRow }] = await Promise.all([
         supabase
           .from("claims")
-          .select("id, total, created_at, events(name)")
+          .select("id, total, created_at, status, tx_hash, events(name)")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(5),
@@ -129,11 +130,26 @@ function WalletHome() {
             </h2>
             <ul className="mt-4 divide-y divide-border">
               {claims.map((c) => (
-                <li key={c.id} className="flex items-center justify-between py-3">
-                  <div className="min-w-0">
+                <li key={c.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{c.events?.name ?? "Event"}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(c.created_at).toLocaleString()}
+                      {c.status === "pending" && " · settling…"}
+                      {c.status === "failed" && " · mint failed"}
+                      {c.tx_hash && (
+                        <>
+                          {" · "}
+                          <a
+                            href={`https://mempool.texitcoin.org/tx/${c.tx_hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            tx
+                          </a>
+                        </>
+                      )}
                     </p>
                   </div>
                   <span className="font-display text-sm font-bold text-primary">

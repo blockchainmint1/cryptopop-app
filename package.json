@@ -12,6 +12,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@bitcoinerlab/secp256k1": "^1.2.0",
     "@cloudflare/vite-plugin": "^1.25.5",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -52,8 +53,10 @@
     "@yudiel/react-qr-scanner": "^2.5.1",
     "@zxing/browser": "^0.2.0",
     "@zxing/library": "^0.23.0",
+    "bip32": "^5.0.1",
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^7.0.1",
+    "bs58check": "^4.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
