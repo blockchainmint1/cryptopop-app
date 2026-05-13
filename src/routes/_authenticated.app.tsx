@@ -67,7 +67,7 @@ function WalletHome() {
       const [{ data: cl }, { data: roleRow }] = await Promise.all([
         supabase
           .from("claims")
-          .select("id, total, created_at, events(name)")
+          .select("id, total, created_at, status, tx_hash, events(name)")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(5),
