@@ -13,7 +13,10 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
+import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
+import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -34,23 +37,46 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedScanSuccessRoute =
+  AuthenticatedScanSuccessRouteImport.update({
+    id: '/success',
+    path: '/success',
+    getParentRoute: () => AuthenticatedScanRoute,
+  } as any)
+const AuthenticatedAdminEventsIdRoute =
+  AuthenticatedAdminEventsIdRouteImport.update({
+    id: '/admin/events/$id',
+    path: '/admin/events/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/app': typeof AuthenticatedAppRoute
+  '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/app': typeof AuthenticatedAppRoute
+  '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,20 +84,40 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
+  '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/app' | '/auth/callback'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/app'
+    | '/scan'
+    | '/auth/callback'
+    | '/scan/success'
+    | '/admin/events/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/app' | '/auth/callback'
+  to:
+    | '/'
+    | '/login'
+    | '/app'
+    | '/scan'
+    | '/auth/callback'
+    | '/scan/success'
+    | '/admin/events/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
     | '/_authenticated/app'
+    | '/_authenticated/scan'
     | '/auth/callback'
+    | '/_authenticated/scan/success'
+    | '/_authenticated/admin/events/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -118,15 +171,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/scan/success': {
+      id: '/_authenticated/scan/success'
+      path: '/success'
+      fullPath: '/scan/success'
+      preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
+      parentRoute: typeof AuthenticatedScanRoute
+    }
+    '/_authenticated/admin/events/$id': {
+      id: '/_authenticated/admin/events/$id'
+      path: '/admin/events/$id'
+      fullPath: '/admin/events/$id'
+      preLoaderRoute: typeof AuthenticatedAdminEventsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedScanRouteChildren {
+  AuthenticatedScanSuccessRoute: typeof AuthenticatedScanSuccessRoute
+}
+
+const AuthenticatedScanRouteChildren: AuthenticatedScanRouteChildren = {
+  AuthenticatedScanSuccessRoute: AuthenticatedScanSuccessRoute,
+}
+
+const AuthenticatedScanRouteWithChildren =
+  AuthenticatedScanRoute._addFileChildren(AuthenticatedScanRouteChildren)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
+  AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
+  AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
+  AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
+  AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -142,3 +224,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
