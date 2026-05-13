@@ -124,20 +124,24 @@ export const claimPop = createServerFn({ method: "POST" })
 
     const reward = Number(event.base_reward);
 
-    // Insert claim (status pending — chain settle happens later)
-    const { error: claimErr } = await supabaseAdmin.from("claims").insert({
-      user_id: userId,
-      event_id: event.id,
-      wallet_address: profile.wallet_address!,
-      lat: data.lat,
-      lng: data.lng,
-      base_reward: reward,
-      quiz_reward: 0,
-      referral_reward: 0,
-      total: reward,
-      status: "pending",
-    });
-    if (claimErr) throw new Error(claimErr.message);
+    // Insert claim (status pending — chain settle happens after)
+    const { data: claimRow, error: claimErr } = await supabaseAdmin
+      .from("claims")
+      .insert({
+        user_id: userId,
+        event_id: event.id,
+        wallet_address: profile.wallet_address,
+        lat: data.lat,
+        lng: data.lng,
+        base_reward: reward,
+        quiz_reward: 0,
+        referral_reward: 0,
+        total: reward,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+    if (claimErr || !claimRow) throw new Error(claimErr?.message ?? "claim insert failed");
 
     // Upsert balance mirror
     const { data: prev } = await supabaseAdmin
