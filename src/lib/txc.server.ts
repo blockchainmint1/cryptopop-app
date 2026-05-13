@@ -31,7 +31,12 @@ export const TXC_NETWORK: bitcoin.Network = {
   wif: 0x80, // overridden per-WIF in decodeWif()
 };
 
-const PROPERTY_ID = 19;
+function getPropertyId(): number {
+  const raw = process.env.TXC_TOKEN_ID ?? "19";
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) throw new Error(`TXC_TOKEN_ID invalid: ${raw}`);
+  return n;
+}
 const DUST_SATS = 546;
 const FEE_SATS_PER_VBYTE = 5;
 const MEMPOOL_BASE = "https://mempool.texitcoin.org/api";
