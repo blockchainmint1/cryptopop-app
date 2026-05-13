@@ -114,7 +114,36 @@ function WalletHome() {
           <p className="mt-2 text-xs text-muted-foreground">
             {eventsAttended} {eventsAttended === 1 ? "event" : "events"} attended
           </p>
+          <Button asChild size="lg" className="mt-6 w-full">
+            <Link to="/scan">
+              <ScanLine className="h-5 w-5 mr-2" /> Scan to Earn
+            </Link>
+          </Button>
         </Card>
+
+        {/* Recent claims */}
+        {claims.length > 0 && (
+          <Card className="p-6">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Recent activity
+            </h2>
+            <ul className="mt-4 divide-y divide-border">
+              {claims.map((c) => (
+                <li key={c.id} className="flex items-center justify-between py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{c.events?.name ?? "Event"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(c.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="font-display text-sm font-bold text-primary">
+                    +{Number(c.total)} POP
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
 
         {/* Receive */}
         <Card className="p-6">
@@ -174,6 +203,26 @@ function WalletHome() {
             </div>
           </div>
         </Card>
+
+        {isAdmin && (
+          <Card className="border-primary/30 bg-primary/5 p-4">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-primary" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">Admin tools</p>
+                <p className="text-xs text-muted-foreground">View the demo event QR poster</p>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link
+                  to="/admin/events/$id"
+                  params={{ id: "aaaaaaaa-0000-0000-0000-000000000001" }}
+                >
+                  Open
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        )}
 
         <p className="pt-2 text-center text-xs text-muted-foreground">
           Signed in as {user?.email}
