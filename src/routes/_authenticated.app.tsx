@@ -1,13 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, LogOut, AlertTriangle } from "lucide-react";
+import { Copy, Check, LogOut, AlertTriangle, ScanLine, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getOrCreateMnemonic, deriveTxcAddress } from "@/lib/wallet";
+
+type RecentClaim = {
+  id: string;
+  total: number;
+  created_at: string;
+  events: { name: string } | null;
+};
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Wallet — CryptoPOP" }] }),
