@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 function WalletHome() {
   const { user, signOut } = useAuth();
-  const { address, ready, settingUp, error: walletError, retry } = useEnsureWallet();
+  const { address, settingUp, error: walletError, retry } = useEnsureWallet();
   const fetchTxc = useServerFn(getTxcBalance);
 
   const [balance, setBalance] = useState<number>(0);
