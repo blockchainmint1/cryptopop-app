@@ -142,17 +142,20 @@ export type MintResult = { txHash: string; minterAddress: string };
 export async function mintGrant(opts: {
   amount: number;
   toAddress: string;
+  memo?: string;
 }): Promise<MintResult> {
   const { keyPair, address: issuer } = loadKey();
 
-  // 1. Get omni payload
+  // 1. Get omni payload. The 3rd `grantdata` arg is an on-chain memo embedded
+  // in the Omni payload itself — perfect for attribution ("why this POP was
+  // granted"). Keep it short: the whole OP_RETURN must stay under the node's
+  // datacarrier size limit, so we cap memo at 60 bytes.
   const amountStr = formatDivisibleAmount(opts.amount);
-  // NOTE: the third `grantdata` arg is documented as optional, but this
-  // node's RPC rejects the 2-arg form and returns the help text. Always pass "".
+  const memo = (opts.memo ?? "").slice(0, 60);
   const payloadHex = await rpc<string>("omni_createpayload_grant", [
     getPropertyId(),
     amountStr,
-    "",
+    memo,
   ]);
 
   // 2. Get UTXOs
