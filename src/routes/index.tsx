@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { QrCode, MapPin, Coins, Users, ArrowRight } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -177,9 +178,7 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-6xl px-6 py-10 font-mono text-xs text-muted-foreground">
-        © {new Date().getFullYear()} CryptoPOP · Proof of Participation on TXC
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import logo from "@/assets/cryptopop-logo.png";
+import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/api")({
   head: () => ({
@@ -344,6 +345,7 @@ rpc("omni_createpayload_grant", [propertyId, amount, "claim:abc123"]);     // at
           <Link to="/" className="underline hover:text-foreground">Back to CryptoPOP</Link>.
         </p>
       </main>
+      <SiteFooter />
     </div>
   );
 }
