@@ -178,9 +178,7 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-6xl px-6 py-10 font-mono text-xs text-muted-foreground">
-        © {new Date().getFullYear()} CryptoPOP · Proof of Participation on TXC
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
