@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import logo from "@/assets/cryptopop-logo.png";
 
-export const Route = createFileRoute("/l2-api")({
+export const Route = createFileRoute("/api")({
   head: () => ({
     meta: [
       { title: "TXC L2 / Omni Layer Developer Guide — CryptoPOP" },
