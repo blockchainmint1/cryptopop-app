@@ -74,14 +74,20 @@ function ScanPage() {
       });
 
       if (result.ok) {
-        navigate({
-          to: "/scan/success",
-          search: {
-            event: result.eventName,
-            reward: result.reward,
-            balance: result.newBalance,
-          },
-        });
+        try {
+          await navigate({
+            to: "/scan/success",
+            search: {
+              event: result.eventName,
+              reward: result.reward,
+              balance: result.newBalance,
+            },
+          });
+        } catch (navErr) {
+          // Navigation failed (e.g. search validation) — recover instead of hanging
+          toast.success(`+${result.reward} POP earned!`);
+          await navigate({ to: "/app" });
+        }
       } else {
         toast.error(ERROR_COPY[result.reason] ?? "Claim failed");
         setBusy(false);
@@ -117,24 +123,28 @@ function ScanPage() {
       <main className="mx-auto max-w-md px-6 py-6">
         <Card className="overflow-hidden p-0">
           <div className="relative aspect-square w-full bg-black">
-            <Scanner
-              onScan={(codes) => {
-                const value = codes[0]?.rawValue;
-                if (value) submit(value);
-              }}
-              onError={() => {}}
-              constraints={{ facingMode: "environment" }}
-              styles={{ container: { width: "100%", height: "100%" } }}
-              components={{ finder: false }}
-              sound={false}
-            />
-            {/* Reticle */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="h-2/3 w-2/3 rounded-2xl border-2 border-primary/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]" />
-            </div>
+            {!busy && address ? (
+              <Scanner
+                onScan={(codes) => {
+                  const value = codes[0]?.rawValue;
+                  if (value) submit(value);
+                }}
+                onError={() => {}}
+                constraints={{ facingMode: "environment" }}
+                styles={{ container: { width: "100%", height: "100%" } }}
+                components={{ finder: false }}
+                sound={false}
+              />
+            ) : null}
+            {!busy && address && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="h-2/3 w-2/3 rounded-2xl border-2 border-primary/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]" />
+              </div>
+            )}
             {busy && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 text-primary-foreground">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="text-sm">Claiming your POP…</p>
               </div>
             )}
             {!address && (
