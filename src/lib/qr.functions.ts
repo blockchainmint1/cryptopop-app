@@ -140,6 +140,8 @@ export const claimPop = createServerFn({ method: "POST" })
         referral_reward: 0,
         total: reward,
         status: "pending",
+        qr_payload: data.qr,
+        scanned_at: new Date().toISOString(),
       })
       .select("id")
       .single();
