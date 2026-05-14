@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { QrCode, MapPin, Coins, Users, ArrowRight } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/")({
   component: Landing,
