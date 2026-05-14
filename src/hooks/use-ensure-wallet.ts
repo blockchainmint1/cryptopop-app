@@ -50,19 +50,24 @@ export function useEnsureWallet(): State {
     }
 
     let cancelled = false;
+    let step: "mnemonic" | "derive" | "read-profile" | "upsert" = "mnemonic";
     (async () => {
       setReady(false);
       setSettingUp(true);
       setError(null);
       try {
+        step = "mnemonic";
         const mnemonic = getOrCreateMnemonic();
+        step = "derive";
         const localAddr = deriveTxcAddress(mnemonic);
 
-        const { data: profile } = await supabase
+        step = "read-profile";
+        const { data: profile, error: readErr } = await supabase
           .from("profiles")
           .select("wallet_address")
           .eq("id", user.id)
           .maybeSingle();
+        if (readErr) throw readErr;
 
         const remote = profile?.wallet_address ?? null;
 
@@ -75,16 +80,15 @@ export function useEnsureWallet(): State {
           return;
         }
 
-        // Either no remote yet, remote is invalid placeholder, or this is a
-        // new device with a different local mnemonic. Overwrite remote.
         const remoteWasValid = !!remote && isValidTxcAddress(remote);
-        const { error } = await supabase
+        step = "upsert";
+        const { error: upsertErr } = await supabase
           .from("profiles")
           .upsert(
             { id: user.id, wallet_address: localAddr, updated_at: new Date().toISOString() },
             { onConflict: "id" },
           );
-        if (error) throw error;
+        if (upsertErr) throw upsertErr;
 
         if (!cancelled) {
           setAddress(localAddr);
@@ -101,12 +105,14 @@ export function useEnsureWallet(): State {
           }
         }
       } catch (e) {
-        console.error("[wallet] provisioning failed", e);
+        const raw = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+        const msg = `[${step}] ${raw}`;
+        console.error("[wallet] provisioning failed", { step, error: e });
         if (!cancelled) {
           setAddress(null);
           setReady(true);
           setSettingUp(false);
-          setError(e instanceof Error ? e.message : "Wallet setup failed");
+          setError(msg);
         }
       }
     })();
