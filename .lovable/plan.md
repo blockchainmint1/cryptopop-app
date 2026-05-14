@@ -1,68 +1,68 @@
-## Problem
+## What "wallet setup" actually does
 
-Two related bugs:
+When you sign in, `useEnsureWallet()` runs this sequence in the browser:
 
-1. **"Wallet not provisioned"** when scanning on a fresh device. The `_authenticated.tsx` layout provisions the wallet inside a `useEffect` that fires async — if a user lands directly on `/scan` and scans immediately, `claimPop` runs before `profiles.wallet_address` has been written, so the server returns `no_wallet`.
-2. **"Receive TXC" card renders blank** for the same reason — the QR only renders once `address` state is set, and on a fresh device that write hasn't happened yet.
+1. **`getOrCreateMnemonic()`** — reads `localStorage["cryptopop:mnemonic"]`. If absent or invalid, generates a fresh 12-word BIP39 mnemonic and stores it.
+2. **`deriveTxcAddress(mnemonic)`** — pure crypto, no network:
+   - `mnemonicToSeedSync` (bip39) → 64-byte seed
+   - `BIP32Factory(ecc).fromSeed(seed).derivePath("m/44'/0'/0'/0/0")` → child key
+   - `ripemd160(sha256(pubkey))` → HASH160
+   - prepend TXC version byte `0x42`, base58check encode → `T…` address
+3. **Supabase upsert** — `profiles.upsert({ id: user.id, wallet_address, updated_at })` with `onConflict: "id"`.
+4. On success: `setAddress`, `setReady(true)`, `setSettingUp(false)`.
+5. On any throw: catch block sets `address=null`, `ready=true`, `settingUp=false`, `error=<message>`.
 
-The flow also buries POP (the actual product) under a giant TXC receive QR, which is the wrong hierarchy.
+The retry button calls `setAttempt(n+1)`, which re-runs the effect. That wiring is correct — so if clicking it does *nothing visible*, the effect IS re-running but failing again at the same step within ~ms, leaving the UI in the same state. (No spinner flash because the failure is synchronous-fast.)
 
-## Approach
+## Why it's most likely failing
 
-Per your answers: **auto-create per-device** with a clear warning, and a **soft nudge** to back up the phrase (no hard gate).
+We don't yet know which step throws — the catch only does `console.error("[wallet] provisioning failed", e)` and we have no console logs captured. The likely culprits, in order:
 
-### 1. Make wallet provisioning deterministic (fix the race)
+1. **`Buffer is not defined`** in the browser. `bip39` / `bs58check` / `bip32` historically expect Node's `Buffer` global. Vite doesn't polyfill it by default. This is the #1 cause of "wallet setup fails silently the moment you load the app."
+2. **`crypto.getRandomValues` unavailable** — only on insecure (http://) origins. Unlikely on `*.lovable.app` (https), but possible on a custom dev URL.
+3. **Supabase upsert RLS denial** — RLS allows `INSERT` only when `auth.uid() = id`. If the session token isn't yet attached at the moment of upsert, this 401s. Less likely (you're already past auth gate), but possible.
+4. **localStorage disabled** (private mode / iframe sandbox) — `getOrCreateMnemonic` would throw on `setItem`.
 
-- Move provisioning into a small client hook `useEnsureWallet()` that returns `{ address, ready }`.
-- Both `/app` and `/scan` call it. The scan button stays disabled (with a "Setting up wallet…" spinner) until `ready === true`. No more timing-dependent `no_wallet` errors.
-- On second device: detect that `profiles.wallet_address` already exists but differs from the locally-derived one. Show a one-time toast: *"This device created a new wallet. POP minted before today went to your other device's wallet."* Then overwrite (per your choice).
+## Fix
 
-### 2. Redesign `/app` hierarchy
+### Step 1 — surface the actual error (1 file)
 
-New top-to-bottom order:
+Edit `src/hooks/use-ensure-wallet.ts` catch block to log the failing **step** and the raw error message, and stash that on `error` so the UI shows it:
 
-```text
-┌─────────────────────────────┐
-│  POP balance (huge, hero)   │  ← main feature
-│  1,234 POP                  │
-│  3 events attended          │
-│  [ Scan to Earn ]           │
-├─────────────────────────────┤
-│  Recent activity            │
-├─────────────────────────────┤
-│  Backup banner (dismissible)│  ← soft nudge, persistent until backed up
-│  "Save your recovery phrase"│
-│  [ Reveal ] [ Download .txt]│
-├─────────────────────────────┤
-│  TXC wallet (compact)       │  ← collapsed by default
-│  T9aB…x4Kq · 0.00 TXC       │
-│  [ Show QR ▾ ]              │
-└─────────────────────────────┘
+```ts
+} catch (e) {
+  const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+  console.error("[wallet] provisioning failed", { step, error: e });
+  if (!cancelled) { setAddress(null); setReady(true); setSettingUp(false); setError(msg); }
+}
 ```
 
-- POP balance card stays as the visual anchor (already good).
-- The full-size TXC QR collapses into a single row showing truncated address + tiny TXC balance. Tapping expands to reveal the QR + copy button.
-- Backup banner persists (stored in `localStorage: cryptopop:backed-up`) until the user clicks "Download .txt" or explicitly dismisses with "I've saved it".
-- Recovery-phrase download writes a plain `.txt` with the 12 words + a one-line warning.
+…and track `step` (`"mnemonic" | "derive" | "read-profile" | "upsert"`) as we go.
 
-### 3. Better scan-page error for the edge case
+### Step 2 — fix the most likely root cause preemptively
 
-If `claimPop` ever still returns `no_wallet` (e.g. localStorage cleared mid-session), the toast becomes actionable: *"Wallet setup interrupted. Tap to retry."* — tapping re-runs `useEnsureWallet()` and re-submits.
+Add a Buffer polyfill so bip39/bs58check work in the browser. Two options:
 
-### 4. TXC balance (small)
+- **Quick:** in `src/lib/wallet.ts` top-of-file: `import { Buffer } from "buffer"; if (typeof globalThis.Buffer === "undefined") globalThis.Buffer = Buffer;` (the `buffer` package ships with Vite via `node_modules`).
+- **Cleaner:** add `vite-plugin-node-polyfills` to `vite.config.ts` with `{ globals: { Buffer: true } }`.
 
-For the compact TXC row, fetch balance lazily via the existing `txc.server.ts` mempool helper (new tiny serverFn `getTxcBalance(address)`). If the call fails, show `—` instead of breaking the card. Cached for 30s.
+I'll go with the quick inline polyfill — it's one import, no config changes, and only loads when `wallet.ts` is imported.
+
+### Step 3 — show the real error in the UI
+
+In `_authenticated.app.tsx`, replace the generic "Wallet setup failed. Tap retry…" with the actual `walletError` string (truncated). That way if it fails again you'll see *why* without opening DevTools.
+
+### Step 4 — verify
+
+After the fix, sign out + back in (or hard reload). Expected: address derives in <100ms and the "Scan to Earn" button replaces the retry. If it still fails, the toast/inline message will name the failing step.
 
 ## Files touched
 
-- `src/hooks/use-ensure-wallet.ts` *(new)* — shared provisioning hook.
-- `src/lib/wallet.functions.ts` *(new)* — `getTxcBalance` serverFn.
-- `src/routes/_authenticated.tsx` — remove the inline `useEffect`, just render `<Outlet />`.
-- `src/routes/_authenticated.app.tsx` — re-layout per wireframe above; consume the hook; collapse TXC; add backup banner state.
-- `src/routes/_authenticated.scan.tsx` — gate the Scanner on `ready`; better `no_wallet` retry copy.
+- `src/hooks/use-ensure-wallet.ts` — track `step`, expose detailed error.
+- `src/lib/wallet.ts` — Buffer polyfill at top of file.
+- `src/routes/_authenticated.app.tsx` — show `walletError` text inline.
 
 ## Out of scope
 
-- Importing an existing recovery phrase on a new device (you chose per-device wallets).
-- Hard setup gate / forced backup (you chose soft nudge).
-- Any DB/RLS changes — schema is unchanged.
+- Switching crypto libs (e.g. to `@scure/bip39`) — only if Buffer polyfill doesn't fix it.
+- Any DB / RLS changes.

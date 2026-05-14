@@ -6,6 +6,12 @@
 // could verify; using 0' until we have confirmation. The mnemonic remains
 // authoritative — we can re-derive on any path later.)
 
+// Buffer polyfill — bip39/bip32/bs58check expect Node's Buffer global.
+import { Buffer } from "buffer";
+if (typeof globalThis !== "undefined" && typeof (globalThis as { Buffer?: unknown }).Buffer === "undefined") {
+  (globalThis as { Buffer: typeof Buffer }).Buffer = Buffer;
+}
+
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "bip39";
 import { BIP32Factory } from "bip32";
 import * as ecc from "@bitcoinerlab/secp256k1";
