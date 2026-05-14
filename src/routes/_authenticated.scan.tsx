@@ -74,6 +74,20 @@ function ScanPage() {
       });
 
       if (result.ok) {
+        // Build the success URL ourselves so a failing TanStack navigate
+        // (search validation, race, etc.) can't trap the user on the spinner.
+        const params = new URLSearchParams({
+          event: result.eventName,
+          reward: String(result.reward),
+          balance: String(result.newBalance),
+        });
+        const url = `/scan/success?${params.toString()}`;
+        // Hard fallback: if we're still on /scan after 600ms, force the nav.
+        const fallback = window.setTimeout(() => {
+          if (window.location.pathname.startsWith("/scan") && !window.location.pathname.includes("success")) {
+            window.location.href = url;
+          }
+        }, 600);
         try {
           await navigate({
             to: "/scan/success",
@@ -84,9 +98,10 @@ function ScanPage() {
             },
           });
         } catch (navErr) {
-          // Navigation failed (e.g. search validation) — recover instead of hanging
-          toast.success(`+${result.reward} POP earned!`);
-          await navigate({ to: "/app" });
+          console.error("navigate to /scan/success failed:", navErr);
+          window.location.href = url;
+        } finally {
+          window.clearTimeout(fallback);
         }
       } else {
         toast.error(ERROR_COPY[result.reason] ?? "Claim failed");
