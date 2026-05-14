@@ -138,13 +138,13 @@ function ScanPage() {
               </div>
             )}
             {!address && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/75 px-6 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/90 px-6 text-center">
                 {walletSettingUp ? (
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 ) : (
                   <Button onClick={retryWallet}>Retry wallet setup</Button>
                 )}
-                <p className="text-sm text-white">
+                <p className="text-sm text-foreground">
                   {walletSettingUp ? "Setting up your wallet…" : "Wallet setup needs a retry."}
                 </p>
               </div>
