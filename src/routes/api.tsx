@@ -345,6 +345,7 @@ rpc("omni_createpayload_grant", [propertyId, amount, "claim:abc123"]);     // at
           <Link to="/" className="underline hover:text-foreground">Back to CryptoPOP</Link>.
         </p>
       </main>
+      <SiteFooter />
     </div>
   );
 }
