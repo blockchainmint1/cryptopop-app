@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,6 +13,9 @@ const DEVICE_WARNED_KEY = "cryptopop:device-warned";
 type State = {
   address: string | null;
   ready: boolean;
+  settingUp: boolean;
+  error: string | null;
+  retry: () => void;
   /** True iff this device's locally-derived address replaced a different one
    *  already stored on the profile (i.e. signed in on a 2nd device). */
   replacedRemote: boolean;
@@ -31,17 +34,26 @@ export function useEnsureWallet(): State {
   const { user } = useAuth();
   const [address, setAddress] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [settingUp, setSettingUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [replacedRemote, setReplacedRemote] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
     if (!user) {
       setAddress(null);
-      setReady(false);
+      setReady(true);
+      setSettingUp(false);
+      setError(null);
       return;
     }
 
     let cancelled = false;
     (async () => {
+      setReady(false);
+      setSettingUp(true);
+      setError(null);
       try {
         const mnemonic = getOrCreateMnemonic();
         const localAddr = deriveTxcAddress(mnemonic);
@@ -58,6 +70,7 @@ export function useEnsureWallet(): State {
           if (!cancelled) {
             setAddress(localAddr);
             setReady(true);
+            setSettingUp(false);
           }
           return;
         }
@@ -67,13 +80,16 @@ export function useEnsureWallet(): State {
         const remoteWasValid = !!remote && isValidTxcAddress(remote);
         const { error } = await supabase
           .from("profiles")
-          .update({ wallet_address: localAddr })
-          .eq("id", user.id);
+          .upsert(
+            { id: user.id, wallet_address: localAddr, updated_at: new Date().toISOString() },
+            { onConflict: "id" },
+          );
         if (error) throw error;
 
         if (!cancelled) {
           setAddress(localAddr);
           setReady(true);
+          setSettingUp(false);
           if (remoteWasValid && !sessionStorage.getItem(DEVICE_WARNED_KEY)) {
             setReplacedRemote(true);
             sessionStorage.setItem(DEVICE_WARNED_KEY, "1");
@@ -86,14 +102,19 @@ export function useEnsureWallet(): State {
         }
       } catch (e) {
         console.error("[wallet] provisioning failed", e);
-        if (!cancelled) setReady(false);
+        if (!cancelled) {
+          setAddress(null);
+          setReady(true);
+          setSettingUp(false);
+          setError(e instanceof Error ? e.message : "Wallet setup failed");
+        }
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, attempt]);
 
-  return { address, ready, replacedRemote };
+  return { address, ready, settingUp, error, retry, replacedRemote };
 }

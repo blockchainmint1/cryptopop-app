@@ -30,7 +30,7 @@ const ERROR_COPY: Record<ClaimError, string> = {
 function ScanPage() {
   const navigate = useNavigate();
   const claim = useServerFn(claimPop);
-  const { ready: walletReady } = useEnsureWallet();
+  const { address, settingUp: walletSettingUp, error: walletError, retry: retryWallet } = useEnsureWallet();
   const [busy, setBusy] = useState(false);
   const [manual, setManual] = useState("");
   const [showManual, setShowManual] = useState(false);
@@ -38,9 +38,9 @@ function ScanPage() {
 
   async function submit(qr: string) {
     if (handledRef.current || busy) return;
-    if (!walletReady) {
-      toast.message("Setting up your wallet…", {
-        description: "Hold on a second, then scan again.",
+    if (!address) {
+      toast.error(walletError ? "Wallet setup failed" : "Setting up your wallet…", {
+        description: walletError ? "Tap retry, then scan again." : "Hold on a second, then scan again.",
       });
       return;
     }
@@ -135,6 +135,18 @@ function ScanPage() {
             {busy && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/60">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
+            {!address && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/90 px-6 text-center">
+                {walletSettingUp ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                ) : (
+                  <Button onClick={retryWallet}>Retry wallet setup</Button>
+                )}
+                <p className="text-sm text-foreground">
+                  {walletSettingUp ? "Setting up your wallet…" : "Wallet setup needs a retry."}
+                </p>
               </div>
             )}
           </div>
