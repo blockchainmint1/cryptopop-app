@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { claimPop, type ClaimError } from "@/lib/qr.functions";
+import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 
 export const Route = createFileRoute("/_authenticated/scan")({
   head: () => ({ meta: [{ title: "Scan to Earn — CryptoPOP" }] }),
@@ -23,12 +24,13 @@ const ERROR_COPY: Record<ClaimError, string> = {
   outside_geofence: "You're outside the event area.",
   low_gps_accuracy: "GPS signal too weak. Move outdoors and retry.",
   already_claimed: "You've already claimed POP for this event.",
-  no_wallet: "Wallet not provisioned. Visit your wallet first.",
+  no_wallet: "Wallet setup interrupted. Open your wallet, then try again.",
 };
 
 function ScanPage() {
   const navigate = useNavigate();
   const claim = useServerFn(claimPop);
+  const { ready: walletReady } = useEnsureWallet();
   const [busy, setBusy] = useState(false);
   const [manual, setManual] = useState("");
   const [showManual, setShowManual] = useState(false);
@@ -36,6 +38,12 @@ function ScanPage() {
 
   async function submit(qr: string) {
     if (handledRef.current || busy) return;
+    if (!walletReady) {
+      toast.message("Setting up your wallet…", {
+        description: "Hold on a second, then scan again.",
+      });
+      return;
+    }
     handledRef.current = true;
     setBusy(true);
 

@@ -1,13 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, LogOut, AlertTriangle, ScanLine, Shield } from "lucide-react";
+import {
+  Copy,
+  Check,
+  LogOut,
+  AlertTriangle,
+  ScanLine,
+  Shield,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getOrCreateMnemonic, deriveTxcAddress, isValidTxcAddress } from "@/lib/wallet";
+import { getOrCreateMnemonic } from "@/lib/wallet";
+import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
+import { getTxcBalance } from "@/lib/wallet.functions";
 
 type RecentClaim = {
   id: string;
@@ -18,6 +32,8 @@ type RecentClaim = {
   events: { name: string } | null;
 };
 
+const BACKED_UP_KEY = "cryptopop:backed-up";
+
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Wallet — CryptoPOP" }] }),
   component: WalletHome,
@@ -25,34 +41,26 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 function WalletHome() {
   const { user, signOut } = useAuth();
-  const [address, setAddress] = useState<string | null>(null);
+  const { address, ready } = useEnsureWallet();
+  const fetchTxc = useServerFn(getTxcBalance);
+
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
   const [copied, setCopied] = useState(false);
   const [showMnemonic, setShowMnemonic] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const [claims, setClaims] = useState<RecentClaim[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [txc, setTxc] = useState<number | null>(null);
+  const [backedUp, setBackedUp] = useState(false);
 
-  // Provision wallet on first login
+  useEffect(() => {
+    setBackedUp(localStorage.getItem(BACKED_UP_KEY) === "1");
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("wallet_address")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      let addr = profile?.wallet_address ?? null;
-      // Always ensure a local mnemonic exists; re-derive if address is missing
-      // OR is an invalid placeholder from earlier builds.
-      const mnemonic = getOrCreateMnemonic();
-      if (!addr || !isValidTxcAddress(addr)) {
-        addr = deriveTxcAddress(mnemonic);
-        await supabase.from("profiles").update({ wallet_address: addr }).eq("id", user.id);
-      }
-      setAddress(addr);
-
       const { data: bal } = await supabase
         .from("pop_balance_mirror")
         .select("balance, events_attended")
@@ -63,7 +71,6 @@ function WalletHome() {
         setEventsAttended(bal.events_attended);
       }
 
-      // Recent claims + admin check (parallel)
       const [{ data: cl }, { data: roleRow }] = await Promise.all([
         supabase
           .from("claims")
@@ -83,6 +90,22 @@ function WalletHome() {
     })();
   }, [user]);
 
+  // Fetch TXC chain balance once we have an address
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetchTxc({ data: { address } })
+      .then((r) => {
+        if (!cancelled) setTxc(r.txc);
+      })
+      .catch(() => {
+        if (!cancelled) setTxc(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [address, fetchTxc]);
+
   const copy = async () => {
     if (!address) return;
     await navigator.clipboard.writeText(address);
@@ -90,6 +113,32 @@ function WalletHome() {
     toast.success("Address copied");
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const downloadPhrase = () => {
+    const m = getOrCreateMnemonic();
+    const body =
+      `CryptoPOP Recovery Phrase\n` +
+      `========================\n\n` +
+      `${m}\n\n` +
+      `Anyone with these 12 words controls your wallet. Store offline.`;
+    const blob = new Blob([body], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cryptopop-recovery-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    localStorage.setItem(BACKED_UP_KEY, "1");
+    setBackedUp(true);
+    toast.success("Recovery phrase downloaded");
+  };
+
+  const dismissBackup = () => {
+    localStorage.setItem(BACKED_UP_KEY, "1");
+    setBackedUp(true);
+  };
+
+  const shortAddr = address ? `${address.slice(0, 6)}…${address.slice(-6)}` : "";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -102,12 +151,12 @@ function WalletHome() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-md space-y-6 px-6 py-8">
-        {/* Balance */}
+      <main className="mx-auto max-w-md space-y-4 px-6 py-8">
+        {/* POP balance — hero */}
         <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/15 via-primary/5 to-background p-8 text-center shadow-lg">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">POP Balance</p>
           <div className="mt-3 flex items-baseline justify-center gap-2">
-            <span className="font-display text-5xl font-bold tabular-nums">
+            <span className="font-display text-6xl font-bold tabular-nums">
               {balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </span>
             <span className="text-lg font-medium text-muted-foreground">POP</span>
@@ -115,9 +164,10 @@ function WalletHome() {
           <p className="mt-2 text-xs text-muted-foreground">
             {eventsAttended} {eventsAttended === 1 ? "event" : "events"} attended
           </p>
-          <Button asChild size="lg" className="mt-6 w-full">
+          <Button asChild size="lg" className="mt-6 w-full" disabled={!ready}>
             <Link to="/scan">
-              <ScanLine className="h-5 w-5 mr-2" /> Scan to Earn
+              <ScanLine className="h-5 w-5 mr-2" />
+              {ready ? "Scan to Earn" : "Setting up wallet…"}
             </Link>
           </Button>
         </Card>
@@ -161,63 +211,92 @@ function WalletHome() {
           </Card>
         )}
 
-        {/* Receive */}
-        <Card className="p-6">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Receive TXC
-          </h2>
-          {address ? (
-            <>
-              <div className="mt-4 flex justify-center rounded-lg bg-white p-4">
-                <QRCodeSVG value={address} size={180} level="M" />
+        {/* Backup nudge — soft, dismissible */}
+        {ready && !backedUp && (
+          <Card className="relative border-amber-500/30 bg-amber-500/5 p-5">
+            <button
+              onClick={dismissBackup}
+              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold">Save your recovery phrase</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  These 12 words are the only way to restore your wallet on another device.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setShowMnemonic((v) => !v)}>
+                    {showMnemonic ? "Hide" : "Reveal"}
+                  </Button>
+                  <Button size="sm" onClick={downloadPhrase}>
+                    <Download className="mr-1.5 h-4 w-4" /> Download .txt
+                  </Button>
+                </div>
+                {showMnemonic && (
+                  <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-background/60 p-3 font-mono text-xs">
+                    {getOrCreateMnemonic()
+                      .split(" ")
+                      .map((w, i) => (
+                        <div key={i} className="flex items-baseline gap-1.5">
+                          <span className="text-muted-foreground">{i + 1}.</span>
+                          <span>{w}</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* TXC wallet — compact, collapsed */}
+        <Card className="overflow-hidden p-0">
+          <button
+            onClick={() => setShowQr((v) => !v)}
+            className="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-muted/40"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                TXC Wallet
+              </p>
+              <p className="mt-0.5 truncate font-mono text-xs">
+                {address ? shortAddr : "Setting up…"}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-display text-sm font-semibold tabular-nums">
+                {txc === null ? "—" : txc.toFixed(4)}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">TXC</p>
+            </div>
+            {showQr ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+          {showQr && address && (
+            <div className="border-t border-border p-4">
+              <div className="flex justify-center rounded-lg bg-white p-4">
+                <QRCodeSVG value={address} size={160} level="M" />
               </div>
               <button
                 onClick={copy}
-                className="mt-4 flex w-full items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2.5 text-left font-mono text-xs transition hover:bg-muted"
+                className="mt-3 flex w-full items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-left font-mono text-[11px] transition hover:bg-muted"
               >
                 <span className="truncate">{address}</span>
                 {copied ? (
-                  <Check className="h-4 w-4 shrink-0 text-primary" />
+                  <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                 ) : (
-                  <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 )}
               </button>
-            </>
-          ) : (
-            <div className="mt-4 h-48 animate-pulse rounded-lg bg-muted" />
-          )}
-        </Card>
-
-        {/* Recovery phrase */}
-        <Card className="border-amber-500/30 bg-amber-500/5 p-5">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold">Back up your recovery phrase</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                This phrase is the only way to restore your wallet. Store it offline.
-              </p>
-              {showMnemonic ? (
-                <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-background/60 p-3 font-mono text-xs">
-                  {getOrCreateMnemonic().split(" ").map((w, i) => (
-                    <div key={i} className="flex items-baseline gap-1.5">
-                      <span className="text-muted-foreground">{i + 1}.</span>
-                      <span>{w}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() => setShowMnemonic(true)}
-                >
-                  Reveal phrase
-                </Button>
-              )}
             </div>
-          </div>
+          )}
         </Card>
 
         {isAdmin && (
