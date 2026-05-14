@@ -74,10 +74,8 @@ export const claimPop = createServerFn({ method: "POST" })
     const secret = process.env.QR_HMAC_SECRET;
     if (!secret) throw new Error("QR_HMAC_SECRET not configured");
 
-    // GPS sanity — generous to accommodate indoor venues / wifi-only fixes
-    if (data.accuracy !== undefined && data.accuracy > 500) {
-      return { ok: false, reason: "low_gps_accuracy" };
-    }
+    // No accuracy gate — geofence radius itself is the trust boundary.
+    // Indoors / wifi-only fixes commonly report 1000m+ accuracy worldwide.
 
     const parsed = parseQrPayload(data.qr);
     if (!parsed) return { ok: false, reason: "invalid_qr" };
