@@ -74,14 +74,20 @@ function ScanPage() {
       });
 
       if (result.ok) {
-        navigate({
-          to: "/scan/success",
-          search: {
-            event: result.eventName,
-            reward: result.reward,
-            balance: result.newBalance,
-          },
-        });
+        try {
+          await navigate({
+            to: "/scan/success",
+            search: {
+              event: result.eventName,
+              reward: result.reward,
+              balance: result.newBalance,
+            },
+          });
+        } catch (navErr) {
+          // Navigation failed (e.g. search validation) — recover instead of hanging
+          toast.success(`+${result.reward} POP earned!`);
+          await navigate({ to: "/app" });
+        }
       } else {
         toast.error(ERROR_COPY[result.reason] ?? "Claim failed");
         setBusy(false);
