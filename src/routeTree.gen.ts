@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -19,6 +20,11 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.ap
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
+  '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
+  '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/login'
+    | '/terms'
     | '/app'
     | '/scan'
     | '/auth/callback'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/login'
+    | '/terms'
     | '/app'
     | '/scan'
     | '/auth/callback'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/api'
     | '/login'
+    | '/terms'
     | '/_authenticated/app'
     | '/_authenticated/scan'
     | '/auth/callback'
@@ -137,11 +149,19 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiRoute: typeof ApiRoute
   LoginRoute: typeof LoginRoute
+  TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -240,8 +260,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiRoute: ApiRoute,
   LoginRoute: LoginRoute,
+  TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
