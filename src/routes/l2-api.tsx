@@ -262,14 +262,46 @@ const bal: Bal = await rpc("omni_getbalance", [address, 21]);
           Concatenate just <Code>"omni" + payload</Code>. Nothing else.
         </p>
 
-        <H3>The <Code>grantdata</Code> argument is not optional</H3>
+        <H3>The <Code>grantdata</Code> argument is not optional (and it's a memo)</H3>
         <p className="mt-3 text-muted-foreground">
           Upstream Omni docs say the third argument to{" "}
           <Code>omni_createpayload_grant</Code> is optional. On the TXC node
           it's required — the 2-arg form returns the help text instead of a
-          payload. Pass an empty string when you don't need it:
+          payload. It's also more useful than it looks: <Code>grantdata</Code>{" "}
+          is a free-form attribution memo embedded <em>inside</em> the Omni
+          payload itself, so it travels with the grant on-chain and shows up
+          in <Code>omni_gettransaction</Code> output. Cap it at ~60 bytes —
+          the entire OP_RETURN (magic + payload + memo) has to fit under the
+          node's datacarrier size limit (80 bytes by default).
         </p>
-        <Block lang="ts">{`rpc("omni_createpayload_grant", [propertyId, amount, ""]);`}</Block>
+        <Block lang="ts">{`rpc("omni_createpayload_grant", [propertyId, amount, ""]);                 // no memo
+rpc("omni_createpayload_grant", [propertyId, amount, "claim:abc123"]);     // attribution memo`}</Block>
+
+        <H3>Chain your own change for back-to-back mints</H3>
+        <p className="mt-3 text-muted-foreground">
+          TXC blocks take real time to land. If you mint twice in quick
+          succession, the second mint's only spendable coin is the{" "}
+          <strong>unconfirmed change output</strong> from the first. The
+          symptom is confusing: the second mint fails with{" "}
+          <Code>"issuer has no UTXOs"</Code> even though a block explorer
+          clearly shows the address is funded.
+        </p>
+        <p className="mt-2 text-muted-foreground">
+          The fix is to <strong>not</strong> filter out unconfirmed UTXOs
+          when reading from Esplora's <Code>/address/:addr/utxo</Code>{" "}
+          endpoint. Sort confirmed-first so settled coins are preferred, and
+          fall through to your own unconfirmed change only when needed:
+        </p>
+        <Block lang="ts">{`const utxos = raw
+  .sort((a, b) => Number(b.status.confirmed) - Number(a.status.confirmed))
+  .map(({ txid, vout, value }) => ({ txid, vout, value }));`}</Block>
+        <p className="mt-2 text-muted-foreground">
+          Caveat: spending unconfirmed change builds a tx chain. If the
+          parent gets evicted or RBF'd, every child mint becomes invalid
+          along with it. For high-throughput minting, either batch grants
+          into a single tx or pre-fund several issuer UTXOs so each mint
+          can spend a settled coin.
+        </p>
 
         <H3>Dust threshold is 10,000 sats, not 546</H3>
         <p className="mt-3 text-muted-foreground">
