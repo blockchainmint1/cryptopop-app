@@ -37,7 +37,7 @@ function getPropertyId(): number {
   if (!Number.isInteger(n) || n <= 0) throw new Error(`TXC_TOKEN_ID invalid: ${raw}`);
   return n;
 }
-const DUST_SATS = 1000;
+const DUST_SATS = 10000;
 const FEE_SATS_PER_VBYTE = 5;
 const MEMPOOL_BASE = "https://mempool.texitcoin.org/api";
 
