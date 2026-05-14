@@ -139,7 +139,8 @@ function WalletHome() {
     setBackedUp(true);
   };
 
-  const shortAddr = address ? `${address.slice(0, 6)}…${address.slice(-6)}` : "";
+  // WalletID = 2nd through 7th characters of the address (6 chars)
+  const shortAddr = address ? address.slice(1, 7) : "";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
