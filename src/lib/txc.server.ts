@@ -118,15 +118,17 @@ function loadKey(): { keyPair: ReturnType<typeof ECPair.fromWIF>; address: strin
 
 // ---------- omni payload assembly ----------
 
-// Class C OP_RETURN payload: "omni" magic + 2 zero bytes + grant payload bytes
+// Class C OP_RETURN payload: "omni" magic + Omni RPC payload bytes.
+// `omni_createpayload_*` already includes the version/type bytes; adding extra
+// zero bytes shifts the payload and makes the node decode it as a Simple Send.
 function buildOmniOpReturn(grantPayloadHex: string): Buffer {
   const magic = Buffer.from("omni", "ascii");
   const grant = Buffer.from(grantPayloadHex, "hex");
-  return Buffer.concat([magic, Buffer.from([0x00, 0x00]), grant]);
+  return Buffer.concat([magic, grant]);
 }
 
-// Format an integer mint count as a decimal-string acceptable to omni
-// for divisible tokens (8 decimals). e.g. 100 → "100.00000000".
+// Format a mint count as a decimal-string acceptable to Omni. The node accepts
+// both "100" and "100.00000000" for indivisible token #21, normalizing to 100.
 function formatDivisibleAmount(units: number | string): string {
   const n = typeof units === "string" ? Number(units) : units;
   if (!Number.isFinite(n) || n <= 0) throw new Error("amount must be positive");
