@@ -1,68 +1,41 @@
-## What "wallet setup" actually does
+# YOU GOT POP 🎉
 
-When you sign in, `useEnsureWallet()` runs this sequence in the browser:
+Turn the success screen into a loud, joyful celebration using the CryptoPOP logo, then bounce the user back to their wallet automatically. Also fix the spinner-stuck bug on the scan page.
 
-1. **`getOrCreateMnemonic()`** — reads `localStorage["cryptopop:mnemonic"]`. If absent or invalid, generates a fresh 12-word BIP39 mnemonic and stores it.
-2. **`deriveTxcAddress(mnemonic)`** — pure crypto, no network:
-   - `mnemonicToSeedSync` (bip39) → 64-byte seed
-   - `BIP32Factory(ecc).fromSeed(seed).derivePath("m/44'/0'/0'/0/0")` → child key
-   - `ripemd160(sha256(pubkey))` → HASH160
-   - prepend TXC version byte `0x42`, base58check encode → `T…` address
-3. **Supabase upsert** — `profiles.upsert({ id: user.id, wallet_address, updated_at })` with `onConflict: "id"`.
-4. On success: `setAddress`, `setReady(true)`, `setSettingUp(false)`.
-5. On any throw: catch block sets `address=null`, `ready=true`, `settingUp=false`, `error=<message>`.
+## What changes
 
-The retry button calls `setAttempt(n+1)`, which re-runs the effect. That wiring is correct — so if clicking it does *nothing visible*, the effect IS re-running but failing again at the same step within ~ms, leaving the UI in the same state. (No spinner flash because the failure is synchronous-fast.)
+### 1. New celebration page (`/scan/success`)
+Replace the current minimal success card with a full-screen, goofy, colorful "YOU GOT POP!" moment:
 
-## Why it's most likely failing
+- **Big bouncy logo**: CryptoPOP logo (`src/assets/cryptopop-logo.png`) center-screen, scales in with a springy bounce, then wobbles continuously.
+- **Confetti burst**: multi-color confetti explosion on mount (using `canvas-confetti`, ~12KB, no React deps), fired 2–3 times in quick succession for maximum goof.
+- **Headline**: "YOU GOT POP!" in huge display font, each letter staggered in with a rainbow color cycle.
+- **Reward chip**: floating "+N POP" badge that pops in with overshoot scale, plus event name underneath.
+- **New balance** shown smaller below.
+- **Background**: animated gradient (pink → orange → yellow → mint) that slowly shifts — much more colorful than the current subtle primary tint.
+- **Floating emoji/sparkles** drifting up in the background for ambient goof.
+- **Dismiss "X" button** top-right that cancels the auto-redirect and stays on the page.
+- **Manual buttons** at the bottom: "Scan another" + "Back to wallet" (preserved from current design).
 
-We don't yet know which step throws — the catch only does `console.error("[wallet] provisioning failed", e)` and we have no console logs captured. The likely culprits, in order:
+### 2. Auto-redirect with countdown
+- 5-second countdown after mount; redirects to `/app`.
+- Subtle progress bar or "Returning to wallet in 5…4…3…" text at the bottom.
+- Clicking the X button (or either CTA) cancels the timer.
 
-1. **`Buffer is not defined`** in the browser. `bip39` / `bs58check` / `bip32` historically expect Node's `Buffer` global. Vite doesn't polyfill it by default. This is the #1 cause of "wallet setup fails silently the moment you load the app."
-2. **`crypto.getRandomValues` unavailable** — only on insecure (http://) origins. Unlikely on `*.lovable.app` (https), but possible on a custom dev URL.
-3. **Supabase upsert RLS denial** — RLS allows `INSERT` only when `auth.uid() = id`. If the session token isn't yet attached at the moment of upsert, this 401s. Less likely (you're already past auth gate), but possible.
-4. **localStorage disabled** (private mode / iframe sandbox) — `getOrCreateMnemonic` would throw on `setItem`.
+### 3. Fix the scanner getting stuck
+Two robustness fixes in `src/routes/_authenticated.scan.tsx`:
+- **Hard-stop on first hit**: unmount the `<Scanner>` (conditional render) the moment we have a QR value, so the camera feed and `onScan` loop stop immediately. Today the spinner sits over a still-running scanner.
+- **Always recover from navigation failures**: wrap the `navigate(...)` call so any error (e.g. search-param validation mismatch) flips `busy` back off and shows a toast instead of a permanent spinner.
+- **Loosen success search validation**: change `z.string()` for `event` to `z.string().catch("Event")` and `z.coerce.number().catch(0)` for the numbers, so a slightly off payload from the server still lands on the celebration page.
 
-## Fix
+## Technical notes
 
-### Step 1 — surface the actual error (1 file)
+- Add dependency: `canvas-confetti` + `@types/canvas-confetti`.
+- All animation via CSS keyframes + Tailwind `animate-*` (no framer-motion needed for this).
+- Logo bounce/wobble: a custom `@keyframes` pair in `src/styles.css`.
+- Auto-redirect uses `useEffect` + `setTimeout` + `useNavigate`; cleanup on unmount and on dismiss.
+- Honor `prefers-reduced-motion`: skip confetti and continuous wobble, keep the static page + redirect.
+- No backend changes. No on-chain changes. Pure frontend celebration + bug fix.
 
-Edit `src/hooks/use-ensure-wallet.ts` catch block to log the failing **step** and the raw error message, and stash that on `error` so the UI shows it:
-
-```ts
-} catch (e) {
-  const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
-  console.error("[wallet] provisioning failed", { step, error: e });
-  if (!cancelled) { setAddress(null); setReady(true); setSettingUp(false); setError(msg); }
-}
-```
-
-…and track `step` (`"mnemonic" | "derive" | "read-profile" | "upsert"`) as we go.
-
-### Step 2 — fix the most likely root cause preemptively
-
-Add a Buffer polyfill so bip39/bs58check work in the browser. Two options:
-
-- **Quick:** in `src/lib/wallet.ts` top-of-file: `import { Buffer } from "buffer"; if (typeof globalThis.Buffer === "undefined") globalThis.Buffer = Buffer;` (the `buffer` package ships with Vite via `node_modules`).
-- **Cleaner:** add `vite-plugin-node-polyfills` to `vite.config.ts` with `{ globals: { Buffer: true } }`.
-
-I'll go with the quick inline polyfill — it's one import, no config changes, and only loads when `wallet.ts` is imported.
-
-### Step 3 — show the real error in the UI
-
-In `_authenticated.app.tsx`, replace the generic "Wallet setup failed. Tap retry…" with the actual `walletError` string (truncated). That way if it fails again you'll see *why* without opening DevTools.
-
-### Step 4 — verify
-
-After the fix, sign out + back in (or hard reload). Expected: address derives in <100ms and the "Scan to Earn" button replaces the retry. If it still fails, the toast/inline message will name the failing step.
-
-## Files touched
-
-- `src/hooks/use-ensure-wallet.ts` — track `step`, expose detailed error.
-- `src/lib/wallet.ts` — Buffer polyfill at top of file.
-- `src/routes/_authenticated.app.tsx` — show `walletError` text inline.
-
-## Out of scope
-
-- Switching crypto libs (e.g. to `@scure/bip39`) — only if Buffer polyfill doesn't fix it.
-- Any DB / RLS changes.
+## On-chain minting answer (no change needed)
+Just confirming: `claimPop` already mints real TXC to the user's wallet via `mintGrant`, then sets `claims.status = "minted"` with the on-chain `tx_hash`. The 100 POP balance you see is backed by an actual on-chain transaction — the `pop_balance_mirror` row is just a fast-read mirror of the chain state.
