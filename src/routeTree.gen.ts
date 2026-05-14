@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as L2ApiRouteImport } from './routes/l2-api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -21,6 +22,11 @@ import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authen
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const L2ApiRoute = L2ApiRouteImport.update({
+  id: '/l2-api',
+  path: '/l2-api',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -62,6 +68,7 @@ const AuthenticatedAdminEventsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/l2-api': typeof L2ApiRoute
   '/login': typeof LoginRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/l2-api': typeof L2ApiRoute
   '/login': typeof LoginRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/l2-api': typeof L2ApiRoute
   '/login': typeof LoginRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
@@ -93,6 +102,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/l2-api'
     | '/login'
     | '/app'
     | '/scan'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/l2-api'
     | '/login'
     | '/app'
     | '/scan'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/l2-api'
     | '/login'
     | '/_authenticated/app'
     | '/_authenticated/scan'
@@ -123,6 +135,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  L2ApiRoute: typeof L2ApiRoute
   LoginRoute: typeof LoginRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
@@ -134,6 +147,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/l2-api': {
+      id: '/l2-api'
+      path: '/l2-api'
+      fullPath: '/l2-api'
+      preLoaderRoute: typeof L2ApiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -218,9 +238,20 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  L2ApiRoute: L2ApiRoute,
   LoginRoute: LoginRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
