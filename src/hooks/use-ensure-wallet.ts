@@ -70,6 +70,7 @@ export function useEnsureWallet(): State {
           if (!cancelled) {
             setAddress(localAddr);
             setReady(true);
+            setSettingUp(false);
           }
           return;
         }
