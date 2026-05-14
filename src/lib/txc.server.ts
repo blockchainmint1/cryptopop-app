@@ -145,9 +145,12 @@ export async function mintGrant(opts: {
 
   // 1. Get omni payload
   const amountStr = formatDivisibleAmount(opts.amount);
+  // NOTE: the third `grantdata` arg is documented as optional, but this
+  // node's RPC rejects the 2-arg form and returns the help text. Always pass "".
   const payloadHex = await rpc<string>("omni_createpayload_grant", [
     getPropertyId(),
     amountStr,
+    "",
   ]);
 
   // 2. Get UTXOs
