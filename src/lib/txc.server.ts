@@ -77,9 +77,14 @@ async function getUtxos(addr: string): Promise<Utxo[]> {
     value: number;
     status: { confirmed: boolean };
   }>;
+  // Include unconfirmed UTXOs — after a rapid mint, our own change output is
+  // still in mempool and we'd otherwise see "no UTXOs" until it confirms.
+  // Confirmed first so we prefer settled coins; unconfirmed (our change) only
+  // gets pulled in when needed.
   return raw
-    .filter((u) => u.status.confirmed)
-    .map((u) => ({ txid: u.txid, vout: u.vout, value: u.value }));
+    .map((u) => ({ txid: u.txid, vout: u.vout, value: u.value, confirmed: u.status.confirmed }))
+    .sort((a, b) => Number(b.confirmed) - Number(a.confirmed))
+    .map(({ txid, vout, value }) => ({ txid, vout, value }));
 }
 
 async function getTxHex(txid: string): Promise<string> {
