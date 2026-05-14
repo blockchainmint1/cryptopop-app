@@ -13,6 +13,7 @@ import {
   ChevronUp,
   Download,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 function WalletHome() {
   const { user, signOut } = useAuth();
-  const { address, ready } = useEnsureWallet();
+  const { address, ready, settingUp, error: walletError, retry } = useEnsureWallet();
   const fetchTxc = useServerFn(getTxcBalance);
 
   const [balance, setBalance] = useState<number>(0);
@@ -164,12 +165,28 @@ function WalletHome() {
           <p className="mt-2 text-xs text-muted-foreground">
             {eventsAttended} {eventsAttended === 1 ? "event" : "events"} attended
           </p>
-          <Button asChild size="lg" className="mt-6 w-full" disabled={!ready}>
-            <Link to="/scan">
-              <ScanLine className="h-5 w-5 mr-2" />
-              {ready ? "Scan to Earn" : "Setting up wallet…"}
-            </Link>
-          </Button>
+          {address ? (
+            <Button asChild size="lg" className="mt-6 w-full">
+              <Link to="/scan">
+                <ScanLine className="h-5 w-5 mr-2" />
+                Scan to Earn
+              </Link>
+            </Button>
+          ) : (
+            <Button size="lg" className="mt-6 w-full" disabled={settingUp} onClick={retry}>
+              {settingUp ? (
+                <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-5 w-5 mr-2" />
+              )}
+              {settingUp ? "Setting up wallet…" : "Retry wallet setup"}
+            </Button>
+          )}
+          {walletError && (
+            <p className="mt-3 text-xs text-destructive">
+              Wallet setup failed. Tap retry, or refresh this page.
+            </p>
+          )}
         </Card>
 
         {/* Recent claims */}
@@ -212,7 +229,7 @@ function WalletHome() {
         )}
 
         {/* Backup nudge — soft, dismissible */}
-        {ready && !backedUp && (
+        {address && !backedUp && (
           <Card className="relative border-amber-500/30 bg-amber-500/5 p-5">
             <button
               onClick={dismissBackup}
