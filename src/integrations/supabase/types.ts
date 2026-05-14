@@ -23,8 +23,10 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          qr_payload: string | null
           quiz_reward: number
           referral_reward: number
+          scanned_at: string
           status: Database["public"]["Enums"]["claim_status"]
           total: number
           tx_hash: string | null
@@ -39,8 +41,10 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          qr_payload?: string | null
           quiz_reward?: number
           referral_reward?: number
+          scanned_at?: string
           status?: Database["public"]["Enums"]["claim_status"]
           total?: number
           tx_hash?: string | null
@@ -55,8 +59,10 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          qr_payload?: string | null
           quiz_reward?: number
           referral_reward?: number
+          scanned_at?: string
           status?: Database["public"]["Enums"]["claim_status"]
           total?: number
           tx_hash?: string | null
