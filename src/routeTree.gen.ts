@@ -10,7 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as L2ApiRouteImport } from './routes/l2-api'
+import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -24,9 +24,9 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const L2ApiRoute = L2ApiRouteImport.update({
-  id: '/l2-api',
-  path: '/l2-api',
+const ApiRoute = ApiRouteImport.update({
+  id: '/api',
+  path: '/api',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -68,7 +68,7 @@ const AuthenticatedAdminEventsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/l2-api': typeof L2ApiRoute
+  '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
@@ -78,7 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/l2-api': typeof L2ApiRoute
+  '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
@@ -90,7 +90,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/l2-api': typeof L2ApiRoute
+  '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
@@ -102,7 +102,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/l2-api'
+    | '/api'
     | '/login'
     | '/app'
     | '/scan'
@@ -112,7 +112,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/l2-api'
+    | '/api'
     | '/login'
     | '/app'
     | '/scan'
@@ -123,7 +123,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/l2-api'
+    | '/api'
     | '/login'
     | '/_authenticated/app'
     | '/_authenticated/scan'
@@ -135,7 +135,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  L2ApiRoute: typeof L2ApiRoute
+  ApiRoute: typeof ApiRoute
   LoginRoute: typeof LoginRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
@@ -149,11 +149,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/l2-api': {
-      id: '/l2-api'
-      path: '/l2-api'
-      fullPath: '/l2-api'
-      preLoaderRoute: typeof L2ApiRouteImport
+    '/api': {
+      id: '/api'
+      path: '/api'
+      fullPath: '/api'
+      preLoaderRoute: typeof ApiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -238,7 +238,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  L2ApiRoute: L2ApiRoute,
+  ApiRoute: ApiRoute,
   LoginRoute: LoginRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
