@@ -175,9 +175,19 @@ export const claimPop = createServerFn({ method: "POST" })
     // an extra ~1–3s but gets a real tx hash back.
     let txHash: string | null = null;
     try {
+      // On-chain attribution memo (rides in the Omni OP_RETURN via grantdata).
+      // Format: "POP|<event-name>|<YYYY-MM-DD>|<lat>,<lng>|q:<sig8>"
+      // Capped at 60 bytes server-side; truncate event name first to stay safe.
+      const day = new Date().toISOString().slice(0, 10);
+      const geo = `${data.lat.toFixed(3)},${data.lng.toFixed(3)}`;
+      const sig8 = parsed.sig.slice(0, 8);
+      const evName = event.name.slice(0, 18);
+      const memo = `POP|${evName}|${day}|${geo}|q:${sig8}`;
+
       const result = await mintGrant({
         amount: reward,
         toAddress: profile.wallet_address,
+        memo,
       });
       txHash = result.txHash;
       await supabaseAdmin
