@@ -7,9 +7,10 @@
 // authoritative — we can re-derive on any path later.)
 
 // Buffer polyfill — bip39/bip32/bs58check expect Node's Buffer global.
-import { Buffer } from "buffer";
-if (typeof globalThis !== "undefined" && typeof (globalThis as { Buffer?: unknown }).Buffer === "undefined") {
-  (globalThis as { Buffer: typeof Buffer }).Buffer = Buffer;
+import { Buffer as BufferPolyfill } from "buffer";
+const _g = globalThis as unknown as { Buffer?: typeof BufferPolyfill };
+if (typeof _g.Buffer === "undefined") {
+  _g.Buffer = BufferPolyfill;
 }
 
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "bip39";
