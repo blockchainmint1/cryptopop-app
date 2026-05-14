@@ -183,8 +183,8 @@ function WalletHome() {
             </Button>
           )}
           {walletError && (
-            <p className="mt-3 text-xs text-destructive">
-              Wallet setup failed. Tap retry, or refresh this page.
+            <p className="mt-3 break-words text-xs text-destructive">
+              {walletError.slice(0, 200)}
             </p>
           )}
         </Card>
