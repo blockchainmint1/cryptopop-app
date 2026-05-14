@@ -168,3 +168,32 @@
     letter-spacing: -0.02em;
   }
 }
+
+/* CryptoPOP success celebration animations */
+@keyframes pop-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pop-wobble {
+  0%, 100% { transform: rotate(-4deg) scale(1); }
+  50% { transform: rotate(4deg) scale(1.06); }
+}
+@keyframes pop-letter {
+  0% { opacity: 0; transform: translateY(40px) scale(0.4) rotate(-15deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+@keyframes pop-float {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.85; }
+  90% { opacity: 0.85; }
+  100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="pop-wobble"], [style*="pop-float"], [style*="pop-gradient"] {
+    animation: none !important;
+  }
+}
