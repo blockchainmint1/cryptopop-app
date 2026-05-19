@@ -202,25 +202,42 @@ function Landing() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-foreground/15 bg-card px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Next event · 4 July 2026
+              Next event · 4 July 2026 · 11am–4pm
             </p>
             <h2 className="mt-5 font-display text-[clamp(2.25rem,6vw,4.5rem)] font-bold leading-[0.95] tracking-tight">
               Red, white &<br />
               <span className="text-primary">barbecue.</span>
             </h2>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-              CryptoPOP takes over <strong className="text-foreground">1-15 Marina</strong> for a
-              250th USA anniversary block party — live music, face painting, low-and-slow BBQ,
-              and pop-up demos. Family-friendly. Scan the event QR on the day to collect your
-              commemorative POP.
+              CryptoPOP takes over{" "}
+              <a
+                href={VENUE_MAP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-foreground underline-offset-4 hover:underline"
+              >
+                ONE°15 Marina, Sentosa Cove
+              </a>{" "}
+              for a 250th USA anniversary block party — live music, face painting,
+              low-and-slow BBQ, pop-up demos, and complimentary exploratory
+              superyacht charters around the marina. Family-friendly. Scan the
+              event QR on the day to collect your commemorative POP.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               <span className="inline-flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-primary" /> Sat · 4 Jul · 2pm
+                <CalendarDays className="h-4 w-4 text-primary" /> Sat · 4 Jul · 11am–4pm
               </span>
+              <a
+                href={VENUE_MAP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 hover:text-foreground"
+              >
+                <MapPin className="h-4 w-4 text-primary" /> ONE°15 Marina
+              </a>
               <span className="inline-flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" /> 1-15 Marina
+                <Sailboat className="h-4 w-4 text-primary" /> Yacht charters
               </span>
               <span className="inline-flex items-center gap-2">
                 <Music className="h-4 w-4 text-primary" /> Live music
@@ -257,19 +274,21 @@ function Landing() {
               className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-2xl"
             />
             <div className="relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-card shadow-[0_30px_80px_-30px] shadow-foreground/30">
-              <div
-                className="relative h-44 w-full"
-                style={{
-                  background:
-                    "linear-gradient(135deg, color-mix(in oklab, var(--pop) 90%, white), color-mix(in oklab, var(--pop) 40%, white))",
-                }}
-              >
+              <div className="relative h-56 w-full overflow-hidden">
+                <img
+                  src={yachts}
+                  alt="Superyachts moored at ONE°15 Marina at golden hour"
+                  width={1536}
+                  height={1024}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
                 <div
                   aria-hidden
-                  className="absolute inset-0 opacity-30"
+                  className="absolute inset-0"
                   style={{
-                    backgroundImage:
-                      "repeating-linear-gradient(0deg, white 0 10px, transparent 10px 30px)",
+                    background:
+                      "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.55) 100%)",
                   }}
                 />
                 <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between text-white">
@@ -281,7 +300,7 @@ function Landing() {
                       USA 250
                     </p>
                   </div>
-                  <span className="rounded-full bg-black/30 px-3 py-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur">
+                  <span className="rounded-full bg-black/40 px-3 py-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur">
                     Free entry
                   </span>
                 </div>
@@ -293,18 +312,26 @@ function Landing() {
                       When
                     </p>
                     <p className="font-display text-base font-semibold">
-                      Sat · 4 Jul · 2pm – late
+                      Sat · 4 Jul · 11am – 4pm
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                       Where
                     </p>
-                    <p className="font-display text-base font-semibold">1-15 Marina</p>
+                    <a
+                      href={VENUE_MAP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-display text-base font-semibold hover:underline"
+                    >
+                      ONE°15 Marina
+                    </a>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Bring the family. Bring a flag. We'll bring the brisket.
+                <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <Anchor className="h-4 w-4 text-primary" />
+                  Complimentary exploratory yacht charters all afternoon.
                 </p>
                 <Link
                   to="/events/$slug/rsvp"
