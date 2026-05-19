@@ -162,10 +162,15 @@ function RsvpPage() {
               <CalendarDays className="h-4 w-4 text-primary" />
               {ev.date}
             </p>
-            <p className="flex items-center gap-2 text-muted-foreground">
+            <a
+              href={ev.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
               <MapPin className="h-4 w-4 text-primary" />
-              {ev.location}
-            </p>
+              {ev.location} — open in Google Maps
+            </a>
           </div>
           <p className="mt-6 text-muted-foreground">{ev.blurb}</p>
           <p className="mt-6 rounded-2xl border border-border bg-card p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -180,8 +185,9 @@ function RsvpPage() {
               <CheckCircle2 className="h-12 w-12 text-primary" />
               <h2 className="mt-4 font-display text-2xl font-bold">You're on the list!</h2>
               <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                We've saved your RSVP for {ev.name}. A confirmation email will land
-                in your inbox shortly. See you at 1-15 Marina on 4 July.
+                We've saved your RSVP for {ev.name}. A confirmation email will
+                land in your inbox shortly. See you at ONE°15 Marina on 4 July,
+                11am–4pm.
               </p>
               <Link
                 to="/"
