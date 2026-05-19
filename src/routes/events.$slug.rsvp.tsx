@@ -271,6 +271,26 @@ function RsvpPage() {
                 />
               </Field>
 
+              <Field label="How did you hear about this?" htmlFor="heard_from">
+                <select
+                  id="heard_from"
+                  name="heard_from"
+                  required
+                  defaultValue=""
+                  className={inputCls}
+                >
+                  <option value="" disabled>
+                    Pick one…
+                  </option>
+                  {HEARD_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+
               <Field label="Anything we should know? (optional)" htmlFor="notes">
                 <textarea
                   id="notes"
