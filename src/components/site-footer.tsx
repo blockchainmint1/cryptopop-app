@@ -20,6 +20,9 @@ export function SiteFooter() {
           </p>
         </div>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <Link to="/mission" className="hover:text-foreground transition">
+            Mission
+          </Link>
           <Link to="/api" className="hover:text-foreground transition">
             Developer API
           </Link>
