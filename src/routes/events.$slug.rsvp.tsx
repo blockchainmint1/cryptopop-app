@@ -107,6 +107,7 @@ function RsvpPage() {
       email: form.get("email"),
       contact_number: form.get("contact_number"),
       party_size: form.get("party_size"),
+      heard_from: form.get("heard_from"),
       notes: form.get("notes"),
     });
     if (!parsed.success) {
@@ -121,6 +122,7 @@ function RsvpPage() {
       email: parsed.data.email,
       contact_number: parsed.data.contact_number,
       party_size: parsed.data.party_size,
+      heard_from: parsed.data.heard_from,
       notes: parsed.data.notes || null,
     });
     setSubmitting(false);
