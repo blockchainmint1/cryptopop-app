@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { ArrowLeft, CalendarDays, MapPin, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, CheckCircle2, Anchor } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import yachts from "@/assets/marina-yachts.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
