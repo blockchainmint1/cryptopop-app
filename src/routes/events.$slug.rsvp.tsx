@@ -12,6 +12,7 @@ type EventInfo = {
   name: string;
   date: string;
   location: string;
+  mapUrl: string;
   blurb: string;
 };
 
@@ -19,12 +20,26 @@ const EVENTS: Record<string, EventInfo> = {
   "july4-marina-bbq": {
     slug: "july4-marina-bbq",
     name: "Red, White & Barbecue — USA 250",
-    date: "Saturday, 4 July 2026 · 2pm – late",
-    location: "1-15 Marina, Singapore",
+    date: "Saturday, 4 July 2026 · 11am – 4pm",
+    location: "ONE°15 Marina, Sentosa Cove",
+    mapUrl:
+      "https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z",
     blurb:
-      "A family-friendly CryptoPOP block party for the 250th USA anniversary. Live music, face painting, low-and-slow BBQ, and a commemorative POP for everyone who scans on the day.",
+      "A family-friendly CryptoPOP block party for the 250th USA anniversary. Live music, face painting, low-and-slow BBQ, complimentary exploratory superyacht charters around the marina, and a commemorative POP for everyone who scans on the day.",
   },
 };
+
+const HEARD_OPTIONS = [
+  "Friend or family",
+  "Instagram",
+  "TikTok",
+  "LinkedIn",
+  "Telegram / WhatsApp group",
+  "At a CryptoPOP event",
+  "News article or blog",
+  "Search engine",
+  "Other",
+];
 
 export const Route = createFileRoute("/events/$slug/rsvp")({
   head: ({ params }) => {
@@ -54,6 +69,7 @@ const rsvpSchema = z.object({
     .min(3, "Contact number is too short")
     .max(32, "Contact number is too long"),
   party_size: z.coerce.number().int().min(1, "At least 1").max(20, "Max 20 per RSVP"),
+  heard_from: z.string().trim().min(1, "Let us know how you heard about us").max(120),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
