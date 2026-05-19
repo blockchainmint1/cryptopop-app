@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
+import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 
@@ -71,6 +72,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const EventsSlugRsvpRoute = EventsSlugRsvpRouteImport.update({
+  id: '/events/$slug/rsvp',
+  path: '/events/$slug/rsvp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedScanSuccessRoute =
   AuthenticatedScanSuccessRouteImport.update({
     id: '/success',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
 }
 export interface FileRoutesByTo {
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
 }
 export interface FileRoutesById {
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
 }
 export interface FileRouteTypes {
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/auth/callback'
     | '/scan/success'
+    | '/events/$slug/rsvp'
     | '/admin/events/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/auth/callback'
     | '/scan/success'
+    | '/events/$slug/rsvp'
     | '/admin/events/$id'
   id:
     | '__root__'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scan'
     | '/auth/callback'
     | '/_authenticated/scan/success'
+    | '/events/$slug/rsvp'
     | '/_authenticated/admin/events/$id'
   fileRoutesById: FileRoutesById
 }
@@ -177,6 +189,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  EventsSlugRsvpRoute: typeof EventsSlugRsvpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/events/$slug/rsvp': {
+      id: '/events/$slug/rsvp'
+      path: '/events/$slug/rsvp'
+      fullPath: '/events/$slug/rsvp'
+      preLoaderRoute: typeof EventsSlugRsvpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/scan/success': {
       id: '/_authenticated/scan/success'
       path: '/success'
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  EventsSlugRsvpRoute: EventsSlugRsvpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

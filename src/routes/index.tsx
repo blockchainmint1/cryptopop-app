@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { QrCode, MapPin, Coins, Users, ArrowRight } from "lucide-react";
+import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Music, Flame } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -181,6 +181,137 @@ function Landing() {
               <p className="mt-2 text-sm text-muted-foreground">{body}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Next event */}
+      <section className="relative border-t border-border">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(135deg, var(--ink) 0 2px, transparent 2px 14px)",
+          }}
+        />
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-6 py-20 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full border border-foreground/15 bg-card px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Next event · 4 July 2026
+            </p>
+            <h2 className="mt-5 font-display text-[clamp(2.25rem,6vw,4.5rem)] font-bold leading-[0.95] tracking-tight">
+              Red, white &<br />
+              <span className="text-primary">barbecue.</span>
+            </h2>
+            <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+              CryptoPOP takes over <strong className="text-foreground">1-15 Marina</strong> for a
+              250th USA anniversary block party — live music, face painting, low-and-slow BBQ,
+              and pop-up demos. Family-friendly. Scan the event QR on the day to collect your
+              commemorative POP.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" /> Sat · 4 Jul · 2pm
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" /> 1-15 Marina
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Music className="h-4 w-4 text-primary" /> Live music
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Flame className="h-4 w-4 text-primary" /> BBQ + face painting
+              </span>
+            </div>
+
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link
+                to="/events/$slug/rsvp"
+                params={{ slug: "july4-marina-bbq" }}
+                className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-[0_12px_40px_-10px] shadow-primary/60"
+              >
+                RSVP — it's free
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </Link>
+              <Link
+                to="/mission"
+                className="rounded-full border border-foreground/20 px-7 py-3.5 font-display font-semibold hover:bg-foreground/5 transition"
+              >
+                Why we're doing this
+              </Link>
+            </div>
+            <p className="mt-4 max-w-md font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+              Education event · POP has no monetary value · No DPT trading
+            </p>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-sm">
+            <div
+              aria-hidden
+              className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-2xl"
+            />
+            <div className="relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-card shadow-[0_30px_80px_-30px] shadow-foreground/30">
+              <div
+                className="relative h-44 w-full"
+                style={{
+                  background:
+                    "linear-gradient(135deg, color-mix(in oklab, var(--pop) 90%, white), color-mix(in oklab, var(--pop) 40%, white))",
+                }}
+              >
+                <div
+                  aria-hidden
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(0deg, white 0 10px, transparent 10px 30px)",
+                  }}
+                />
+                <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between text-white">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest opacity-80">
+                      CryptoPOP × July 4
+                    </p>
+                    <p className="font-display text-3xl font-bold leading-none">
+                      USA 250
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-black/30 px-3 py-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur">
+                    Free entry
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-4 p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      When
+                    </p>
+                    <p className="font-display text-base font-semibold">
+                      Sat · 4 Jul · 2pm – late
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Where
+                    </p>
+                    <p className="font-display text-base font-semibold">1-15 Marina</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Bring the family. Bring a flag. We'll bring the brisket.
+                </p>
+                <Link
+                  to="/events/$slug/rsvp"
+                  params={{ slug: "july4-marina-bbq" }}
+                  className="block w-full rounded-xl bg-foreground px-4 py-3 text-center font-display font-semibold text-background hover:opacity-90 transition"
+                >
+                  Reserve my spot →
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

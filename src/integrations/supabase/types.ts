@@ -120,6 +120,42 @@ export type Database = {
           },
         ]
       }
+      event_rsvps: {
+        Row: {
+          contact_number: string
+          created_at: string
+          email: string
+          event_name: string
+          event_slug: string
+          full_name: string
+          id: string
+          notes: string | null
+          party_size: number
+        }
+        Insert: {
+          contact_number: string
+          created_at?: string
+          email: string
+          event_name: string
+          event_slug: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          party_size?: number
+        }
+        Update: {
+          contact_number?: string
+          created_at?: string
+          email?: string
+          event_name?: string
+          event_slug?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          party_size?: number
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           base_reward: number
