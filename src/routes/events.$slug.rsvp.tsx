@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { ArrowLeft, CalendarDays, MapPin, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, CheckCircle2, Anchor } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import yachts from "@/assets/marina-yachts.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ type EventInfo = {
   name: string;
   date: string;
   location: string;
+  mapUrl: string;
   blurb: string;
 };
 
@@ -19,12 +21,26 @@ const EVENTS: Record<string, EventInfo> = {
   "july4-marina-bbq": {
     slug: "july4-marina-bbq",
     name: "Red, White & Barbecue — USA 250",
-    date: "Saturday, 4 July 2026 · 2pm – late",
-    location: "1-15 Marina, Singapore",
+    date: "Saturday, 4 July 2026 · 11am – 4pm",
+    location: "ONE°15 Marina, Sentosa Cove",
+    mapUrl:
+      "https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z",
     blurb:
-      "A family-friendly CryptoPOP block party for the 250th USA anniversary. Live music, face painting, low-and-slow BBQ, and a commemorative POP for everyone who scans on the day.",
+      "A family-friendly CryptoPOP block party for the 250th USA anniversary. Live music, face painting, low-and-slow BBQ, complimentary exploratory superyacht charters around the marina, and a commemorative POP for everyone who scans on the day.",
   },
 };
+
+const HEARD_OPTIONS = [
+  "Friend or family",
+  "Instagram",
+  "TikTok",
+  "LinkedIn",
+  "Telegram / WhatsApp group",
+  "At a CryptoPOP event",
+  "News article or blog",
+  "Search engine",
+  "Other",
+];
 
 export const Route = createFileRoute("/events/$slug/rsvp")({
   head: ({ params }) => {
@@ -54,6 +70,7 @@ const rsvpSchema = z.object({
     .min(3, "Contact number is too short")
     .max(32, "Contact number is too long"),
   party_size: z.coerce.number().int().min(1, "At least 1").max(20, "Max 20 per RSVP"),
+  heard_from: z.string().trim().min(1, "Let us know how you heard about us").max(120),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
@@ -91,6 +108,7 @@ function RsvpPage() {
       email: form.get("email"),
       contact_number: form.get("contact_number"),
       party_size: form.get("party_size"),
+      heard_from: form.get("heard_from"),
       notes: form.get("notes"),
     });
     if (!parsed.success) {
@@ -105,6 +123,7 @@ function RsvpPage() {
       email: parsed.data.email,
       contact_number: parsed.data.contact_number,
       party_size: parsed.data.party_size,
+      heard_from: parsed.data.heard_from,
       notes: parsed.data.notes || null,
     });
     setSubmitting(false);
@@ -133,21 +152,39 @@ function RsvpPage() {
 
       <main className="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1fr_1.1fr]">
         <aside>
+          <div className="mb-6 overflow-hidden rounded-3xl border border-border">
+            <img
+              src={yachts}
+              alt="Superyachts moored at ONE°15 Marina, Sentosa Cove"
+              width={1536}
+              height={1024}
+              className="h-48 w-full object-cover md:h-64"
+            />
+          </div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             CryptoPOP event
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
             {ev.name}
           </h1>
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            <Anchor className="h-3.5 w-3.5 text-primary" />
+            Complimentary exploratory yacht charters
+          </p>
           <div className="mt-6 space-y-3 text-sm">
             <p className="flex items-center gap-2 text-muted-foreground">
               <CalendarDays className="h-4 w-4 text-primary" />
               {ev.date}
             </p>
-            <p className="flex items-center gap-2 text-muted-foreground">
+            <a
+              href={ev.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
               <MapPin className="h-4 w-4 text-primary" />
-              {ev.location}
-            </p>
+              {ev.location} — open in Google Maps
+            </a>
           </div>
           <p className="mt-6 text-muted-foreground">{ev.blurb}</p>
           <p className="mt-6 rounded-2xl border border-border bg-card p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -162,8 +199,9 @@ function RsvpPage() {
               <CheckCircle2 className="h-12 w-12 text-primary" />
               <h2 className="mt-4 font-display text-2xl font-bold">You're on the list!</h2>
               <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                We've saved your RSVP for {ev.name}. A confirmation email will land
-                in your inbox shortly. See you at 1-15 Marina on 4 July.
+                We've saved your RSVP for {ev.name}. A confirmation email will
+                land in your inbox shortly. See you at ONE°15 Marina on 4 July,
+                11am–4pm.
               </p>
               <Link
                 to="/"
@@ -232,6 +270,26 @@ function RsvpPage() {
                   className={inputCls}
                 />
               </Field>
+
+              <Field label="How did you hear about this?" htmlFor="heard_from">
+                <select
+                  id="heard_from"
+                  name="heard_from"
+                  required
+                  defaultValue=""
+                  className={inputCls}
+                >
+                  <option value="" disabled>
+                    Pick one…
+                  </option>
+                  {HEARD_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
 
               <Field label="Anything we should know? (optional)" htmlFor="notes">
                 <textarea
