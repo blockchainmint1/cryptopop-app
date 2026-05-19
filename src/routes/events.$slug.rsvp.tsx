@@ -152,12 +152,25 @@ function RsvpPage() {
 
       <main className="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1fr_1.1fr]">
         <aside>
+          <div className="mb-6 overflow-hidden rounded-3xl border border-border">
+            <img
+              src={yachts}
+              alt="Superyachts moored at ONE°15 Marina, Sentosa Cove"
+              width={1536}
+              height={1024}
+              className="h-48 w-full object-cover md:h-64"
+            />
+          </div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             CryptoPOP event
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
             {ev.name}
           </h1>
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            <Anchor className="h-3.5 w-3.5 text-primary" />
+            Complimentary exploratory yacht charters
+          </p>
           <div className="mt-6 space-y-3 text-sm">
             <p className="flex items-center gap-2 text-muted-foreground">
               <CalendarDays className="h-4 w-4 text-primary" />
