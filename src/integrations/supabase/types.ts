@@ -128,6 +128,7 @@ export type Database = {
           event_name: string
           event_slug: string
           full_name: string
+          heard_from: string | null
           id: string
           notes: string | null
           party_size: number
@@ -139,6 +140,7 @@ export type Database = {
           event_name: string
           event_slug: string
           full_name: string
+          heard_from?: string | null
           id?: string
           notes?: string | null
           party_size?: number
@@ -150,6 +152,7 @@ export type Database = {
           event_name?: string
           event_slug?: string
           full_name?: string
+          heard_from?: string | null
           id?: string
           notes?: string | null
           party_size?: number
