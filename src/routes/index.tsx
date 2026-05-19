@@ -14,6 +14,12 @@ function Landing() {
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <img src={logo} alt="CryptoPOP" width={200} height={48} className="h-10 w-auto" />
         <nav className="flex items-center gap-3 font-mono text-xs">
+          <Link
+            to="/mission"
+            className="hidden sm:inline rounded-full px-4 py-2 text-muted-foreground hover:text-foreground transition"
+          >
+            Mission
+          </Link>
           <a
             href="#how"
             className="hidden sm:inline rounded-full px-4 py-2 text-muted-foreground hover:text-foreground transition"
