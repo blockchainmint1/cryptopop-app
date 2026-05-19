@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Music, Flame } from "lucide-react";
+import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Music, Flame, Anchor, Sailboat } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import yachts from "@/assets/marina-yachts.jpg";
 import { SiteFooter } from "@/components/site-footer";
+
+const VENUE_MAP_URL =
+  "https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z";
 
 export const Route = createFileRoute("/")({
   component: Landing,
