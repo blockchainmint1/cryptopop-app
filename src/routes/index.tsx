@@ -72,7 +72,7 @@ function Landing() {
               Singapore · Built on TXC
             </p>
 
-            <h1 className="font-display text-[clamp(3rem,9vw,7.5rem)] font-bold leading-[0.88] tracking-tight">
+            <h1 className="mt-7 max-w-xl text-lg text-muted-foreground font-normal">
               Show up.<br />
               Get{" "}
               <span className="relative inline-block">
