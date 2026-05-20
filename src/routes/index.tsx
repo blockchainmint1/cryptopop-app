@@ -104,7 +104,7 @@ function Landing() {
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Link
                 to="/login"
-                className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-[0_12px_40px_-10px] shadow-primary/60"
+                className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-[0_12px_40px_-10px] shadow-primary/60 text-[#8b3dff]"
               >
                 Open the wallet
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
@@ -251,7 +251,7 @@ function Landing() {
               <Link
                 to="/events/$slug/rsvp"
                 params={{ slug: "july4-marina-bbq" }}
-                className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-[0_12px_40px_-10px] shadow-primary/60"
+                className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-[0_12px_40px_-10px] shadow-primary/60 text-[#8b3dff]"
               >
                 RSVP — it's free
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
