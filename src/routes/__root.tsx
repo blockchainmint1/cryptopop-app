@@ -76,7 +76,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "CryptoPOP — Proof of Participation" },
       { name: "description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
-      { name: "theme-color", content: "#FF3B30" },
+      { name: "theme-color", content: "#FF3DBE" },
       { property: "og:title", content: "CryptoPOP — Proof of Participation" },
       { property: "og:description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
       { property: "og:type", content: "website" },

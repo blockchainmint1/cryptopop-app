@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* CryptoPOP brand fonts */
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
 
 /*
  * Design system definition.
@@ -66,51 +66,59 @@
   --color-pop-foreground: var(--pop-foreground);
   --color-ink: var(--ink);
   --color-bone: var(--bone);
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-neon-purple: var(--neon-purple);
+  --color-neon-pink: var(--neon-pink);
+  --color-neon-cyan: var(--neon-cyan);
+  --color-neon-lime: var(--neon-lime);
+  --font-display: "Bebas Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 :root {
   --radius: 0.875rem;
-  /* CryptoPOP — bone background, ink foreground, electric coral POP */
-  --bone: oklch(0.985 0.005 85);
-  --ink: oklch(0.16 0.02 260);
-  --pop: oklch(0.66 0.24 27);
-  --pop-foreground: oklch(0.985 0.005 85);
+  /* CryptoPOP brand palette — dark futuristic with neon accents */
+  --bone: oklch(0.97 0 0);                /* #F5F5F5 */
+  --ink: oklch(0.16 0.02 280);            /* near-black with violet tint */
+  --neon-purple: oklch(0.55 0.27 295);    /* #8B3DFF */
+  --neon-pink: oklch(0.66 0.30 340);      /* #FF3DBE */
+  --neon-cyan: oklch(0.85 0.16 200);      /* #00E5FF */
+  --neon-lime: oklch(0.93 0.14 130);      /* #CCF695 */
+  --pop: var(--neon-pink);
+  --pop-foreground: oklch(0.16 0.02 280);
 
-  --background: var(--bone);
-  --foreground: var(--ink);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--ink);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--ink);
-  --primary: var(--pop);
-  --primary-foreground: var(--pop-foreground);
-  --secondary: oklch(0.95 0.01 85);
-  --secondary-foreground: var(--ink);
-  --muted: oklch(0.94 0.008 85);
-  --muted-foreground: oklch(0.45 0.02 260);
-  --accent: oklch(0.92 0.04 27);
-  --accent-foreground: var(--ink);
-  --destructive: oklch(0.55 0.22 27);
-  --destructive-foreground: oklch(0.985 0.005 85);
-  --border: oklch(0.9 0.01 85);
-  --input: oklch(0.92 0.01 85);
-  --ring: var(--pop);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --background: var(--ink);
+  --foreground: var(--bone);
+  --card: oklch(0.21 0.03 285);
+  --card-foreground: var(--bone);
+  --popover: oklch(0.21 0.03 285);
+  --popover-foreground: var(--bone);
+  --primary: var(--neon-pink);
+  --primary-foreground: oklch(0.16 0.02 280);
+  --secondary: oklch(0.26 0.04 290);
+  --secondary-foreground: var(--bone);
+  --muted: oklch(0.24 0.03 285);
+  --muted-foreground: oklch(0.72 0.03 290);
+  --accent: var(--neon-purple);
+  --accent-foreground: var(--bone);
+  --destructive: oklch(0.62 0.25 25);
+  --destructive-foreground: var(--bone);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: var(--neon-pink);
+  --chart-1: var(--neon-pink);
+  --chart-2: var(--neon-purple);
+  --chart-3: var(--neon-cyan);
+  --chart-4: var(--neon-lime);
+  --chart-5: oklch(0.7 0.18 320);
+  --sidebar: oklch(0.18 0.025 280);
+  --sidebar-foreground: var(--bone);
+  --sidebar-primary: var(--neon-pink);
+  --sidebar-primary-foreground: var(--bone);
+  --sidebar-accent: oklch(0.26 0.04 290);
+  --sidebar-accent-foreground: var(--bone);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: var(--neon-purple);
 }
 
 .dark {
@@ -165,7 +173,7 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 }
 
