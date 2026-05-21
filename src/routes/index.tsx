@@ -329,7 +329,7 @@ function Landing() {
               </Link>
             </div>
             <p className="mt-4 max-w-md font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-              Education event · POP has no monetary value · No DPT trading
+              Education event · POP has no monetary value
             </p>
           </div>
 
