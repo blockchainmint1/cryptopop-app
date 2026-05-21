@@ -100,7 +100,7 @@ function MissionPage() {
           <Pillar
             icon={BookOpen}
             title="Learn"
-            body="Plain-English explainers about wallets, AI, and blockchain — woven into events you'd want to attend anyway."
+            body="CRYPTOPOP IS — AND ISN’T"
           />
         </div>
 
