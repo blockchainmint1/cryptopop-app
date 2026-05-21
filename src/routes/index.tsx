@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Music, Flame, Anchor, Sailboat } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import yachts from "@/assets/marina-yachts.jpg";
+import bbqBg from "@/assets/bbq-marina-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 
 const VENUE_MAP_URL =
@@ -238,7 +239,22 @@ function Landing() {
       </section>
 
       {/* Next event */}
-      <section className="relative border-t border-border">
+      <section className="relative border-t border-border overflow-hidden">
+        <img
+          src={bbqBg}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-30"
+          loading="lazy"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, var(--background) 0%, rgba(8,5,20,0.55) 35%, rgba(8,5,20,0.55) 65%, var(--background) 100%)",
+          }}
+        />
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.06]"
