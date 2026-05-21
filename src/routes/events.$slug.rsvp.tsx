@@ -302,7 +302,7 @@ function SignupPage() {
                 We'll only use your details to confirm this signup.
               </p>
             </form>
-          )}
+
         </section>
       </main>
 
