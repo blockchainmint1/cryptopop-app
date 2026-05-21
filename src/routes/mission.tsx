@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Sparkles, Users, BookOpen, ShieldAlert } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import wellnessBg from "@/assets/wellness-community-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/mission")({
@@ -45,18 +46,32 @@ function MissionPage() {
         </div>
       </header>
 
+      <section className="relative overflow-hidden border-b border-border/60">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${wellnessBg})` }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background"
+          aria-hidden
+        />
+        <div className="relative mx-auto max-w-3xl px-6 py-20 md:py-28">
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            Education · Singapore
+          </p>
+          <h1 className="mt-3 font-display text-5xl font-bold tracking-tight md:text-6xl">
+            Connect. Experience. Learn.
+          </h1>
+          <p className="mt-6 text-lg text-muted-foreground">
+            CryptoPOP is an <strong className="text-foreground">education-only</strong> campaign
+            designed to help Singaporeans — young and not-so-young — make sense of Web3, AI,
+            and blockchain by showing up in real life, not by trading.
+          </p>
+        </div>
+      </section>
+
       <main className="mx-auto max-w-3xl px-6 py-14">
-        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          Education · Singapore
-        </p>
-        <h1 className="mt-3 font-display text-5xl font-bold tracking-tight md:text-6xl">
-          Connect. Experience. Learn.
-        </h1>
-        <p className="mt-6 text-lg text-muted-foreground">
-          CryptoPOP is an <strong className="text-foreground">education-only</strong> campaign
-          designed to help Singaporeans — young and not-so-young — make sense of Web3, AI,
-          and blockchain by showing up in real life, not by trading.
-        </p>
 
         <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
           <Pillar
