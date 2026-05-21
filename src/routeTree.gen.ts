@@ -22,6 +22,7 @@ import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.s
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
+import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated.admin.signups'
 import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -89,6 +90,12 @@ const AuthenticatedScanSuccessRoute =
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
+const AuthenticatedAdminSignupsRoute =
+  AuthenticatedAdminSignupsRouteImport.update({
+    id: '/admin/signups',
+    path: '/admin/signups',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminEventsIdRoute =
   AuthenticatedAdminEventsIdRouteImport.update({
     id: '/admin/events/$id',
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
@@ -139,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/scan'
     | '/auth/callback'
+    | '/admin/signups'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/admin/events/$id'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/scan'
     | '/auth/callback'
+    | '/admin/signups'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/admin/events/$id'
@@ -187,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/scan'
     | '/auth/callback'
+    | '/_authenticated/admin/signups'
     | '/_authenticated/scan/success'
     | '/events/$slug/rsvp'
     | '/_authenticated/admin/events/$id'
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
+    '/_authenticated/admin/signups': {
+      id: '/_authenticated/admin/signups'
+      path: '/admin/signups'
+      fullPath: '/admin/signups'
+      preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/events/$id': {
       id: '/_authenticated/admin/events/$id'
       path: '/admin/events/$id'
@@ -322,12 +342,14 @@ const AuthenticatedScanRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
+  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
+  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
 }
 
