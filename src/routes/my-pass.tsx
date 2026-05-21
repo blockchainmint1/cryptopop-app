@@ -181,6 +181,14 @@ function PassCard({ signup }: { signup: Signup }) {
             ONE°15 Marina, Sentosa Cove · Sat 4 July 2026 · 11am–4pm
           </p>
         </div>
+
+        <Link
+          to="/my-pop"
+          search={{ id: signup.id }}
+          className="mt-4 block w-full rounded-full bg-primary px-6 py-3 text-center font-display font-semibold text-primary-foreground hover:opacity-90"
+        >
+          View my POP & activities →
+        </Link>
       </div>
     </div>
   );
