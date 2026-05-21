@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { ArrowLeft, CalendarDays, MapPin, Anchor } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
-import yachts from "@/assets/marina-yachts.jpg";
+import bbqHero from "@/assets/usa-250-bbq.png";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
