@@ -104,6 +104,15 @@ function MissionPage() {
           />
         </div>
 
+        <Section title="OUR MISSION">
+          <p>
+            To make Web3 feel human, social, and accessible through real-world experiences, community, and culture.
+          </p>
+          <p>
+            We believe the future of community starts offline first — through conversations, events, creativity, and shared experiences that bring people together.
+          </p>
+        </Section>
+
         <Section title="Why we're doing this">
           <p>
             Singapore is one of the most digitally advanced societies in the world, but
