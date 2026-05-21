@@ -26,7 +26,7 @@ const EVENTS: Record<string, EventInfo> = {
     mapUrl:
       "https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z",
     blurb:
-      "Education-only event. POP tokens are a participation record.",
+      "Education-only event. POP are a participation record.",
   },
 };
 
@@ -135,7 +135,7 @@ function SignupPage() {
     } catch {
       // ignore storage failures
     }
-    toast.success("You're in! 10 POP credits added.");
+    toast.success("You're in! 10 POP added.");
     navigate({ to: "/my-pass", search: { id: inserted.id } });
   }
 
@@ -199,7 +199,7 @@ function SignupPage() {
           </div>
           <p className="mt-6 text-muted-foreground">{ev.blurb}</p>
           <p className="mt-6 rounded-2xl border border-border bg-card p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            Education-only event. POP tokens are a participation record and have
+            Education-only event. POP are a participation record and have
             no monetary value. No DPT trading on site.
           </p>
         </aside>
@@ -209,7 +209,7 @@ function SignupPage() {
               <header>
                 <h2 className="font-display text-2xl font-bold">Sign up</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Free signup. You'll earn <span className="font-semibold text-foreground">10 POP credits</span> the moment you join.
+                  Free signup. You'll earn <span className="font-semibold text-foreground">10 POP</span> the moment you join.
                 </p>
               </header>
 
