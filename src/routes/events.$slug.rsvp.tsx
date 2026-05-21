@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { ArrowLeft, CalendarDays, MapPin, CheckCircle2, Anchor } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, CheckCircle2, Anchor, Sparkles } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import yachts from "@/assets/marina-yachts.jpg";
 import { SiteFooter } from "@/components/site-footer";
@@ -30,25 +30,13 @@ const EVENTS: Record<string, EventInfo> = {
   },
 };
 
-const HEARD_OPTIONS = [
-  "Friend or family",
-  "Instagram",
-  "TikTok",
-  "LinkedIn",
-  "Telegram / WhatsApp group",
-  "At a CryptoPOP event",
-  "News article or blog",
-  "Search engine",
-  "Other",
-];
-
 export const Route = createFileRoute("/events/$slug/rsvp")({
   head: ({ params }) => {
     const ev = EVENTS[params.slug];
-    const title = ev ? `RSVP — ${ev.name}` : "RSVP — CryptoPOP";
+    const title = ev ? `Sign up — ${ev.name}` : "Sign up — CryptoPOP";
     const desc = ev
       ? `Reserve your spot at ${ev.name} on ${ev.date}. Free, family-friendly, education-only.`
-      : "RSVP to the next CryptoPOP event.";
+      : "Sign up to the next CryptoPOP event.";
     return {
       meta: [
         { title },
@@ -58,23 +46,23 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
       ],
     };
   },
-  component: RsvpPage,
+  component: SignupPage,
 });
 
-const rsvpSchema = z.object({
+const signupSchema = z.object({
   full_name: z.string().trim().min(1, "Your name is required").max(120),
   email: z.string().trim().email("Enter a valid email").max(254),
-  contact_number: z
+  mobile_number: z
     .string()
     .trim()
-    .min(3, "Contact number is too short")
-    .max(32, "Contact number is too long"),
-  party_size: z.coerce.number().int().min(1, "At least 1").max(20, "Max 20 per RSVP"),
-  heard_from: z.string().trim().min(1, "Let us know how you heard about us").max(120),
-  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+    .min(3, "Mobile number is too short")
+    .max(32, "Mobile number is too long"),
+  instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+  telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+  is_friend: z.enum(["yes", "no"]),
 });
 
-function RsvpPage() {
+function SignupPage() {
   const { slug } = Route.useParams();
   const ev = EVENTS[slug];
   const [submitting, setSubmitting] = useState(false);
@@ -103,32 +91,39 @@ function RsvpPage() {
     e.preventDefault();
     if (!ev) return;
     const form = new FormData(e.currentTarget);
-    const parsed = rsvpSchema.safeParse({
+    const parsed = signupSchema.safeParse({
       full_name: form.get("full_name"),
       email: form.get("email"),
-      contact_number: form.get("contact_number"),
-      party_size: form.get("party_size"),
-      heard_from: form.get("heard_from"),
-      notes: form.get("notes"),
+      mobile_number: form.get("mobile_number"),
+      instagram_handle: form.get("instagram_handle"),
+      telegram_handle: form.get("telegram_handle"),
+      is_friend: form.get("is_friend"),
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("event_rsvps").insert({
-      event_slug: ev.slug,
-      event_name: ev.name,
+    const ig = parsed.data.instagram_handle?.replace(/^@/, "").trim();
+    const tg = parsed.data.telegram_handle?.replace(/^@/, "").trim();
+    const { error } = await supabase.from("event_signups").insert({
       full_name: parsed.data.full_name,
-      email: parsed.data.email,
-      contact_number: parsed.data.contact_number,
-      party_size: parsed.data.party_size,
-      heard_from: parsed.data.heard_from,
-      notes: parsed.data.notes || null,
+      email: parsed.data.email.toLowerCase(),
+      mobile_number: parsed.data.mobile_number,
+      instagram_handle: ig ? ig : null,
+      telegram_handle: tg ? tg : null,
+      is_friend: parsed.data.is_friend === "yes",
     });
     setSubmitting(false);
     if (error) {
-      toast.error("Couldn't save your RSVP. Please try again.");
+      if (error.code === "23505") {
+        const msg = /mobile/i.test(error.message)
+          ? "That mobile number is already signed up."
+          : "That email is already signed up.";
+        toast.error(msg);
+        return;
+      }
+      toast.error("Couldn't save your signup. Please try again.");
       return;
     }
     setDone(true);
@@ -196,26 +191,38 @@ function RsvpPage() {
         <section className="rounded-3xl border border-border bg-card p-6 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-8">
           {done ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <CheckCircle2 className="h-12 w-12 text-primary" />
-              <h2 className="mt-4 font-display text-2xl font-bold">You're on the list!</h2>
-              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                We've saved your RSVP for {ev.name}. A confirmation email will
-                land in your inbox shortly. See you at ONE°15 Marina on 4 July,
-                11am–4pm.
+              <div className="rounded-full bg-primary/10 p-4">
+                <Sparkles className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="mt-4 font-display text-3xl font-bold">You're in!</h2>
+              <p className="mt-3 max-w-sm text-base text-muted-foreground">
+                You've earned your first <span className="font-semibold text-foreground">10 POP credits</span>.
+                See you at ONE°15 Marina on 4 July, 11am–4pm.
               </p>
-              <Link
-                to="/"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground"
-              >
-                Back home
-              </Link>
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-primary">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Signup confirmed
+              </div>
+              <div className="mt-7 flex flex-col items-stretch gap-3 sm:flex-row">
+                <Link
+                  to="/app"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground"
+                >
+                  Open my POP dashboard
+                </Link>
+                <Link
+                  to="/"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 font-display"
+                >
+                  Back home
+                </Link>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <header>
-                <h2 className="font-display text-2xl font-bold">RSVP</h2>
+                <h2 className="font-display text-2xl font-bold">Sign up</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Free, no payment. We just want to know how much brisket to order.
+                  Free signup. You'll earn <span className="font-semibold text-foreground">10 POP credits</span> the moment you join.
                 </p>
               </header>
 
@@ -244,10 +251,10 @@ function RsvpPage() {
                     placeholder="jane@example.com"
                   />
                 </Field>
-                <Field label="Contact number" htmlFor="contact_number">
+                <Field label="Mobile number" htmlFor="mobile_number">
                   <input
-                    id="contact_number"
-                    name="contact_number"
+                    id="mobile_number"
+                    name="mobile_number"
                     required
                     maxLength={32}
                     autoComplete="tel"
@@ -258,59 +265,60 @@ function RsvpPage() {
                 </Field>
               </div>
 
-              <Field label="How many people are coming?" htmlFor="party_size">
-                <input
-                  id="party_size"
-                  name="party_size"
-                  type="number"
-                  min={1}
-                  max={20}
-                  defaultValue={1}
-                  required
-                  className={inputCls}
-                />
-              </Field>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Instagram handle (optional)" htmlFor="instagram_handle">
+                  <input
+                    id="instagram_handle"
+                    name="instagram_handle"
+                    maxLength={64}
+                    className={inputCls}
+                    placeholder="@cryptopop"
+                  />
+                </Field>
+                <Field label="Telegram handle (optional)" htmlFor="telegram_handle">
+                  <input
+                    id="telegram_handle"
+                    name="telegram_handle"
+                    maxLength={64}
+                    className={inputCls}
+                    placeholder="@cryptopop"
+                  />
+                </Field>
+              </div>
 
-              <Field label="How did you hear about this?" htmlFor="heard_from">
-                <select
-                  id="heard_from"
-                  name="heard_from"
-                  required
-                  defaultValue=""
-                  className={inputCls}
-                >
-                  <option value="" disabled>
-                    Pick one…
-                  </option>
-                  {HEARD_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
+              <fieldset>
+                <legend className="mb-2 block font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Bringing a friend?
+                </legend>
+                <div className="flex gap-2">
+                  {(["yes", "no"] as const).map((v) => (
+                    <label
+                      key={v}
+                      className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm capitalize transition has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:checked]:text-foreground"
+                    >
+                      <input
+                        type="radio"
+                        name="is_friend"
+                        value={v}
+                        required
+                        defaultChecked={v === "no"}
+                        className="sr-only"
+                      />
+                      {v}
+                    </label>
                   ))}
-                </select>
-              </Field>
-
-
-              <Field label="Anything we should know? (optional)" htmlFor="notes">
-                <textarea
-                  id="notes"
-                  name="notes"
-                  rows={3}
-                  maxLength={1000}
-                  className={inputCls}
-                  placeholder="Dietary preferences, kids' ages, etc."
-                />
-              </Field>
+                </div>
+              </fieldset>
 
               <button
                 type="submit"
                 disabled={submitting}
                 className="w-full rounded-full bg-primary px-6 py-3.5 font-display font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
               >
-                {submitting ? "Reserving…" : "Reserve my spot"}
+                {submitting ? "Signing you up…" : "Sign up & claim 10 POP"}
               </button>
               <p className="text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                We'll only use your details to confirm this RSVP.
+                We'll only use your details to confirm this signup.
               </p>
             </form>
           )}
