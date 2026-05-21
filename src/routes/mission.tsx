@@ -113,91 +113,41 @@ function MissionPage() {
           </p>
         </Section>
 
-        <Section title="Why we're doing this">
+        <Section className="border-0 rounded-xl">
           <p>
-            Singapore is one of the most digitally advanced societies in the world, but
-            when it comes to Web3 and on-chain literacy, everyday Singaporeans have been
-            left behind. That's not an accident — the Monetary Authority of Singapore
-            (MAS) has rightly imposed strict rules on how digital payment token services
-            can be marketed to the public, because cryptocurrency trading is{" "}
-            <em>highly risky and not suitable for the general public</em>.
+            CryptoPOP is a community-first lifestyle platform built around real-world experiences, culture, and participation. From wellness activations and food events to yacht socials, nightlife, pop-ups, and community gatherings — CryptoPOP creates fun, social experiences where people can connect, explore, and be part of the moment together.
           </p>
           <p>
-            We agree with that posture. The result, though, is an education gap: a whole
-            generation hears "crypto" and either tunes out or wanders into the riskiest
-            corners of the internet for answers. CryptoPOP exists to close that gap the
-            safe way — through real-world experiences, not speculation.
+            By participating in selected events and activities, users may collect POP rewards as a digital record of participation and community engagement. CryptoPOP is designed to make experiences more interactive, memorable, and community-driven.
           </p>
-        </Section>
-
-        <Section title="What CryptoPOP is — and isn't">
-          <ul className="ml-5 list-disc space-y-2">
-            <li>
-              <strong className="text-foreground">It is</strong> a proof-of-participation
-              campaign. You show up at a sanctioned event, scan a QR, and a non-monetary
-              POP is minted to your wallet as a record that you were there.
-            </li>
-            <li>
-              <strong className="text-foreground">It is</strong> educational content
-              wrapped in lifestyle — parties, pop-ups, food events, club nights,
-              activations — because attention follows fun.
-            </li>
-            <li>
-              <strong className="text-foreground">It is not</strong> a digital payment
-              token service, an exchange, a brokerage, or an investment product. We do
-              not buy, sell, or facilitate the trading of cryptocurrencies for the
-              public.
-            </li>
-            <li>
-              <strong className="text-foreground">It is not</strong> investment, tax, or
-              legal advice. Nothing on this site is a recommendation to acquire any
-              digital asset.
-            </li>
-            <li>
-              <strong className="text-foreground">POP have no monetary value</strong>
-              , are not redeemable for currency, and are not securities, e-money, or
-              deposits. They are a participation receipt.
-            </li>
-          </ul>
-        </Section>
-
-        <Section title="How we honour MAS guidance">
+          
+          <h2 className="pt-6 font-display text-2xl font-bold tracking-tight text-foreground">
+            WHAT WE ARE NOT
+          </h2>
           <p>
-            We've designed CryptoPOP around MAS's{" "}
-            <a
-              href="https://www.mas.gov.sg/regulation/guidelines/ps-g02-guidelines-on-provision-of-digital-payment-token-services-to-the-public"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground"
-            >
-              Guidelines on Provision of Digital Payment Token Services to the Public
-              (PS-G02)
-            </a>{" "}
-            and the spirit behind them:
+            CryptoPOP is not an exchange, brokerage, investment platform, or digital payment token service.
           </p>
-          <ul className="ml-5 list-disc space-y-2">
-            <li>
-              No promotion of DPT trading in public areas, on public transport, in
-              broadcast or print media, or through third-party social media influencers.
-            </li>
-            <li>
-              No portrayal of crypto in a way that trivialises risk. No "get rich" copy,
-              no price talk, no testimonials about gains.
-            </li>
-            <li>
-              No physical crypto ATMs, no on-the-spot onboarding to trading services at
-              any CryptoPOP event.
-            </li>
-            <li>
-              Our communications about CryptoPOP live on our own channels — this site,
-              our app, and our official social accounts — and stay focused on education
-              and participation, not on acquiring tokens for speculation.
-            </li>
-            <li>
-              POP is a participation record on TXC. It is not advertised as an
-              investment, and is not offered to the public as a DPT service.
-            </li>
-          </ul>
+          <p>
+            We do not facilitate the buying, selling, or trading of cryptocurrencies to the public.
+          </p>
+          <p>
+            POP rewards are non-monetary community participation rewards designed for experiences, engagement, and activations within the CryptoPOP ecosystem.
+          </p>
+          <div className="space-y-1">
+            <p className="font-semibold text-foreground">POP rewards:</p>
+            <ul className="list-inside space-y-1">
+              <li>• have no monetary value</li>
+              <li>• are not redeemable for currency</li>
+              <li>• are not investment products</li>
+              <li>• are not securities, e-money, or deposits</li>
+            </ul>
+          </div>
+          <p>
+            Nothing on this platform should be considered financial, investment, legal, or tax advice.
+          </p>
+          <p>
+            CryptoPOP is about community, culture, and experiences first.
+          </p>
         </Section>
 
         <Section title="Who we're here for">
