@@ -65,8 +65,8 @@ const signupSchema = z.object({
 function SignupPage() {
   const { slug } = Route.useParams();
   const ev = EVENTS[slug];
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
 
   if (!ev) {
     return (
@@ -106,17 +106,21 @@ function SignupPage() {
     setSubmitting(true);
     const ig = parsed.data.instagram_handle?.replace(/^@/, "").trim();
     const tg = parsed.data.telegram_handle?.replace(/^@/, "").trim();
-    const { error } = await supabase.from("event_signups").insert({
-      full_name: parsed.data.full_name,
-      email: parsed.data.email.toLowerCase(),
-      mobile_number: parsed.data.mobile_number,
-      instagram_handle: ig ? ig : null,
-      telegram_handle: tg ? tg : null,
-      is_friend: parsed.data.is_friend === "yes",
-    });
+    const { data: inserted, error } = await supabase
+      .from("event_signups")
+      .insert({
+        full_name: parsed.data.full_name,
+        email: parsed.data.email.toLowerCase(),
+        mobile_number: parsed.data.mobile_number,
+        instagram_handle: ig ? ig : null,
+        telegram_handle: tg ? tg : null,
+        is_friend: parsed.data.is_friend === "yes",
+      })
+      .select("id")
+      .single();
     setSubmitting(false);
-    if (error) {
-      if (error.code === "23505") {
+    if (error || !inserted) {
+      if (error?.code === "23505") {
         const msg = /mobile/i.test(error.message)
           ? "That mobile number is already signed up."
           : "That email is already signed up.";
@@ -126,7 +130,13 @@ function SignupPage() {
       toast.error("Couldn't save your signup. Please try again.");
       return;
     }
-    setDone(true);
+    try {
+      localStorage.setItem("cryptopop_signup_id", inserted.id);
+    } catch {
+      // ignore storage failures
+    }
+    toast.success("You're in! 10 POP credits added.");
+    navigate({ to: "/my-pass", search: { id: inserted.id } });
   }
 
   return (
@@ -189,35 +199,7 @@ function SignupPage() {
         </aside>
 
         <section className="rounded-3xl border border-border bg-card p-6 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-8">
-          {done ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="rounded-full bg-primary/10 p-4">
-                <Sparkles className="h-10 w-10 text-primary" />
-              </div>
-              <h2 className="mt-4 font-display text-3xl font-bold">You're in!</h2>
-              <p className="mt-3 max-w-sm text-base text-muted-foreground">
-                You've earned your first <span className="font-semibold text-foreground">10 POP credits</span>.
-                See you at ONE°15 Marina on 4 July, 11am–4pm.
-              </p>
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-primary">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Signup confirmed
-              </div>
-              <div className="mt-7 flex flex-col items-stretch gap-3 sm:flex-row">
-                <Link
-                  to="/app"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground"
-                >
-                  Open my POP dashboard
-                </Link>
-                <Link
-                  to="/"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 font-display"
-                >
-                  Back home
-                </Link>
-              </div>
-            </div>
-          ) : (
+          {(
             <form onSubmit={handleSubmit} className="space-y-5">
               <header>
                 <h2 className="font-display text-2xl font-bold">Sign up</h2>
