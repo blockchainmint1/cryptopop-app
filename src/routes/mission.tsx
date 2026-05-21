@@ -61,7 +61,9 @@ function MissionPage() {
             Education · Singapore
           </p>
           <h1 className="mt-3 font-display text-5xl font-bold tracking-tight md:text-6xl">
-            Connect. Experience. Learn.
+            <span className="text-neon-cyan">Connect.</span>{" "}
+            <span className="text-neon-lime">Experience.</span>{" "}
+            <span className="text-neon-pink">Learn.</span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground">
             CryptoPOP is an <strong className="text-foreground">education-only</strong> campaign
