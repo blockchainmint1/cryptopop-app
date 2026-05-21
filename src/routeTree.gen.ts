@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as LoginRouteImport } from './routes/login'
@@ -33,6 +34,11 @@ const TermsRoute = TermsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPopRoute = MyPopRouteImport.update({
+  id: '/my-pop',
+  path: '/my-pop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyPassRoute = MyPassRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
+  '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
+  '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
+  '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mission'
     | '/my-pass'
+    | '/my-pop'
     | '/privacy'
     | '/terms'
     | '/app'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mission'
     | '/my-pass'
+    | '/my-pop'
     | '/privacy'
     | '/terms'
     | '/app'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mission'
     | '/my-pass'
+    | '/my-pop'
     | '/privacy'
     | '/terms'
     | '/_authenticated/app'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MissionRoute: typeof MissionRoute
   MyPassRoute: typeof MyPassRoute
+  MyPopRoute: typeof MyPopRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-pop': {
+      id: '/my-pop'
+      path: '/my-pop'
+      fullPath: '/my-pop'
+      preLoaderRoute: typeof MyPopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-pass': {
@@ -364,6 +384,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MissionRoute: MissionRoute,
   MyPassRoute: MyPassRoute,
+  MyPopRoute: MyPopRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
@@ -372,3 +393,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
