@@ -78,7 +78,7 @@ function MissionPage() {
             <div className="space-y-1 text-foreground">
               <p>No complicated jargon.</p>
               <p>No hard selling.</p>
-              <p>Just good people, great energy, and unforgettable experiences.</p>
+              <p>Feel what on-chain participation is actually like. Scan a QR at the venue, prove you were there, and walk away with POP.</p>
             </div>
           </div>
         </div>
