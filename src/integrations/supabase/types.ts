@@ -161,6 +161,8 @@ export type Database = {
       }
       event_signups: {
         Row: {
+          checked_in_at: string | null
+          checked_in_by: string | null
           completed_activities: string[]
           created_at: string
           email: string
@@ -177,6 +179,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           completed_activities?: string[]
           created_at?: string
           email: string
@@ -193,6 +197,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           completed_activities?: string[]
           created_at?: string
           email?: string
