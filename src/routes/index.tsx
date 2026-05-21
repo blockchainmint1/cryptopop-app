@@ -226,7 +226,7 @@ function Landing() {
           {[
             { icon: QrCode, title: "Scan", body: "Scan our QR codes at CryptoPOP events." },
             { icon: MapPin, title: "Verify", body: "Geofence + time window confirms you're really there." },
-            { icon: Coins, title: "Earn POP", body: "Tokens minted to your TXC wallet, anchored on-chain." },
+            { icon: Coins, title: "Earn POP", body: "POP unlocks experiences, perks, and community rewards along the way." },
             { icon: Users, title: "Climb", body: "Build your POP score. Invite friends for bonuses." },
           ].map(({ icon: Icon, title, body }) => (
             <div key={title} className="bg-card p-8">
