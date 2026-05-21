@@ -254,8 +254,8 @@ function Landing() {
               Next event · 4 July 2026 · 11am–4pm
             </p>
             <h2 className="mt-5 font-display text-[clamp(2.25rem,6vw,4.5rem)] font-bold leading-[0.95] tracking-tight">
-              Red, white &<br />
-              <span className="text-primary">barbecue.</span>
+              <span className="text-red-500">Red</span>, white &<br />
+              <span className="text-blue-400">barbecue.</span>
             </h2>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
               CryptoPOP takes over{" "}
