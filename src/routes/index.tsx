@@ -165,9 +165,9 @@ function Landing() {
             className="hero-fade-up mt-7 max-w-xl text-lg text-white/75 font-normal"
             style={{ animationDelay: "0.55s" }}
           >
-            The proof-of-participation wallet for real-world events. Scan a QR
-            at the venue, answer a couple of questions, and POP tokens land in
-            your wallet — verifiable on-chain.
+            Show up, join the fun, complete activities, and earn POP rewards
+            along the way. From games and socials to community experiences —
+            every interaction counts.
           </p>
 
           <div
