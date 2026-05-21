@@ -142,7 +142,7 @@ function Landing() {
           </p>
 
           <h1
-            className="hero-fade-up max-w-5xl font-display font-normal uppercase leading-[0.88] tracking-tight text-white text-[clamp(3.5rem,11vw,9rem)]"
+            className="hero-fade-up max-w-5xl font-display uppercase leading-[0.88] tracking-tight text-white text-8xl font-semibold"
             style={{ animationDelay: "0.35s" }}
           >
             Show up.
