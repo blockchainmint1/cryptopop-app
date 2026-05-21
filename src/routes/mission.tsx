@@ -106,10 +106,7 @@ function MissionPage() {
 
         <Section title="OUR MISSION">
           <p>
-            To make Web3 feel human, social, and accessible through real-world experiences, community, and culture.
-          </p>
-          <p>
-            We believe the future of community starts offline first — through conversations, events, creativity, and shared experiences that bring people together.
+            To make Web3 feel human, social, and accessible through real-world experiences, community, and culture. We believe the future of community starts offline first — through conversations, events, creativity, and shared experiences that bring people together.
           </p>
         </Section>
 
