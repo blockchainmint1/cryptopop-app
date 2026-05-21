@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ApiRouteImport } from './routes/api'
@@ -31,6 +32,11 @@ const TermsRoute = TermsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPassRoute = MyPassRouteImport.update({
+  id: '/my-pass',
+  path: '/my-pass',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MissionRoute = MissionRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
+  '/my-pass': typeof MyPassRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
+  '/my-pass': typeof MyPassRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
+  '/my-pass': typeof MyPassRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/login'
     | '/mission'
+    | '/my-pass'
     | '/privacy'
     | '/terms'
     | '/app'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/login'
     | '/mission'
+    | '/my-pass'
     | '/privacy'
     | '/terms'
     | '/app'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/login'
     | '/mission'
+    | '/my-pass'
     | '/privacy'
     | '/terms'
     | '/_authenticated/app'
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   ApiRoute: typeof ApiRoute
   LoginRoute: typeof LoginRoute
   MissionRoute: typeof MissionRoute
+  MyPassRoute: typeof MyPassRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-pass': {
+      id: '/my-pass'
+      path: '/my-pass'
+      fullPath: '/my-pass'
+      preLoaderRoute: typeof MyPassRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mission': {
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRoute: ApiRoute,
   LoginRoute: LoginRoute,
   MissionRoute: MissionRoute,
+  MyPassRoute: MyPassRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
@@ -329,3 +350,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
