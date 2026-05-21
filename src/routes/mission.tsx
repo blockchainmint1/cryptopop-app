@@ -66,9 +66,7 @@ function MissionPage() {
             <span className="text-neon-pink">Learn.</span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground">
-            CryptoPOP is an <strong className="text-foreground">education-only</strong> campaign
-            designed to help Singaporeans — young and not-so-young — make sense of Web3, AI,
-            and blockchain by showing up in real life, not by trading.
+            {"\n"}
           </p>
         </div>
       </section>
