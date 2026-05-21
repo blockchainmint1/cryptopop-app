@@ -31,6 +31,12 @@ function Landing() {
             How it works
           </a>
           <Link
+            to="/my-pop"
+            className="rounded-full px-4 py-2 text-muted-foreground hover:text-foreground transition"
+          >
+            My POP
+          </Link>
+          <Link
             to="/login"
             className="rounded-full border border-foreground/20 px-4 py-2 hover:bg-foreground/5 transition"
           >
