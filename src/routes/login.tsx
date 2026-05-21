@@ -42,8 +42,17 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-md px-6 py-8">
+    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${loginBg})` }}
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background"
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-md px-6 py-8">
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
