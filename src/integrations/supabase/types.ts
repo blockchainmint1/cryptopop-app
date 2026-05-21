@@ -171,6 +171,8 @@ export type Database = {
           mobile_number: string
           pop_credits: number
           signed_up_at: string
+          signup_source: string
+          status: string
           telegram_handle: string | null
           updated_at: string
         }
@@ -185,6 +187,8 @@ export type Database = {
           mobile_number: string
           pop_credits?: number
           signed_up_at?: string
+          signup_source?: string
+          status?: string
           telegram_handle?: string | null
           updated_at?: string
         }
@@ -199,6 +203,8 @@ export type Database = {
           mobile_number?: string
           pop_credits?: number
           signed_up_at?: string
+          signup_source?: string
+          status?: string
           telegram_handle?: string | null
           updated_at?: string
         }
