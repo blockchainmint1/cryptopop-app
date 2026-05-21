@@ -149,7 +149,7 @@ function Landing() {
             <br />
             Get{" "}
             <span
-              className="bg-clip-text text-transparent"
+              className="inline-block bg-clip-text text-transparent pr-[0.08em] pb-[0.08em]"
               style={{
                 backgroundImage:
                   "linear-gradient(90deg, #ffb066 0%, #ff7a28 45%, #ff3dbe 100%)",
