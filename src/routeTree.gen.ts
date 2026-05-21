@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ApiRouteImport } from './routes/api'
@@ -21,6 +22,7 @@ import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.s
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
+import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated.admin.signups'
 import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -31,6 +33,11 @@ const TermsRoute = TermsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPassRoute = MyPassRouteImport.update({
+  id: '/my-pass',
+  path: '/my-pass',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MissionRoute = MissionRouteImport.update({
@@ -83,6 +90,12 @@ const AuthenticatedScanSuccessRoute =
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
+const AuthenticatedAdminSignupsRoute =
+  AuthenticatedAdminSignupsRouteImport.update({
+    id: '/admin/signups',
+    path: '/admin/signups',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminEventsIdRoute =
   AuthenticatedAdminEventsIdRouteImport.update({
     id: '/admin/events/$id',
@@ -95,11 +108,13 @@ export interface FileRoutesByFullPath {
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
+  '/my-pass': typeof MyPassRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
@@ -109,11 +124,13 @@ export interface FileRoutesByTo {
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
+  '/my-pass': typeof MyPassRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
@@ -125,11 +142,13 @@ export interface FileRoutesById {
   '/api': typeof ApiRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
+  '/my-pass': typeof MyPassRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
@@ -141,11 +160,13 @@ export interface FileRouteTypes {
     | '/api'
     | '/login'
     | '/mission'
+    | '/my-pass'
     | '/privacy'
     | '/terms'
     | '/app'
     | '/scan'
     | '/auth/callback'
+    | '/admin/signups'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/admin/events/$id'
@@ -155,11 +176,13 @@ export interface FileRouteTypes {
     | '/api'
     | '/login'
     | '/mission'
+    | '/my-pass'
     | '/privacy'
     | '/terms'
     | '/app'
     | '/scan'
     | '/auth/callback'
+    | '/admin/signups'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/admin/events/$id'
@@ -170,11 +193,13 @@ export interface FileRouteTypes {
     | '/api'
     | '/login'
     | '/mission'
+    | '/my-pass'
     | '/privacy'
     | '/terms'
     | '/_authenticated/app'
     | '/_authenticated/scan'
     | '/auth/callback'
+    | '/_authenticated/admin/signups'
     | '/_authenticated/scan/success'
     | '/events/$slug/rsvp'
     | '/_authenticated/admin/events/$id'
@@ -186,6 +211,7 @@ export interface RootRouteChildren {
   ApiRoute: typeof ApiRoute
   LoginRoute: typeof LoginRoute
   MissionRoute: typeof MissionRoute
+  MyPassRoute: typeof MyPassRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -206,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-pass': {
+      id: '/my-pass'
+      path: '/my-pass'
+      fullPath: '/my-pass'
+      preLoaderRoute: typeof MyPassRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mission': {
@@ -278,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
+    '/_authenticated/admin/signups': {
+      id: '/_authenticated/admin/signups'
+      path: '/admin/signups'
+      fullPath: '/admin/signups'
+      preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/events/$id': {
       id: '/_authenticated/admin/events/$id'
       path: '/admin/events/$id'
@@ -302,12 +342,14 @@ const AuthenticatedScanRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
+  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
+  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
 }
 
@@ -321,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRoute: ApiRoute,
   LoginRoute: LoginRoute,
   MissionRoute: MissionRoute,
+  MyPassRoute: MyPassRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,

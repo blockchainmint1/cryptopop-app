@@ -318,19 +318,24 @@ function WalletHome() {
         </Card>
 
         {isAdmin && (
-          <Card className="border-primary/30 bg-primary/5 p-4">
+          <Card className="border-primary/30 bg-primary/5 p-4 space-y-3">
             <div className="flex items-center gap-3">
               <Shield className="h-5 w-5 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-semibold">Admin tools</p>
-                <p className="text-xs text-muted-foreground">View the demo event QR poster</p>
+                <p className="text-xs text-muted-foreground">Manage signups & event QR</p>
               </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link to="/admin/signups">Signups & check-in</Link>
+              </Button>
               <Button asChild size="sm" variant="outline">
                 <Link
                   to="/admin/events/$id"
                   params={{ id: "aaaaaaaa-0000-0000-0000-000000000001" }}
                 >
-                  Open
+                  Event QR poster
                 </Link>
               </Button>
             </div>
