@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { ArrowLeft, CalendarDays, MapPin, Anchor } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
-import yachts from "@/assets/marina-yachts.jpg";
+import bbqHero from "@/assets/usa-250-bbq.png";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -159,8 +159,8 @@ function SignupPage() {
         <aside>
           <div className="mb-6 overflow-hidden rounded-3xl border border-border">
             <img
-              src={yachts}
-              alt="Superyachts moored at ONE°15 Marina, Sentosa Cove"
+              src={bbqHero}
+              alt="Red, White & Barbecue — USA 250 at ONE°15 Marina"
               width={1536}
               height={1024}
               className="h-48 w-full object-cover md:h-64"
