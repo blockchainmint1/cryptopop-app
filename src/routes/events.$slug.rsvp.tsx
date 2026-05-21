@@ -199,7 +199,6 @@ function SignupPage() {
         </aside>
 
         <section className="rounded-3xl border border-border bg-card p-6 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-8">
-          {(
             <form onSubmit={handleSubmit} className="space-y-5">
               <header>
                 <h2 className="font-display text-2xl font-bold">Sign up</h2>
