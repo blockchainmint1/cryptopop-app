@@ -26,7 +26,7 @@ const EVENTS: Record<string, EventInfo> = {
     mapUrl:
       "https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z",
     blurb:
-      "Education-only event. POP are a participation record.",
+      "Celebrate the 250th USA anniversary with a family-friendly CryptoPOP block party at ONE°15 Marina, Sentosa Cove — featuring live music, face painting, low-and-slow BBQ, complimentary superyacht marina tours, community experiences, and commemorative POP rewards for everyone who checks in on the day.",
   },
 };
 
