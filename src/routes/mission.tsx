@@ -212,7 +212,7 @@ function Section({ title, children, className }: { title?: string; children: Rea
   return (
     <section className={`mt-10 font-serif ${className || ""}`}>
       {title && <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>}
-      <div className={`${title ? "mt-3" : ""} space-y-3 text-muted-foreground`}>{children}</div>
+      <div className={`${title ? "mt-3" : ""} space-y-3 text-muted-foreground font-sans`}>{children}</div>
     </section>
   );
 }
