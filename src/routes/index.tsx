@@ -19,7 +19,7 @@ function Landing() {
       <section className="relative h-screen min-h-[640px] w-full overflow-hidden">
         {/* Background image (swap to <video> when uploaded) */}
         <img
-          src={yachts}
+          src={bbqHero}
           alt="CryptoPOP at ONE°15 Marina"
           className="absolute inset-0 h-full w-full object-cover hero-zoom"
         />
