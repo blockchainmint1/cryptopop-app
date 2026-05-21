@@ -159,6 +159,51 @@ export type Database = {
         }
         Relationships: []
       }
+      event_signups: {
+        Row: {
+          completed_activities: string[]
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          instagram_handle: string | null
+          is_friend: boolean
+          mobile_number: string
+          pop_credits: number
+          signed_up_at: string
+          telegram_handle: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_activities?: string[]
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          instagram_handle?: string | null
+          is_friend?: boolean
+          mobile_number: string
+          pop_credits?: number
+          signed_up_at?: string
+          telegram_handle?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_activities?: string[]
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          instagram_handle?: string | null
+          is_friend?: boolean
+          mobile_number?: string
+          pop_credits?: number
+          signed_up_at?: string
+          telegram_handle?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           base_reward: number
