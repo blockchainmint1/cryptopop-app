@@ -199,8 +199,7 @@ function SignupPage() {
           </div>
           <p className="mt-6 text-muted-foreground">{ev.blurb}</p>
           <p className="mt-6 rounded-2xl border border-border bg-card p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            Education-only event. POP are a participation record and have
-            no monetary value. No DPT trading on site.
+            Education-only event. POP are a participation record.
           </p>
         </aside>
 
