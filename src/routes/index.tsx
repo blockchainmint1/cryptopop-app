@@ -267,10 +267,10 @@ function Landing() {
               >
                 ONE°15 Marina, Sentosa Cove
               </a>{" "}
-              for a 250th USA anniversary block party — live music, face painting,
-              low-and-slow BBQ, pop-up demos, and complimentary exploratory
-              superyacht charters around the marina. Family-friendly. Scan the
-              event QR on the day to collect your commemorative POP.
+              for a community block party filled with live music, low-and-slow
+              BBQ, pop-up experiences, face painting, and complimentary
+              superyacht marina tours. Bring your friends, soak in the vibes,
+              and scan the event QR on the day to collect your POP!
             </p>
 
             <div className="mt-7 flex flex-wrap gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -300,7 +300,7 @@ function Landing() {
               <Link
                 to="/events/$slug/rsvp"
                 params={{ slug: "july4-marina-bbq" }}
-                className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-[0_12px_40px_-10px] shadow-primary/60 text-[#8b3dff]"
+                className="group inline-flex items-center gap-2 bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-primary/60 text-neutral-100 bg-[#fa2e38] shadow-none rounded-lg"
               >
                 RSVP — it's free
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
