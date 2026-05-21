@@ -53,7 +53,7 @@ function TermsPage() {
         <Section title="1. About CryptoPOP">
           <p>
             CryptoPOP ("we", "us", "our") is a proof-of-participation wallet that lets
-            you collect POP tokens by attending real-world events in Singapore and
+            you collect POP by attending real-world events in Singapore and
             beyond. The service is operated from Singapore. By using CryptoPOP you
             agree to these Terms.
           </p>
@@ -71,12 +71,12 @@ function TermsPage() {
           <p>
             CryptoPOP issues you a non-custodial TXC wallet tied to your sign-in.
             You are responsible for safeguarding access to the email or social account
-            you use to sign in. We do not have the ability to recover lost POP tokens
+            you use to sign in. We do not have the ability to recover lost POP
             sent to incorrect addresses or accessed by unauthorised third parties.
           </p>
         </Section>
 
-        <Section title="4. POP tokens">
+        <Section title="4. POP">
           <p>
             POP is a non-monetary participation token issued on the Texitcoin (TXC)
             Omni Layer. POP has no cash value, is not redeemable for currency, and is
@@ -128,7 +128,7 @@ function TermsPage() {
             To the maximum extent permitted by law, our total liability arising out
             of or relating to your use of CryptoPOP will not exceed SGD 100. We are
             not liable for indirect, incidental, special, consequential, or punitive
-            damages, or for loss of POP tokens, profits, data, or goodwill.
+            damages, or for loss of POP, profits, data, or goodwill.
           </p>
         </Section>
 

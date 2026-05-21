@@ -165,7 +165,7 @@ function Landing() {
             className="hero-fade-up mt-7 max-w-xl text-lg text-white/75 font-normal"
             style={{ animationDelay: "0.55s" }}
           >
-            Show up, join the fun, complete activities, and earn POP rewards
+            Show up, join the fun, complete activities, and earn POP
             along the way. From games and socials to community experiences —
             every interaction counts.
           </p>

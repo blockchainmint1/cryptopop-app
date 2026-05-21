@@ -98,7 +98,7 @@ function MissionPage() {
             <li>
               <strong className="text-foreground">It is</strong> a proof-of-participation
               campaign. You show up at a sanctioned event, scan a QR, and a non-monetary
-              POP token is minted to your wallet as a record that you were there.
+              POP is minted to your wallet as a record that you were there.
             </li>
             <li>
               <strong className="text-foreground">It is</strong> educational content
@@ -117,7 +117,7 @@ function MissionPage() {
               digital asset.
             </li>
             <li>
-              <strong className="text-foreground">POP tokens have no monetary value</strong>
+              <strong className="text-foreground">POP have no monetary value</strong>
               , are not redeemable for currency, and are not securities, e-money, or
               deposits. They are a participation receipt.
             </li>

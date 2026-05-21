@@ -123,7 +123,7 @@ function PassCard({ signup }: { signup: Signup }) {
         <Sparkles className="mx-auto h-10 w-10 text-primary" />
         <h1 className="mt-3 font-display text-3xl font-bold">You're in!</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          You've earned your first <span className="font-semibold text-foreground">10 POP credits</span>.
+          You've earned your first <span className="font-semibold text-foreground">10 POP</span>.
           Show this QR at the marina to check in.
         </p>
       </div>
@@ -165,7 +165,7 @@ function PassCard({ signup }: { signup: Signup }) {
         <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
           <Stat
             icon={<Coins className="h-4 w-4 text-primary" />}
-            label="POP credits"
+            label="POP"
             value={String(signup.pop_credits)}
           />
           <Stat

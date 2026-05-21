@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api")({
       {
         name: "description",
         content:
-          "How to mint, send, and read POP tokens on the Texitcoin (TXC) L2 Omni Layer. Field-tested specs, RPC calls, and gotchas for token issuers and wallet builders.",
+          "How to mint, send, and read POP on the Texitcoin (TXC) L2 Omni Layer. Field-tested specs, RPC calls, and gotchas for token issuers and wallet builders.",
       },
       { property: "og:title", content: "TXC L2 / Omni Layer Developer Guide — CryptoPOP" },
       {

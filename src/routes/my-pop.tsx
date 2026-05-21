@@ -25,7 +25,7 @@ export const Route = createFileRoute("/my-pop")({
       { title: "My POP — CryptoPOP" },
       {
         name: "description",
-        content: "Your POP token balance, activity history and event check-ins.",
+        content: "Your POP balance, activity history and event check-ins.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -140,7 +140,7 @@ function MyPopPage() {
         ) : !id ? (
           <Empty
             title="No POP account on this device"
-            message="Sign up to start collecting POP credits at the next CryptoPOP event."
+            message="Sign up to start collecting POP at the next CryptoPOP event."
           />
         ) : error || !signup ? (
           <Empty title="Account not found" message={error ?? "We couldn't find your POP."} />
@@ -289,7 +289,7 @@ function Dashboard({ signup }: { signup: Signup }) {
       )}
 
       <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        POP tokens are a participation record. Education only, no monetary value.
+        POP are a participation record. Education only, no monetary value.
       </p>
     </>
   );
