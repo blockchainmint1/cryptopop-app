@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Music, Flame, Anchor, Sailboat } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
-import yachts from "@/assets/marina-yachts.jpg";
+import bbqHero from "@/assets/usa-250-bbq.png";
 import bbqBg from "@/assets/bbq-marina-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -341,8 +341,8 @@ function Landing() {
             <div className="relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-card shadow-[0_30px_80px_-30px] shadow-foreground/30">
               <div className="relative h-56 w-full overflow-hidden">
                 <img
-                  src={yachts}
-                  alt="Superyachts moored at ONE°15 Marina at golden hour"
+                  src={bbqHero}
+                  alt="Red, White & Barbecue — USA 250 at ONE°15 Marina"
                   width={1536}
                   height={1024}
                   loading="lazy"
