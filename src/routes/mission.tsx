@@ -210,7 +210,7 @@ function Pillar({
 
 function Section({ title, children, className }: { title?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`mt-10 ${className || ""}`}>
+    <section className={`mt-10 font-serif ${className || ""}`}>
       {title && <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>}
       <div className={`${title ? "mt-3" : ""} space-y-3 text-muted-foreground`}>{children}</div>
     </section>
