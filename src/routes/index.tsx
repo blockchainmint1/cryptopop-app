@@ -14,167 +14,210 @@ export const Route = createFileRoute("/")({
 function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
-      {/* Nav */}
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <img src={logo} alt="CryptoPOP" width={200} height={48} className="h-10 w-auto" />
-        <nav className="flex items-center gap-3 font-mono text-xs">
-          <Link
-            to="/mission"
-            className="hidden sm:inline rounded-full px-4 py-2 text-muted-foreground hover:text-foreground transition"
-          >
-            Mission
-          </Link>
-          <a
-            href="#how"
-            className="hidden sm:inline rounded-full px-4 py-2 text-muted-foreground hover:text-foreground transition"
-          >
-            How it works
-          </a>
-          <Link
-            to="/my-pop"
-            className="rounded-full px-4 py-2 text-muted-foreground hover:text-foreground transition"
-          >
-            My POP
-          </Link>
-          <Link
-            to="/login"
-            className="rounded-full border border-foreground/20 px-4 py-2 hover:bg-foreground/5 transition"
-          >
-            Sign in
-          </Link>
-        </nav>
-      </header>
-
-      {/* Hero */}
-      <section className="relative">
-        {/* QR-grid background motif (echoes the O in the logo) */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "radial-gradient(var(--ink) 1.5px, transparent 1.5px)",
-            backgroundSize: "14px 14px",
-            maskImage:
-              "radial-gradient(ellipse 80% 60% at 70% 30%, black 30%, transparent 70%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse 80% 60% at 70% 30%, black 30%, transparent 70%)",
-          }}
+      {/* Cinematic fullscreen hero */}
+      <section className="relative h-screen min-h-[640px] w-full overflow-hidden">
+        {/* Background image (swap to <video> when uploaded) */}
+        <img
+          src={yachts}
+          alt="CryptoPOP at ONE°15 Marina"
+          className="absolute inset-0 h-full w-full object-cover hero-zoom"
         />
-        {/* Coral wash behind the headline */}
+
+        {/* Dark cinematic overlay */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-32 right-[-10%] h-[600px] w-[600px] rounded-full"
+          className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle, color-mix(in oklab, var(--pop) 35%, transparent), transparent 65%)",
+              "linear-gradient(180deg, rgba(8,5,20,0.55) 0%, rgba(8,5,20,0.65) 40%, rgba(8,5,20,0.92) 100%)",
           }}
         />
 
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 pt-12 pb-28 lg:grid-cols-[1.15fr_1fr] lg:items-center">
-          <div>
-            <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-foreground/15 bg-card/70 backdrop-blur px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Singapore · Built on TXC
-            </p>
+        {/* Animated aurora gradients */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-1/3 -left-1/4 h-[120vh] w-[120vh] rounded-full blur-3xl opacity-60 hero-aurora-a"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(255,122,40,0.55), rgba(255,61,190,0.25) 45%, transparent 70%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-1/3 -right-1/4 h-[110vh] w-[110vh] rounded-full blur-3xl opacity-50 hero-aurora-b"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(139,61,255,0.55), rgba(0,229,255,0.18) 50%, transparent 75%)",
+          }}
+        />
 
-            <h1 className="mt-7 max-w-xl text-muted-foreground font-normal text-8xl font-sans text-left">
-              Show up.<br />
-              Get{" "}
-              <span className="relative inline-block">
-                <span className="text-primary">P</span>
-                <span className="text-primary relative inline-block">
-                  {/* QR-as-O — mirrors the logo */}
-                  <span className="invisible">O</span>
-                  <span
-                    aria-hidden
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <span className="relative inline-block rounded-full bg-primary p-[0.08em] aspect-square h-[0.85em]">
-                      <QrPattern />
-                    </span>
-                  </span>
-                </span>
-                <span className="text-primary">P</span>
-                <span className="absolute -bottom-2 left-0 right-0 h-[0.08em] rounded-full bg-primary/30" />
-              </span>
-              .
-            </h1>
+        {/* Orange glow accent */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[60vh] w-[60vh] rounded-full blur-3xl hero-glow"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(255,140,50,0.45), transparent 65%)",
+          }}
+        />
 
-            <p className="mt-7 max-w-xl text-lg text-muted-foreground">
-              The proof-of-participation wallet for real-world events. Scan a QR
-              at the venue, answer a couple of questions, and POP tokens land in
-              your wallet — verifiable on-chain.
-            </p>
+        {/* QR dot grain */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)",
+            backgroundSize: "16px 16px",
+          }}
+        />
 
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Link
-                to="/login"
-                className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground hover:opacity-90 transition shadow-[0_12px_40px_-10px] shadow-primary/60 text-[#8b3dff]"
-              >
-                Open the wallet
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-              </Link>
-              <a
-                href="#how"
-                className="rounded-full border border-foreground/20 px-7 py-3.5 font-display font-semibold hover:bg-foreground/5 transition"
-              >
-                How it works
-              </a>
-            </div>
+        {/* Subtle scanline sweep */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 h-40 hero-scanline opacity-[0.06]"
+          style={{
+            background:
+              "linear-gradient(180deg, transparent, rgba(255,255,255,0.6), transparent)",
+          }}
+        />
 
-            <div className="mt-12 flex items-center gap-6 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-              <Stat label="On-chain" value="100%" />
-              <Divider />
-              <Stat label="Geo-verified" value="±100m" />
-              <Divider />
-              <Stat label="Network" value="TXC L2" />
-            </div>
+        {/* Floating ambient embers */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {Array.from({ length: 18 }).map((_, i) => {
+            const left = (i * 53) % 100;
+            const size = 4 + ((i * 7) % 10);
+            const delay = (i * 0.9) % 14;
+            const dur = 12 + ((i * 3) % 10);
+            const orange = i % 3 !== 0;
+            return (
+              <span
+                key={i}
+                className="absolute rounded-full blur-[1px]"
+                style={{
+                  left: `${left}%`,
+                  bottom: `-${size}px`,
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  background: orange
+                    ? "radial-gradient(circle, rgba(255,160,70,0.95), rgba(255,90,30,0.2))"
+                    : "radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,255,255,0.1))",
+                  boxShadow: orange
+                    ? "0 0 18px rgba(255,140,50,0.85)"
+                    : "0 0 10px rgba(255,255,255,0.6)",
+                  animation: `hero-float ${dur}s linear ${delay}s infinite`,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Nav */}
+        <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 hero-fade">
+          <img src={logo} alt="CryptoPOP" width={200} height={48} className="h-10 w-auto" />
+          <nav className="flex items-center gap-3 font-mono text-xs">
+            <Link to="/mission" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+              Mission
+            </Link>
+            <a href="#how" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+              How it works
+            </a>
+            <Link to="/my-pop" className="rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+              My POP
+            </Link>
+            <Link to="/login" className="rounded-full border border-white/25 px-4 py-2 text-white hover:bg-white/10 transition">
+              Sign in
+            </Link>
+          </nav>
+        </header>
+
+        {/* Hero content */}
+        <div className="relative z-10 mx-auto flex h-[calc(100vh-104px)] min-h-[520px] max-w-6xl flex-col items-start justify-center px-6 pb-20">
+          <p
+            className="hero-fade-up mb-7 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-white/80 backdrop-blur-md"
+            style={{ animationDelay: "0.15s" }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#ff8c32] shadow-[0_0_12px_rgba(255,140,50,0.9)] animate-pulse" />
+            Connect · Experience · Learn
+          </p>
+
+          <h1
+            className="hero-fade-up max-w-5xl font-display font-normal uppercase leading-[0.88] tracking-tight text-white text-[clamp(3.5rem,11vw,9rem)]"
+            style={{ animationDelay: "0.35s" }}
+          >
+            Show up.
+            <br />
+            Get{" "}
+            <span
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage:
+                  "linear-gradient(90deg, #ffb066 0%, #ff7a28 45%, #ff3dbe 100%)",
+                filter: "drop-shadow(0 0 30px rgba(255,140,50,0.55))",
+              }}
+            >
+              POP
+            </span>
+            .
+          </h1>
+
+          <p
+            className="hero-fade-up mt-7 max-w-xl text-lg text-white/75 font-normal"
+            style={{ animationDelay: "0.55s" }}
+          >
+            The proof-of-participation wallet for real-world events. Scan a QR
+            at the venue, answer a couple of questions, and POP tokens land in
+            your wallet — verifiable on-chain.
+          </p>
+
+          <div
+            className="hero-fade-up mt-10 flex flex-wrap items-center gap-3"
+            style={{ animationDelay: "0.75s" }}
+          >
+            <Link
+              to="/events/$slug/rsvp"
+              params={{ slug: "july4-marina-bbq" }}
+              className="group inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-display font-semibold text-white transition hover:opacity-95"
+              style={{
+                background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
+                boxShadow:
+                  "0 18px 50px -12px rgba(255,122,40,0.7), 0 0 0 1px rgba(255,255,255,0.08) inset",
+              }}
+            >
+              RSVP — it's free
+              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#how"
+              className="rounded-full border border-white/25 px-7 py-3.5 font-display font-semibold text-white backdrop-blur-md hover:bg-white/10 transition"
+            >
+              How it works
+            </a>
           </div>
 
-          {/* Hero card — giant QR badge echoing the logo's POP-O */}
-          <div className="relative mx-auto w-full max-w-md">
-            <div
-              aria-hidden
-              className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-2xl"
-            />
-            <div className="relative rounded-[2rem] border border-foreground/10 bg-card p-8 shadow-[0_30px_80px_-30px] shadow-foreground/30">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Event QR · Live
-                </span>
-                <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Active
-                </span>
-              </div>
-
-              <div className="mt-6 mx-auto aspect-square w-full max-w-[280px] rounded-2xl bg-primary p-5 shadow-inner">
-                <div className="h-full w-full rounded-xl bg-bone p-3">
-                  <QrPattern variant="large" />
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-end justify-between">
-                <div>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Reward
-                  </p>
-                  <p className="font-display text-3xl font-bold text-foreground">
-                    +100 <span className="text-primary">POP</span>
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Venue
-                  </p>
-                  <p className="font-display text-sm font-semibold">Marina Bay</p>
-                </div>
-              </div>
-            </div>
+          <div
+            className="hero-fade-up mt-14 flex items-center gap-6 font-mono text-[11px] uppercase tracking-[0.22em] text-white/60"
+            style={{ animationDelay: "0.95s" }}
+          >
+            <Stat label="On-chain" value="100%" />
+            <Divider />
+            <Stat label="Geo-verified" value="±100m" />
+            <Divider />
+            <Stat label="Network" value="TXC L2" />
           </div>
         </div>
+
+        {/* Bottom fade into next section */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
+          style={{
+            background:
+              "linear-gradient(180deg, transparent, var(--background))",
+          }}
+        />
       </section>
+
 
       {/* How */}
       <section id="how" className="border-t border-border bg-card">
