@@ -170,7 +170,13 @@ function SignupPage() {
             CryptoPOP event
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
-            {ev.name}
+            {ev.slug === "july4-marina-bbq" ? (
+              <>
+                <span className="text-red-500">Red</span>, White & <span className="text-blue-400">Barbecue</span> — USA 250
+              </>
+            ) : (
+              ev.name
+            )}
           </h1>
           <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             <Anchor className="h-3.5 w-3.5 text-primary" />
