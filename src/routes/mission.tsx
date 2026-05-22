@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Sparkles, Users, BookOpen } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import wellnessBg from "@/assets/wellness-variant.jpg";
 import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/mission")({
