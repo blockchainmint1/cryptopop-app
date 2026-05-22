@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Sparkles, Users, BookOpen } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
-import wellnessBg from "@/assets/wellness-community-bg.jpg";
+import glowBg from "@/assets/mission-glow-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/mission")({
@@ -49,11 +49,11 @@ function MissionPage() {
       <section className="relative overflow-hidden border-b border-border/60">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${wellnessBg})` }}
+          style={{ backgroundImage: `url(${glowBg})` }}
           aria-hidden
         />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background"
+          className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background"
           aria-hidden
         />
         <div className="relative mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-0">
