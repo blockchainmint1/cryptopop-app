@@ -112,7 +112,6 @@ function MissionPage() {
 
         <Section className="border-0 rounded-xl">
           <p>
-            CryptoPOP is a community-first lifestyle platform built around real-world experiences, culture, and participation. From wellness activations and food events to yacht socials, nightlife, pop-ups, and community gatherings — CryptoPOP creates fun, social experiences where people can connect, explore, and be part of the moment together.
           </p>
           <p>
             By participating in selected events and activities, users may collect POP rewards as a digital record of participation and community engagement. CryptoPOP is designed to make experiences more interactive, memorable, and community-driven.
