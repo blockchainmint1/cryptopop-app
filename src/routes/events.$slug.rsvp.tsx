@@ -172,7 +172,7 @@ function SignupPage() {
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
             {ev.slug === "july4-marina-bbq" ? (
               <>
-                <span className="text-red-500">Red</span>, White & <span className="text-blue-400">Barbecue</span> — USA 250
+                <span className="text-red-500">Red</span>, White & <span className="text-blue-400">Barbecue</span> — USA 250ᵗʰ
               </>
             ) : (
               ev.name
