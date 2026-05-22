@@ -113,9 +113,6 @@ function MissionPage() {
         <Section className="border-0 rounded-xl">
           <p>
           </p>
-          <p>
-            By participating in selected events and activities, users may collect POP rewards as a digital record of participation and community engagement. CryptoPOP is designed to make experiences more interactive, memorable, and community-driven.
-          </p>
           
           <h2 className="pt-6 font-display text-2xl font-bold tracking-tight text-foreground">
             WHAT WE ARE NOT
