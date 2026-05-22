@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import loginBg from "@/assets/login-bg.jpg";
+import logo from "@/assets/cryptopop-logo.png";
+import loginBg from "@/assets/login-cinematic-bg.jpg";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — CryptoPOP" }] }),
@@ -42,64 +42,132 @@ function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${loginBg})` }}
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      {/* Cinematic background */}
+      <img
+        src={loginBg}
+        alt=""
         aria-hidden
+        className="absolute inset-0 h-full w-full object-cover hero-zoom"
       />
       <div
-        className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background"
         aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(8,5,20,0.45) 0%, rgba(8,5,20,0.7) 55%, rgba(8,5,20,0.92) 100%)",
+        }}
       />
-      <div className="relative mx-auto max-w-md px-6 py-8">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Link>
+      {/* Aurora glows */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-1/4 -left-1/4 h-[100vh] w-[100vh] rounded-full blur-3xl opacity-60 hero-aurora-a"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,122,40,0.5), rgba(255,61,190,0.25) 45%, transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-1/4 -right-1/4 h-[90vh] w-[90vh] rounded-full blur-3xl opacity-50 hero-aurora-b"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,220,90,0.45), rgba(255,61,190,0.18) 50%, transparent 75%)",
+        }}
+      />
 
-        <div className="mt-12">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-            <Mail className="h-6 w-6 text-primary" />
-          </div>
-          <h1 className="mt-6 font-display text-4xl font-bold tracking-tight">
-            {sent ? "Check your inbox" : "Sign in to CryptoPOP"}
-          </h1>
-          <p className="mt-3 text-muted-foreground">
-            {sent
-              ? `We sent a magic link to ${email}. Tap it on this device to finish signing in.`
-              : "Enter your email and we'll send you a magic link. No passwords."}
-          </p>
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-6 py-8">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="CryptoPOP" className="h-8 w-auto" />
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 font-mono text-xs text-white/80 backdrop-blur-md hover:bg-white/10 hover:text-white transition"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back
+          </Link>
         </div>
 
-        {!sent ? (
-          <form onSubmit={onSubmit} className="mt-8 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="you@domain.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12"
-              />
+        <div className="flex flex-1 items-center">
+          <div
+            className="hero-fade-up relative w-full overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-8 backdrop-blur-xl"
+            style={{
+              boxShadow:
+                "0 30px 80px -20px rgba(255,61,190,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset",
+            }}
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full blur-3xl opacity-70"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(255,122,40,0.5), rgba(255,61,190,0.25) 50%, transparent 75%)",
+              }}
+            />
+            <div className="relative">
+              <div
+                className="inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white"
+                style={{
+                  background: "linear-gradient(135deg, #ff7a28, #ff3dbe)",
+                  boxShadow: "0 10px 30px -10px rgba(255,122,40,0.7)",
+                }}
+              >
+                <Mail className="h-6 w-6" />
+              </div>
+              <h1 className="mt-6 font-display text-4xl font-bold uppercase tracking-tight text-white">
+                {sent ? "Check your inbox" : "Sign in to CryptoPOP"}
+              </h1>
+              <p className="mt-3 text-white/75">
+                {sent
+                  ? `We sent a magic link to ${email}. Tap it on this device to finish signing in.`
+                  : "Enter your email and we'll send you a magic link. No passwords."}
+              </p>
+
+              {!sent ? (
+                <form onSubmit={onSubmit} className="mt-8 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-white/80">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      placeholder="you@domain.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 border-white/20 bg-white/10 text-white placeholder:text-white/40 backdrop-blur-md focus-visible:ring-[#ff3dbe]"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={sending}
+                    className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-7 font-display text-base font-semibold text-white transition hover:opacity-95 disabled:opacity-60"
+                    style={{
+                      background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
+                      boxShadow:
+                        "0 18px 50px -12px rgba(255,122,40,0.7), 0 0 0 1px rgba(255,255,255,0.08) inset",
+                    }}
+                  >
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send magic link"}
+                  </button>
+                  <p className="text-xs text-white/60">
+                    By continuing you agree to receive a one-time sign-in email.
+                  </p>
+                </form>
+              ) : (
+                <div className="mt-8 space-y-3">
+                  <button
+                    onClick={() => { setSent(false); setEmail(""); }}
+                    className="h-12 w-full rounded-full border border-white/25 bg-white/5 font-display font-semibold text-white backdrop-blur-md hover:bg-white/10 transition"
+                  >
+                    Use a different email
+                  </button>
+                </div>
+              )}
             </div>
-            <Button type="submit" disabled={sending} className="h-12 w-full text-base">
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send magic link"}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              By continuing you agree to receive a one-time sign-in email.
-            </p>
-          </form>
-        ) : (
-          <div className="mt-8 space-y-3">
-            <Button variant="outline" className="h-12 w-full" onClick={() => { setSent(false); setEmail(""); }}>
-              Use a different email
-            </Button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
