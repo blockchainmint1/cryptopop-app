@@ -20,7 +20,7 @@ type EventInfo = {
 const EVENTS: Record<string, EventInfo> = {
   "july4-marina-bbq": {
     slug: "july4-marina-bbq",
-    name: "Red, White & Barbecue — USA 250",
+    name: "Red, White & Barbecue — USA 250ᵗʰ",
     date: "Saturday, 4 July 2026 · 11am – 4pm",
     location: "ONE°15 Marina, Sentosa Cove",
     mapUrl:
@@ -172,7 +172,7 @@ function SignupPage() {
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
             {ev.slug === "july4-marina-bbq" ? (
               <>
-                <span className="text-red-500">Red</span>, White & <span className="text-blue-400">Barbecue</span> — USA 250
+                <span className="text-red-500">Red</span>, White & <span className="text-blue-400">Barbecue</span> — USA 250ᵗʰ
               </>
             ) : (
               ev.name
