@@ -100,7 +100,7 @@ function MissionPage() {
           <Pillar
             icon={BookOpen}
             title="Learn"
-            body="CRYPTOPOP IS — AND ISN’T"
+            body="Explore Web3, culture, and emerging trends in a fun, approachable, and community-driven way without the complicated jargon."
           />
         </div>
 
