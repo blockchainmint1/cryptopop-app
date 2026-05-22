@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import logo from "@/assets/cryptopop-logo.png";
+import texasBg from "@/assets/api-texas-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/api")({
