@@ -56,7 +56,7 @@ function MissionPage() {
           className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background"
           aria-hidden
         />
-        <div className="relative mx-auto max-w-3xl px-6 py-20 md:py-28">
+        <div className="relative mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-0">
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Education · Singapore
           </p>
@@ -78,7 +78,7 @@ function MissionPage() {
             <div className="space-y-1 text-foreground">
               <p>No complicated jargon.</p>
               <p>No hard selling.</p>
-              <p>Feel what on-chain participation is actually like. Scan a QR at the venue, prove you were there, and walk away with POP.</p>
+              <p>CryptoPOP is a community-first lifestyle platform that brings together culture, experiences, wellness, entertainment, and Web3 in a fun and approachable way.</p>
             </div>
           </div>
         </div>
