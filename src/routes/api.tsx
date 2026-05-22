@@ -58,7 +58,16 @@ function H3({ children }: { children: React.ReactNode }) {
 
 function L2ApiPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen bg-background text-foreground">
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-[0.12]"
+        style={{ backgroundImage: `url(${texasBg})` }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/60 via-background/80 to-background"
+        aria-hidden
+      />
       {/* Nav */}
       <header className="border-b border-border/60">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
