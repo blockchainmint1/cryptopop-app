@@ -154,6 +154,7 @@ function MissionPage() {
       </main>
 
       <SiteFooter />
+      </div>
     </div>
   );
 }
