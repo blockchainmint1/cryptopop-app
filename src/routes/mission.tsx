@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Sparkles, Users, BookOpen } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import wellnessBg from "@/assets/wellness-variant.jpg";
 import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/mission")({
@@ -25,7 +26,17 @@ export const Route = createFileRoute("/mission")({
 
 function MissionPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen text-foreground">
+      {/* Background image with dark overlay for readability */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${wellnessBg})` }}
+      />
+      <div className="fixed inset-0 bg-black/70" />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
+
+      {/* Content */}
+      <div className="relative z-10">
       <header className="border-b border-border/60">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
           <Link to="/" className="flex items-center gap-2">
@@ -143,6 +154,7 @@ function MissionPage() {
       </main>
 
       <SiteFooter />
+      </div>
     </div>
   );
 }
