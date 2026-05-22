@@ -78,7 +78,7 @@ function MissionPage() {
             <div className="space-y-1 text-foreground">
               <p>No complicated jargon.</p>
               <p>No hard selling.</p>
-              <p>CryptoPOP is a community-first lifestyle platform that brings together culture, experiences, wellness, entertainment, and Web3 in a fun and approachable way.</p>
+              <p></p>
             </div>
           </div>
         </div>
