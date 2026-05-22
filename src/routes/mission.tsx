@@ -120,27 +120,6 @@ function MissionPage() {
           <p>
             CryptoPOP is not an exchange, brokerage, investment platform, or digital payment token service.
           </p>
-          <p>
-            We do not facilitate the buying, selling, or trading of cryptocurrencies to the public.
-          </p>
-          <p>
-            POP rewards are non-monetary community participation rewards designed for experiences, engagement, and activations within the CryptoPOP ecosystem.
-          </p>
-          <div className="space-y-1">
-            <p className="font-semibold text-foreground">POP rewards:</p>
-            <ul className="list-inside space-y-1">
-              <li>• have no monetary value</li>
-              <li>• are not redeemable for currency</li>
-              <li>• are not investment products</li>
-              <li>• are not securities, e-money, or deposits</li>
-            </ul>
-          </div>
-          <p>
-            Nothing on this platform should be considered financial, investment, legal, or tax advice.
-          </p>
-          <p>
-            CryptoPOP is about community, culture, and experiences first.
-          </p>
         </Section>
 
         <Section title="WH">
