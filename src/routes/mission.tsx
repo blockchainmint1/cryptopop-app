@@ -122,7 +122,7 @@ function MissionPage() {
           </p>
         </Section>
 
-        <Section title="WH">
+        <Section title="WHO WE HERE FOR?">
           <p>
             Curious students. Aunties and uncles who want to understand what their kids
             are talking about. Designers, developers, chefs, DJs, dancers, founders, and
