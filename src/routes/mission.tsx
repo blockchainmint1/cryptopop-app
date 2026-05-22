@@ -95,7 +95,7 @@ function MissionPage() {
           <Pillar
             icon={Sparkles}
             title="Experience"
-            body="Feel what on-chain participation is actually like. Scan a QR at the venue, prove you were there, and walk away with a verifiable POP."
+            body="From wellness activations and yacht socials to BBQs, nightlife, games, and pop-ups — CryptoPOP is all about memorable moments."
           />
           <Pillar
             icon={BookOpen}
