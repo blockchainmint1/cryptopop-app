@@ -48,7 +48,7 @@ function MissionPage() {
 
       <section className="relative overflow-hidden border-b border-border/60">
         <div
-          className="absolute inset-1 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${glowBg})` }}
           aria-hidden
         />
