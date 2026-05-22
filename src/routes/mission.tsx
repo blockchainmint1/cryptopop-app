@@ -48,12 +48,12 @@ function MissionPage() {
 
       <section className="relative overflow-hidden border-b border-border/60">
         <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${wellnessBg})` }}
+          className="absolute inset-1 bg-cover bg-center"
+          style={{ backgroundImage: `url(${glowBg})` }}
           aria-hidden
         />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background"
+          className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background"
           aria-hidden
         />
         <div className="relative mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-0">
