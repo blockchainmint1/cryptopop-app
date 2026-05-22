@@ -33,7 +33,7 @@ function MissionPage() {
         style={{ backgroundImage: `url(${wellnessBg})` }}
       />
       <div className="fixed inset-0 bg-black/70" />
-      <div className="fixed inset-1 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
 
       {/* Content */}
       <div className="relative z-10">
