@@ -396,9 +396,9 @@ function Section({
   return (
     <section>
       <div className="mb-3">
-        <h2 className="font-display text-lg font-bold">{title}</h2>
+        <h2 className="font-display text-xl font-bold uppercase tracking-tight text-white">{title}</h2>
         {subtitle && (
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
+          <p className="text-xs text-white/60">{subtitle}</p>
         )}
       </div>
       {children}
@@ -416,24 +416,29 @@ function StatPill({
   value: number | string;
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-background/60 p-2.5">
-      <p className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+    <div className="rounded-xl border border-white/15 bg-white/5 p-2.5 backdrop-blur-md">
+      <p className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-white/60">
         {icon} {label}
       </p>
-      <p className="mt-0.5 font-display text-sm font-bold">{value}</p>
+      <p className="mt-0.5 font-display text-sm font-bold text-white">{value}</p>
     </div>
   );
 }
 
 function Empty({ title, message }: { title: string; message: string }) {
   return (
-    <div className="rounded-3xl border border-border bg-card p-8 text-center">
-      <h1 className="font-display text-2xl font-bold">{title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+    <div className="rounded-3xl border border-white/15 bg-white/5 p-8 text-center backdrop-blur-xl">
+      <h1 className="font-display text-2xl font-bold text-white">{title}</h1>
+      <p className="mt-2 text-sm text-white/70">{message}</p>
       <Link
         to="/events/$slug/rsvp"
         params={{ slug: "july4-marina-bbq" }}
-        className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground"
+        className="mt-6 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-display font-semibold text-white transition hover:opacity-95"
+        style={{
+          background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
+          boxShadow:
+            "0 14px 40px -10px rgba(255,122,40,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset",
+        }}
       >
         Sign up
       </Link>
