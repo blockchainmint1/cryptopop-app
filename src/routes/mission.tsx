@@ -46,7 +46,7 @@ function MissionPage() {
       </header>
 
       <section className="overflow-hidden border-b border-border/60">
-        <div className="mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-人0">
+        <div className="mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-0">
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Education · Singapore
           </p>
