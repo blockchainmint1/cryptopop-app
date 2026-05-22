@@ -310,9 +310,7 @@ function Dashboard({ signup }: { signup: Signup }) {
             No activities yet.
           </p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            {/* Synthesize timestamped events. Real timestamps live in `claims`
-                long-term; for now, signup and check-in use signup row dates. */}
+          <ul className="divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl">
             {earnedActivities.map((a) => {
               const when =
                 a.key === "signup"
@@ -321,23 +319,21 @@ function Dashboard({ signup }: { signup: Signup }) {
                     ? signup.checked_in_at
                     : null;
               return (
-                <li key={a.key} className="flex items-center gap-3 p-4">
-                  <div className="rounded-full bg-primary/15 p-2 text-primary">
+                <li key={a.key} className="flex items-center gap-3 p-4 transition hover:bg-white/5">
+                  <div className="rounded-full bg-gradient-to-br from-[#ff7a28]/30 to-[#ff3dbe]/30 p-2 text-white shadow-[0_0_20px_rgba(255,122,40,0.35)]">
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-display font-semibold">{a.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {a.description}
-                    </p>
+                    <p className="font-display font-semibold text-white">{a.label}</p>
+                    <p className="text-xs text-white/60">{a.description}</p>
                     {when && (
-                      <p className="mt-0.5 flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <p className="mt-0.5 flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-white/50">
                         <Calendar className="h-3 w-3" />
                         {new Date(when).toLocaleString()}
                       </p>
                     )}
                   </div>
-                  <div className="shrink-0 rounded-full bg-emerald-500/15 px-3 py-1 font-mono text-[11px] font-semibold text-emerald-600">
+                  <div className="shrink-0 rounded-full bg-[#ccf695]/20 px-3 py-1 font-mono text-[11px] font-semibold text-[#ccf695]">
                     +{a.reward} POP
                   </div>
                 </li>
@@ -353,22 +349,20 @@ function Dashboard({ signup }: { signup: Signup }) {
           title="Earn more POP"
           subtitle="Complete these at the event to collect more credits."
         >
-          <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+          <ul className="divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
             {lockedActivities.map((a) => (
               <li
                 key={a.key}
-                className="flex items-center gap-3 p-4 opacity-80"
+                className="flex items-center gap-3 p-4 opacity-70 transition hover:opacity-100"
               >
-                <div className="rounded-full bg-muted p-2 text-muted-foreground">
+                <div className="rounded-full bg-white/10 p-2 text-white/70">
                   <Coins className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-display font-semibold">{a.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {a.description}
-                  </p>
+                  <p className="font-display font-semibold text-white">{a.label}</p>
+                  <p className="text-xs text-white/60">{a.description}</p>
                 </div>
-                <div className="shrink-0 rounded-full border border-border px-3 py-1 font-mono text-[11px] text-muted-foreground">
+                <div className="shrink-0 rounded-full border border-white/15 px-3 py-1 font-mono text-[11px] text-white/60">
                   +{a.reward} POP
                 </div>
               </li>
@@ -377,7 +371,7 @@ function Dashboard({ signup }: { signup: Signup }) {
         </Section>
       )}
 
-      <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <p className="text-center font-mono text-[10px] uppercase tracking-widest text-white/50">
         POP are a participation record. Education only, no monetary value.
       </p>
     </>
