@@ -118,7 +118,11 @@ function MissionPage() {
             WHAT WE ARE NOT
           </h2>
           <p>
-            CryptoPOP is not an exchange, brokerage, investment platform, or digital payment token service.
+            CryptoPOP is not an exchange, brokerage, investment platform, or digital payment token service. CryptoPOP is built around real-world experiences, community participation, and culture.
+
+            POP rewards are designed as digital participation rewards that users can collect through events, activities, activations, and community experiences within the CryptoPOP ecosystem.
+
+            Rather than focusing on trading or financial services, CryptoPOP focuses on creating fun, social, and memorable experiences that bring people together through culture, entertainment, wellness, and Web3 education.
           </p>
         </Section>
 
