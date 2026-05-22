@@ -359,7 +359,7 @@ function Landing() {
                       CryptoPOP × July 4
                     </p>
                     <p className="font-display text-3xl font-bold leading-none">
-                      USA 250
+                      USA 250ᵀᴴ
                     </p>
                   </div>
                   <span className="rounded-full bg-black/40 px-3 py-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur">
