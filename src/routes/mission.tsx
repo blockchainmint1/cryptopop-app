@@ -86,7 +86,7 @@ function MissionPage() {
 
       <main className="mx-auto max-w-3xl px-6 py-14">
 
-        <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
+        <div className="mt-2 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
           <Pillar
             icon={Users}
             title="Connect"
