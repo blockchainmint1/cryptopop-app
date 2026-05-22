@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Sparkles, Users, BookOpen, ShieldAlert } from "lucide-react";
+import { Sparkles, Users, BookOpen } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import wellnessBg from "@/assets/wellness-community-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
@@ -131,15 +131,6 @@ function MissionPage() {
           </p>
         </Section>
 
-        <div className="mt-12 flex items-start gap-3 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <p>
-            <strong className="text-foreground">Risk reminder.</strong> Trading of digital
-            payment tokens is highly risky and not suitable for the general public. You
-            may lose all the money you put in. CryptoPOP does not offer DPT services and
-            nothing here is an inducement to trade.
-          </p>
-        </div>
 
         <div className="mt-10 flex flex-wrap gap-3">
           <Link
