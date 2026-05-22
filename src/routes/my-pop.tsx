@@ -13,6 +13,7 @@ import {
   Flame,
 } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import myPopBg from "@/assets/my-pop-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { getSignupById } from "@/lib/signups.functions";
 
@@ -117,42 +118,62 @@ function MyPopPage() {
   }, [id, fetchSignup]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="CryptoPOP" className="h-8 w-auto" />
-          </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Home
-          </Link>
-        </div>
-      </header>
+    <div className="relative min-h-screen text-foreground">
+      <img
+        src={myPopBg}
+        alt=""
+        aria-hidden
+        className="pointer-events-none fixed inset-0 h-full w-full object-cover"
+        loading="lazy"
+        width={1080}
+        height={1920}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(8,5,20,0.78) 0%, rgba(8,5,20,0.85) 50%, rgba(8,5,20,0.95) 100%)",
+        }}
+      />
+      <div className="relative">
+        <header className="border-b border-border/60 backdrop-blur-md">
+          <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
+            <Link to="/" className="flex items-center gap-2">
+              <img src={logo} alt="CryptoPOP" className="h-8 w-auto" />
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Home
+            </Link>
+          </div>
+        </header>
 
-      <main className="mx-auto max-w-xl space-y-6 px-6 py-10">
-        {loading ? (
-          <p className="text-center font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Loading your POP…
-          </p>
-        ) : !id ? (
-          <Empty
-            title="No POP account on this device"
-            message="Sign up to start collecting POP at the next CryptoPOP event."
-          />
-        ) : error || !signup ? (
-          <Empty title="Account not found" message={error ?? "We couldn't find your POP."} />
-        ) : (
-          <Dashboard signup={signup} />
-        )}
-      </main>
+        <main className="mx-auto max-w-xl space-y-6 px-6 py-10">
+          {loading ? (
+            <p className="text-center font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              Loading your POP…
+            </p>
+          ) : !id ? (
+            <Empty
+              title="No POP account on this device"
+              message="Sign up to start collecting POP at the next CryptoPOP event."
+            />
+          ) : error || !signup ? (
+            <Empty title="Account not found" message={error ?? "We couldn't find your POP."} />
+          ) : (
+            <Dashboard signup={signup} />
+          )}
+        </main>
 
-      <SiteFooter />
+        <SiteFooter />
+      </div>
     </div>
   );
 }
+
 
 function Dashboard({ signup }: { signup: Signup }) {
   const earned = new Set(signup.completed_activities ?? []);
