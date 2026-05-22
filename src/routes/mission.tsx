@@ -90,7 +90,7 @@ function MissionPage() {
           <Pillar
             icon={Users}
             title="Connect"
-            body="Meet the people building Singapore's digital future at pop-ups, club nights, food events, and live activations."
+            body="Meet new people, discover communities, and be part of experiences designed to bring people together in real life."
           />
           <Pillar
             icon={Sparkles}
