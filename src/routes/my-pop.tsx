@@ -13,6 +13,7 @@ import {
   Flame,
 } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
+import myPopBg from "@/assets/my-pop-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { getSignupById } from "@/lib/signups.functions";
 
