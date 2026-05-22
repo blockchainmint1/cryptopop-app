@@ -45,17 +45,8 @@ function MissionPage() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden border-b border-border/60">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${glowBg})` }}
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background"
-          aria-hidden
-        />
-        <div className="relative mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-0">
+      <section className="overflow-hidden border-b border-border/60">
+        <div className="mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-人0">
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Education · Singapore
           </p>
