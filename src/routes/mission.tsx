@@ -69,8 +69,8 @@ function MissionPage() {
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
               WHAT IS CRYPTOPOP?
             </h2>
-            <p>
-              CryptoPOP is a community-first lifestyle platform that brings together culture, experiences, wellness, entertainment, and Web3 in a fun and approachable way.
+            <p className="font-mono font-semibold">
+              Explore Web3, culture, and emerging trends in a fun, approachable, and community-driven way without the complicated jargon.
             </p>
             <p>
               From yacht parties and wellness activations to BBQs, nightlife, fitness, creators, and social experiences — CryptoPOP is designed to make people connect in real life while discovering the future of digital communities together.
