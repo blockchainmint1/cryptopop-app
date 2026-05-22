@@ -69,7 +69,7 @@ function MissionPage() {
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
               WHAT IS CRYPTOPOP?
             </h2>
-            <p className="font-mono font-semibold">
+            <p className="font-sans font-normal">
               Explore Web3, culture, and emerging trends in a fun, approachable, and community-driven way without the complicated jargon.
             </p>
             <p>
