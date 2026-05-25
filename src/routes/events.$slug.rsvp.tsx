@@ -5,8 +5,9 @@ import { ArrowLeft, CalendarDays, MapPin, Anchor } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
 import { SiteFooter } from "@/components/site-footer";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { createEventSignup } from "@/lib/signups.functions";
 
 type EventInfo = {
   slug: string;
@@ -66,6 +67,7 @@ function SignupPage() {
   const { slug } = Route.useParams();
   const ev = EVENTS[slug];
   const navigate = useNavigate();
+  const saveSignup = useServerFn(createEventSignup);
   const [submitting, setSubmitting] = useState(false);
 
   if (!ev) {
@@ -104,39 +106,34 @@ function SignupPage() {
       return;
     }
     setSubmitting(true);
-    const ig = parsed.data.instagram_handle?.replace(/^@/, "").trim();
-    const tg = parsed.data.telegram_handle?.replace(/^@/, "").trim();
-    const { data: inserted, error } = await supabase
-      .from("event_signups")
-      .insert({
-        full_name: parsed.data.full_name,
-        email: parsed.data.email.toLowerCase(),
-        mobile_number: parsed.data.mobile_number,
-        instagram_handle: ig ? ig : null,
-        telegram_handle: tg ? tg : null,
-        is_friend: parsed.data.is_friend === "yes",
-      })
-      .select("id")
-      .single();
-    setSubmitting(false);
-    if (error || !inserted) {
-      if (error?.code === "23505") {
-        const msg = /mobile/i.test(error.message)
-          ? "That mobile number is already signed up."
-          : "That email is already signed up.";
-        toast.error(msg);
+    try {
+      const inserted = await saveSignup({
+        data: {
+          full_name: parsed.data.full_name,
+          email: parsed.data.email,
+          mobile_number: parsed.data.mobile_number,
+          instagram_handle: parsed.data.instagram_handle || null,
+          telegram_handle: parsed.data.telegram_handle || null,
+          is_friend: parsed.data.is_friend === "yes",
+        },
+      });
+      try {
+        localStorage.setItem("cryptopop_signup_id", inserted.id);
+      } catch {
+        // ignore storage failures
+      }
+      toast.success("You're in! 10 POP added.");
+      navigate({ to: "/my-pass", search: { id: inserted.id } });
+    } catch (error) {
+      if (error instanceof Error && error.message === "duplicate_signup") {
+        toast.error("That email or mobile number is already signed up.");
         return;
       }
       toast.error("Couldn't save your signup. Please try again.");
       return;
+    } finally {
+      setSubmitting(false);
     }
-    try {
-      localStorage.setItem("cryptopop_signup_id", inserted.id);
-    } catch {
-      // ignore storage failures
-    }
-    toast.success("You're in! 10 POP added.");
-    navigate({ to: "/my-pass", search: { id: inserted.id } });
   }
 
   return (
