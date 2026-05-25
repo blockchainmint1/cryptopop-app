@@ -7,6 +7,44 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 const safeColumns =
   "id, full_name, email, mobile_number, instagram_handle, telegram_handle, is_friend, pop_credits, completed_activities, signup_source, status, signed_up_at, checked_in_at";
 
+const eventSignupSchema = z.object({
+  full_name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(254),
+  mobile_number: z.string().trim().min(3).max(32),
+  instagram_handle: z.string().trim().max(64).optional().nullable(),
+  telegram_handle: z.string().trim().max(64).optional().nullable(),
+  is_friend: z.boolean(),
+});
+
+// Public: create a signup without exposing the private signups table to public reads.
+export const createEventSignup = createServerFn({ method: "POST" })
+  .inputValidator((input) => eventSignupSchema.parse(input))
+  .handler(async ({ data }) => {
+    const instagram = data.instagram_handle?.replace(/^@/, "").trim() || null;
+    const telegram = data.telegram_handle?.replace(/^@/, "").trim() || null;
+    const { data: inserted, error } = await supabaseAdmin
+      .from("event_signups")
+      .insert({
+        full_name: data.full_name,
+        email: data.email.toLowerCase(),
+        mobile_number: data.mobile_number,
+        instagram_handle: instagram,
+        telegram_handle: telegram,
+        is_friend: data.is_friend,
+        pop_credits: 10,
+        completed_activities: ["signup"],
+        signup_source: "website",
+        status: "confirmed",
+      })
+      .select("id")
+      .single();
+    if (error) {
+      if (error.code === "23505") throw new Error("duplicate_signup");
+      throw new Error(error.message);
+    }
+    return { id: inserted.id };
+  });
+
 // Public: fetch a signup by its id (the id IS the pass — possession of the
 // UUID is the access token). Returns null when not found.
 export const getSignupById = createServerFn({ method: "POST" })
