@@ -4,8 +4,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const safeColumns =
+// Admin-only columns (includes PII). Never expose to public endpoints.
+const adminColumns =
   "id, full_name, email, mobile_number, instagram_handle, telegram_handle, is_friend, pop_credits, completed_activities, signup_source, status, signed_up_at, checked_in_at";
+
+// Public pass columns — what the holder of the pass UUID can see.
+// Excludes PII (email, mobile, IG, Telegram) to avoid leaking contact info
+// to anyone who obtains the pass UUID.
+const passColumns =
+  "id, full_name, pop_credits, completed_activities, status, signed_up_at, checked_in_at";
 
 const eventSignupSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
