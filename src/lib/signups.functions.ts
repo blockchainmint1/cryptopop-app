@@ -91,7 +91,7 @@ export const searchSignups = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     let query = supabaseAdmin
       .from("event_signups")
-      .select(safeColumns)
+      .select(adminColumns)
       .order("signed_up_at", { ascending: false })
       .limit(100);
     const q = data.q?.trim();
