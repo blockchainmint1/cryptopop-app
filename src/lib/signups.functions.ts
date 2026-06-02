@@ -4,8 +4,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const safeColumns =
+// Admin-only columns (includes PII). Never expose to public endpoints.
+const adminColumns =
   "id, full_name, email, mobile_number, instagram_handle, telegram_handle, is_friend, pop_credits, completed_activities, signup_source, status, signed_up_at, checked_in_at";
+
+// Public pass columns — what the holder of the pass UUID can see.
+// Excludes PII (email, mobile, IG, Telegram) to avoid leaking contact info
+// to anyone who obtains the pass UUID.
+const passColumns =
+  "id, full_name, pop_credits, completed_activities, status, signed_up_at, checked_in_at";
 
 const eventSignupSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
@@ -39,23 +46,28 @@ export const createEventSignup = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) {
+      console.error("[createEventSignup]", error);
       if (error.code === "23505") throw new Error("duplicate_signup");
-      throw new Error(error.message);
+      throw new Error("signup_failed");
     }
     return { id: inserted.id };
   });
 
 // Public: fetch a signup by its id (the id IS the pass — possession of the
-// UUID is the access token). Returns null when not found.
+// UUID is the access token). Returns only non-PII pass fields. Returns null
+// when not found.
 export const getSignupById = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
     const { data: row, error } = await supabaseAdmin
       .from("event_signups")
-      .select(safeColumns)
+      .select(passColumns)
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[getSignupById]", error);
+      throw new Error("lookup_failed");
+    }
     return { signup: row };
   });
 
@@ -79,7 +91,7 @@ export const searchSignups = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     let query = supabaseAdmin
       .from("event_signups")
-      .select(safeColumns)
+      .select(adminColumns)
       .order("signed_up_at", { ascending: false })
       .limit(100);
     const q = data.q?.trim();

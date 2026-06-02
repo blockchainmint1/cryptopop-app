@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { attachSupabaseAuth } from "./auth-client-middleware";
 
 const MEMPOOL_BASE = "https://mempool.texitcoin.org/api";
 
@@ -8,8 +10,10 @@ const Input = z.object({ address: z.string().min(20).max(64) });
 /**
  * Returns the native TXC chain balance (in TXC, not satoshis) for an address.
  * Failures return `null` so the UI can render a dash without breaking.
+ * Auth-gated to prevent the endpoint from being abused as a public proxy.
  */
 export const getTxcBalance = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((input) => Input.parse(input))
   .handler(async ({ data }): Promise<{ txc: number | null }> => {
     try {

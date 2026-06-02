@@ -135,7 +135,6 @@ function PassCard({ signup }: { signup: Signup }) {
               CryptoPOP pass
             </p>
             <p className="mt-1 font-display text-xl font-bold">{signup.full_name}</p>
-            <p className="text-xs text-muted-foreground">{signup.email}</p>
           </div>
           <div
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-widest ${
