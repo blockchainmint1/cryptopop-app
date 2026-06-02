@@ -46,23 +46,28 @@ export const createEventSignup = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) {
+      console.error("[createEventSignup]", error);
       if (error.code === "23505") throw new Error("duplicate_signup");
-      throw new Error(error.message);
+      throw new Error("signup_failed");
     }
     return { id: inserted.id };
   });
 
 // Public: fetch a signup by its id (the id IS the pass — possession of the
-// UUID is the access token). Returns null when not found.
+// UUID is the access token). Returns only non-PII pass fields. Returns null
+// when not found.
 export const getSignupById = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
     const { data: row, error } = await supabaseAdmin
       .from("event_signups")
-      .select(safeColumns)
+      .select(passColumns)
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[getSignupById]", error);
+      throw new Error("lookup_failed");
+    }
     return { signup: row };
   });
 
