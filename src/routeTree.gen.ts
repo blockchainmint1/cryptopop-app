@@ -20,6 +20,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
+import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
@@ -80,6 +81,12 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedRecoverWalletRoute =
+  AuthenticatedRecoverWalletRouteImport.update({
+    id: '/recover-wallet',
+    path: '/recover-wallet',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
+  '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
+  '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -155,6 +164,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
+  '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/app'
+    | '/recover-wallet'
     | '/scan'
     | '/auth/callback'
     | '/admin/signups'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/app'
+    | '/recover-wallet'
     | '/scan'
     | '/auth/callback'
     | '/admin/signups'
@@ -209,6 +221,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/_authenticated/app'
+    | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
     | '/auth/callback'
     | '/_authenticated/admin/signups'
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/recover-wallet': {
+      id: '/_authenticated/recover-wallet'
+      path: '/recover-wallet'
+      fullPath: '/recover-wallet'
+      preLoaderRoute: typeof AuthenticatedRecoverWalletRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -361,6 +381,7 @@ const AuthenticatedScanRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
+  AuthenticatedRecoverWalletRoute: typeof AuthenticatedRecoverWalletRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
   AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
@@ -368,6 +389,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
+  AuthenticatedRecoverWalletRoute: AuthenticatedRecoverWalletRoute,
   AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
   AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
@@ -393,3 +415,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
