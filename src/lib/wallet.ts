@@ -38,6 +38,16 @@ export function getOrCreateMnemonic(): string {
   return m;
 }
 
+export function getMnemonic(): string | null {
+  const m = localStorage.getItem(MNEMONIC_KEY);
+  return m && validateMnemonic(m) ? m : null;
+}
+
+export function setMnemonic(m: string): void {
+  if (!validateMnemonic(m)) throw new Error("invalid mnemonic");
+  localStorage.setItem(MNEMONIC_KEY, m);
+}
+
 export function deriveTxcAddress(mnemonic: string): string {
   const seed = mnemonicToSeedSync(mnemonic);
   const root = bip32.fromSeed(seed);
