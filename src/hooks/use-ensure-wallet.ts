@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  getOrCreateMnemonic,
   deriveTxcAddress,
-  isValidTxcAddress,
+  getMnemonic,
+  setMnemonic,
 } from "@/lib/wallet";
+import { ensureWalletBackup } from "@/lib/wallet-backup.functions";
 
 const DEVICE_WARNED_KEY = "cryptopop:device-warned";
 
@@ -16,19 +17,14 @@ type State = {
   settingUp: boolean;
   error: string | null;
   retry: () => void;
-  /** True iff this device's locally-derived address replaced a different one
-   *  already stored on the profile (i.e. signed in on a 2nd device). */
   replacedRemote: boolean;
 };
 
 /**
- * Ensures the authenticated user has a TXC wallet address persisted to
- * `profiles.wallet_address`. Auto-creates per-device (per product decision):
- * if the local mnemonic derives to a different address than the one stored
- * remotely, we overwrite the remote and warn the user once.
- *
- * Returns `ready: true` only after the address is confirmed in the DB, so
- * callers (e.g. /scan) can safely gate actions on this.
+ * Ensures the signed-in user has a sandbox POP wallet whose seed is backed
+ * up server-side (encrypted). The server is the source of truth: if a
+ * backup exists, we restore the seed to this device; otherwise we either
+ * upload this device's seed or have the server generate one.
  */
 export function useEnsureWallet(): State {
   const { user } = useAuth();
@@ -39,6 +35,7 @@ export function useEnsureWallet(): State {
   const [replacedRemote, setReplacedRemote] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  const ensure = useServerFn(ensureWalletBackup);
 
   useEffect(() => {
     if (!user) {
@@ -50,59 +47,45 @@ export function useEnsureWallet(): State {
     }
 
     let cancelled = false;
-    let step: "mnemonic" | "derive" | "read-profile" | "upsert" = "mnemonic";
+    let step: "local" | "backup" | "persist" = "local";
     (async () => {
       setReady(false);
       setSettingUp(true);
       setError(null);
       try {
-        step = "mnemonic";
-        const mnemonic = getOrCreateMnemonic();
-        step = "derive";
-        const localAddr = deriveTxcAddress(mnemonic);
+        step = "local";
+        const localMnemonic = getMnemonic();
+        const localAddr = localMnemonic ? deriveTxcAddress(localMnemonic) : null;
 
-        step = "read-profile";
-        const { data: profile, error: readErr } = await supabase
-          .from("profiles")
-          .select("wallet_address")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (readErr) throw readErr;
+        step = "backup";
+        const res = await ensure({
+          data: { clientMnemonic: localMnemonic ?? undefined },
+        });
 
-        const remote = profile?.wallet_address ?? null;
+        step = "persist";
+        // Server is authoritative — sync local storage to match the backup.
+        const serverChanged = localMnemonic !== res.mnemonic;
+        if (serverChanged) setMnemonic(res.mnemonic);
 
-        if (remote === localAddr) {
-          if (!cancelled) {
-            setAddress(localAddr);
-            setReady(true);
-            setSettingUp(false);
-          }
-          return;
-        }
+        if (cancelled) return;
+        setAddress(res.address);
+        setReady(true);
+        setSettingUp(false);
 
-        const remoteWasValid = !!remote && isValidTxcAddress(remote);
-        step = "upsert";
-        const { error: upsertErr } = await supabase
-          .from("profiles")
-          .upsert(
-            { id: user.id, wallet_address: localAddr, updated_at: new Date().toISOString() },
-            { onConflict: "id" },
-          );
-        if (upsertErr) throw upsertErr;
-
-        if (!cancelled) {
-          setAddress(localAddr);
-          setReady(true);
-          setSettingUp(false);
-          if (remoteWasValid && !sessionStorage.getItem(DEVICE_WARNED_KEY)) {
-            setReplacedRemote(true);
-            sessionStorage.setItem(DEVICE_WARNED_KEY, "1");
-            toast.warning("New wallet for this device", {
-              description:
-                "POP minted earlier went to your other device's wallet. Future scans land here.",
-              duration: 8000,
-            });
-          }
+        // Warn once when the on-device wallet was replaced by the cloud
+        // backup (e.g. signed in on a fresh device).
+        if (
+          localAddr &&
+          localAddr !== res.address &&
+          !sessionStorage.getItem(DEVICE_WARNED_KEY)
+        ) {
+          setReplacedRemote(true);
+          sessionStorage.setItem(DEVICE_WARNED_KEY, "1");
+          toast.info("Wallet restored from backup", {
+            description:
+              "Your sandbox POP wallet was restored on this device from your encrypted backup.",
+            duration: 8000,
+          });
         }
       } catch (e) {
         const raw = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
@@ -120,7 +103,7 @@ export function useEnsureWallet(): State {
     return () => {
       cancelled = true;
     };
-  }, [user, attempt]);
+  }, [user, attempt, ensure]);
 
   return { address, ready, settingUp, error, retry, replacedRemote };
 }

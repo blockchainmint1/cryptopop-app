@@ -244,7 +244,8 @@ function WalletHome() {
               <div className="flex-1">
                 <h3 className="text-sm font-semibold">Save your recovery phrase</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  These 12 words are the only way to restore your wallet on another device.
+                  Your seed is also encrypted and backed up to your account — you can
+                  always recover from any device. Saving these 12 words offline is good practice.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => setShowMnemonic((v) => !v)}>
@@ -252,6 +253,9 @@ function WalletHome() {
                   </Button>
                   <Button size="sm" onClick={downloadPhrase}>
                     <Download className="mr-1.5 h-4 w-4" /> Download .txt
+                  </Button>
+                  <Button size="sm" variant="ghost" asChild>
+                    <Link to="/recover-wallet">Recover</Link>
                   </Button>
                 </div>
                 {showMnemonic && (

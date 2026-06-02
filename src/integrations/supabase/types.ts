@@ -377,6 +377,39 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_backups: {
+        Row: {
+          ciphertext: string
+          created_at: string
+          iv: string
+          salt: string
+          updated_at: string
+          user_id: string
+          version: number
+          wallet_address: string
+        }
+        Insert: {
+          ciphertext: string
+          created_at?: string
+          iv: string
+          salt: string
+          updated_at?: string
+          user_id: string
+          version?: number
+          wallet_address: string
+        }
+        Update: {
+          ciphertext?: string
+          created_at?: string
+          iv?: string
+          salt?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+          wallet_address?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
