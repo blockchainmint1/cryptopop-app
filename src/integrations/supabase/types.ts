@@ -166,6 +166,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_wallets: {
+        Row: {
+          claimed_at: string | null
+          claimed_by_user_id: string | null
+          created_at: string
+          derivation_index: number
+          email: string
+          wallet_address: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          derivation_index: number
+          email: string
+          wallet_address: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          derivation_index?: number
+          email?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       event_quiz_questions: {
         Row: {
           correct_index: number
@@ -351,6 +378,48 @@ export type Database = {
           referral_reward?: number
           start_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      pop_awards: {
+        Row: {
+          amount: number
+          created_at: string
+          email: string
+          error: string | null
+          id: string
+          sent_at: string | null
+          source: string
+          source_id: string | null
+          status: string
+          tx_hash: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          email: string
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          source: string
+          source_id?: string | null
+          status?: string
+          tx_hash?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          email?: string
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          source?: string
+          source_id?: string | null
+          status?: string
+          tx_hash?: string | null
+          wallet_address?: string
         }
         Relationships: []
       }
