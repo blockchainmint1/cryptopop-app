@@ -308,6 +308,13 @@ const cardValue = {
   color: '#2a1f3a',
   margin: '0 0 8px',
 }
+const walletAddr = {
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: '13px',
+  color: '#1a1024',
+  wordBreak: 'break-all' as const,
+  margin: '0 0 10px',
+}
 const hr = {
   borderColor: '#ebe0ff',
   borderStyle: 'solid',
