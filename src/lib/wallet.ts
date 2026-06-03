@@ -6,24 +6,16 @@
 // could verify; using 0' until we have confirmation. The mnemonic remains
 // authoritative — we can re-derive on any path later.)
 
-// Buffer polyfill — bip39/bip32/bs58check expect Node's Buffer global.
-import { Buffer as BufferPolyfill } from "buffer";
-const _g = globalThis as unknown as { Buffer?: typeof BufferPolyfill };
-if (typeof _g.Buffer === "undefined") {
-  _g.Buffer = BufferPolyfill;
-}
-
-import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "bip39";
-import { BIP32Factory } from "bip32";
-import * as ecc from "@bitcoinerlab/secp256k1";
-import bs58check from "bs58check";
+import { HDKey } from "@scure/bip32";
+import { createBase58check } from "@scure/base";
+import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { ripemd160 } from "@noble/hashes/ripemd160";
 import { sha256 } from "@noble/hashes/sha256";
 
 const MNEMONIC_KEY = "cryptopop:mnemonic";
 const TXC_P2PKH = 0x42;
-
-const bip32 = BIP32Factory(ecc);
+const base58check = createBase58check(sha256);
 
 function hash160(buf: Uint8Array): Uint8Array {
   return ripemd160(sha256(buf));
@@ -31,8 +23,8 @@ function hash160(buf: Uint8Array): Uint8Array {
 
 export function getOrCreateMnemonic(): string {
   let m = localStorage.getItem(MNEMONIC_KEY);
-  if (!m || !validateMnemonic(m)) {
-    m = generateMnemonic(128);
+  if (!m || !validateMnemonic(m, wordlist)) {
+    m = generateMnemonic(wordlist, 128);
     localStorage.setItem(MNEMONIC_KEY, m);
   }
   return m;
@@ -40,30 +32,31 @@ export function getOrCreateMnemonic(): string {
 
 export function getMnemonic(): string | null {
   const m = localStorage.getItem(MNEMONIC_KEY);
-  return m && validateMnemonic(m) ? m : null;
+  return m && validateMnemonic(m, wordlist) ? m : null;
 }
 
 export function setMnemonic(m: string): void {
-  if (!validateMnemonic(m)) throw new Error("invalid mnemonic");
+  if (!validateMnemonic(m, wordlist)) throw new Error("invalid mnemonic");
   localStorage.setItem(MNEMONIC_KEY, m);
 }
 
 export function deriveTxcAddress(mnemonic: string): string {
   const seed = mnemonicToSeedSync(mnemonic);
-  const root = bip32.fromSeed(seed);
-  const child = root.derivePath("m/44'/0'/0'/0/0");
+  const root = HDKey.fromMasterSeed(seed);
+  const child = root.derive("m/44'/0'/0'/0/0");
   const pubkey = child.publicKey;
+  if (!pubkey) throw new Error("failed to derive public key");
   const h160 = hash160(pubkey);
   const payload = new Uint8Array(21);
   payload[0] = TXC_P2PKH;
   payload.set(h160, 1);
-  return bs58check.encode(payload);
+  return base58check.encode(payload);
 }
 
 // True iff `addr` decodes to a valid P2PKH address with TXC's version byte.
 export function isValidTxcAddress(addr: string): boolean {
   try {
-    const decoded = bs58check.decode(addr);
+    const decoded = base58check.decode(addr);
     return decoded.length === 21 && decoded[0] === TXC_P2PKH;
   } catch {
     return false;
