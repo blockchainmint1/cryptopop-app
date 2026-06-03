@@ -1,36 +1,51 @@
-## Update `src/routes/l2-api.tsx` with what we learned from the failed mint
+# Email-Driven Wallet & POP Flow
 
-The mint that failed wasn't an Omni encoding bug — it was a **UTXO selection** bug. After a rapid mint, the issuer's only spendable coin was the change output from the previous mint, which was still **unconfirmed** in the mempool. Esplora's default `/address/:addr/utxo` response includes unconfirmed entries, but if a caller filters to `status.confirmed === true` (a very common pattern), the next mint sees "no UTXOs" and fails — even though there's plenty of TXC sitting on-chain. We also clarified what the `grantdata` arg actually is: not just a required-but-empty string, but an on-chain attribution memo embedded inside the Omni payload.
+## Goal
+Every email that touches CryptoPOP (event RSVP, signup, etc.) gets a deterministic TXC wallet created server-side. Any POP awarded to that email is sent on-chain to that wallet. When the person later signs in, the same wallet is claimed by their `auth.uid`.
 
-Two doc edits, both in the existing structure — no new sections, no restructuring.
+## Model
 
-### 1. Expand the existing "`grantdata` is not optional" gotcha (§8)
+**One wallet per email**, derived from a master seed + email. Identity progression:
+1. Anonymous RSVP with email → wallet exists, POP credits accumulate as a "pending" on-chain payout (or sent immediately if we choose).
+2. User signs up/logs in with that same email → wallet is linked to their `auth.uid`, future POP keeps flowing to it.
 
-Currently it just says "pass an empty string." Add: it's actually a free-form attribution memo carried inside the Omni payload (separate from any OP_RETURN memo), capped at ~60 bytes in practice because the whole OP_RETURN must fit under the node's datacarrier size limit. Show both the empty form and a memo form:
+## Changes
 
-```ts
-rpc("omni_createpayload_grant", [propertyId, amount, ""]);                 // no memo
-rpc("omni_createpayload_grant", [propertyId, amount, "claim:abc123"]);     // attribution memo
-```
+### 1. Database
+New table `email_wallets`:
+- `email` (PK, lowercased)
+- `wallet_address`
+- `derivation_index` (sequential, for HD path)
+- `claimed_by_user_id` (nullable, set when auth user with matching email appears)
+- `created_at`
 
-### 2. Add a new gotcha: "Chain your own change for back-to-back mints"
+New table `pop_awards` (ledger of awards owed/sent per email):
+- `email`, `wallet_address`, `amount`, `source` (e.g. `event_signup`, `rsvp`, `quiz`), `source_id`, `tx_hash` (nullable), `status` (`pending` | `sent` | `failed`), timestamps
 
-Sits in §8 alongside the others. Content:
+RLS: service-role-only writes; users can read their own rows via `claimed_by_user_id = auth.uid()`.
 
-- TXC blocks take real time; if you mint twice in quick succession the second mint's only available coin is the **unconfirmed change** from the first.
-- Symptom: second mint fails with "issuer has no UTXOs" even though a block explorer shows the address is funded.
-- Fix: when calling Esplora's `/address/:addr/utxo`, **do not filter out unconfirmed UTXOs**. Sort confirmed-first so settled coins are preferred, and only fall through to unconfirmed (your own change) when needed:
+Keep existing `wallet_backups` for authenticated users' encrypted seeds (unchanged).
 
-```ts
-const utxos = raw
-  .sort((a, b) => Number(b.status.confirmed) - Number(a.status.confirmed))
-  .map(({ txid, vout, value }) => ({ txid, vout, value }));
-```
+### 2. Server functions / helpers
+- `ensureEmailWallet(email)` — server fn: lowercases email, derives next HD index from a master seed (stored in `MINTER_WIF` or a new `WALLET_MASTER_SEED` secret), inserts `email_wallets` row idempotently, returns address.
+- `awardPop({ email, amount, source, sourceId })` — server fn: ensures wallet, inserts `pop_awards` row, enqueues an on-chain send (or sends immediately via TXC RPC), updates status/tx_hash.
+- `claimWalletForUser(userId, email)` — runs on auth state change / profile creation: links `email_wallets.claimed_by_user_id`.
 
-- Caveat: spending unconfirmed change creates a chain. If the parent gets evicted or replaced, every child mint becomes invalid too. For high-throughput minting, either batch grants into one tx or pre-fund several issuer UTXOs.
+### 3. Wire-up points
+- `event_signups` insert path → call `ensureEmailWallet` + `awardPop` for the 10 POP signup credit.
+- `event_rsvps` insert path → same.
+- Existing quiz / referral / claim flows → route through `awardPop` instead of writing directly to balance.
+- Auth: on `handle_new_user` trigger (or post-signup server fn), call `claimWalletForUser` so the seamless handoff happens.
 
-### Out of scope
+### 4. UI
+- Confirmation email already exists; add wallet address + POP balance to it.
+- Authenticated dashboard shows the same wallet (now claimed) and on-chain balance.
 
-- No changes to `txc.server.ts` (already fixed last turn).
-- No changes to the table of network params, Quickstart, or RPC reference — the new info fits cleanly into §8 Gotchas.
-- No SEO/meta changes.
+## Open questions before I build
+
+1. **Send POP on-chain immediately, or batch?** Immediate = simpler UX, more TXC tx fees. Batched (cron every N min) = cheaper, slight delay. Which?
+2. **Master seed source** — reuse `MINTER_WIF` for derivation, or add a dedicated `WALLET_MASTER_SEED` secret? (Dedicated is cleaner; minter stays a hot wallet for sending.)
+3. **Email collision policy** — if someone RSVPs with email X, then later signs up with Google using email X, auto-claim the wallet? (I'd say yes.)
+4. **Server-side custody** — these email-only wallets have no user-held key until claim. Confirm OK with custodial-until-claimed model.
+
+Answer those four and I'll implement.
