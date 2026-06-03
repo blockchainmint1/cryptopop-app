@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueTransactionalEmail } from "./email/send.server";
 
 // Admin-only columns (includes PII). Never expose to public endpoints.
 const adminColumns =
