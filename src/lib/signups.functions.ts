@@ -101,6 +101,7 @@ export const getSignupById = createServerFn({ method: "POST" })
       throw new Error("lookup_failed");
     }
     if (!row) return { signup: null };
+    const r = row as Record<string, unknown> & { email: string };
 
     // Reconcile displayed POP with the ledger (source of truth for on-chain awards).
     // Count 'sent' and 'pending' so users see credit before the broadcast confirms;
@@ -108,7 +109,7 @@ export const getSignupById = createServerFn({ method: "POST" })
     const { data: awards } = await supabaseAdmin
       .from("pop_awards")
       .select("amount,status")
-      .eq("email", row.email)
+      .eq("email", r.email)
       .in("status", ["sent", "pending"]);
     const ledgerPop = (awards ?? []).reduce(
       (sum, a) => sum + Number(a.amount ?? 0),
@@ -116,7 +117,7 @@ export const getSignupById = createServerFn({ method: "POST" })
     );
 
     // Strip email from the response (passColumns contract excludes PII).
-    const { email: _email, ...passFields } = row as typeof row & { email: string };
+    const { email: _email, ...passFields } = r;
     return { signup: { ...passFields, pop_credits: ledgerPop } };
   });
 
