@@ -27,6 +27,7 @@ interface EventConfirmationProps {
   venueAddress?: string
   mapUrl?: string
   popCredits?: number
+  walletAddress?: string | null
 }
 
 const EventConfirmationEmail = ({
