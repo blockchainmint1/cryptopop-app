@@ -101,7 +101,7 @@ export const getSignupById = createServerFn({ method: "POST" })
       throw new Error("lookup_failed");
     }
     if (!row) return { signup: null };
-    const r = row as Record<string, unknown> & { email: string };
+    const r = row as unknown as Record<string, unknown> & { email: string };
 
     // Reconcile displayed POP with the ledger (source of truth for on-chain awards).
     // Count 'sent' and 'pending' so users see credit before the broadcast confirms;
