@@ -103,6 +103,18 @@ const EventConfirmationEmail = ({
             </Button>
           </Section>
 
+          {walletAddress ? (
+            <Section style={card}>
+              <Text style={cardLabel}>YOUR POP WALLET</Text>
+              <Text style={walletAddr}>{walletAddress}</Text>
+              <Text style={cardValue}>
+                We've wired up a sandbox wallet for you. Your {popCredits} POP
+                from signing up are on their way here. Sign in with this same
+                email to claim it.
+              </Text>
+            </Section>
+          ) : null}
+
           <Heading as="h2" style={h2}>
             Set up the CryptoPOP app
           </Heading>
