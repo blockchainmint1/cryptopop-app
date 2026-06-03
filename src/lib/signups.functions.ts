@@ -93,14 +93,31 @@ export const getSignupById = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: row, error } = await supabaseAdmin
       .from("event_signups")
-      .select(passColumns)
+      .select(passColumns + ", email")
       .eq("id", data.id)
       .maybeSingle();
     if (error) {
       console.error("[getSignupById]", error);
       throw new Error("lookup_failed");
     }
-    return { signup: row };
+    if (!row) return { signup: null };
+
+    // Reconcile displayed POP with the ledger (source of truth for on-chain awards).
+    // Count 'sent' and 'pending' so users see credit before the broadcast confirms;
+    // 'failed' rows are excluded.
+    const { data: awards } = await supabaseAdmin
+      .from("pop_awards")
+      .select("amount,status")
+      .eq("email", row.email)
+      .in("status", ["sent", "pending"]);
+    const ledgerPop = (awards ?? []).reduce(
+      (sum, a) => sum + Number(a.amount ?? 0),
+      0,
+    );
+
+    // Strip email from the response (passColumns contract excludes PII).
+    const { email: _email, ...passFields } = row as typeof row & { email: string };
+    return { signup: { ...passFields, pop_credits: ledgerPop } };
   });
 
 async function assertAdmin(userId: string) {
