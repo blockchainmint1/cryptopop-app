@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueTransactionalEmail } from "./email/send.server";
+import { ensureEmailWallet, awardPop } from "./email-wallet.server";
 
 // Admin-only columns (includes PII). Never expose to public endpoints.
 const adminColumns =
@@ -51,17 +52,37 @@ export const createEventSignup = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("duplicate_signup");
       throw new Error("signup_failed");
     }
+    const lcEmail = data.email.toLowerCase();
+
+    // Ensure a wallet exists for this email so the confirmation email can
+    // include it. Fire-and-forget POP grant for the 10 signup credits.
+    let walletAddress: string | null = null;
+    try {
+      const w = await ensureEmailWallet(lcEmail);
+      walletAddress = w.walletAddress;
+    } catch (e) {
+      console.error("[createEventSignup] ensureEmailWallet", e);
+    }
+    awardPop({
+      email: lcEmail,
+      amount: 10,
+      source: "event_signup",
+      sourceId: inserted.id,
+      memo: "CryptoPOP signup",
+    }).catch((e) => console.error("[createEventSignup] awardPop", e));
+
     // Fire-and-forget confirmation email (failures don't break signup)
     enqueueTransactionalEmail({
       templateName: "event-confirmation",
-      recipientEmail: data.email.toLowerCase(),
+      recipientEmail: lcEmail,
       idempotencyKey: `event-confirm-${inserted.id}`,
       templateData: {
         name: data.full_name,
         passId: inserted.id,
+        walletAddress,
       },
     }).catch((e) => console.error("[createEventSignup] email enqueue", e));
-    return { id: inserted.id };
+    return { id: inserted.id, walletAddress };
   });
 
 // Public: fetch a signup by its id (the id IS the pass — possession of the
