@@ -27,6 +27,7 @@ interface EventConfirmationProps {
   venueAddress?: string
   mapUrl?: string
   popCredits?: number
+  walletAddress?: string | null
 }
 
 const EventConfirmationEmail = ({
@@ -38,6 +39,7 @@ const EventConfirmationEmail = ({
   venueAddress = '11 Cove Drive, Sentosa Cove, Singapore 098497',
   mapUrl = 'https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z',
   popCredits = 10,
+  walletAddress,
 }: EventConfirmationProps) => {
   const passUrl = passId
     ? `${SITE_URL}/my-pass?id=${passId}`
@@ -100,6 +102,18 @@ const EventConfirmationEmail = ({
               Open my pass
             </Button>
           </Section>
+
+          {walletAddress ? (
+            <Section style={card}>
+              <Text style={cardLabel}>YOUR POP WALLET</Text>
+              <Text style={walletAddr}>{walletAddress}</Text>
+              <Text style={cardValue}>
+                We've wired up a sandbox wallet for you. Your {popCredits} POP
+                from signing up are on their way here. Sign in with this same
+                email to claim it.
+              </Text>
+            </Section>
+          ) : null}
 
           <Heading as="h2" style={h2}>
             Set up the CryptoPOP app
@@ -293,6 +307,13 @@ const cardValue = {
   lineHeight: '1.5',
   color: '#2a1f3a',
   margin: '0 0 8px',
+}
+const walletAddr = {
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: '13px',
+  color: '#1a1024',
+  wordBreak: 'break-all' as const,
+  margin: '0 0 10px',
 }
 const hr = {
   borderColor: '#ebe0ff',
