@@ -39,6 +39,7 @@ const EventConfirmationEmail = ({
   venueAddress = '11 Cove Drive, Sentosa Cove, Singapore 098497',
   mapUrl = 'https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z',
   popCredits = 10,
+  walletAddress,
 }: EventConfirmationProps) => {
   const passUrl = passId
     ? `${SITE_URL}/my-pass?id=${passId}`
