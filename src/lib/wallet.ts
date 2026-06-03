@@ -50,13 +50,13 @@ export function deriveTxcAddress(mnemonic: string): string {
   const payload = new Uint8Array(21);
   payload[0] = TXC_P2PKH;
   payload.set(h160, 1);
-  return bs58check.encode(payload);
+  return base58check.encode(payload);
 }
 
 // True iff `addr` decodes to a valid P2PKH address with TXC's version byte.
 export function isValidTxcAddress(addr: string): boolean {
   try {
-    const decoded = bs58check.decode(addr);
+    const decoded = base58check.decode(addr);
     return decoded.length === 21 && decoded[0] === TXC_P2PKH;
   } catch {
     return false;
