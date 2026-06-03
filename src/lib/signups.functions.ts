@@ -51,6 +51,16 @@ export const createEventSignup = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("duplicate_signup");
       throw new Error("signup_failed");
     }
+    // Fire-and-forget confirmation email (failures don't break signup)
+    enqueueTransactionalEmail({
+      templateName: "event-confirmation",
+      recipientEmail: data.email.toLowerCase(),
+      idempotencyKey: `event-confirm-${inserted.id}`,
+      templateData: {
+        name: data.full_name,
+        passId: inserted.id,
+      },
+    }).catch((e) => console.error("[createEventSignup] email enqueue", e));
     return { id: inserted.id };
   });
 
