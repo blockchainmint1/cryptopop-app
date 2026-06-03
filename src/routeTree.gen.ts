@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MyPopRouteImport } from './routes/my-pop'
@@ -18,16 +19,25 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated.admin.signups'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -72,6 +82,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -93,6 +108,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsSlugRsvpRoute = EventsSlugRsvpRouteImport.update({
   id: '/events/$slug/rsvp',
   path: '/events/$slug/rsvp',
@@ -109,6 +129,18 @@ const AuthenticatedAdminSignupsRoute =
     id: '/admin/signups',
     path: '/admin/signups',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
@@ -132,15 +164,20 @@ export interface FileRoutesByFullPath {
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -151,15 +188,20 @@ export interface FileRoutesByTo {
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -172,15 +214,20 @@ export interface FileRoutesById {
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -193,15 +240,20 @@ export interface FileRouteTypes {
     | '/my-pop'
     | '/privacy'
     | '/terms'
+    | '/unsubscribe'
     | '/app'
     | '/recover-wallet'
     | '/scan'
     | '/auth/callback'
+    | '/email/unsubscribe'
     | '/admin/signups'
     | '/scan/success'
     | '/events/$slug/rsvp'
+    | '/lovable/email/suppression'
     | '/admin/events/$id'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -212,15 +264,20 @@ export interface FileRouteTypes {
     | '/my-pop'
     | '/privacy'
     | '/terms'
+    | '/unsubscribe'
     | '/app'
     | '/recover-wallet'
     | '/scan'
     | '/auth/callback'
+    | '/email/unsubscribe'
     | '/admin/signups'
     | '/scan/success'
     | '/events/$slug/rsvp'
+    | '/lovable/email/suppression'
     | '/admin/events/$id'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -232,15 +289,20 @@ export interface FileRouteTypes {
     | '/my-pop'
     | '/privacy'
     | '/terms'
+    | '/unsubscribe'
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
     | '/auth/callback'
+    | '/email/unsubscribe'
     | '/_authenticated/admin/signups'
     | '/_authenticated/scan/success'
     | '/events/$slug/rsvp'
+    | '/lovable/email/suppression'
     | '/_authenticated/admin/events/$id'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -253,13 +315,25 @@ export interface RootRouteChildren {
   MyPopRoute: typeof MyPopRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EventsSlugRsvpRoute: typeof EventsSlugRsvpRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -323,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -351,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/$slug/rsvp': {
       id: '/events/$slug/rsvp'
       path: '/events/$slug/rsvp'
@@ -371,6 +459,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/signups'
       preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -430,9 +532,14 @@ const rootRouteChildren: RootRouteChildren = {
   MyPopRoute: MyPopRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EventsSlugRsvpRoute: EventsSlugRsvpRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueTransactionalEmail } from "./email/send.server";
 
 // Admin-only columns (includes PII). Never expose to public endpoints.
 const adminColumns =
@@ -50,6 +51,16 @@ export const createEventSignup = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("duplicate_signup");
       throw new Error("signup_failed");
     }
+    // Fire-and-forget confirmation email (failures don't break signup)
+    enqueueTransactionalEmail({
+      templateName: "event-confirmation",
+      recipientEmail: data.email.toLowerCase(),
+      idempotencyKey: `event-confirm-${inserted.id}`,
+      templateData: {
+        name: data.full_name,
+        passId: inserted.id,
+      },
+    }).catch((e) => console.error("[createEventSignup] email enqueue", e));
     return { id: inserted.id };
   });
 
