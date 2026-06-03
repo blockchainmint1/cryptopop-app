@@ -1,11 +1,9 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
-
-/* CryptoPOP brand fonts */
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
 
 /*
  * Design system definition.
