@@ -89,7 +89,10 @@ export const ensureWalletBackup = createServerFn({ method: "POST" })
           salt: blob.salt,
           version: blob.version,
         });
-      if (upErr) throw new Error(`backup write failed: ${upErr.message}`);
+      if (upErr) {
+        console.error("[wallet-backup] write failed", upErr);
+        throw new Error("Could not save wallet backup. Please try again.");
+      }
 
       // Mirror to profiles so the rest of the app keeps working unchanged.
       await supabaseAdmin
