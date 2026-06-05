@@ -145,7 +145,10 @@ export const claimPop = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (claimErr || !claimRow) throw new Error(claimErr?.message ?? "claim insert failed");
+    if (claimErr || !claimRow) {
+      console.error("[claim] insert failed", claimErr);
+      throw new Error("Could not record claim. Please try again.");
+    }
 
     // Upsert balance mirror
     const { data: prev } = await supabaseAdmin
