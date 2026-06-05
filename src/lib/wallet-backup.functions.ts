@@ -120,7 +120,10 @@ export const recoverWalletSeed = createServerFn({ method: "POST" })
         .select("ciphertext, iv, salt, version, wallet_address")
         .eq("user_id", userId)
         .maybeSingle();
-      if (error) throw new Error(`recover failed: ${error.message}`);
+      if (error) {
+        console.error("[wallet-backup] recover failed", error);
+        throw new Error("Could not recover wallet. Please try again.");
+      }
       if (!data) return { mnemonic: null, address: null };
       const mnemonic = decryptSeed({
         ciphertext: data.ciphertext,
