@@ -47,7 +47,10 @@ export const ensureWalletBackup = createServerFn({ method: "POST" })
         .select("ciphertext, iv, salt, version, wallet_address")
         .eq("user_id", userId)
         .maybeSingle();
-      if (readErr) throw new Error(`backup read failed: ${readErr.message}`);
+      if (readErr) {
+        console.error("[wallet-backup] read failed", readErr);
+        throw new Error("Wallet backup unavailable. Please try again.");
+      }
 
       if (existing) {
         const mnemonic = decryptSeed({
