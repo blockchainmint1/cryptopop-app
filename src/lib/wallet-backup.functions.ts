@@ -47,7 +47,10 @@ export const ensureWalletBackup = createServerFn({ method: "POST" })
         .select("ciphertext, iv, salt, version, wallet_address")
         .eq("user_id", userId)
         .maybeSingle();
-      if (readErr) throw new Error(`backup read failed: ${readErr.message}`);
+      if (readErr) {
+        console.error("[wallet-backup] read failed", readErr);
+        throw new Error("Wallet backup unavailable. Please try again.");
+      }
 
       if (existing) {
         const mnemonic = decryptSeed({
@@ -86,7 +89,10 @@ export const ensureWalletBackup = createServerFn({ method: "POST" })
           salt: blob.salt,
           version: blob.version,
         });
-      if (upErr) throw new Error(`backup write failed: ${upErr.message}`);
+      if (upErr) {
+        console.error("[wallet-backup] write failed", upErr);
+        throw new Error("Could not save wallet backup. Please try again.");
+      }
 
       // Mirror to profiles so the rest of the app keeps working unchanged.
       await supabaseAdmin
@@ -114,7 +120,10 @@ export const recoverWalletSeed = createServerFn({ method: "POST" })
         .select("ciphertext, iv, salt, version, wallet_address")
         .eq("user_id", userId)
         .maybeSingle();
-      if (error) throw new Error(`recover failed: ${error.message}`);
+      if (error) {
+        console.error("[wallet-backup] recover failed", error);
+        throw new Error("Could not recover wallet. Please try again.");
+      }
       if (!data) return { mnemonic: null, address: null };
       const mnemonic = decryptSeed({
         ciphertext: data.ciphertext,
