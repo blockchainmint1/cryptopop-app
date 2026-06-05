@@ -171,7 +171,10 @@ export const claimPop = createServerFn({ method: "POST" })
         },
         { onConflict: "user_id" },
       );
-    if (mirrorErr) throw new Error(mirrorErr.message);
+    if (mirrorErr) {
+      console.error("[claim] balance mirror upsert failed", mirrorErr);
+      throw new Error("Could not update balance. Please try again.");
+    }
 
     // Stage 2 — mint on TXC. Inline await keeps it simple and works in the
     // Worker runtime (background tasks die after the response). User waits
