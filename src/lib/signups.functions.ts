@@ -71,7 +71,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
     try {
       await awardPop({
         email: lcEmail,
-        amount: 10,
+        amount: signupReward,
         source: "event_signup",
         sourceId: inserted.id,
         memo: "CryptoPOP signup",
