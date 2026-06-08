@@ -512,6 +512,39 @@ export type Database = {
           },
         ]
       }
+      reward_rules: {
+        Row: {
+          action_key: string
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          label: string
+          pop_amount: number
+          updated_at: string
+        }
+        Insert: {
+          action_key: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label: string
+          pop_amount: number
+          updated_at?: string
+        }
+        Update: {
+          action_key?: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string
+          pop_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
