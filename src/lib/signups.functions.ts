@@ -5,6 +5,7 @@ import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueTransactionalEmail } from "./email/send.server";
 import { ensureEmailWallet, awardPop } from "./email-wallet.server";
+import { notifyEventSignup } from "./telegram.server";
 
 // Admin-only columns (includes PII). Never expose to public endpoints.
 const adminColumns =
