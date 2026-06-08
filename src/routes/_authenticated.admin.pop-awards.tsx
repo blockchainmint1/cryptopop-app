@@ -30,7 +30,7 @@ type Summary = {
 
 export const Route = createFileRoute("/_authenticated/admin/pop-awards")({
   head: () => ({ meta: [{ title: "POP Awards — CryptoPOP Admin" }] }),
-  component: AdminPopAwards;
+  component: AdminPopAwards,
 });
 
 function AdminPopAwards() {
