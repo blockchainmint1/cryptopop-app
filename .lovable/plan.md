@@ -1,51 +1,36 @@
-# Email-Driven Wallet & POP Flow
+# Why your wallet shows 0 POP
 
-## Goal
-Every email that touches CryptoPOP (event RSVP, signup, etc.) gets a deterministic TXC wallet created server-side. Any POP awarded to that email is sent on-chain to that wallet. When the person later signs in, the same wallet is claimed by their `auth.uid`.
+I dug into the database for your signup:
 
-## Model
+- `event_signups.pop_credits` = **10** (set at signup, as expected)
+- `email_wallets` row exists with a TXC address ✓
+- `pop_awards` ledger has **0 rows** for your email ✗
 
-**One wallet per email**, derived from a master seed + email. Identity progression:
-1. Anonymous RSVP with email → wallet exists, POP credits accumulate as a "pending" on-chain payout (or sent immediately if we choose).
-2. User signs up/logs in with that same email → wallet is linked to their `auth.uid`, future POP keeps flowing to it.
+The `/my-pop` page intentionally shows the **ledger sum** (what's actually been awarded/sent on-chain) rather than the raw `pop_credits` column. Since no ledger row exists, the page shows 0 POP — even though the signup itself succeeded.
 
-## Changes
+## Root cause
 
-### 1. Database
-New table `email_wallets`:
-- `email` (PK, lowercased)
-- `wallet_address`
-- `derivation_index` (sequential, for HD path)
-- `claimed_by_user_id` (nullable, set when auth user with matching email appears)
-- `created_at`
+In `src/lib/signups.functions.ts`, `createEventSignup` calls `awardPop(...)` **fire-and-forget**:
 
-New table `pop_awards` (ledger of awards owed/sent per email):
-- `email`, `wallet_address`, `amount`, `source` (e.g. `event_signup`, `rsvp`, `quiz`), `source_id`, `tx_hash` (nullable), `status` (`pending` | `sent` | `failed`), timestamps
+```ts
+awardPop({ ... }).catch(e => console.error(...));
+```
 
-RLS: service-role-only writes; users can read their own rows via `claimed_by_user_id = auth.uid()`.
+The server runs on Cloudflare Workers, where background tasks **are killed the moment the HTTP response is sent**. That's why the ledger insert + on-chain `mintGrant` never ran. (The `claimPop` function already documents this gotcha and awaits inline for the same reason.)
 
-Keep existing `wallet_backups` for authenticated users' encrypted seeds (unchanged).
+The email confirmation enqueue has the same fire-and-forget pattern, but it's writing to a durable queue table inside its first DB call, so it's been getting through. `awardPop` does more async work after the insert (the mint broadcast) and isn't surviving.
 
-### 2. Server functions / helpers
-- `ensureEmailWallet(email)` — server fn: lowercases email, derives next HD index from a master seed (stored in `MINTER_WIF` or a new `WALLET_MASTER_SEED` secret), inserts `email_wallets` row idempotently, returns address.
-- `awardPop({ email, amount, source, sourceId })` — server fn: ensures wallet, inserts `pop_awards` row, enqueues an on-chain send (or sends immediately via TXC RPC), updates status/tx_hash.
-- `claimWalletForUser(userId, email)` — runs on auth state change / profile creation: links `email_wallets.claimed_by_user_id`.
+## Fix
 
-### 3. Wire-up points
-- `event_signups` insert path → call `ensureEmailWallet` + `awardPop` for the 10 POP signup credit.
-- `event_rsvps` insert path → same.
-- Existing quiz / referral / claim flows → route through `awardPop` instead of writing directly to balance.
-- Auth: on `handle_new_user` trigger (or post-signup server fn), call `claimWalletForUser` so the seamless handoff happens.
+1. **`src/lib/signups.functions.ts`** — `await awardPop(...)` inside `createEventSignup`, before returning. Wrap in `try/catch` so a mint failure doesn't break signup (we still want `pop_awards` row written with `status: 'failed'` so we can retry).
+2. **Backfill** the missing award for the existing signup (`bobby@blockchainmint.com`, signup id `117344f2…`) by inserting a `pop_awards` row via the same path — easiest is a one-off server call after the fix lands, or a small migration that inserts the row directly and lets the next mint retry pick it up.
+3. **Add a "retry pending/failed awards" admin path** (optional, small) — a server fn that finds `pop_awards` with `status in ('pending','failed')` and re-runs `mintGrant`. Useful operationally and as a safety net.
 
-### 4. UI
-- Confirmation email already exists; add wallet address + POP balance to it.
-- Authenticated dashboard shows the same wallet (now claimed) and on-chain balance.
+## What the user will see after the fix
 
-## Open questions before I build
+- New signup → ledger row immediately written (`status: pending` → `sent` once mint broadcasts) → `/my-pop` reflects 10 POP.
+- If the on-chain mint fails (TXC node down, etc.), the row stays `status: failed` but `/my-pop` still shows 10 because the reconcile counts `pending`+`sent`. Mint can be retried later without double-spending (the ledger has the unique `(source, source_id)` constraint).
 
-1. **Send POP on-chain immediately, or batch?** Immediate = simpler UX, more TXC tx fees. Batched (cron every N min) = cheaper, slight delay. Which?
-2. **Master seed source** — reuse `MINTER_WIF` for derivation, or add a dedicated `WALLET_MASTER_SEED` secret? (Dedicated is cleaner; minter stays a hot wallet for sending.)
-3. **Email collision policy** — if someone RSVPs with email X, then later signs up with Google using email X, auto-claim the wallet? (I'd say yes.)
-4. **Server-side custody** — these email-only wallets have no user-held key until claim. Confirm OK with custodial-until-claimed model.
+## Open question
 
-Answer those four and I'll implement.
+The same fire-and-forget pattern likely affects RSVPs too (`src/routes/events.$slug.rsvp.tsx` flow). Want me to audit that in the same pass, or keep this scoped to event signups for now?
