@@ -80,6 +80,16 @@ export const createEventSignup = createServerFn({ method: "POST" })
       console.error("[createEventSignup] awardPop", e);
     }
 
+    // Telegram notification (awaited so it lands before Worker terminates)
+    await notifyEventSignup({
+      fullName: data.full_name,
+      email: lcEmail,
+      mobile: data.mobile_number,
+      instagram,
+      telegram,
+      isFriend: data.is_friend,
+      signupId: inserted.id,
+    });
 
     // Fire-and-forget confirmation email (failures don't break signup)
     enqueueTransactionalEmail({
