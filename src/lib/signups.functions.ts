@@ -33,6 +33,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const instagram = data.instagram_handle?.replace(/^@/, "").trim() || null;
     const telegram = data.telegram_handle?.replace(/^@/, "").trim() || null;
+    const signupReward = await getRewardAmount("event_signup", 10);
     const { data: inserted, error } = await supabaseAdmin
       .from("event_signups")
       .insert({
@@ -42,7 +43,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
         instagram_handle: instagram,
         telegram_handle: telegram,
         is_friend: data.is_friend,
-        pop_credits: 10,
+        pop_credits: signupReward,
         completed_activities: ["signup"],
         signup_source: "website",
         status: "confirmed",
