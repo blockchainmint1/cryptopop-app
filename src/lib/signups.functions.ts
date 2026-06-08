@@ -55,7 +55,9 @@ export const createEventSignup = createServerFn({ method: "POST" })
     const lcEmail = data.email.toLowerCase();
 
     // Ensure a wallet exists for this email so the confirmation email can
-    // include it. Fire-and-forget POP grant for the 10 signup credits.
+    // include it, and award the 10 signup POP. Both must be awaited —
+    // Cloudflare Workers terminate background tasks once the response is
+    // sent, so fire-and-forget would drop the on-chain mint + ledger row.
     let walletAddress: string | null = null;
     try {
       const w = await ensureEmailWallet(lcEmail);
@@ -63,13 +65,20 @@ export const createEventSignup = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[createEventSignup] ensureEmailWallet", e);
     }
-    awardPop({
-      email: lcEmail,
-      amount: 10,
-      source: "event_signup",
-      sourceId: inserted.id,
-      memo: "CryptoPOP signup",
-    }).catch((e) => console.error("[createEventSignup] awardPop", e));
+    try {
+      await awardPop({
+        email: lcEmail,
+        amount: 10,
+        source: "event_signup",
+        sourceId: inserted.id,
+        memo: "CryptoPOP signup",
+      });
+    } catch (e) {
+      // awardPop catches mint failures internally; this only catches insert
+      // failures (e.g. RLS/constraint). Don't break the signup.
+      console.error("[createEventSignup] awardPop", e);
+    }
+
 
     // Fire-and-forget confirmation email (failures don't break signup)
     enqueueTransactionalEmail({
