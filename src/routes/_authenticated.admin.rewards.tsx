@@ -47,7 +47,7 @@ function AdminRewards() {
   async function refresh() {
     setLoading(true);
     try {
-      const res = await list({ data: {} });
+      const res = await list();
       setRules(res.rules as Rule[]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to load");
