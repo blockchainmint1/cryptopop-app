@@ -5,6 +5,7 @@ import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueTransactionalEmail } from "./email/send.server";
 import { ensureEmailWallet, awardPop } from "./email-wallet.server";
+import { getRewardAmount } from "./reward-rules.server";
 import { notifyEventSignup } from "./telegram.server";
 
 // Admin-only columns (includes PII). Never expose to public endpoints.
@@ -32,6 +33,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const instagram = data.instagram_handle?.replace(/^@/, "").trim() || null;
     const telegram = data.telegram_handle?.replace(/^@/, "").trim() || null;
+    const signupReward = await getRewardAmount("event_signup", 10);
     const { data: inserted, error } = await supabaseAdmin
       .from("event_signups")
       .insert({
@@ -41,7 +43,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
         instagram_handle: instagram,
         telegram_handle: telegram,
         is_friend: data.is_friend,
-        pop_credits: 10,
+        pop_credits: signupReward,
         completed_activities: ["signup"],
         signup_source: "website",
         status: "confirmed",
@@ -69,7 +71,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
     try {
       await awardPop({
         email: lcEmail,
-        amount: 10,
+        amount: signupReward,
         source: "event_signup",
         sourceId: inserted.id,
         memo: "CryptoPOP signup",
