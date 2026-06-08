@@ -49,8 +49,8 @@ function MissionPage() {
             <Link to="/api" className="hover:text-foreground transition">
               Developer API
             </Link>
-            <Link to="/login" className="hover:text-foreground transition">
-              Sign in
+            <Link to="/my-pop" className="hover:text-foreground transition">
+              My POP
             </Link>
           </nav>
         </div>

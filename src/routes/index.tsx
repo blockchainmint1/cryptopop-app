@@ -120,11 +120,8 @@ function Landing() {
             <Link to="/mission" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
               Mission
             </Link>
-            <Link to="/my-pop" className="rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+            <Link to="/my-pop" className="rounded-full border border-white/25 px-4 py-2 text-white hover:bg-white/10 transition">
               My POP
-            </Link>
-            <Link to="/login" className="rounded-full border border-white/25 px-4 py-2 text-white hover:bg-white/10 transition">
-              Sign in
             </Link>
           </nav>
         </header>
