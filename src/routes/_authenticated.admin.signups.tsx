@@ -90,7 +90,20 @@ function AdminSignups() {
             <ArrowLeft className="h-3.5 w-3.5" /> Back
           </Link>
           <h1 className="font-display text-lg font-bold">Signups</h1>
-          <span className="w-12" />
+          <nav className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest">
+            <Link
+              to="/admin/rewards"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Rewards
+            </Link>
+            <Link
+              to="/admin/pop-awards"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              POP Log
+            </Link>
+          </nav>
         </div>
       </header>
 
