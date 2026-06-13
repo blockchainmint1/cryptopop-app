@@ -47,6 +47,34 @@ function addressFromPubkey(pubkey: Uint8Array): string {
   return base58check.encode(payload);
 }
 
+// TXC WIF prefix is discovered from MINTER_WIF (decoded base58check).
+// Cached after first call. Falls back to 0xC2 (Bitcoin-fork convention:
+// pubKeyHash 0x42 + 0x80) so derivation works even before MINTER_WIF is set.
+let WIF_PREFIX: number | null = null;
+function txcWifPrefix(): number {
+  if (WIF_PREFIX !== null) return WIF_PREFIX;
+  const m = process.env.MINTER_WIF;
+  if (m) {
+    try {
+      WIF_PREFIX = base58check.decode(m.trim())[0];
+      return WIF_PREFIX;
+    } catch {
+      /* fall through */
+    }
+  }
+  WIF_PREFIX = 0xc2;
+  return WIF_PREFIX;
+}
+
+function wifFromPrivateKey(priv: Uint8Array, compressed = true): string {
+  const prefix = txcWifPrefix();
+  const payload = new Uint8Array(compressed ? 34 : 33);
+  payload[0] = prefix;
+  payload.set(priv, 1);
+  if (compressed) payload[33] = 0x01;
+  return base58check.encode(payload);
+}
+
 export function deriveAddressForEmail(email: string): {
   address: string;
   index: number;
@@ -58,6 +86,28 @@ export function deriveAddressForEmail(email: string): {
   const child = root.derive(`m/44'/0'/0'/0/${index}`);
   if (!child.publicKey) throw new Error("derivation failed");
   return { address: addressFromPubkey(child.publicKey), index };
+}
+
+/**
+ * Server-side: derive the WIF private key + address for an email.
+ * The user can import this WIF into any TXC-compatible wallet to take
+ * custody of their POP at any time. Custody is otherwise held by the
+ * server (master seed).
+ */
+export function deriveWalletForEmail(email: string): {
+  address: string;
+  wif: string;
+  index: number;
+} {
+  const index = indexForEmail(email);
+  const root = loadMasterRoot();
+  const child = root.derive(`m/44'/0'/0'/0/${index}`);
+  if (!child.privateKey || !child.publicKey) throw new Error("derivation failed");
+  return {
+    address: addressFromPubkey(child.publicKey),
+    wif: wifFromPrivateKey(child.privateKey, true),
+    index,
+  };
 }
 
 /**
