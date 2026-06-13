@@ -76,7 +76,34 @@ function AdminPopAwards() {
       toast.error(e instanceof Error ? e.message : "Retry failed");
     } finally {
       setRetrying(null);
+  }
+
+  async function doMint(e: React.FormEvent) {
+    e.preventDefault();
+    const amt = Number(amount);
+    if (!recipient.trim() || !Number.isInteger(amt) || amt <= 0) {
+      toast.error("Enter a recipient and a positive whole POP amount");
+      return;
     }
+    setMinting(true);
+    try {
+      const res = await manual({
+        data: { recipient: recipient.trim(), amount: amt, memo: memo.trim() || undefined },
+      });
+      toast.success(
+        res.status === "duplicate"
+          ? "Already minted (duplicate)"
+          : `Minted ${amt} POP to ${res.mode}`,
+      );
+      setRecipient("");
+      setMemo("");
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Mint failed");
+    } finally {
+      setMinting(false);
+    }
+  }
   }
 
   return (
