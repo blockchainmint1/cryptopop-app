@@ -26,12 +26,15 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated.admin'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated.admin.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated.admin.signups'
 import { Route as AuthenticatedAdminRewardsRouteImport } from './routes/_authenticated.admin.rewards'
 import { Route as AuthenticatedAdminPopAwardsRouteImport } from './routes/_authenticated.admin.pop-awards'
+import { Route as AuthenticatedAdminEventsIndexRouteImport } from './routes/_authenticated.admin.events.index'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -122,6 +125,16 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -140,21 +153,27 @@ const AuthenticatedScanSuccessRoute =
   } as any)
 const AuthenticatedAdminSignupsRoute =
   AuthenticatedAdminSignupsRouteImport.update({
-    id: '/admin/signups',
-    path: '/admin/signups',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/signups',
+    path: '/signups',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminRewardsRoute =
   AuthenticatedAdminRewardsRouteImport.update({
-    id: '/admin/rewards',
-    path: '/admin/rewards',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/rewards',
+    path: '/rewards',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminPopAwardsRoute =
   AuthenticatedAdminPopAwardsRouteImport.update({
-    id: '/admin/pop-awards',
-    path: '/admin/pop-awards',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/pop-awards',
+    path: '/pop-awards',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEventsIndexRoute =
+  AuthenticatedAdminEventsIndexRouteImport.update({
+    id: '/events/',
+    path: '/events/',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
@@ -176,9 +195,9 @@ const LovableEmailQueueProcessRoute =
   } as any)
 const AuthenticatedAdminEventsIdRoute =
   AuthenticatedAdminEventsIdRouteImport.update({
-    id: '/admin/events/$id',
-    path: '/admin/events/$id',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/events/$id',
+    path: '/events/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -193,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
@@ -204,10 +224,12 @@ export interface FileRoutesByFullPath {
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/admin/events/': typeof AuthenticatedAdminEventsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -232,10 +254,12 @@ export interface FileRoutesByTo {
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/admin/events': typeof AuthenticatedAdminEventsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -251,6 +275,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
@@ -262,10 +287,12 @@ export interface FileRoutesById {
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/_authenticated/admin/events/': typeof AuthenticatedAdminEventsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -281,6 +308,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/unsubscribe'
+    | '/admin'
     | '/app'
     | '/recover-wallet'
     | '/scan'
@@ -292,10 +320,12 @@ export interface FileRouteTypes {
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
+    | '/admin/'
     | '/admin/events/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
+    | '/admin/events/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -320,10 +350,12 @@ export interface FileRouteTypes {
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
+    | '/admin'
     | '/admin/events/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
+    | '/admin/events'
   id:
     | '__root__'
     | '/'
@@ -338,6 +370,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/unsubscribe'
+    | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
@@ -349,10 +382,12 @@ export interface FileRouteTypes {
     | '/_authenticated/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
+    | '/_authenticated/admin/'
     | '/_authenticated/admin/events/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
+    | '/_authenticated/admin/events/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -498,6 +533,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -521,24 +570,31 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/signups': {
       id: '/_authenticated/admin/signups'
-      path: '/admin/signups'
+      path: '/signups'
       fullPath: '/admin/signups'
       preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/rewards': {
       id: '/_authenticated/admin/rewards'
-      path: '/admin/rewards'
+      path: '/rewards'
       fullPath: '/admin/rewards'
       preLoaderRoute: typeof AuthenticatedAdminRewardsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/pop-awards': {
       id: '/_authenticated/admin/pop-awards'
-      path: '/admin/pop-awards'
+      path: '/pop-awards'
       fullPath: '/admin/pop-awards'
       preLoaderRoute: typeof AuthenticatedAdminPopAwardsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/events/': {
+      id: '/_authenticated/admin/events/'
+      path: '/events'
+      fullPath: '/admin/events/'
+      preLoaderRoute: typeof AuthenticatedAdminEventsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
@@ -563,13 +619,34 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/events/$id': {
       id: '/_authenticated/admin/events/$id'
-      path: '/admin/events/$id'
+      path: '/events/$id'
       fullPath: '/admin/events/$id'
       preLoaderRoute: typeof AuthenticatedAdminEventsIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
   }
 }
+
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminPopAwardsRoute: typeof AuthenticatedAdminPopAwardsRoute
+  AuthenticatedAdminRewardsRoute: typeof AuthenticatedAdminRewardsRoute
+  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
+  AuthenticatedAdminEventsIndexRoute: typeof AuthenticatedAdminEventsIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminPopAwardsRoute: AuthenticatedAdminPopAwardsRoute,
+  AuthenticatedAdminRewardsRoute: AuthenticatedAdminRewardsRoute,
+  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
+  AuthenticatedAdminEventsIndexRoute: AuthenticatedAdminEventsIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedScanRouteChildren {
   AuthenticatedScanSuccessRoute: typeof AuthenticatedScanSuccessRoute
@@ -583,23 +660,17 @@ const AuthenticatedScanRouteWithChildren =
   AuthenticatedScanRoute._addFileChildren(AuthenticatedScanRouteChildren)
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedRecoverWalletRoute: typeof AuthenticatedRecoverWalletRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
-  AuthenticatedAdminPopAwardsRoute: typeof AuthenticatedAdminPopAwardsRoute
-  AuthenticatedAdminRewardsRoute: typeof AuthenticatedAdminRewardsRoute
-  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
-  AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedRecoverWalletRoute: AuthenticatedRecoverWalletRoute,
   AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
-  AuthenticatedAdminPopAwardsRoute: AuthenticatedAdminPopAwardsRoute,
-  AuthenticatedAdminRewardsRoute: AuthenticatedAdminRewardsRoute,
-  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
-  AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

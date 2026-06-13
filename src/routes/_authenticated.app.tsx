@@ -271,7 +271,7 @@ function WalletHome() {
             </Button>
             {isAdmin && (
               <Button asChild variant="ghost" size="sm" className="text-primary">
-                <Link to="/admin/signups">
+                <Link to="/admin">
                   <Shield className="h-4 w-4 mr-1" />
                   Admin
                 </Link>
@@ -610,7 +610,7 @@ function WalletHome() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="sm">
-                <Link to="/admin/signups">Signups & check-in</Link>
+                <Link to="/admin">Signups & check-in</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
                 <Link
