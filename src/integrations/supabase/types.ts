@@ -897,6 +897,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      user_owns_email: {
+        Args: { _email: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user"
