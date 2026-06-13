@@ -64,6 +64,7 @@ function WalletHome() {
   const { user, signOut } = useAuth();
   const { address, settingUp, error: walletError, retry } = useEnsureWallet();
   const fetchTxc = useServerFn(getTxcBalance);
+  const fetchTxcTxs = useServerFn(getTxcTxs);
 
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
@@ -71,8 +72,10 @@ function WalletHome() {
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [claims, setClaims] = useState<RecentClaim[]>([]);
+  const [awards, setAwards] = useState<PopAward[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [txc, setTxc] = useState<number | null>(null);
+  const [txcTxs, setTxcTxs] = useState<TxcTx[]>([]);
   const [backedUp, setBackedUp] = useState(false);
 
   useEffect(() => {
