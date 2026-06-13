@@ -45,7 +45,7 @@ export const BrandShell = ({ preview, children }: ShellProps) => (
     <Head>
       <Font
         fontFamily="Bebas Neue"
-        fallbackFontFamily={["Impact","Helvetica","sans-serif"]}
+        fallbackFontFamily={["Helvetica","sans-serif"]}
         webFont={{
           url: 'https://fonts.gstatic.com/s/bebasneue/v14/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2',
           format: 'woff2',
