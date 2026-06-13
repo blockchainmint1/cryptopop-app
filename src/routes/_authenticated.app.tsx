@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getOrCreateMnemonic } from "@/lib/wallet";
+// (mnemonic UX removed — wallet is custodial, email-derived)
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
@@ -93,7 +93,7 @@ function WalletHome() {
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
   const [copied, setCopied] = useState(false);
-  const [showMnemonic, setShowMnemonic] = useState(false);
+  // (mnemonic UX removed)
   const [showQr, setShowQr] = useState(false);
   const [claims, setClaims] = useState<RecentClaim[]>([]);
   const [awards, setAwards] = useState<PopAward[]>([]);
@@ -198,25 +198,6 @@ function WalletHome() {
     setCopied(true);
     toast.success("Address copied");
     setTimeout(() => setCopied(false), 1500);
-  };
-
-  const downloadPhrase = () => {
-    const m = getOrCreateMnemonic();
-    const body =
-      `CryptoPOP Recovery Phrase\n` +
-      `========================\n\n` +
-      `${m}\n\n` +
-      `Anyone with these 12 words controls your wallet. Store offline.`;
-    const blob = new Blob([body], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cryptopop-recovery-${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    localStorage.setItem(BACKED_UP_KEY, "1");
-    setBackedUp(true);
-    toast.success("Recovery phrase downloaded");
   };
 
   const dismissBackup = () => {
@@ -417,34 +398,22 @@ function WalletHome() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
               <div className="flex-1">
-                <h3 className="text-sm font-semibold">Save your recovery phrase</h3>
+                <h3 className="text-sm font-semibold">Take self-custody (optional)</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Your seed is also encrypted and backed up to your account — you can
-                  always recover from any device. Saving these 12 words offline is good practice.
+                  Your wallet is managed for you against your email — sign in anywhere
+                  and your POP is there. To control the keys yourself, export the
+                  private key and import it into any TXC-compatible wallet.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setShowMnemonic((v) => !v)}>
-                    {showMnemonic ? "Hide" : "Reveal"}
+                  <Button size="sm" asChild>
+                    <Link to="/recover-wallet">
+                      <Download className="mr-1.5 h-4 w-4" /> Export key
+                    </Link>
                   </Button>
-                  <Button size="sm" onClick={downloadPhrase}>
-                    <Download className="mr-1.5 h-4 w-4" /> Download .txt
-                  </Button>
-                  <Button size="sm" variant="ghost" asChild>
-                    <Link to="/recover-wallet">Recover</Link>
+                  <Button size="sm" variant="ghost" onClick={dismissBackup}>
+                    Dismiss
                   </Button>
                 </div>
-                {showMnemonic && (
-                  <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-background/60 p-3 font-mono text-xs">
-                    {getOrCreateMnemonic()
-                      .split(" ")
-                      .map((w, i) => (
-                        <div key={i} className="flex items-baseline gap-1.5">
-                          <span className="text-muted-foreground">{i + 1}.</span>
-                          <span>{w}</span>
-                        </div>
-                      ))}
-                  </div>
-                )}
               </div>
             </div>
           </Card>
