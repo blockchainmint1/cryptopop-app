@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Eye, EyeOff, Copy, Check, ShieldCheck, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Copy, Check, ShieldCheck, AlertTriangle, Download } from "lucide-react";
 import { recoverWalletSeed } from "@/lib/wallet-backup.functions";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/recover-wallet")({
   head: () => ({
     meta: [
-      { title: "Recover Wallet — CryptoPOP" },
-      { name: "description", content: "Recover your CryptoPOP sandbox wallet seed phrase." },
+      { title: "Export Wallet Key — CryptoPOP" },
+      { name: "description", content: "Export your CryptoPOP wallet private key." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/recover-wallet")({
 
 function RecoverWalletPage() {
   const recover = useServerFn(recoverWalletSeed);
-  const [mnemonic, setMnemonic] = useState<string | null>(null);
+  const [secret, setSecret] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -32,10 +32,10 @@ function RecoverWalletPage() {
     setError(null);
     try {
       const res = await recover();
-      if (!res.mnemonic) {
-        setError("No backup found yet. Sign in on any device and your wallet will be created automatically.");
+      if (!res.secret) {
+        setError("No wallet on file. Sign in first and your wallet will be created automatically.");
       } else {
-        setMnemonic(res.mnemonic);
+        setSecret(res.secret);
         setAddress(res.address);
         setRevealed(true);
       }
@@ -47,11 +47,30 @@ function RecoverWalletPage() {
   };
 
   const handleCopy = async () => {
-    if (!mnemonic) return;
-    await navigator.clipboard.writeText(mnemonic);
+    if (!secret) return;
+    await navigator.clipboard.writeText(secret);
     setCopied(true);
-    toast.success("Seed phrase copied");
+    toast.success("Private key copied");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    if (!secret || !address) return;
+    const body =
+      `CryptoPOP Wallet — Private Key Export\n` +
+      `=====================================\n\n` +
+      `Address: ${address}\n` +
+      `Private Key (WIF): ${secret}\n\n` +
+      `Import this WIF into any TXC-compatible wallet to take self-custody\n` +
+      `of your POP. Anyone with this key controls the wallet. Keep it offline.`;
+    const blob = new Blob([body], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cryptopop-wallet-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Wallet key downloaded");
   };
 
   return (
@@ -69,11 +88,12 @@ function RecoverWalletPage() {
       <main className="flex-1 max-w-xl w-full mx-auto px-6 py-12">
         <div className="mb-8">
           <h1 className="font-display text-5xl uppercase tracking-wide mb-3">
-            Recover Wallet
+            Export Wallet Key
           </h1>
           <p className="text-muted-foreground">
-            Your sandbox POP wallet seed is encrypted and backed up to your CryptoPOP account.
-            Reveal it any time to restore on a new device.
+            Your CryptoPOP wallet is custodial — managed for you against your email account.
+            You can export the private key any time to take self-custody in any TXC-compatible
+            wallet.
           </p>
         </div>
 
@@ -83,8 +103,8 @@ function RecoverWalletPage() {
             <div>
               <p className="text-foreground font-medium mb-1">Sandbox wallet</p>
               <p>
-                POP tokens are non-monetary reward points. This wallet is for the CryptoPOP
-                community — feel free to experiment. You can recover here any time.
+                POP tokens are non-monetary reward points. Your wallet stays linked to your email —
+                sign in on any device and you'll see the same POP balance.
               </p>
             </div>
           </div>
@@ -97,7 +117,7 @@ function RecoverWalletPage() {
               size="lg"
             >
               <Eye className="h-4 w-4 mr-2" />
-              {loading ? "Loading…" : "Reveal seed phrase"}
+              {loading ? "Loading…" : "Reveal private key"}
             </Button>
           )}
 
@@ -108,7 +128,7 @@ function RecoverWalletPage() {
             </div>
           )}
 
-          {revealed && mnemonic && (
+          {revealed && secret && (
             <div className="space-y-4">
               {address && (
                 <div>
@@ -121,20 +141,10 @@ function RecoverWalletPage() {
 
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 font-mono">
-                  Seed phrase (12 words)
+                  Private key (WIF)
                 </div>
-                <div className="grid grid-cols-3 gap-2 p-4 rounded-xl bg-background border border-border">
-                  {mnemonic.split(" ").map((word, i) => (
-                    <div
-                      key={i}
-                      className="font-mono text-sm flex items-baseline gap-1.5"
-                    >
-                      <span className="text-muted-foreground text-xs w-4">
-                        {i + 1}.
-                      </span>
-                      <span>{word}</span>
-                    </div>
-                  ))}
+                <div className="font-mono text-sm break-all rounded-xl bg-background border border-border p-4">
+                  {secret}
                 </div>
               </div>
 
@@ -150,11 +160,14 @@ function RecoverWalletPage() {
                     </>
                   )}
                 </Button>
+                <Button variant="outline" onClick={handleDownload} className="flex-1">
+                  <Download className="h-4 w-4 mr-2" /> Download .txt
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
                     setRevealed(false);
-                    setMnemonic(null);
+                    setSecret(null);
                   }}
                   className="flex-1"
                 >
@@ -163,7 +176,7 @@ function RecoverWalletPage() {
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Anyone with this phrase can access your sandbox POP. Treat it like a password.
+                Anyone with this key can spend your POP. Treat it like a password.
               </p>
             </div>
           )}
