@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "./use-auth";
-import { checkIsAdmin } from "@/lib/admin-role";
+import { getMyAdminStatus } from "@/lib/admin-role.functions";
 
 export function useIsAdmin() {
   const { user, loading: authLoading } = useAuth();
+  const getAdminStatus = useServerFn(getMyAdminStatus);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -19,8 +21,8 @@ export function useIsAdmin() {
     }
     let cancelled = false;
     setLoading(true);
-    checkIsAdmin(user.id)
-      .then((admin) => {
+    getAdminStatus()
+      .then(({ isAdmin: admin }) => {
         if (cancelled) return;
         setIsAdmin(admin);
       })
@@ -36,7 +38,7 @@ export function useIsAdmin() {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, getAdminStatus]);
 
   return { isAdmin, loading };
 }

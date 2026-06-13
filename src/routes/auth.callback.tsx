@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { checkIsAdmin } from "@/lib/admin-role";
+import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import callbackBg from "@/assets/auth-callback-bg.jpg";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/auth/callback")({
 
 function CallbackPage() {
   const navigate = useNavigate();
+  const getAdminStatus = useServerFn(getMyAdminStatus);
 
   useEffect(() => {
     let done = false;
@@ -21,14 +23,18 @@ function CallbackPage() {
       navigate({ to, replace: true });
     };
 
-    const routeForSession = async (userId: string | undefined): Promise<"/app" | "/admin"> => {
-      if (!userId) return "/app";
+    const routeForSession = async (): Promise<"/app" | "/admin"> => {
       try {
-        return (await checkIsAdmin(userId)) ? "/admin" : "/app";
-      } catch {
+        const { isAdmin } = await getAdminStatus();
+        console.info("Callback admin redirect decision", { isAdmin });
+        return isAdmin ? "/admin" : "/app";
+      } catch (error) {
+        console.error("Callback admin redirect check failed", error);
         return "/app";
       }
     };
+
+    const finishForSession = async () => finish(await routeForSession());
 
     const url = typeof window !== "undefined" ? window.location.href : "";
     const hasAuthPayload =
@@ -38,20 +44,22 @@ function CallbackPage() {
       url.includes("type=recovery") ||
       url.includes("type=magiclink");
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === "SIGNED_IN" || (event === "INITIAL_SESSION" && s)) {
-        finish(await routeForSession(s?.user?.id));
+        setTimeout(() => {
+          void finishForSession();
+        }, 0);
       }
     });
 
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      if (s) finish(await routeForSession(s.user?.id));
+      if (s) finish(await routeForSession());
     });
 
     const timeoutMs = hasAuthPayload ? 8000 : 1500;
     const t = setTimeout(async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
-      if (s) finish(await routeForSession(s.user?.id));
+      if (s) finish(await routeForSession());
       else finish("/login");
     }, timeoutMs);
 
@@ -59,7 +67,7 @@ function CallbackPage() {
       subscription.unsubscribe();
       clearTimeout(t);
     };
-  }, [navigate]);
+  }, [navigate, getAdminStatus]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">

@@ -26,6 +26,7 @@ import { getOrCreateMnemonic } from "@/lib/wallet";
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
+import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
 
 type RecentClaim = {
@@ -87,6 +88,7 @@ function WalletHome() {
   const fetchTxc = useServerFn(getTxcBalance);
   const fetchTxcTxs = useServerFn(getTxcTxs);
   const fetchMyEvents = useServerFn(getMyEventMemberships);
+  const getAdminStatus = useServerFn(getMyAdminStatus);
 
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
@@ -119,7 +121,7 @@ function WalletHome() {
         setEventsAttended(bal.events_attended);
       }
 
-      const [{ data: cl }, { data: aw }, { data: roleRow }] = await Promise.all([
+      const [{ data: cl }, { data: aw }, adminStatus] = await Promise.all([
         supabase
           .from("claims")
           .select("id, total, created_at, status, tx_hash, events(name)")
@@ -134,18 +136,13 @@ function WalletHome() {
               .order("created_at", { ascending: false })
               .limit(20)
           : Promise.resolve({ data: [] as PopAward[] }),
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle(),
+        getAdminStatus().catch(() => ({ isAdmin: false })),
       ]);
       if (cl) setClaims(cl as unknown as RecentClaim[]);
       if (aw) setAwards(aw as unknown as PopAward[]);
-      setIsAdmin(!!roleRow);
+      setIsAdmin(adminStatus.isAdmin);
     })();
-  }, [user]);
+  }, [user, getAdminStatus]);
 
   // Fetch TXC chain transactions once we have an address
   useEffect(() => {

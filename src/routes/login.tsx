@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { checkIsAdmin } from "@/lib/admin-role";
+import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/cryptopop-logo.png";
@@ -20,26 +21,29 @@ function LoginPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const { session, loading } = useAuth();
+  const getAdminStatus = useServerFn(getMyAdminStatus);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (loading || !session) return;
 
     let cancelled = false;
-    checkIsAdmin(session.user.id)
-      .then((isAdmin) => {
+    getAdminStatus()
+      .then(({ isAdmin }) => {
         if (cancelled) return;
+        console.info("Admin redirect decision", { isAdmin, email: session.user.email });
         navigate({ to: isAdmin ? "/admin" : "/app", replace: true });
       })
-      .catch(() => {
+      .catch((error) => {
         if (cancelled) return;
+        console.error("Admin redirect check failed", error);
         navigate({ to: "/app", replace: true });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [loading, session, navigate]);
+  }, [loading, session, navigate, getAdminStatus]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

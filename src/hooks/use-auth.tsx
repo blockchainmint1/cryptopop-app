@@ -21,18 +21,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up listener BEFORE getSession (per Supabase guidance)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!mounted) return;
       setSession(s);
-      setLoading(false);
+      if (_event !== "INITIAL_SESSION") setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!mounted) return;
       setSession(s);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
