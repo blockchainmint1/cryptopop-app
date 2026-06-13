@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getOrCreateMnemonic } from "@/lib/wallet";
+// (mnemonic UX removed — wallet is custodial, email-derived)
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
