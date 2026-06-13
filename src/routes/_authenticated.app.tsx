@@ -22,7 +22,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getOrCreateMnemonic } from "@/lib/wallet";
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
-import { getTxcBalance } from "@/lib/wallet.functions";
+import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 
 type RecentClaim = {
   id: string;
@@ -31,6 +31,26 @@ type RecentClaim = {
   status: "pending" | "minted" | "failed";
   tx_hash: string | null;
   events: { name: string } | null;
+};
+
+type PopAward = {
+  id: string;
+  amount: number;
+  source: string;
+  status: "pending" | "sent" | "failed";
+  tx_hash: string | null;
+  created_at: string;
+};
+
+type PopTx = {
+  id: string;
+  label: string;
+  amount: number;
+  created_at: string;
+  status: string;
+  tx_hash: string | null;
+  pending: boolean;
+  failed: boolean;
 };
 
 const BACKED_UP_KEY = "cryptopop:backed-up";
