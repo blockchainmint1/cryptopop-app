@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, RotateCw, ExternalLink, Coins } from "lucide-react";
 import { toast } from "sonner";
-import { listPopAwards, retryPopAward } from "@/lib/pop-awards-admin.functions";
+import { listPopAwards, retryPopAward, manualAwardPop } from "@/lib/pop-awards-admin.functions";
 
 type Award = {
   id: string;
