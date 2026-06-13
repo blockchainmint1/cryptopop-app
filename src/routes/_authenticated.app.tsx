@@ -93,7 +93,7 @@ function WalletHome() {
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
   const [copied, setCopied] = useState(false);
-  const [showMnemonic, setShowMnemonic] = useState(false);
+  // (mnemonic UX removed)
   const [showQr, setShowQr] = useState(false);
   const [claims, setClaims] = useState<RecentClaim[]>([]);
   const [awards, setAwards] = useState<PopAward[]>([]);
