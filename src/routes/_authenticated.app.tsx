@@ -60,6 +60,23 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: WalletHome,
 });
 
+function prettySource(source: string): string {
+  switch (source) {
+    case "signup":
+    case "event_signup":
+      return "Event signup bonus";
+    case "scan":
+    case "claim":
+      return "Event scan";
+    case "referral":
+      return "Referral bonus";
+    case "quiz":
+      return "Quiz reward";
+    default:
+      return source.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+}
+
 function WalletHome() {
   const { user, signOut } = useAuth();
   const { address, settingUp, error: walletError, retry } = useEnsureWallet();
