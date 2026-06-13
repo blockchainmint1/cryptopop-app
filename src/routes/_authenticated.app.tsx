@@ -14,6 +14,8 @@ import {
   Download,
   X,
   RefreshCw,
+  CalendarDays,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +25,8 @@ import { toast } from "sonner";
 import { getOrCreateMnemonic } from "@/lib/wallet";
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
+import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
+import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
 
 type RecentClaim = {
   id: string;
@@ -82,6 +86,7 @@ function WalletHome() {
   const { address, settingUp, error: walletError, retry } = useEnsureWallet();
   const fetchTxc = useServerFn(getTxcBalance);
   const fetchTxcTxs = useServerFn(getTxcTxs);
+  const fetchMyEvents = useServerFn(getMyEventMemberships);
 
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
@@ -93,6 +98,8 @@ function WalletHome() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [txc, setTxc] = useState<number | null>(null);
   const [txcTxs, setTxcTxs] = useState<TxcTx[]>([]);
+  const [myEvents, setMyEvents] = useState<MyEventMembership[]>([]);
+  const [eventsTab, setEventsTab] = useState<"mine" | "find">("mine");
   const [backedUp, setBackedUp] = useState(false);
 
   useEffect(() => {
@@ -155,6 +162,22 @@ function WalletHome() {
       cancelled = true;
     };
   }, [address, fetchTxcTxs]);
+
+  // Fetch event memberships (which public events the user has signed up to)
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetchMyEvents({})
+      .then((r) => {
+        if (!cancelled) setMyEvents(r.memberships);
+      })
+      .catch(() => {
+        if (!cancelled) setMyEvents([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, fetchMyEvents]);
 
   // Fetch TXC chain balance once we have an address
   useEffect(() => {
@@ -231,6 +254,12 @@ function WalletHome() {
     })),
   ].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
 
+  // Upcoming-events tabs: derive from PUBLIC_EVENTS + the user's memberships.
+  const upcoming = upcomingPublicEvents();
+  const mySlugs = new Set(myEvents.map((m) => m.slug));
+  const mineEvents = upcoming.filter((e) => mySlugs.has(e.slug));
+  const findEvents = upcoming.filter((e) => !mySlugs.has(e.slug));
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50">
@@ -280,6 +309,90 @@ function WalletHome() {
         </Card>
 
         {/* Recent activity moved below the TXC wallet card */}
+
+        {/* Upcoming events — My events / Find events */}
+        <Card className="overflow-hidden p-0">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 pt-4 pb-0">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Upcoming events
+            </h2>
+          </div>
+          <div role="tablist" className="flex border-b border-border px-2">
+            {([
+              ["mine", `My events${mineEvents.length ? ` · ${mineEvents.length}` : ""}`],
+              ["find", `Find events${findEvents.length ? ` · ${findEvents.length}` : ""}`],
+            ] as const).map(([key, label]) => {
+              const active = eventsTab === key;
+              return (
+                <button
+                  key={key}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setEventsTab(key)}
+                  className={`relative flex-1 px-3 py-3 text-xs font-semibold uppercase tracking-wider transition ${
+                    active
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                  {active && (
+                    <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="p-4">
+            {eventsTab === "mine" ? (
+              mineEvents.length === 0 ? (
+                <div className="py-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    You haven't signed up for any upcoming events yet.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-3"
+                    onClick={() => setEventsTab("find")}
+                  >
+                    Find events
+                  </Button>
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {mineEvents.map((ev) => {
+                    const membership = myEvents.find((m) => m.slug === ev.slug);
+                    const checkedIn = !!membership?.checked_in_at;
+                    return (
+                      <li key={ev.slug}>
+                        <EventCard
+                          ev={ev}
+                          ctaLabel={checkedIn ? "Checked in" : "View details"}
+                          ctaDisabled={checkedIn}
+                          badge={checkedIn ? "Checked in" : "Going"}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              )
+            ) : findEvents.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No new events right now. Check back soon.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {findEvents.map((ev) => (
+                  <li key={ev.slug}>
+                    <EventCard ev={ev} ctaLabel="Sign up" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
 
         {/* Backup nudge — soft, dismissible */}
         {address && !backedUp && (
@@ -505,3 +618,53 @@ function WalletHome() {
     </div>
   );
 }
+
+function EventCard({
+  ev,
+  ctaLabel,
+  ctaDisabled,
+  badge,
+}: {
+  ev: (typeof PUBLIC_EVENTS)[number];
+  ctaLabel: string;
+  ctaDisabled?: boolean;
+  badge?: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card/40">
+      {ev.heroUrl && (
+        <div className="relative aspect-[16/7] w-full overflow-hidden">
+          <img src={ev.heroUrl} alt="" className="h-full w-full object-cover" />
+          {badge && (
+            <span className="absolute right-2 top-2 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow">
+              {badge}
+            </span>
+          )}
+        </div>
+      )}
+      <div className="space-y-2 p-4">
+        <p className="font-display text-sm font-semibold leading-snug">{ev.name}</p>
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{ev.dateLabel}</span>
+        </p>
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{ev.location}</span>
+        </p>
+        {ctaDisabled ? (
+          <Button size="sm" variant="outline" disabled className="mt-2 w-full">
+            {ctaLabel}
+          </Button>
+        ) : (
+          <Button asChild size="sm" className="mt-2 w-full">
+            <Link to="/events/$slug/rsvp" params={{ slug: ev.slug }}>
+              {ctaLabel}
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
