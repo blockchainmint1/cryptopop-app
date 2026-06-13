@@ -5,6 +5,7 @@ import bbqHero from "@/assets/usa-250-bbq.png";
 import bbqBg from "@/assets/bbq-marina-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const VENUE_MAP_URL =
   "https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const { session } = useAuth();
+  const isAdmin = useIsAdmin();
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* Cinematic fullscreen hero */}
@@ -122,6 +124,11 @@ function Landing() {
             <Link to="/mission" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
               Mission
             </Link>
+            {session && isAdmin && (
+              <Link to="/admin/signups" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+                Admin
+              </Link>
+            )}
             {session ? (
               <Link to="/my-pop" className="rounded-full border border-white/25 px-4 py-2 text-white hover:bg-white/10 transition">
                 My POP
