@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { mintGrant } from "./txc.server";
+import { awardPop } from "./email-wallet.server";
 
 async function assertAdmin(userId: string) {
   const { data } = await supabaseAdmin
