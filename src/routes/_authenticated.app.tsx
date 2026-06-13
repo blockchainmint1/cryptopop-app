@@ -22,7 +22,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getOrCreateMnemonic } from "@/lib/wallet";
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
-import { getTxcBalance } from "@/lib/wallet.functions";
+import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 
 type RecentClaim = {
   id: string;
@@ -33,6 +33,26 @@ type RecentClaim = {
   events: { name: string } | null;
 };
 
+type PopAward = {
+  id: string;
+  amount: number;
+  source: string;
+  status: "pending" | "sent" | "failed";
+  tx_hash: string | null;
+  created_at: string;
+};
+
+type PopTx = {
+  id: string;
+  label: string;
+  amount: number;
+  created_at: string;
+  status: string;
+  tx_hash: string | null;
+  pending: boolean;
+  failed: boolean;
+};
+
 const BACKED_UP_KEY = "cryptopop:backed-up";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -40,10 +60,28 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: WalletHome,
 });
 
+function prettySource(source: string): string {
+  switch (source) {
+    case "signup":
+    case "event_signup":
+      return "Event signup bonus";
+    case "scan":
+    case "claim":
+      return "Event scan";
+    case "referral":
+      return "Referral bonus";
+    case "quiz":
+      return "Quiz reward";
+    default:
+      return source.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+}
+
 function WalletHome() {
   const { user, signOut } = useAuth();
   const { address, settingUp, error: walletError, retry } = useEnsureWallet();
   const fetchTxc = useServerFn(getTxcBalance);
+  const fetchTxcTxs = useServerFn(getTxcTxs);
 
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
@@ -51,8 +89,10 @@ function WalletHome() {
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [claims, setClaims] = useState<RecentClaim[]>([]);
+  const [awards, setAwards] = useState<PopAward[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [txc, setTxc] = useState<number | null>(null);
+  const [txcTxs, setTxcTxs] = useState<TxcTx[]>([]);
   const [backedUp, setBackedUp] = useState(false);
 
   useEffect(() => {
@@ -72,13 +112,21 @@ function WalletHome() {
         setEventsAttended(bal.events_attended);
       }
 
-      const [{ data: cl }, { data: roleRow }] = await Promise.all([
+      const [{ data: cl }, { data: aw }, { data: roleRow }] = await Promise.all([
         supabase
           .from("claims")
           .select("id, total, created_at, status, tx_hash, events(name)")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(20),
+        user.email
+          ? supabase
+              .from("pop_awards")
+              .select("id, amount, source, status, tx_hash, created_at")
+              .eq("email", user.email.toLowerCase())
+              .order("created_at", { ascending: false })
+              .limit(20)
+          : Promise.resolve({ data: [] as PopAward[] }),
         supabase
           .from("user_roles")
           .select("role")
@@ -87,9 +135,26 @@ function WalletHome() {
           .maybeSingle(),
       ]);
       if (cl) setClaims(cl as unknown as RecentClaim[]);
+      if (aw) setAwards(aw as unknown as PopAward[]);
       setIsAdmin(!!roleRow);
     })();
   }, [user]);
+
+  // Fetch TXC chain transactions once we have an address
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetchTxcTxs({ data: { address } })
+      .then((r) => {
+        if (!cancelled) setTxcTxs(r.txs);
+      })
+      .catch(() => {
+        if (!cancelled) setTxcTxs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [address, fetchTxcTxs]);
 
   // Fetch TXC chain balance once we have an address
   useEffect(() => {
@@ -142,6 +207,30 @@ function WalletHome() {
   // WalletID = 2nd through 7th characters of the address (6 chars)
   const shortAddr = address ? address.slice(1, 7) : "";
 
+  // Merge POP claims + awards into one transaction list, newest first.
+  const popTxs: PopTx[] = [
+    ...claims.map<PopTx>((c) => ({
+      id: `claim-${c.id}`,
+      label: c.events?.name ?? "Event reward",
+      amount: Number(c.total),
+      created_at: c.created_at,
+      status: c.status,
+      tx_hash: c.tx_hash,
+      pending: c.status === "pending",
+      failed: c.status === "failed",
+    })),
+    ...awards.map<PopTx>((a) => ({
+      id: `award-${a.id}`,
+      label: prettySource(a.source),
+      amount: Number(a.amount),
+      created_at: a.created_at,
+      status: a.status,
+      tx_hash: a.tx_hash,
+      pending: a.status === "pending",
+      failed: a.status === "failed",
+    })),
+  ].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50">
@@ -190,44 +279,7 @@ function WalletHome() {
           )}
         </Card>
 
-        {/* Recent claims */}
-        {claims.length > 0 && (
-          <Card className="p-6">
-            <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Recent activity
-            </h2>
-            <ul className="mt-4 divide-y divide-border">
-              {claims.map((c) => (
-                <li key={c.id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{c.events?.name ?? "Event"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(c.created_at).toLocaleString()}
-                      {c.status === "pending" && " · settling…"}
-                      {c.status === "failed" && " · mint failed"}
-                      {c.tx_hash && (
-                        <>
-                          {" · "}
-                          <a
-                            href={`https://mempool.texitcoin.org/tx/${c.tx_hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            tx
-                          </a>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <span className="font-display text-sm font-bold text-primary">
-                    +{Number(c.total)} POP
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        )}
+        {/* Recent activity moved below the TXC wallet card */}
 
         {/* Backup nudge — soft, dismissible */}
         {address && !backedUp && (
@@ -320,6 +372,106 @@ function WalletHome() {
             </div>
           )}
         </Card>
+
+        {/* Transactions */}
+        <Card className="p-6">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            POP Transactions
+          </h2>
+          {popTxs.length === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              No POP transactions yet. Attend an event to earn your first POP.
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {popTxs.map((t) => (
+                <li key={t.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{t.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(t.created_at).toLocaleString()}
+                      {t.pending && " · settling…"}
+                      {t.failed && " · mint failed"}
+                      {t.tx_hash && (
+                        <>
+                          {" · "}
+                          <a
+                            href={`https://mempool.texitcoin.org/tx/${t.tx_hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            tx
+                          </a>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <span
+                    className={`font-display text-sm font-bold tabular-nums ${
+                      t.failed ? "text-muted-foreground line-through" : "text-primary"
+                    }`}
+                  >
+                    +{t.amount} POP
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            TXC Transactions
+          </h2>
+          {!address ? (
+            <p className="mt-3 text-xs text-muted-foreground">Wallet still setting up…</p>
+          ) : txcTxs.length === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              No on-chain TXC transactions yet.
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {txcTxs.map((t) => {
+                const incoming = t.delta_sats >= 0;
+                const txc = Math.abs(t.delta_sats) / 1e8;
+                return (
+                  <li key={t.txid} className="flex items-center justify-between gap-3 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">
+                        {incoming ? "Received" : "Sent"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t.block_time
+                          ? new Date(t.block_time * 1000).toLocaleString()
+                          : "Unconfirmed"}
+                        {" · "}
+                        <a
+                          href={`https://mempool.texitcoin.org/tx/${t.txid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {t.txid.slice(0, 8)}…
+                        </a>
+                        {!t.confirmed && " · pending"}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-display text-sm font-bold tabular-nums ${
+                        incoming ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      {incoming ? "+" : "−"}
+                      {txc.toFixed(4)} TXC
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
 
         {isAdmin && (
           <Card className="border-primary/30 bg-primary/5 p-4 space-y-3">
