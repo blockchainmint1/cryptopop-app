@@ -86,6 +86,7 @@ function WalletHome() {
   const { address, settingUp, error: walletError, retry } = useEnsureWallet();
   const fetchTxc = useServerFn(getTxcBalance);
   const fetchTxcTxs = useServerFn(getTxcTxs);
+  const fetchMyEvents = useServerFn(getMyEventMemberships);
 
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
@@ -97,6 +98,8 @@ function WalletHome() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [txc, setTxc] = useState<number | null>(null);
   const [txcTxs, setTxcTxs] = useState<TxcTx[]>([]);
+  const [myEvents, setMyEvents] = useState<MyEventMembership[]>([]);
+  const [eventsTab, setEventsTab] = useState<"mine" | "find">("mine");
   const [backedUp, setBackedUp] = useState(false);
 
   useEffect(() => {
