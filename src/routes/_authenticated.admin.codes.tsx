@@ -26,6 +26,7 @@ import {
   deleteQrCode,
 } from "@/lib/qr-codes.functions";
 import { listAdminEvents } from "@/lib/events-admin.functions";
+import { GeofenceMapPicker } from "@/components/geofence-map-picker";
 
 export const Route = createFileRoute("/_authenticated/admin/codes")({
   head: () => ({ meta: [{ title: "QR Codes — CryptoPOP Admin" }] }),
@@ -363,7 +364,7 @@ function CreateCodeDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur">
-      <Card className="w-full max-w-lg p-6">
+      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-bold">New QR code</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -418,6 +419,15 @@ function CreateCodeDialog({
             </div>
             {geofenced && (
               <div className="space-y-3">
+                <GeofenceMapPicker
+                  lat={lat ? Number(lat) : null}
+                  lng={lng ? Number(lng) : null}
+                  radiusM={Number(radius) || 200}
+                  onChange={(la, ln) => {
+                    setLat(la.toFixed(6));
+                    setLng(ln.toFixed(6));
+                  }}
+                />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="lat">Latitude</Label>
