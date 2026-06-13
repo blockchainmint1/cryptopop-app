@@ -373,6 +373,106 @@ function WalletHome() {
           )}
         </Card>
 
+        {/* Transactions */}
+        <Card className="p-6">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            POP Transactions
+          </h2>
+          {popTxs.length === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              No POP transactions yet. Attend an event to earn your first POP.
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {popTxs.map((t) => (
+                <li key={t.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{t.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(t.created_at).toLocaleString()}
+                      {t.pending && " · settling…"}
+                      {t.failed && " · mint failed"}
+                      {t.tx_hash && (
+                        <>
+                          {" · "}
+                          <a
+                            href={`https://mempool.texitcoin.org/tx/${t.tx_hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            tx
+                          </a>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <span
+                    className={`font-display text-sm font-bold tabular-nums ${
+                      t.failed ? "text-muted-foreground line-through" : "text-primary"
+                    }`}
+                  >
+                    +{t.amount} POP
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            TXC Transactions
+          </h2>
+          {!address ? (
+            <p className="mt-3 text-xs text-muted-foreground">Wallet still setting up…</p>
+          ) : txcTxs.length === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              No on-chain TXC transactions yet.
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {txcTxs.map((t) => {
+                const incoming = t.delta_sats >= 0;
+                const txc = Math.abs(t.delta_sats) / 1e8;
+                return (
+                  <li key={t.txid} className="flex items-center justify-between gap-3 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">
+                        {incoming ? "Received" : "Sent"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t.block_time
+                          ? new Date(t.block_time * 1000).toLocaleString()
+                          : "Unconfirmed"}
+                        {" · "}
+                        <a
+                          href={`https://mempool.texitcoin.org/tx/${t.txid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {t.txid.slice(0, 8)}…
+                        </a>
+                        {!t.confirmed && " · pending"}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-display text-sm font-bold tabular-nums ${
+                        incoming ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      {incoming ? "+" : "−"}
+                      {txc.toFixed(4)} TXC
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+
         {isAdmin && (
           <Card className="border-primary/30 bg-primary/5 p-4 space-y-3">
             <div className="flex items-center gap-3">
