@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "./use-auth";
-import { getMyAdminStatus } from "@/lib/admin-role";
+import { getMyAdminStatus } from "@/lib/admin-role.functions";
 
 export function useIsAdmin() {
   const { user, loading: authLoading } = useAuth();

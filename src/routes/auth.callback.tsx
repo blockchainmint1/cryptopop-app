@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyAdminStatus } from "@/lib/admin-role";
+import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import callbackBg from "@/assets/auth-callback-bg.jpg";
 
 export const Route = createFileRoute("/auth/callback")({
