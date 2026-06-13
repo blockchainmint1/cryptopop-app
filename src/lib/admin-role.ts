@@ -1,9 +1,12 @@
-import { supabase } from "@/integrations/supabase/client";
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { attachSupabaseAuth } from "./auth-client-middleware";
 
-export async function checkIsAdmin(userId: string | undefined | null) {
-  if (!userId) return false;
+async function checkAdminByUserId(userId: string | undefined | null) {
+  if (!userId) return { isAdmin: false };
 
-  const { data, error } = await supabase
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
@@ -12,8 +15,12 @@ export async function checkIsAdmin(userId: string | undefined | null) {
 
   if (error) {
     console.error("Admin role check failed", error);
-    return false;
+    return { isAdmin: false };
   }
 
-  return !!data;
+  return { isAdmin: !!data };
 }
+
+export const getMyAdminStatus = createServerFn({ method: "GET" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .handler(async ({ context }) => checkAdminByUserId(context.userId));
