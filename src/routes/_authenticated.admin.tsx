@@ -10,6 +10,7 @@ import {
   Contact,
   Send,
   FileText,
+  Wallet,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useAuth } from "@/hooks/use-auth";
