@@ -267,7 +267,7 @@ function AdminCodes() {
               toast.success("Code created");
               setShowCreate(false);
               refresh();
-              setShowQrFor(res.code as CodeRow);
+              setShowQrFor({ ...(res.code as Omit<CodeRow, "events">), events: null });
             } catch (e) {
               toast.error(e instanceof Error ? e.message : "Create failed");
             }

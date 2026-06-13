@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminRewardsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminPopAwardsRouteImport } from './routes/_authenticated.admin.pop-awards'
 import { Route as AuthenticatedAdminEmailTemplatesRouteImport } from './routes/_authenticated.admin.email-templates'
 import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated.admin.crm'
+import { Route as AuthenticatedAdminCodesRouteImport } from './routes/_authenticated.admin.codes'
 import { Route as AuthenticatedAdminBlastRouteImport } from './routes/_authenticated.admin.blast'
 import { Route as AuthenticatedAdminEventsIndexRouteImport } from './routes/_authenticated.admin.events.index'
 import { Route as AuthenticatedAdminBlastIndexRouteImport } from './routes/_authenticated.admin.blast.index'
@@ -201,6 +202,11 @@ const AuthenticatedAdminCrmRoute = AuthenticatedAdminCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminCodesRoute = AuthenticatedAdminCodesRouteImport.update({
+  id: '/codes',
+  path: '/codes',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminBlastRoute = AuthenticatedAdminBlastRouteImport.update({
   id: '/blast',
   path: '/blast',
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
+  '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
   '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
   '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
+  '/_authenticated/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/_authenticated/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
   '/_authenticated/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/email/unsubscribe'
     | '/admin/blast'
+    | '/admin/codes'
     | '/admin/crm'
     | '/admin/email-templates'
     | '/admin/pop-awards'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/auth/callback'
     | '/email/unsubscribe'
+    | '/admin/codes'
     | '/admin/crm'
     | '/admin/email-templates'
     | '/admin/pop-awards'
@@ -491,6 +502,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/email/unsubscribe'
     | '/_authenticated/admin/blast'
+    | '/_authenticated/admin/codes'
     | '/_authenticated/admin/crm'
     | '/_authenticated/admin/email-templates'
     | '/_authenticated/admin/pop-awards'
@@ -743,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCrmRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/codes': {
+      id: '/_authenticated/admin/codes'
+      path: '/codes'
+      fullPath: '/admin/codes'
+      preLoaderRoute: typeof AuthenticatedAdminCodesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/blast': {
       id: '/_authenticated/admin/blast'
       path: '/blast'
@@ -841,6 +860,7 @@ const AuthenticatedAdminBlastRouteWithChildren =
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBlastRoute: typeof AuthenticatedAdminBlastRouteWithChildren
+  AuthenticatedAdminCodesRoute: typeof AuthenticatedAdminCodesRoute
   AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRoute
   AuthenticatedAdminEmailTemplatesRoute: typeof AuthenticatedAdminEmailTemplatesRoute
   AuthenticatedAdminPopAwardsRoute: typeof AuthenticatedAdminPopAwardsRoute
@@ -854,6 +874,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBlastRoute: AuthenticatedAdminBlastRouteWithChildren,
+  AuthenticatedAdminCodesRoute: AuthenticatedAdminCodesRoute,
   AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRoute,
   AuthenticatedAdminEmailTemplatesRoute: AuthenticatedAdminEmailTemplatesRoute,
   AuthenticatedAdminPopAwardsRoute: AuthenticatedAdminPopAwardsRoute,
