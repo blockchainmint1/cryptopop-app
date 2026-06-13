@@ -54,7 +54,7 @@ function MissionPage() {
               Developer API
             </Link>
             {session && isAdmin && (
-              <Link to="/admin/signups" className="hover:text-foreground transition">
+              <Link to="/admin" className="hover:text-foreground transition">
                 Admin
               </Link>
             )}
