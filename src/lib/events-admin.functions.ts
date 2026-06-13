@@ -43,6 +43,8 @@ export const listAdminEvents = createServerFn({ method: "GET" })
       .select(
         "id, name, description, cover_url, lat, lng, radius_m, start_at, end_at, base_reward, referral_reward, created_at",
       )
+      // Hide legacy seed/test rows — those live under POP Awards now.
+      .not("name", "ilike", "CryptoPOP Test Drop%")
       .order("start_at", { ascending: false });
     if (error) throw new Error(error.message);
 
