@@ -53,7 +53,8 @@ function findParamTags(raw: string): Array<{ kind: "event" | "rsvp"; arg: string
 }
 
 async function pageAll<T>(
-  query: (from: number, to: number) => Promise<{ data: T[] | null; error: unknown }>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  query: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: any }>,
   pluck: (row: T) => string | null | undefined,
 ): Promise<string[]> {
   const PAGE = 1000;

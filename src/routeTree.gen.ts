@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminEventsIndexRouteImport } from './routes/_aut
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
 import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -193,6 +194,12 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksBlastDrainRoute =
+  ApiPublicHooksBlastDrainRouteImport.update({
+    id: '/public/hooks/blast-drain',
+    path: '/public/hooks/blast-drain',
+    getParentRoute: () => ApiRoute,
+  } as any)
 const AuthenticatedAdminEventsIdRoute =
   AuthenticatedAdminEventsIdRouteImport.update({
     id: '/events/$id',
@@ -202,7 +209,7 @@ const AuthenticatedAdminEventsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api': typeof ApiRoute
+  '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
+  '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -233,7 +241,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api': typeof ApiRoute
+  '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
+  '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -265,7 +274,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/api': typeof ApiRoute
+  '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/login': typeof LoginRoute
   '/mission': typeof MissionRoute
@@ -289,6 +298,7 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
+  '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/admin/'
     | '/admin/events/$id'
+    | '/api/public/hooks/blast-drain'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/admin'
     | '/admin/events/$id'
+    | '/api/public/hooks/blast-drain'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -384,6 +396,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/events/$id'
+    | '/api/public/hooks/blast-drain'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -393,7 +406,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  ApiRoute: typeof ApiRoute
+  ApiRoute: typeof ApiRouteWithChildren
   ChangeLogRoute: typeof ChangeLogRoute
   LoginRoute: typeof LoginRoute
   MissionRoute: typeof MissionRoute
@@ -617,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/blast-drain': {
+      id: '/api/public/hooks/blast-drain'
+      path: '/public/hooks/blast-drain'
+      fullPath: '/api/public/hooks/blast-drain'
+      preLoaderRoute: typeof ApiPublicHooksBlastDrainRouteImport
+      parentRoute: typeof ApiRoute
+    }
     '/_authenticated/admin/events/$id': {
       id: '/_authenticated/admin/events/$id'
       path: '/events/$id'
@@ -677,10 +697,20 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface ApiRouteChildren {
+  ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
+}
+
+const ApiRouteChildren: ApiRouteChildren = {
+  ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
+}
+
+const ApiRouteWithChildren = ApiRoute._addFileChildren(ApiRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  ApiRoute: ApiRoute,
+  ApiRoute: ApiRouteWithChildren,
   ChangeLogRoute: ChangeLogRoute,
   LoginRoute: LoginRoute,
   MissionRoute: MissionRoute,
