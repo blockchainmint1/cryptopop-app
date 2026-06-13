@@ -254,6 +254,12 @@ function WalletHome() {
     })),
   ].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
 
+  // Upcoming-events tabs: derive from PUBLIC_EVENTS + the user's memberships.
+  const upcoming = upcomingPublicEvents();
+  const mySlugs = new Set(myEvents.map((m) => m.slug));
+  const mineEvents = upcoming.filter((e) => mySlugs.has(e.slug));
+  const findEvents = upcoming.filter((e) => !mySlugs.has(e.slug));
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50">
