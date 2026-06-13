@@ -14,6 +14,8 @@ import {
   Download,
   X,
   RefreshCw,
+  CalendarDays,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +25,8 @@ import { toast } from "sonner";
 import { getOrCreateMnemonic } from "@/lib/wallet";
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
+import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
+import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
 
 type RecentClaim = {
   id: string;
