@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Users,
   Coins,
+  ScanLine,
   Settings2,
   Shield,
   ArrowLeft,
@@ -43,6 +44,7 @@ const navItems = [
   { to: "/admin/blast", label: "Email Blast", icon: Send, exact: false },
   { to: "/admin/email-templates", label: "Templates", icon: FileText, exact: true },
   { to: "/admin/pop-awards", label: "POP Awards", icon: Coins, exact: true },
+  { to: "/admin/codes", label: "QR Codes", icon: ScanLine, exact: false },
   { to: "/admin/rewards", label: "Reward Rules", icon: Settings2, exact: true },
 ] as const;
 
