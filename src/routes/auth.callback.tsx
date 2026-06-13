@@ -29,14 +29,14 @@ function CallbackPage() {
 
   useEffect(() => {
     let done = false;
-    const finish = async (to: "/app" | "/login" | "/admin") => {
+    const finish = async (to: string) => {
       if (done) return;
       done = true;
-      navigate({ to, replace: true });
+      navigate({ to: to as never, replace: true });
     };
 
-    const routeForSession = async (): Promise<"/app" | "/admin"> => {
-      if (redirect) return redirect.startsWith("/admin") ? "/admin" : (redirect as "/app");
+    const routeForSession = async (): Promise<string> => {
+      if (redirect) return redirect;
       try {
         const { isAdmin } = await getAdminStatus();
         console.info("Callback admin redirect decision", { isAdmin });
