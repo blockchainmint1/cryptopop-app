@@ -76,6 +76,7 @@ function AdminPopAwards() {
       toast.error(e instanceof Error ? e.message : "Retry failed");
     } finally {
       setRetrying(null);
+    }
   }
 
   async function doMint(e: React.FormEvent) {
@@ -104,7 +105,7 @@ function AdminPopAwards() {
       setMinting(false);
     }
   }
-  }
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
