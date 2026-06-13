@@ -14,6 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      blast_campaigns: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          finished_at: string | null
+          from_email: string
+          from_name: string
+          html: string
+          preview_text: string | null
+          recipients_raw: string
+          reply_to: string | null
+          sent_at: string | null
+          subject: string
+          total_recipients: number
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          from_email: string
+          from_name: string
+          html: string
+          preview_text?: string | null
+          recipients_raw: string
+          reply_to?: string | null
+          sent_at?: string | null
+          subject: string
+          total_recipients?: number
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          from_email?: string
+          from_name?: string
+          html?: string
+          preview_text?: string | null
+          recipients_raw?: string
+          reply_to?: string | null
+          sent_at?: string | null
+          subject?: string
+          total_recipients?: number
+        }
+        Relationships: []
+      }
+      blast_recipients: {
+        Row: {
+          attempts: number
+          campaign_id: string
+          email: string
+          error_message: string | null
+          id: string
+          queued_at: string
+          sent_at: string | null
+          ses_message_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          campaign_id: string
+          email: string
+          error_message?: string | null
+          id?: string
+          queued_at?: string
+          sent_at?: string | null
+          ses_message_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          campaign_id?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          queued_at?: string
+          sent_at?: string | null
+          ses_message_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blast_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "blast_campaigns"
+            referencedColumns: ["campaign_id"]
+          },
+        ]
+      }
       claims: {
         Row: {
           base_reward: number
@@ -138,6 +233,42 @@ export type Database = {
           retry_after_until?: string | null
           send_delay_ms?: number
           transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          html: string
+          id: string
+          name: string
+          notes: string | null
+          preview_text: string | null
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          html: string
+          id?: string
+          name: string
+          notes?: string | null
+          preview_text?: string | null
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          html?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          preview_text?: string | null
+          subject?: string | null
           updated_at?: string
         }
         Relationships: []
