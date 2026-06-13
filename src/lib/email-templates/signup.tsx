@@ -1,16 +1,12 @@
 import * as React from 'react'
-
 import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Link,
-  Preview,
-  Text,
-} from '@react-email/components'
+  BrandShell,
+  BrandHeading,
+  BrandBody,
+  BrandCta,
+  BrandMuted,
+  BrandLink,
+} from './_brand'
 
 interface SignupEmailProps {
   siteName: string
@@ -21,64 +17,25 @@ interface SignupEmailProps {
 
 export const SignupEmail = ({
   siteName,
-  siteUrl,
   recipient,
   confirmationUrl,
 }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Confirm your email for {siteName}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
-        <Text style={text}>
-          Thanks for signing up for{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          !
-        </Text>
-        <Text style={text}>
-          Please confirm your email address (
-          <Link href={`mailto:${recipient}`} style={link}>
-            {recipient}
-          </Link>
-          ) by clicking the button below:
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Verify Email
-        </Button>
-        <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+  <BrandShell preview={`Confirm your email and unlock ${siteName}`}>
+    <BrandHeading>Welcome to the POP</BrandHeading>
+    <BrandBody>
+      One tap to confirm <strong>{recipient}</strong> and your CryptoPOP
+      account is live — events, rewards, and the whole community open up.
+    </BrandBody>
+    <BrandCta href={confirmationUrl}>Confirm my email</BrandCta>
+    <BrandMuted>
+      Button not playing nice? Paste this into your browser:
+      <br />
+      <BrandLink href={confirmationUrl}>{confirmationUrl}</BrandLink>
+    </BrandMuted>
+    <BrandMuted>
+      Didn't sign up? Ignore this — no account gets created.
+    </BrandMuted>
+  </BrandShell>
 )
 
 export default SignupEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
