@@ -36,12 +36,17 @@ export const Route = createFileRoute("/_authenticated/admin/pop-awards")({
 function AdminPopAwards() {
   const list = useServerFn(listPopAwards);
   const retry = useServerFn(retryPopAward);
+  const manual = useServerFn(manualAwardPop);
   const [rows, setRows] = useState<Award[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [status, setStatus] = useState<"all" | "pending" | "sent" | "failed">("all");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("10");
+  const [memo, setMemo] = useState("");
+  const [minting, setMinting] = useState(false);
 
   async function refresh() {
     setLoading(true);
