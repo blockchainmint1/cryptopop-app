@@ -140,6 +140,11 @@ function AdminDashboard() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
+              <Link to="/admin/codes">
+                <ScanLine className="h-4 w-4 mr-2" /> QR codes
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start">
               <Link to="/admin/rewards">
                 <Settings2 className="h-4 w-4 mr-2" /> Edit reward rules
               </Link>
