@@ -618,3 +618,53 @@ function WalletHome() {
     </div>
   );
 }
+
+function EventCard({
+  ev,
+  ctaLabel,
+  ctaDisabled,
+  badge,
+}: {
+  ev: (typeof PUBLIC_EVENTS)[number];
+  ctaLabel: string;
+  ctaDisabled?: boolean;
+  badge?: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card/40">
+      {ev.heroUrl && (
+        <div className="relative aspect-[16/7] w-full overflow-hidden">
+          <img src={ev.heroUrl} alt="" className="h-full w-full object-cover" />
+          {badge && (
+            <span className="absolute right-2 top-2 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow">
+              {badge}
+            </span>
+          )}
+        </div>
+      )}
+      <div className="space-y-2 p-4">
+        <p className="font-display text-sm font-semibold leading-snug">{ev.name}</p>
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{ev.dateLabel}</span>
+        </p>
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{ev.location}</span>
+        </p>
+        {ctaDisabled ? (
+          <Button size="sm" variant="outline" disabled className="mt-2 w-full">
+            {ctaLabel}
+          </Button>
+        ) : (
+          <Button asChild size="sm" className="mt-2 w-full">
+            <Link to="/events/$slug/rsvp" params={{ slug: ev.slug }}>
+              {ctaLabel}
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
