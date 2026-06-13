@@ -52,6 +52,17 @@ function ScanPage() {
 
   async function submit(qr: string) {
     if (handledRef.current || busy || success) return;
+
+    // New-style QR codes (admin/codes) encode a URL like
+    // https://cryptopop.sg/claim/<token>. Route those to the claim page,
+    // which handles redemption + geofence on its own.
+    const claimMatch = qr.match(/\/claim\/([A-Za-z0-9_-]{8,64})/);
+    if (claimMatch) {
+      handledRef.current = true;
+      window.location.assign(`/claim/${claimMatch[1]}`);
+      return;
+    }
+
     if (!address) {
       toast.error(walletError ? "Wallet setup failed" : "Setting up your wallet…", {
         description: walletError ? "Tap retry, then scan again." : "Hold on a second, then scan again.",
