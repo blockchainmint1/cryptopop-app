@@ -28,7 +28,7 @@ export const Route = createFileRoute("/mission")({
 
 function MissionPage() {
   const { session } = useAuth();
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useIsAdmin();
   return (
     <div className="relative min-h-screen text-foreground">
       {/* Background image with dark overlay for readability */}

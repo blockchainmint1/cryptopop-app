@@ -14,13 +14,27 @@ function CallbackPage() {
 
   useEffect(() => {
     let done = false;
-    const finish = (to: "/app" | "/login") => {
+    const finish = async (to: "/app" | "/login" | "/admin") => {
       if (done) return;
       done = true;
       navigate({ to, replace: true });
     };
 
-    // If the URL contains auth tokens / a code, wait for SIGNED_IN before deciding.
+    const routeForSession = async (userId: string | undefined): Promise<"/app" | "/admin"> => {
+      if (!userId) return "/app";
+      try {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle();
+        return data ? "/admin" : "/app";
+      } catch {
+        return "/app";
+      }
+    };
+
     const url = typeof window !== "undefined" ? window.location.href : "";
     const hasAuthPayload =
       url.includes("access_token=") ||
@@ -29,22 +43,21 @@ function CallbackPage() {
       url.includes("type=recovery") ||
       url.includes("type=magiclink");
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
       if (event === "SIGNED_IN" || (event === "INITIAL_SESSION" && s)) {
-        finish("/app");
+        finish(await routeForSession(s?.user?.id));
       }
     });
 
-    // Also poll getSession as a fallback (covers cases where the event already fired).
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      if (s) finish("/app");
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+      if (s) finish(await routeForSession(s.user?.id));
     });
 
-    // Only bail to /login if there was nothing to process and no session shows up.
     const timeoutMs = hasAuthPayload ? 8000 : 1500;
     const t = setTimeout(async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
-      finish(s ? "/app" : "/login");
+      if (s) finish(await routeForSession(s.user?.id));
+      else finish("/login");
     }, timeoutMs);
 
     return () => {

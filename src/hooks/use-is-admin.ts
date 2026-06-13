@@ -3,15 +3,22 @@ import { useAuth } from "./use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useIsAdmin() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
       setIsAdmin(false);
+      setLoading(false);
       return;
     }
     let cancelled = false;
+    setLoading(true);
     supabase
       .from("user_roles")
       .select("role")
@@ -19,12 +26,14 @@ export function useIsAdmin() {
       .eq("role", "admin")
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setIsAdmin(!!data);
+        if (cancelled) return;
+        setIsAdmin(!!data);
+        setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, authLoading]);
 
-  return isAdmin;
+  return { isAdmin, loading };
 }

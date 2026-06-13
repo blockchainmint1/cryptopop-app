@@ -16,7 +16,7 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const { session } = useAuth();
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useIsAdmin();
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* Cinematic fullscreen hero */}
