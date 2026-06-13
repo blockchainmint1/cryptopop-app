@@ -190,6 +190,30 @@ function WalletHome() {
   // WalletID = 2nd through 7th characters of the address (6 chars)
   const shortAddr = address ? address.slice(1, 7) : "";
 
+  // Merge POP claims + awards into one transaction list, newest first.
+  const popTxs: PopTx[] = [
+    ...claims.map<PopTx>((c) => ({
+      id: `claim-${c.id}`,
+      label: c.events?.name ?? "Event reward",
+      amount: Number(c.total),
+      created_at: c.created_at,
+      status: c.status,
+      tx_hash: c.tx_hash,
+      pending: c.status === "pending",
+      failed: c.status === "failed",
+    })),
+    ...awards.map<PopTx>((a) => ({
+      id: `award-${a.id}`,
+      label: prettySource(a.source),
+      amount: Number(a.amount),
+      created_at: a.created_at,
+      status: a.status,
+      tx_hash: a.tx_hash,
+      pending: a.status === "pending",
+      failed: a.status === "failed",
+    })),
+  ].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50">
