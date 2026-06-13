@@ -205,11 +205,6 @@ function WalletHome() {
     setBackedUp(true);
   };
 
-  const dismissBackup = () => {
-    localStorage.setItem(BACKED_UP_KEY, "1");
-    setBackedUp(true);
-  };
-
   // WalletID = 2nd through 7th characters of the address (6 chars)
   const shortAddr = address ? address.slice(1, 7) : "";
 
