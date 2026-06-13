@@ -163,6 +163,22 @@ function WalletHome() {
     };
   }, [address, fetchTxcTxs]);
 
+  // Fetch event memberships (which public events the user has signed up to)
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetchMyEvents({})
+      .then((r) => {
+        if (!cancelled) setMyEvents(r.memberships);
+      })
+      .catch(() => {
+        if (!cancelled) setMyEvents([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, fetchMyEvents]);
+
   // Fetch TXC chain balance once we have an address
   useEffect(() => {
     if (!address) return;
