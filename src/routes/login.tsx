@@ -12,9 +12,20 @@ import logo from "@/assets/cryptopop-logo.png";
 import loginBg from "@/assets/login-cinematic-bg.jpg";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? safeRedirect(search.redirect) : undefined,
+  }),
   head: () => ({ meta: [{ title: "Sign in — CryptoPOP" }] }),
   component: LoginPage,
 });
+
+function safeRedirect(value: string | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return undefined;
+  if (value === "/login" || value.startsWith("/auth/callback") || value === "/logout") {
+    return undefined;
+  }
+  return value;
+}
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -23,6 +34,7 @@ function LoginPage() {
   const { session, loading } = useAuth();
   const getAdminStatus = useServerFn(getMyAdminStatus);
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
 
   useEffect(() => {
     if (loading || !session) return;
@@ -32,7 +44,7 @@ function LoginPage() {
       .then(({ isAdmin }) => {
         if (cancelled) return;
         console.info("Admin redirect decision", { isAdmin, email: session.user.email });
-        navigate({ to: isAdmin ? "/admin" : "/app", replace: true });
+        navigate({ to: (redirect ?? (isAdmin ? "/admin" : "/app")) as never, replace: true });
       })
       .catch((error) => {
         if (cancelled) return;
@@ -43,7 +55,7 @@ function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [loading, session, navigate, getAdminStatus]);
+  }, [loading, session, navigate, getAdminStatus, redirect]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +63,9 @@ function LoginPage() {
     setSending(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`,
+      },
     });
     setSending(false);
     if (error) {
