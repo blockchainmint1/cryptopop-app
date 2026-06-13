@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, RotateCw, ExternalLink, Coins } from "lucide-react";
 import { toast } from "sonner";
-import { listPopAwards, retryPopAward } from "@/lib/pop-awards-admin.functions";
+import { listPopAwards, retryPopAward, manualAwardPop } from "@/lib/pop-awards-admin.functions";
 
 type Award = {
   id: string;
@@ -36,12 +36,17 @@ export const Route = createFileRoute("/_authenticated/admin/pop-awards")({
 function AdminPopAwards() {
   const list = useServerFn(listPopAwards);
   const retry = useServerFn(retryPopAward);
+  const manual = useServerFn(manualAwardPop);
   const [rows, setRows] = useState<Award[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [status, setStatus] = useState<"all" | "pending" | "sent" | "failed">("all");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("10");
+  const [memo, setMemo] = useState("");
+  const [minting, setMinting] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -74,6 +79,34 @@ function AdminPopAwards() {
     }
   }
 
+  async function doMint(e: React.FormEvent) {
+    e.preventDefault();
+    const amt = Number(amount);
+    if (!recipient.trim() || !Number.isInteger(amt) || amt <= 0) {
+      toast.error("Enter a recipient and a positive whole POP amount");
+      return;
+    }
+    setMinting(true);
+    try {
+      const res = await manual({
+        data: { recipient: recipient.trim(), amount: amt, memo: memo.trim() || undefined },
+      });
+      toast.success(
+        res.status === "duplicate"
+          ? "Already minted (duplicate)"
+          : `Minted ${amt} POP to ${res.mode}`,
+      );
+      setRecipient("");
+      setMemo("");
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Mint failed");
+    } finally {
+      setMinting(false);
+    }
+  }
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/60">
@@ -98,6 +131,52 @@ function AdminPopAwards() {
             <Stat label="Failed" value={summary.failed} danger={summary.failed > 0} />
           </div>
         )}
+
+        <form
+          onSubmit={doMint}
+          className="rounded-2xl border border-border bg-card p-5 space-y-4"
+        >
+          <div>
+            <h2 className="font-display text-base font-bold flex items-center gap-2">
+              <Coins className="h-4 w-4 text-primary" /> Manual mint
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Send POP to an email (uses the custodial wallet for that email) or directly to a TXC wallet address.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[1fr_120px_1fr_auto]">
+            <input
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              placeholder="email@example.com or TXC wallet address"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+              maxLength={200}
+            />
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="POP"
+              inputMode="numeric"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+            <input
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="Memo (optional, ≤60 chars)"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+              maxLength={60}
+            />
+            <button
+              type="submit"
+              disabled={minting}
+              className="rounded-lg bg-primary px-4 py-2 font-display text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {minting ? "Minting…" : "Mint POP"}
+            </button>
+          </div>
+        </form>
+
+
 
         <div className="flex flex-wrap gap-2">
           {(["all", "pending", "sent", "failed"] as const).map((s) => (
