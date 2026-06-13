@@ -131,6 +131,52 @@ function AdminPopAwards() {
           </div>
         )}
 
+        <form
+          onSubmit={doMint}
+          className="rounded-2xl border border-border bg-card p-5 space-y-4"
+        >
+          <div>
+            <h2 className="font-display text-base font-bold flex items-center gap-2">
+              <Coins className="h-4 w-4 text-primary" /> Manual mint
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Send POP to an email (uses the custodial wallet for that email) or directly to a TXC wallet address.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[1fr_120px_1fr_auto]">
+            <input
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              placeholder="email@example.com or TXC wallet address"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+              maxLength={200}
+            />
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="POP"
+              inputMode="numeric"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+            <input
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="Memo (optional, ≤60 chars)"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+              maxLength={60}
+            />
+            <button
+              type="submit"
+              disabled={minting}
+              className="rounded-lg bg-primary px-4 py-2 font-display text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {minting ? "Minting…" : "Mint POP"}
+            </button>
+          </div>
+        </form>
+
+
+
         <div className="flex flex-wrap gap-2">
           {(["all", "pending", "sent", "failed"] as const).map((s) => (
             <button
