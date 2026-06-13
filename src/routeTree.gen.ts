@@ -23,6 +23,7 @@ import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
@@ -118,6 +119,11 @@ const IndexRoute = IndexRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimTokenRoute = ClaimTokenRouteImport.update({
+  id: '/claim/$token',
+  path: '/claim/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -289,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
@@ -373,6 +381,7 @@ export interface FileRoutesById {
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/_authenticated/admin/codes': typeof AuthenticatedAdminCodesRoute
@@ -417,6 +426,7 @@ export interface FileRouteTypes {
     | '/recover-wallet'
     | '/scan'
     | '/auth/callback'
+    | '/claim/$token'
     | '/email/unsubscribe'
     | '/admin/blast'
     | '/admin/codes'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/recover-wallet'
     | '/scan'
     | '/auth/callback'
+    | '/claim/$token'
     | '/email/unsubscribe'
     | '/admin/codes'
     | '/admin/crm'
@@ -500,6 +511,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
     | '/auth/callback'
+    | '/claim/$token'
     | '/email/unsubscribe'
     | '/_authenticated/admin/blast'
     | '/_authenticated/admin/codes'
@@ -540,6 +552,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ClaimTokenRoute: typeof ClaimTokenRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EventsSlugRsvpRoute: typeof EventsSlugRsvpRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -648,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claim/$token': {
+      id: '/claim/$token'
+      path: '/claim/$token'
+      fullPath: '/claim/$token'
+      preLoaderRoute: typeof ClaimTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -943,6 +963,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ClaimTokenRoute: ClaimTokenRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EventsSlugRsvpRoute: EventsSlugRsvpRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
