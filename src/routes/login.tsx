@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { checkIsAdmin } from "@/lib/admin-role";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/cryptopop-logo.png";
@@ -25,15 +26,14 @@ function LoginPage() {
     if (loading || !session) return;
 
     let cancelled = false;
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => {
+    checkIsAdmin(session.user.id)
+      .then((isAdmin) => {
         if (cancelled) return;
-        navigate({ to: data ? "/admin" : "/app", replace: true });
+        navigate({ to: isAdmin ? "/admin" : "/app", replace: true });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        navigate({ to: "/app", replace: true });
       });
 
     return () => {
