@@ -279,44 +279,7 @@ function WalletHome() {
           )}
         </Card>
 
-        {/* Recent claims */}
-        {claims.length > 0 && (
-          <Card className="p-6">
-            <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Recent activity
-            </h2>
-            <ul className="mt-4 divide-y divide-border">
-              {claims.map((c) => (
-                <li key={c.id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{c.events?.name ?? "Event"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(c.created_at).toLocaleString()}
-                      {c.status === "pending" && " · settling…"}
-                      {c.status === "failed" && " · mint failed"}
-                      {c.tx_hash && (
-                        <>
-                          {" · "}
-                          <a
-                            href={`https://mempool.texitcoin.org/tx/${c.tx_hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            tx
-                          </a>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <span className="font-display text-sm font-bold text-primary">
-                    +{Number(c.total)} POP
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        )}
+        {/* Recent activity moved below the TXC wallet card */}
 
         {/* Backup nudge — soft, dismissible */}
         {address && !backedUp && (
