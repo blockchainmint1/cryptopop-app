@@ -7,23 +7,36 @@ import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import callbackBg from "@/assets/auth-callback-bg.jpg";
 
 export const Route = createFileRoute("/auth/callback")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? safeRedirect(search.redirect) : undefined,
+  }),
   head: () => ({ meta: [{ title: "Signing in…" }] }),
   component: CallbackPage,
 });
 
+function safeRedirect(value: string | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return undefined;
+  if (value === "/login" || value.startsWith("/auth/callback") || value === "/logout") {
+    return undefined;
+  }
+  return value;
+}
+
 function CallbackPage() {
   const navigate = useNavigate();
   const getAdminStatus = useServerFn(getMyAdminStatus);
+  const { redirect } = Route.useSearch();
 
   useEffect(() => {
     let done = false;
-    const finish = async (to: "/app" | "/login" | "/admin") => {
+    const finish = async (to: string) => {
       if (done) return;
       done = true;
-      navigate({ to, replace: true });
+      navigate({ to: to as never, replace: true });
     };
 
-    const routeForSession = async (): Promise<"/app" | "/admin"> => {
+    const routeForSession = async (): Promise<string> => {
+      if (redirect) return redirect;
       try {
         const { isAdmin } = await getAdminStatus();
         console.info("Callback admin redirect decision", { isAdmin });
@@ -67,7 +80,7 @@ function CallbackPage() {
       subscription.unsubscribe();
       clearTimeout(t);
     };
-  }, [navigate, getAdminStatus]);
+  }, [navigate, getAdminStatus, redirect]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
