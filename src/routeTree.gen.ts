@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MissionRouteImport } from './routes/mission'
+import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChangeLogRouteImport } from './routes/change-log'
 import { Route as ApiRouteImport } from './routes/api'
@@ -81,6 +82,11 @@ const MyPassRoute = MyPassRouteImport.update({
 const MissionRoute = MissionRouteImport.update({
   id: '/mission',
   path: '/mission',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
@@ -335,6 +343,7 @@ export interface FileRoutesById {
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/change-log'
     | '/login'
+    | '/logout'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/change-log'
     | '/login'
+    | '/logout'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/change-log'
     | '/login'
+    | '/logout'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
@@ -494,6 +506,7 @@ export interface RootRouteChildren {
   ApiRoute: typeof ApiRouteWithChildren
   ChangeLogRoute: typeof ChangeLogRoute
   LoginRoute: typeof LoginRoute
+  LogoutRoute: typeof LogoutRoute
   MissionRoute: typeof MissionRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
@@ -561,6 +574,13 @@ declare module '@tanstack/react-router' {
       path: '/mission'
       fullPath: '/mission'
       preLoaderRoute: typeof MissionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -871,6 +891,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRoute: ApiRouteWithChildren,
   ChangeLogRoute: ChangeLogRoute,
   LoginRoute: LoginRoute,
+  LogoutRoute: LogoutRoute,
   MissionRoute: MissionRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
