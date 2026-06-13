@@ -146,10 +146,11 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
 
         // Render React Email to HTML and plain text
         const element = React.createElement(EmailTemplate, templateProps)
-        const html = await renderAsync(element)
-        const text = await renderAsync(element, { plainText: true })
+        const html = await render(element)
+        const text = await render(element, { plainText: true })
 
-        // Enqueue email for async processing by the dispatcher (process-email-queue).
+        // Send directly via SES (bypasses the Lovable email queue's 100/hr cap
+        // and uses our verified noreply@cryptopop.asia identity).
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -164,7 +165,6 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
         const messageId = crypto.randomUUID()
 
-        // Log pending BEFORE enqueue so we have a record even if enqueue crashes
         await supabase.from('email_send_log').insert({
           message_id: messageId,
           template_name: emailType,
@@ -172,45 +172,43 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           status: 'pending',
         })
 
-        const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-          queue_name: 'auth_emails',
-          payload: {
-            run_id,
-            message_id: messageId,
+        try {
+          const result = await sendSesEmail({
+            from: `CryptoPOP <noreply@${FROM_DOMAIN}>`,
             to: payload.data.email,
-            from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-            sender_domain: SENDER_DOMAIN,
             subject: EMAIL_SUBJECTS[emailType] || 'Notification',
             html,
             text,
-            purpose: 'transactional',
-            label: emailType,
-            queued_at: new Date().toISOString(),
-          },
-        })
+          })
 
-        if (enqueueError) {
-          console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
+          await supabase.from('email_send_log').insert({
+            message_id: messageId,
+            template_name: emailType,
+            recipient_email: payload.data.email,
+            status: 'sent',
+            provider_message_id: result.id,
+          })
+
+          console.log('Auth email sent via SES', {
+            emailType,
+            email_redacted: redactEmail(payload.data.email),
+            run_id,
+            ses_message_id: result.id,
+          })
+
+          return Response.json({ success: true, sent: true })
+        } catch (sendError) {
+          const errMsg = sendError instanceof Error ? sendError.message : String(sendError)
+          console.error('Failed to send auth email via SES', { error: errMsg, run_id, emailType })
           await supabase.from('email_send_log').insert({
             message_id: messageId,
             template_name: emailType,
             recipient_email: payload.data.email,
             status: 'failed',
-            error_message: 'Failed to enqueue email',
+            error_message: errMsg.slice(0, 500),
           })
-          return Response.json(
-            { error: 'Failed to enqueue email' },
-            { status: 500 }
-          )
+          return Response.json({ error: 'Failed to send email' }, { status: 500 })
         }
-
-        console.log('Auth email enqueued', {
-          emailType,
-          email_redacted: redactEmail(payload.data.email),
-          run_id,
-        })
-
-        return Response.json({ success: true, queued: true })
       },
     },
   },
