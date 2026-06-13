@@ -213,7 +213,7 @@ function Landing() {
             <Divider />
             <Stat label="Geo-verified" value="±100m" />
             <Divider />
-            <Stat label="Network" value="TXC L2" />
+            <Stat label="Network" value="TXC OMNI" />
           </div>
         </div>
 
