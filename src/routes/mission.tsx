@@ -3,6 +3,7 @@ import { Sparkles, Users, BookOpen } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import wellnessBg from "@/assets/wellness-variant.jpg";
 import { SiteFooter } from "@/components/site-footer";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/mission")({
   head: () => ({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/mission")({
 });
 
 function MissionPage() {
+  const { session } = useAuth();
   return (
     <div className="relative min-h-screen text-foreground">
       {/* Background image with dark overlay for readability */}
@@ -49,9 +51,15 @@ function MissionPage() {
             <Link to="/api" className="hover:text-foreground transition">
               Developer API
             </Link>
-            <Link to="/my-pop" className="hover:text-foreground transition">
-              My POP
-            </Link>
+            {session ? (
+              <Link to="/my-pop" className="hover:text-foreground transition">
+                My POP
+              </Link>
+            ) : (
+              <Link to="/login" className="hover:text-foreground transition">
+                Sign in
+              </Link>
+            )}
           </nav>
         </div>
       </header>
