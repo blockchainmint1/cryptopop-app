@@ -9,7 +9,7 @@
 //   5. POST raw hex to esplora /tx (broadcast), returns txid
 //
 // Env: TXC_RPC_URL, TXC_RPC_USER, TXC_RPC_PASS, MINTER_WIF, TXC_TOKEN_ID
-// Token defaults to #19 ("NestB", divisible, managed) if TXC_TOKEN_ID unset.
+// Token defaults to #21 (POP, managed) if TXC_TOKEN_ID unset.
 
 import * as bitcoin from "bitcoinjs-lib";
 import { ECPairFactory } from "ecpair";
@@ -32,7 +32,7 @@ export const TXC_NETWORK: bitcoin.Network = {
 };
 
 function getPropertyId(): number {
-  const raw = process.env.TXC_TOKEN_ID ?? "19";
+  const raw = process.env.TXC_TOKEN_ID ?? "21";
   const n = Number(raw);
   if (!Number.isInteger(n) || n <= 0) throw new Error(`TXC_TOKEN_ID invalid: ${raw}`);
   return n;
