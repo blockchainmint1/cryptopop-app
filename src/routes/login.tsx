@@ -22,7 +22,23 @@ function LoginPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && session) navigate({ to: "/app" });
+    if (loading || !session) return;
+
+    let cancelled = false;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", session.user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        navigate({ to: data ? "/admin" : "/app", replace: true });
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [loading, session, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
