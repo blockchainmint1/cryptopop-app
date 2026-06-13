@@ -46,7 +46,9 @@ function CallbackPage() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === "SIGNED_IN" || (event === "INITIAL_SESSION" && s)) {
-        void finishForSession();
+        setTimeout(() => {
+          void finishForSession();
+        }, 0);
       }
     });
 
