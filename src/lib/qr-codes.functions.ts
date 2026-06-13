@@ -268,16 +268,18 @@ export const redeemQrCode = createServerFn({ method: "POST" })
     });
 
     // Update balance mirror so the /app dashboard reflects the new POP.
+    let newBalance = 0;
     if (award.status === "sent") {
       const { data: prev } = await supabaseAdmin
         .from("pop_balance_mirror")
         .select("balance, events_attended")
         .eq("user_id", context.userId)
         .maybeSingle();
+      newBalance = Number(prev?.balance ?? 0) + code.pop_reward;
       await supabaseAdmin.from("pop_balance_mirror").upsert(
         {
           user_id: context.userId,
-          balance: Number(prev?.balance ?? 0) + code.pop_reward,
+          balance: newBalance,
           events_attended: prev?.events_attended ?? 0,
           last_synced_at: new Date().toISOString(),
         },
@@ -303,5 +305,6 @@ export const redeemQrCode = createServerFn({ method: "POST" })
       popReward: code.pop_reward,
       label: code.label,
       status: award.status,
+      balance: newBalance,
     };
   });

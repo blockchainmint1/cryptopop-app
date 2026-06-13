@@ -62,7 +62,15 @@ function ClaimPage() {
         });
       }
       const res = await redeem({ data: { token, ...(coords ?? {}) } });
-      setResult({ ok: true, popReward: res.popReward });
+      navigate({
+        to: "/scan/success",
+        search: {
+          event: info.found ? (info.eventName || info.label) : "Reward",
+          reward: res.popReward,
+          balance: res.balance ?? 0,
+        },
+      });
+      return;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Claim failed");
     } finally {
