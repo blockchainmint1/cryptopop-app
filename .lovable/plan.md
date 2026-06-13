@@ -1,36 +1,103 @@
-# Why your wallet shows 0 POP
+# Admin QR Codes (`/admin/codes`)
 
-I dug into the database for your signup:
+A new admin tool to mint ad‑hoc QR codes that grant POP when scanned.
 
-- `event_signups.pop_credits` = **10** (set at signup, as expected)
-- `email_wallets` row exists with a TXC address ✓
-- `pop_awards` ledger has **0 rows** for your email ✗
+## Behaviour
 
-The `/my-pop` page intentionally shows the **ledger sum** (what's actually been awarded/sent on-chain) rather than the raw `pop_credits` column. Since no ledger row exists, the page shows 0 POP — even though the signup itself succeeded.
+Each QR code has:
+- **Label** — internal name (e.g. "Booth A — Friday")
+- **POP reward** — integer amount to mint per scan
+- **Event** (optional) — links scan to an `events` row (for reporting)
+- **Geofence** (optional) — `lat`, `lng`, `radius_m` (default 200m). When set, scanner's browser geolocation must be within radius
+- **Expires at** — required UTC timestamp
+- **Single‑use** — boolean. If true, first successful scan locks the code; if false, each *user* can only scan once (no farming)
+- **Active** — admin can disable at any time
 
-## Root cause
+When a code is created, a random `token` (22+ char base62) is generated. The QR encodes `https://<host>/claim/<token>`.
 
-In `src/lib/signups.functions.ts`, `createEventSignup` calls `awardPop(...)` **fire-and-forget**:
+## Scan flow (`/claim/$token`)
 
-```ts
-awardPop({ ... }).catch(e => console.error(...));
-```
+1. Route is **public** (top-level), shows a "Scanning…" screen.
+2. If the visitor isn't signed in, render a "Sign in to claim" CTA that returns to the same URL.
+3. Once signed in, client gets geolocation (only if the code has a geofence — fetched via a public lookup server fn that returns `requiresLocation`, `label`, `popReward`, `expired`, `disabled`).
+4. POSTs to `redeemQrCode({ token, lat?, lng? })`:
+   - Validates: not expired, active, geofence (haversine), single-use lock, per-user dedupe.
+   - Mints POP via the existing `awardPop` ledger using `source = 'qr_code'`, `source_id = code_id + ':' + user_id` (idempotent).
+   - Returns success/failure with reason.
+5. Success screen shows amount + link to `/app`.
 
-The server runs on Cloudflare Workers, where background tasks **are killed the moment the HTTP response is sent**. That's why the ledger insert + on-chain `mintGrant` never ran. (The `claimPop` function already documents this gotcha and awaits inline for the same reason.)
+## Data model
 
-The email confirmation enqueue has the same fire-and-forget pattern, but it's writing to a durable queue table inside its first DB call, so it's been getting through. `awardPop` does more async work after the insert (the mint broadcast) and isn't surviving.
+New table `public.qr_codes`:
 
-## Fix
+| column         | type                 | notes                                |
+| -------------- | -------------------- | ------------------------------------ |
+| id             | uuid PK              |                                      |
+| token          | text UNIQUE          | URL-safe random, indexed             |
+| label          | text                 | admin-facing                         |
+| pop_reward     | integer              | >0                                   |
+| event_id       | uuid NULL → events   | optional                             |
+| lat, lng       | double precision NULL| geofence center (both or neither)    |
+| radius_m       | integer NULL         | default 200                          |
+| expires_at     | timestamptz          |                                      |
+| single_use     | boolean              | default false                        |
+| max_uses       | integer NULL         | computed: 1 when single_use else null|
+| use_count      | integer              | default 0                            |
+| active         | boolean              | default true                         |
+| created_by     | uuid → auth.users    |                                      |
+| created_at, updated_at | timestamptz  |                                      |
 
-1. **`src/lib/signups.functions.ts`** — `await awardPop(...)` inside `createEventSignup`, before returning. Wrap in `try/catch` so a mint failure doesn't break signup (we still want `pop_awards` row written with `status: 'failed'` so we can retry).
-2. **Backfill** the missing award for the existing signup (`bobby@blockchainmint.com`, signup id `117344f2…`) by inserting a `pop_awards` row via the same path — easiest is a one-off server call after the fix lands, or a small migration that inserts the row directly and lets the next mint retry pick it up.
-3. **Add a "retry pending/failed awards" admin path** (optional, small) — a server fn that finds `pop_awards` with `status in ('pending','failed')` and re-runs `mintGrant`. Useful operationally and as a safety net.
+New table `public.qr_redemptions` (per-scan log, also serves as per-user dedupe):
 
-## What the user will see after the fix
+| column      | type            | notes                          |
+| ----------- | --------------- | ------------------------------ |
+| id          | uuid PK         |                                |
+| code_id     | uuid → qr_codes |                                |
+| user_id     | uuid → auth.users |                              |
+| pop_amount  | integer         |                                |
+| tx_hash     | text NULL       | from award                     |
+| status      | text            | 'sent' / 'failed' / 'duplicate'|
+| lat, lng    | double precision NULL |                          |
+| created_at  | timestamptz     |                                |
 
-- New signup → ledger row immediately written (`status: pending` → `sent` once mint broadcasts) → `/my-pop` reflects 10 POP.
-- If the on-chain mint fails (TXC node down, etc.), the row stays `status: failed` but `/my-pop` still shows 10 because the reconcile counts `pending`+`sent`. Mint can be retried later without double-spending (the ledger has the unique `(source, source_id)` constraint).
+UNIQUE `(code_id, user_id)` enforces "one scan per user per code".
 
-## Open question
+RLS:
+- `qr_codes`: only admins manage; `requireSupabaseAuth` admin path used for create/list. Public lookup goes via `supabaseAdmin` in a server fn that returns only safe fields.
+- `qr_redemptions`: user can see their own rows; admins see all.
 
-The same fire-and-forget pattern likely affects RSVPs too (`src/routes/events.$slug.rsvp.tsx` flow). Want me to audit that in the same pass, or keep this scoped to event signups for now?
+Grants for both: `authenticated` SELECT/INSERT/UPDATE/DELETE, `service_role` ALL.
+
+## Server functions (`src/lib/qr-codes.functions.ts`)
+
+- `createQrCode(input)` — admin, inserts row, returns row + scan URL.
+- `listQrCodes({ status })` — admin, lists with use counts.
+- `updateQrCode({ id, active?, expires_at?, label?, … })` — admin.
+- `deleteQrCode({ id })` — admin (soft via `active=false` keeps audit; we'll go hard delete + cascade redemptions on request).
+- `lookupQrCode({ token })` — **public** (no auth), returns minimal info for the claim page: `{ label, popReward, requiresLocation, eventName, expired, disabled, exhausted }`.
+- `redeemQrCode({ token, lat?, lng? })` — auth required, performs validation + `awardPop`, inserts `qr_redemptions`.
+
+## Routes
+
+- `src/routes/_authenticated.admin.codes.tsx` — list + "New code" dialog with: label, POP, event picker (optional), "Geofence this code" toggle revealing lat/lng/radius, expires_at, single-use toggle. Each row shows scan URL, copy-link, "Show QR" (renders QR using existing `qrcode` lib if installed, else lightweight inline via Google chart API — actually we'll add `qrcode` if not present), use count, disable/delete, expiry status.
+- `src/routes/claim.$token.tsx` — public claim page (sign-in CTA + scan flow). Replaces nothing (existing `/app` claim flow stays).
+
+Add a link to the admin dashboard quick-actions for "QR Codes".
+
+## Validation
+
+- `pop_reward`: int 1–1_000_000
+- `radius_m`: int 10–50_000 when geofence enabled
+- `expires_at`: must be future on create
+- Either both `lat`/`lng` set or neither; if set, `radius_m` required.
+
+## Out of scope (future)
+
+- Bulk QR generation
+- CSV export of redemptions
+- Per-code reward tiers / quiz integration
+
+## Open questions
+
+1. **Hard delete vs deactivate?** Default: deactivate (`active=false`) so audit/log survives; hard delete available too.
+2. **Anonymous scan?** Plan assumes scanner must sign in (so we have a wallet). If you want anonymous → wallet-by-email-on-the-spot flow, that's an extra phase.
