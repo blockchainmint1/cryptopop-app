@@ -267,6 +267,24 @@ export const redeemQrCode = createServerFn({ method: "POST" })
       memo: `QR: ${code.label}`.slice(0, 60),
     });
 
+    // Update balance mirror so the /app dashboard reflects the new POP.
+    if (award.status === "sent") {
+      const { data: prev } = await supabaseAdmin
+        .from("pop_balance_mirror")
+        .select("balance, events_attended")
+        .eq("user_id", context.userId)
+        .maybeSingle();
+      await supabaseAdmin.from("pop_balance_mirror").upsert(
+        {
+          user_id: context.userId,
+          balance: Number(prev?.balance ?? 0) + code.pop_reward,
+          events_attended: prev?.events_attended ?? 0,
+          last_synced_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+    }
+
     // Bump use_count and finalize redemption
     await supabaseAdmin
       .from("qr_codes")
