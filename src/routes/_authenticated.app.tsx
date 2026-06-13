@@ -200,23 +200,9 @@ function WalletHome() {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const downloadPhrase = () => {
-    const m = getOrCreateMnemonic();
-    const body =
-      `CryptoPOP Recovery Phrase\n` +
-      `========================\n\n` +
-      `${m}\n\n` +
-      `Anyone with these 12 words controls your wallet. Store offline.`;
-    const blob = new Blob([body], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cryptopop-recovery-${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const dismissBackup = () => {
     localStorage.setItem(BACKED_UP_KEY, "1");
     setBackedUp(true);
-    toast.success("Recovery phrase downloaded");
   };
 
   const dismissBackup = () => {
