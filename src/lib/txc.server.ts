@@ -32,7 +32,9 @@ export const TXC_NETWORK: bitcoin.Network = {
 };
 
 function getPropertyId(): number {
-  const raw = process.env.TXC_TOKEN_ID ?? "21";
+  // Property #35 = CryptoPOP (POP), indivisible, managed. Issued 2026-06-13.
+  // Issuer wallet: Thaotk2YYWiXG9EozU5dqABx7EB26fGrhn (MINTER_WIF).
+  const raw = process.env.TXC_TOKEN_ID ?? "35";
   const n = Number(raw);
   if (!Number.isInteger(n) || n <= 0) throw new Error(`TXC_TOKEN_ID invalid: ${raw}`);
   return n;
