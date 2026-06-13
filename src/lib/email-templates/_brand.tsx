@@ -45,7 +45,7 @@ export const BrandShell = ({ preview, children }: ShellProps) => (
     <Head>
       <Font
         fontFamily="Bebas Neue"
-        fallbackFontFamily="Impact"
+        fallbackFontFamily={["Impact","Helvetica","sans-serif"]}
         webFont={{
           url: 'https://fonts.gstatic.com/s/bebasneue/v14/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2',
           format: 'woff2',
@@ -55,7 +55,7 @@ export const BrandShell = ({ preview, children }: ShellProps) => (
       />
       <Font
         fontFamily="Poppins"
-        fallbackFontFamily="Helvetica"
+        fallbackFontFamily={["Helvetica","Arial","sans-serif"]}
         webFont={{
           url: 'https://fonts.gstatic.com/s/poppins/v21/pxiEyp8kv8JHgFVrJJfecnFHGPc.woff2',
           format: 'woff2',
@@ -65,7 +65,7 @@ export const BrandShell = ({ preview, children }: ShellProps) => (
       />
       <Font
         fontFamily="Poppins"
-        fallbackFontFamily="Helvetica"
+        fallbackFontFamily={["Helvetica","Arial","sans-serif"]}
         webFont={{
           url: 'https://fonts.gstatic.com/s/poppins/v21/pxiByp8kv8JHgFVrLCz7Z1xlEA.woff2',
           format: 'woff2',
