@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { checkIsAdmin } from "@/lib/admin-role";
 import callbackBg from "@/assets/auth-callback-bg.jpg";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -23,13 +24,7 @@ function CallbackPage() {
     const routeForSession = async (userId: string | undefined): Promise<"/app" | "/admin"> => {
       if (!userId) return "/app";
       try {
-        const { data } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .eq("role", "admin")
-          .maybeSingle();
-        return data ? "/admin" : "/app";
+        return (await checkIsAdmin(userId)) ? "/admin" : "/app";
       } catch {
         return "/app";
       }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "./use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { checkIsAdmin } from "@/lib/admin-role";
 
 export function useIsAdmin() {
   const { user, loading: authLoading } = useAuth();
@@ -19,15 +19,18 @@ export function useIsAdmin() {
     }
     let cancelled = false;
     setLoading(true);
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => {
+    checkIsAdmin(user.id)
+      .then((admin) => {
         if (cancelled) return;
-        setIsAdmin(!!data);
+        setIsAdmin(admin);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Admin role check failed", error);
+        setIsAdmin(false);
+      })
+      .finally(() => {
+        if (cancelled) return;
         setLoading(false);
       });
     return () => {
