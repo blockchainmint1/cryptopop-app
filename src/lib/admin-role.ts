@@ -1,8 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { attachSupabaseAuth } from "./auth-client-middleware";
-
-async function checkAdminByUserId(userId: string | undefined | null) {
+export async function checkAdminByUserId(userId: string | undefined | null) {
   if (!userId) return { isAdmin: false };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -20,7 +16,3 @@ async function checkAdminByUserId(userId: string | undefined | null) {
 
   return { isAdmin: !!data };
 }
-
-export const getMyAdminStatus = createServerFn({ method: "GET" })
-  .middleware([attachSupabaseAuth, requireSupabaseAuth])
-  .handler(async ({ context }) => checkAdminByUserId(context.userId));
