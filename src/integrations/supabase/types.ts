@@ -608,6 +608,112 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_codes: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          expires_at: string
+          id: string
+          label: string
+          lat: number | null
+          lng: number | null
+          pop_reward: number
+          radius_m: number | null
+          single_use: boolean
+          token: string
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expires_at: string
+          id?: string
+          label: string
+          lat?: number | null
+          lng?: number | null
+          pop_reward: number
+          radius_m?: number | null
+          single_use?: boolean
+          token: string
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expires_at?: string
+          id?: string
+          label?: string
+          lat?: number | null
+          lng?: number | null
+          pop_reward?: number
+          radius_m?: number | null
+          single_use?: boolean
+          token?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_codes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_redemptions: {
+        Row: {
+          code_id: string
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          pop_amount: number
+          status: string
+          tx_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          code_id: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          pop_amount: number
+          status: string
+          tx_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          code_id?: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          pop_amount?: number
+          status?: string
+          tx_hash?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_redemptions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           created_at: string
