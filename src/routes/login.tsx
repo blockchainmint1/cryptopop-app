@@ -29,22 +29,29 @@ function safeRedirect(value: string | undefined) {
 
 function LoginPage() {
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [sent, setSent] = useState(false);
   const { session, loading } = useAuth();
   const getAdminStatus = useServerFn(getMyAdminStatus);
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
 
+  const routeAfterSignIn = async () => {
+    const { isAdmin } = await getAdminStatus();
+    return redirect ?? (isAdmin ? "/admin" : "/app");
+  };
+
   useEffect(() => {
     if (loading || !session) return;
 
     let cancelled = false;
-    getAdminStatus()
-      .then(({ isAdmin }) => {
+    routeAfterSignIn()
+      .then((to) => {
         if (cancelled) return;
-        console.info("Admin redirect decision", { isAdmin, email: session.user.email });
-        navigate({ to: (redirect ?? (isAdmin ? "/admin" : "/app")) as never, replace: true });
+        console.info("Admin redirect decision", { to, email: session.user.email });
+        navigate({ to: to as never, replace: true });
       })
       .catch((error) => {
         if (cancelled) return;
@@ -73,6 +80,24 @@ function LoginPage() {
       return;
     }
     setSent(true);
+  };
+
+  const onVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = code.replace(/\D/g, "");
+    if (!email || token.length < 6) return;
+    setVerifying(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token,
+      type: "email",
+    });
+    setVerifying(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    navigate({ to: (await routeAfterSignIn()) as never, replace: true });
   };
 
   return (
@@ -190,9 +215,36 @@ function LoginPage() {
                   </p>
                 </form>
               ) : (
-                <div className="mt-8 space-y-3">
+                <div className="mt-8 space-y-4">
+                  <form onSubmit={onVerifyCode} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="code" className="text-white/80">Email code</Label>
+                      <Input
+                        id="code"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        required
+                        placeholder="123456"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        className="h-12 border-white/20 bg-white/10 text-center font-mono text-lg tracking-[0.35em] text-white placeholder:text-white/35 backdrop-blur-md focus-visible:ring-[#ff3dbe]"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={verifying || code.replace(/\D/g, "").length < 6}
+                      className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-7 font-display text-base font-semibold text-white transition hover:opacity-95 disabled:opacity-60"
+                      style={{
+                        background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
+                        boxShadow:
+                          "0 18px 50px -12px rgba(255,122,40,0.7), 0 0 0 1px rgba(255,255,255,0.08) inset",
+                      }}
+                    >
+                      {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify code"}
+                    </button>
+                  </form>
                   <button
-                    onClick={() => { setSent(false); setEmail(""); }}
+                    onClick={() => { setSent(false); setEmail(""); setCode(""); }}
                     className="h-12 w-full rounded-full border border-white/25 bg-white/5 font-display font-semibold text-white backdrop-blur-md hover:bg-white/10 transition"
                   >
                     Use a different email
