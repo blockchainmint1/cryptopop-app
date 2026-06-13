@@ -265,9 +265,22 @@ function WalletHome() {
       <header className="border-b border-border/50">
         <div className="mx-auto flex max-w-md items-center justify-between px-6 py-4">
           <span className="font-display text-lg font-semibold tracking-tight">CryptoPOP</span>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/mission">Mission</Link>
+            </Button>
+            {isAdmin && (
+              <Button asChild variant="ghost" size="sm" className="text-primary">
+                <Link to="/admin/signups">
+                  <Shield className="h-4 w-4 mr-1" />
+                  Admin
+                </Link>
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
