@@ -95,13 +95,21 @@ function WalletHome() {
         setEventsAttended(bal.events_attended);
       }
 
-      const [{ data: cl }, { data: roleRow }] = await Promise.all([
+      const [{ data: cl }, { data: aw }, { data: roleRow }] = await Promise.all([
         supabase
           .from("claims")
           .select("id, total, created_at, status, tx_hash, events(name)")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(20),
+        user.email
+          ? supabase
+              .from("pop_awards")
+              .select("id, amount, source, status, tx_hash, created_at")
+              .eq("email", user.email.toLowerCase())
+              .order("created_at", { ascending: false })
+              .limit(20)
+          : Promise.resolve({ data: [] as PopAward[] }),
         supabase
           .from("user_roles")
           .select("role")
@@ -110,9 +118,26 @@ function WalletHome() {
           .maybeSingle(),
       ]);
       if (cl) setClaims(cl as unknown as RecentClaim[]);
+      if (aw) setAwards(aw as unknown as PopAward[]);
       setIsAdmin(!!roleRow);
     })();
   }, [user]);
+
+  // Fetch TXC chain transactions once we have an address
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetchTxcTxs({ data: { address } })
+      .then((r) => {
+        if (!cancelled) setTxcTxs(r.txs);
+      })
+      .catch(() => {
+        if (!cancelled) setTxcTxs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [address, fetchTxcTxs]);
 
   // Fetch TXC chain balance once we have an address
   useEffect(() => {
