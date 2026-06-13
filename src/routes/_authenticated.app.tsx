@@ -310,6 +310,90 @@ function WalletHome() {
 
         {/* Recent activity moved below the TXC wallet card */}
 
+        {/* Upcoming events — My events / Find events */}
+        <Card className="overflow-hidden p-0">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 pt-4 pb-0">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Upcoming events
+            </h2>
+          </div>
+          <div role="tablist" className="flex border-b border-border px-2">
+            {([
+              ["mine", `My events${mineEvents.length ? ` · ${mineEvents.length}` : ""}`],
+              ["find", `Find events${findEvents.length ? ` · ${findEvents.length}` : ""}`],
+            ] as const).map(([key, label]) => {
+              const active = eventsTab === key;
+              return (
+                <button
+                  key={key}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setEventsTab(key)}
+                  className={`relative flex-1 px-3 py-3 text-xs font-semibold uppercase tracking-wider transition ${
+                    active
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                  {active && (
+                    <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="p-4">
+            {eventsTab === "mine" ? (
+              mineEvents.length === 0 ? (
+                <div className="py-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    You haven't signed up for any upcoming events yet.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-3"
+                    onClick={() => setEventsTab("find")}
+                  >
+                    Find events
+                  </Button>
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {mineEvents.map((ev) => {
+                    const membership = myEvents.find((m) => m.slug === ev.slug);
+                    const checkedIn = !!membership?.checked_in_at;
+                    return (
+                      <li key={ev.slug}>
+                        <EventCard
+                          ev={ev}
+                          ctaLabel={checkedIn ? "Checked in" : "View details"}
+                          ctaDisabled={checkedIn}
+                          badge={checkedIn ? "Checked in" : "Going"}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              )
+            ) : findEvents.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No new events right now. Check back soon.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {findEvents.map((ev) => (
+                  <li key={ev.slug}>
+                    <EventCard ev={ev} ctaLabel="Sign up" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+
         {/* Backup nudge — soft, dismissible */}
         {address && !backedUp && (
           <Card className="relative border-amber-500/30 bg-amber-500/5 p-5">
