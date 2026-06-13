@@ -32,6 +32,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
+import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authenticated.admin.wallets'
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated.admin.signups'
 import { Route as AuthenticatedAdminRewardsRouteImport } from './routes/_authenticated.admin.rewards'
 import { Route as AuthenticatedAdminPopAwardsRouteImport } from './routes/_authenticated.admin.pop-awards'
@@ -165,6 +166,12 @@ const AuthenticatedScanSuccessRoute =
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
+const AuthenticatedAdminWalletsRoute =
+  AuthenticatedAdminWalletsRouteImport.update({
+    id: '/wallets',
+    path: '/wallets',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSignupsRoute =
   AuthenticatedAdminSignupsRouteImport.update({
     id: '/signups',
@@ -283,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
   '/admin/rewards': typeof AuthenticatedAdminRewardsRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
+  '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -321,6 +329,7 @@ export interface FileRoutesByTo {
   '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
   '/admin/rewards': typeof AuthenticatedAdminRewardsRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
+  '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -363,6 +372,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
   '/_authenticated/admin/rewards': typeof AuthenticatedAdminRewardsRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
+  '/_authenticated/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/admin/pop-awards'
     | '/admin/rewards'
     | '/admin/signups'
+    | '/admin/wallets'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/admin/pop-awards'
     | '/admin/rewards'
     | '/admin/signups'
+    | '/admin/wallets'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
@@ -484,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/pop-awards'
     | '/_authenticated/admin/rewards'
     | '/_authenticated/admin/signups'
+    | '/_authenticated/admin/wallets'
     | '/_authenticated/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
@@ -688,6 +701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
+    '/_authenticated/admin/wallets': {
+      id: '/_authenticated/admin/wallets'
+      path: '/wallets'
+      fullPath: '/admin/wallets'
+      preLoaderRoute: typeof AuthenticatedAdminWalletsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/signups': {
       id: '/_authenticated/admin/signups'
       path: '/signups'
@@ -826,6 +846,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPopAwardsRoute: typeof AuthenticatedAdminPopAwardsRoute
   AuthenticatedAdminRewardsRoute: typeof AuthenticatedAdminRewardsRoute
   AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
+  AuthenticatedAdminWalletsRoute: typeof AuthenticatedAdminWalletsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
   AuthenticatedAdminEventsIndexRoute: typeof AuthenticatedAdminEventsIndexRoute
@@ -838,6 +859,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminPopAwardsRoute: AuthenticatedAdminPopAwardsRoute,
   AuthenticatedAdminRewardsRoute: AuthenticatedAdminRewardsRoute,
   AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
+  AuthenticatedAdminWalletsRoute: AuthenticatedAdminWalletsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
   AuthenticatedAdminEventsIndexRoute: AuthenticatedAdminEventsIndexRoute,

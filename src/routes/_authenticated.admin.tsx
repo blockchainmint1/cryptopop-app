@@ -10,6 +10,7 @@ import {
   Contact,
   Send,
   FileText,
+  Wallet,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,6 +38,7 @@ const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/events", label: "Events", icon: CalendarDays, exact: false },
   { to: "/admin/signups", label: "Signups", icon: Users, exact: true },
+  { to: "/admin/wallets", label: "Wallets", icon: Wallet, exact: true },
   { to: "/admin/crm", label: "CRM", icon: Contact, exact: true },
   { to: "/admin/blast", label: "Email Blast", icon: Send, exact: false },
   { to: "/admin/email-templates", label: "Templates", icon: FileText, exact: true },
