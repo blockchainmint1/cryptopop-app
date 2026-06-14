@@ -180,7 +180,12 @@ function AdminEventsList() {
 
       {showCreate && (
         <Card className="p-6">
-          <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2 -mt-2 mb-2">
+              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                {editingId ? "Editing event" : "New event"}
+              </p>
+            </div>
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
