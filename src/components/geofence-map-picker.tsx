@@ -43,6 +43,7 @@ interface Props {
 
 export function GeofenceMapPicker({ lat, lng, radiusM, onChange }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const autocompleteSlotRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
@@ -53,7 +54,7 @@ export function GeofenceMapPicker({ lat, lng, radiusM, onChange }: Props) {
   useEffect(() => {
     let cancelled = false;
     loadGoogleMaps()
-      .then((g) => {
+      .then(async (g) => {
         if (cancelled || !containerRef.current) return;
         const center = {
           lat: lat ?? 1.3521,
@@ -106,6 +107,49 @@ export function GeofenceMapPicker({ lat, lng, radiusM, onChange }: Props) {
           circle.setCenter(pos);
           onChangeRef.current(pos.lat(), pos.lng());
         });
+
+        // Mount Places (New) autocomplete
+        try {
+          const places = (await g.maps.importLibrary("places")) as google.maps.PlacesLibrary;
+          const PAE = (places as unknown as {
+            PlaceAutocompleteElement: new () => HTMLElement;
+          }).PlaceAutocompleteElement;
+          if (PAE && autocompleteSlotRef.current) {
+            const el = new PAE();
+            // Style the embedded element to match form inputs
+            el.setAttribute(
+              "style",
+              "width:100%; --gmpx-color-surface:transparent;",
+            );
+            autocompleteSlotRef.current.innerHTML = "";
+            autocompleteSlotRef.current.appendChild(el);
+            el.addEventListener("gmp-select", async (evt: Event) => {
+              const detail = (evt as unknown as {
+                placePrediction?: {
+                  toPlace: () => {
+                    fetchFields: (opts: { fields: string[] }) => Promise<unknown>;
+                    location?: { lat: () => number; lng: () => number };
+                  };
+                };
+              }).placePrediction;
+              if (!detail) return;
+              const place = detail.toPlace();
+              await place.fetchFields({ fields: ["location", "formattedAddress"] });
+              const loc = place.location;
+              if (!loc) return;
+              const p = { lat: loc.lat(), lng: loc.lng() };
+              marker.setPosition(p);
+              marker.setVisible(true);
+              circle.setCenter(p);
+              circle.setVisible(true);
+              map.panTo(p);
+              map.setZoom(16);
+              onChangeRef.current(p.lat, p.lng);
+            });
+          }
+        } catch (err) {
+          console.warn("Places autocomplete unavailable", err);
+        }
       })
       .catch((err) => {
         console.error("Maps load failed", err);
@@ -138,13 +182,14 @@ export function GeofenceMapPicker({ lat, lng, radiusM, onChange }: Props) {
   }, [radiusM]);
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
+      <div ref={autocompleteSlotRef} className="w-full" />
       <div
         ref={containerRef}
         className="h-64 w-full rounded-md border border-border bg-muted"
       />
       <p className="font-mono text-[10px] text-muted-foreground">
-        Click the map to drop a pin, or drag the marker to fine-tune.
+        Search an address above, click the map to drop a pin, or drag the marker to fine-tune.
       </p>
     </div>
   );
