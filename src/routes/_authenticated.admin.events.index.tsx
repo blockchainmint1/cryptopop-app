@@ -114,31 +114,34 @@ function AdminEventsList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      await create({
-        data: {
-          name: form.name.trim(),
-          description: form.description.trim() || null,
-          cover_url: form.cover_url.trim() || null,
-          lat: Number(form.lat),
-          lng: Number(form.lng),
-          radius_m: Math.round(Number(form.radius_m)),
-          start_at: new Date(form.start_at).toISOString(),
-          end_at: new Date(form.end_at).toISOString(),
-          base_reward: Number(form.base_reward),
-          referral_reward: Number(form.referral_reward),
-          qr_active_minutes_before: Math.round(Number(form.qr_active_minutes_before) || 0),
-        },
-      });
-      toast.success("Event created");
-      setShowCreate(false);
-      setForm({ ...form, name: "", description: "", cover_url: "" });
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim() || null,
+        cover_url: form.cover_url.trim() || null,
+        lat: Number(form.lat),
+        lng: Number(form.lng),
+        radius_m: Math.round(Number(form.radius_m)),
+        start_at: new Date(form.start_at).toISOString(),
+        end_at: new Date(form.end_at).toISOString(),
+        base_reward: Number(form.base_reward),
+        referral_reward: Number(form.referral_reward),
+        qr_active_minutes_before: Math.round(Number(form.qr_active_minutes_before) || 0),
+      };
+      if (editingId) {
+        await update({ data: { id: editingId, ...payload } });
+        toast.success("Event updated");
+      } else {
+        await create({ data: payload });
+        toast.success("Event created");
+      }
+      cancelForm();
       refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Create failed");
+      toast.error(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
@@ -162,7 +165,7 @@ function AdminEventsList() {
             Create events, view signups & claims, and print QR posters.
           </p>
         </div>
-        <Button onClick={() => setShowCreate((s) => !s)}>
+        <Button onClick={() => (showCreate ? cancelForm() : setShowCreate(true))}>
           {showCreate ? (
             <>
               <X className="h-4 w-4 mr-2" /> Cancel
