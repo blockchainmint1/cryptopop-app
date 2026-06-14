@@ -9,6 +9,7 @@ import {
   QrCode,
   X,
   Loader2,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   listAdminEvents,
   createAdminEvent,
+  updateAdminEvent,
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
 import { GeofenceMapPicker } from "@/components/geofence-map-picker";
