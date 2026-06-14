@@ -356,10 +356,12 @@ function EventSection({
   title,
   rows,
   muted,
+  onEdit,
 }: {
   title: string;
   rows: AdminEventRow[];
   muted?: boolean;
+  onEdit: (e: AdminEventRow) => void;
 }) {
   if (rows.length === 0) {
     return (
