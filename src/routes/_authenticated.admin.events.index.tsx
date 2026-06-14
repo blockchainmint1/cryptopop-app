@@ -344,8 +344,8 @@ function AdminEventsList() {
         </Card>
       ) : (
         <div className="space-y-8">
-          <EventSection title="Upcoming & active" rows={upcoming} />
-          <EventSection title="Past events" rows={past} muted />
+          <EventSection title="Upcoming & active" rows={upcoming} onEdit={startEdit} />
+          <EventSection title="Past events" rows={past} muted onEdit={startEdit} />
         </div>
       )}
     </div>
