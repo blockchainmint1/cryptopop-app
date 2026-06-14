@@ -27,6 +27,7 @@ export type AdminEventRow = {
   end_at: string;
   base_reward: number;
   referral_reward: number;
+  qr_active_minutes_before: number;
   created_at: string;
   signup_count: number;
   claim_count: number;
@@ -41,7 +42,7 @@ export const listAdminEvents = createServerFn({ method: "GET" })
     const { data: events, error } = await supabaseAdmin
       .from("events")
       .select(
-        "id, name, description, cover_url, lat, lng, radius_m, start_at, end_at, base_reward, referral_reward, created_at",
+        "id, name, description, cover_url, lat, lng, radius_m, start_at, end_at, base_reward, referral_reward, qr_active_minutes_before, created_at",
       )
       // Hide legacy seed/test rows — those live under POP Awards now.
       .not("name", "ilike", "CryptoPOP Test Drop%")
@@ -87,6 +88,7 @@ const CreateInput = z.object({
   end_at: z.string().min(1),
   base_reward: z.number().min(0).max(100000),
   referral_reward: z.number().min(0).max(100000),
+  qr_active_minutes_before: z.number().int().min(0).max(1440).default(0),
 });
 
 export const createAdminEvent = createServerFn({ method: "POST" })
@@ -108,6 +110,7 @@ export const createAdminEvent = createServerFn({ method: "POST" })
         end_at: data.end_at,
         base_reward: data.base_reward,
         referral_reward: data.referral_reward,
+        qr_active_minutes_before: data.qr_active_minutes_before ?? 0,
         created_by: context.userId,
       })
       .select("id")
