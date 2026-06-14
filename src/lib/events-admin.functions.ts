@@ -119,6 +119,35 @@ export const createAdminEvent = createServerFn({ method: "POST" })
     return { id: row.id };
   });
 
+const UpdateInput = CreateInput.extend({ id: z.string().uuid() });
+
+export const updateAdminEvent = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((input) => UpdateInput.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { id, ...rest } = data;
+    const { error } = await supabaseAdmin
+      .from("events")
+      .update({
+        name: rest.name,
+        description: rest.description ?? null,
+        cover_url: rest.cover_url ?? null,
+        lat: rest.lat,
+        lng: rest.lng,
+        radius_m: rest.radius_m,
+        start_at: rest.start_at,
+        end_at: rest.end_at,
+        base_reward: rest.base_reward,
+        referral_reward: rest.referral_reward,
+        qr_active_minutes_before: rest.qr_active_minutes_before ?? 0,
+      })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return { id };
+  });
+
 export const getAdminStats = createServerFn({ method: "GET" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .handler(async ({ context }) => {

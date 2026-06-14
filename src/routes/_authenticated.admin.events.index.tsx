@@ -9,6 +9,7 @@ import {
   QrCode,
   X,
   Loader2,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   listAdminEvents,
   createAdminEvent,
+  updateAdminEvent,
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
 import { GeofenceMapPicker } from "@/components/geofence-map-picker";
@@ -44,27 +46,56 @@ function formatDate(iso: string) {
 function AdminEventsList() {
   const list = useServerFn(listAdminEvents);
   const create = useServerFn(createAdminEvent);
+  const update = useServerFn(updateAdminEvent);
   const [events, setEvents] = useState<AdminEventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Form state
-  const now = new Date();
-  const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    cover_url: "",
-    lat: "1.3521",
-    lng: "103.8198",
-    radius_m: "200",
-    start_at: toLocalInputValue(now.toISOString()),
-    end_at: toLocalInputValue(inTwoHours.toISOString()),
-    base_reward: "100",
-    referral_reward: "25",
-    qr_active_minutes_before: "60",
-  });
+  const emptyForm = () => {
+    const now = new Date();
+    const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    return {
+      name: "",
+      description: "",
+      cover_url: "",
+      lat: "1.3521",
+      lng: "103.8198",
+      radius_m: "200",
+      start_at: toLocalInputValue(now.toISOString()),
+      end_at: toLocalInputValue(inTwoHours.toISOString()),
+      base_reward: "100",
+      referral_reward: "25",
+      qr_active_minutes_before: "60",
+    };
+  };
+  const [form, setForm] = useState(emptyForm);
+
+  function startEdit(e: AdminEventRow) {
+    setEditingId(e.id);
+    setShowCreate(true);
+    setForm({
+      name: e.name,
+      description: e.description ?? "",
+      cover_url: e.cover_url ?? "",
+      lat: String(e.lat),
+      lng: String(e.lng),
+      radius_m: String(e.radius_m),
+      start_at: toLocalInputValue(e.start_at),
+      end_at: toLocalInputValue(e.end_at),
+      base_reward: String(e.base_reward),
+      referral_reward: String(e.referral_reward),
+      qr_active_minutes_before: String(e.qr_active_minutes_before ?? 0),
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelForm() {
+    setShowCreate(false);
+    setEditingId(null);
+    setForm(emptyForm());
+  }
 
   async function refresh() {
     setLoading(true);
@@ -83,31 +114,34 @@ function AdminEventsList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      await create({
-        data: {
-          name: form.name.trim(),
-          description: form.description.trim() || null,
-          cover_url: form.cover_url.trim() || null,
-          lat: Number(form.lat),
-          lng: Number(form.lng),
-          radius_m: Math.round(Number(form.radius_m)),
-          start_at: new Date(form.start_at).toISOString(),
-          end_at: new Date(form.end_at).toISOString(),
-          base_reward: Number(form.base_reward),
-          referral_reward: Number(form.referral_reward),
-          qr_active_minutes_before: Math.round(Number(form.qr_active_minutes_before) || 0),
-        },
-      });
-      toast.success("Event created");
-      setShowCreate(false);
-      setForm({ ...form, name: "", description: "", cover_url: "" });
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim() || null,
+        cover_url: form.cover_url.trim() || null,
+        lat: Number(form.lat),
+        lng: Number(form.lng),
+        radius_m: Math.round(Number(form.radius_m)),
+        start_at: new Date(form.start_at).toISOString(),
+        end_at: new Date(form.end_at).toISOString(),
+        base_reward: Number(form.base_reward),
+        referral_reward: Number(form.referral_reward),
+        qr_active_minutes_before: Math.round(Number(form.qr_active_minutes_before) || 0),
+      };
+      if (editingId) {
+        await update({ data: { id: editingId, ...payload } });
+        toast.success("Event updated");
+      } else {
+        await create({ data: payload });
+        toast.success("Event created");
+      }
+      cancelForm();
       refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Create failed");
+      toast.error(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
@@ -131,7 +165,7 @@ function AdminEventsList() {
             Create events, view signups & claims, and print QR posters.
           </p>
         </div>
-        <Button onClick={() => setShowCreate((s) => !s)}>
+        <Button onClick={() => (showCreate ? cancelForm() : setShowCreate(true))}>
           {showCreate ? (
             <>
               <X className="h-4 w-4 mr-2" /> Cancel
@@ -146,7 +180,12 @@ function AdminEventsList() {
 
       {showCreate && (
         <Card className="p-6">
-          <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2 -mt-2 mb-2">
+              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                {editingId ? "Editing event" : "New event"}
+              </p>
+            </div>
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
@@ -280,16 +319,18 @@ function AdminEventsList() {
               />
             </div>
             <div className="md:col-span-2 flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>
+              <Button type="button" variant="outline" onClick={cancelForm}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : editingId ? (
+                  <Pencil className="h-4 w-4 mr-2" />
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
                 )}
-                Create event
+                {editingId ? "Save changes" : "Create event"}
               </Button>
             </div>
           </form>
@@ -303,8 +344,8 @@ function AdminEventsList() {
         </Card>
       ) : (
         <div className="space-y-8">
-          <EventSection title="Upcoming & active" rows={upcoming} />
-          <EventSection title="Past events" rows={past} muted />
+          <EventSection title="Upcoming & active" rows={upcoming} onEdit={startEdit} />
+          <EventSection title="Past events" rows={past} muted onEdit={startEdit} />
         </div>
       )}
     </div>
@@ -315,10 +356,12 @@ function EventSection({
   title,
   rows,
   muted,
+  onEdit,
 }: {
   title: string;
   rows: AdminEventRow[];
   muted?: boolean;
+  onEdit: (e: AdminEventRow) => void;
 }) {
   if (rows.length === 0) {
     return (
@@ -376,6 +419,9 @@ function EventSection({
                 <Link to="/admin/events/$id" params={{ id: e.id }}>
                   <QrCode className="h-3.5 w-3.5 mr-1.5" /> QR poster
                 </Link>
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => onEdit(e)}>
+                <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
               </Button>
             </div>
           </Card>
