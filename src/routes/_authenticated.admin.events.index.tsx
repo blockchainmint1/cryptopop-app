@@ -420,6 +420,9 @@ function EventSection({
                   <QrCode className="h-3.5 w-3.5 mr-1.5" /> QR poster
                 </Link>
               </Button>
+              <Button size="sm" variant="outline" onClick={() => onEdit(e)}>
+                <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+              </Button>
             </div>
           </Card>
         ))}
