@@ -319,16 +319,18 @@ function AdminEventsList() {
               />
             </div>
             <div className="md:col-span-2 flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>
+              <Button type="button" variant="outline" onClick={cancelForm}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : editingId ? (
+                  <Pencil className="h-4 w-4 mr-2" />
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
                 )}
-                Create event
+                {editingId ? "Save changes" : "Create event"}
               </Button>
             </div>
           </form>
