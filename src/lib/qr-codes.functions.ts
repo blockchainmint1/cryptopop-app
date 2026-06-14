@@ -200,7 +200,7 @@ export const redeemQrCode = createServerFn({ method: "POST" })
     const { data: code, error: codeErr } = await supabaseAdmin
       .from("qr_codes")
       .select(
-        "id, label, pop_reward, lat, lng, radius_m, expires_at, single_use, use_count, active",
+        "id, label, pop_reward, lat, lng, radius_m, expires_at, single_use, use_count, active, event_id",
       )
       .eq("token", data.token)
       .maybeSingle();
