@@ -21,6 +21,7 @@ import {
   createAdminEvent,
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
+import { GeofenceMapPicker } from "@/components/geofence-map-picker";
 
 export const Route = createFileRoute("/_authenticated/admin/events/")({
   head: () => ({ meta: [{ title: "Events — CryptoPOP Admin" }] }),
@@ -62,6 +63,7 @@ function AdminEventsList() {
     end_at: toLocalInputValue(inTwoHours.toISOString()),
     base_reward: "100",
     referral_reward: "25",
+    qr_active_minutes_before: "60",
   });
 
   async function refresh() {
@@ -97,6 +99,7 @@ function AdminEventsList() {
           end_at: new Date(form.end_at).toISOString(),
           base_reward: Number(form.base_reward),
           referral_reward: Number(form.referral_reward),
+          qr_active_minutes_before: Math.round(Number(form.qr_active_minutes_before) || 0),
         },
       });
       toast.success("Event created");
@@ -194,6 +197,17 @@ function AdminEventsList() {
                 onChange={(e) => setForm({ ...form, end_at: e.target.value })}
               />
             </div>
+            <div className="md:col-span-2 space-y-2">
+              <Label>Location & geofence</Label>
+              <GeofenceMapPicker
+                lat={Number(form.lat) || null}
+                lng={Number(form.lng) || null}
+                radiusM={Number(form.radius_m) || 200}
+                onChange={(lat, lng) =>
+                  setForm((f) => ({ ...f, lat: String(lat), lng: String(lng) }))
+                }
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="lat">Latitude</Label>
               <Input
@@ -223,6 +237,25 @@ function AdminEventsList() {
                 value={form.radius_m}
                 onChange={(e) => setForm({ ...form, radius_m: e.target.value })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="qr_active_minutes_before">
+                QR active before start (minutes)
+              </Label>
+              <Input
+                id="qr_active_minutes_before"
+                type="number"
+                min={0}
+                max={1440}
+                required
+                value={form.qr_active_minutes_before}
+                onChange={(e) =>
+                  setForm({ ...form, qr_active_minutes_before: e.target.value })
+                }
+              />
+              <p className="font-mono text-[10px] text-muted-foreground">
+                e.g. 60 = QR works 1 hour before start. 0 = only after start.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="base_reward">Base POP reward</Label>

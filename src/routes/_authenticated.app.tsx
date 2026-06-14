@@ -25,6 +25,7 @@ import { toast } from "sonner";
 // (mnemonic UX removed — wallet is custodial, email-derived)
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
+import { getPopChainBalance } from "@/lib/pop-chain.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
 import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
@@ -87,6 +88,7 @@ function WalletHome() {
   const { address, settingUp, error: walletError, retry } = useEnsureWallet();
   const fetchTxc = useServerFn(getTxcBalance);
   const fetchTxcTxs = useServerFn(getTxcTxs);
+  const fetchPopChain = useServerFn(getPopChainBalance);
   const fetchMyEvents = useServerFn(getMyEventMemberships);
   const getAdminStatus = useServerFn(getMyAdminStatus);
 
@@ -191,6 +193,23 @@ function WalletHome() {
       cancelled = true;
     };
   }, [address, fetchTxc]);
+
+  // Authoritative POP balance from on-chain Omni token #35. Overrides the
+  // mirror once it loads so the wallet reflects what's actually on-chain.
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetchPopChain({ data: { address } })
+      .then((r) => {
+        if (!cancelled && r.balance !== null) setBalance(r.balance);
+      })
+      .catch(() => {
+        /* keep mirror value */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [address, fetchPopChain]);
 
   const copy = async () => {
     if (!address) return;

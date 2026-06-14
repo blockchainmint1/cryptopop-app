@@ -473,6 +473,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
+          qr_active_minutes_before: number
           radius_m: number
           referral_reward: number
           start_at: string
@@ -489,6 +490,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
+          qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
           start_at: string
@@ -505,6 +507,7 @@ export type Database = {
           lat?: number
           lng?: number
           name?: string
+          qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
           start_at?: string
