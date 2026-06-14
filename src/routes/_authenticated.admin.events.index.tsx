@@ -21,6 +21,7 @@ import {
   createAdminEvent,
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
+import { GeofenceMapPicker } from "@/components/geofence-map-picker";
 
 export const Route = createFileRoute("/_authenticated/admin/events/")({
   head: () => ({ meta: [{ title: "Events — CryptoPOP Admin" }] }),
@@ -62,6 +63,7 @@ function AdminEventsList() {
     end_at: toLocalInputValue(inTwoHours.toISOString()),
     base_reward: "100",
     referral_reward: "25",
+    qr_active_minutes_before: "60",
   });
 
   async function refresh() {
@@ -97,6 +99,7 @@ function AdminEventsList() {
           end_at: new Date(form.end_at).toISOString(),
           base_reward: Number(form.base_reward),
           referral_reward: Number(form.referral_reward),
+          qr_active_minutes_before: Math.round(Number(form.qr_active_minutes_before) || 0),
         },
       });
       toast.success("Event created");
