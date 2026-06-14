@@ -87,13 +87,16 @@ export const claimPop = createServerFn({ method: "POST" })
     // Load event (admin client — claim flow needs to read regardless of RLS)
     const { data: event } = await supabaseAdmin
       .from("events")
-      .select("id, name, cover_url, lat, lng, radius_m, start_at, end_at, base_reward")
+      .select("id, name, cover_url, lat, lng, radius_m, start_at, end_at, base_reward, qr_active_minutes_before")
       .eq("id", parsed.eventId)
       .maybeSingle();
     if (!event) return { ok: false, reason: "event_not_found" };
 
     const now = new Date();
-    if (new Date(event.start_at) > now) return { ok: false, reason: "event_not_started" };
+    const activeFrom = new Date(
+      new Date(event.start_at).getTime() - (event.qr_active_minutes_before ?? 0) * 60_000,
+    );
+    if (activeFrom > now) return { ok: false, reason: "event_not_started" };
     if (new Date(event.end_at) < now) return { ok: false, reason: "event_ended" };
 
     const dist = distanceMeters(data.lat, data.lng, event.lat, event.lng);

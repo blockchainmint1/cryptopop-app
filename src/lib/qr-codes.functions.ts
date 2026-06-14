@@ -268,6 +268,8 @@ export const redeemQrCode = createServerFn({ method: "POST" })
     });
 
     // Update balance mirror so the /app dashboard reflects the new POP.
+    // If this QR is linked to an event AND this is the user's first redemption
+    // for any code under that event, also bump events_attended.
     let newBalance = 0;
     if (award.status === "sent") {
       const { data: prev } = await supabaseAdmin
@@ -276,11 +278,32 @@ export const redeemQrCode = createServerFn({ method: "POST" })
         .eq("user_id", context.userId)
         .maybeSingle();
       newBalance = Number(prev?.balance ?? 0) + code.pop_reward;
+
+      let newAttended = prev?.events_attended ?? 0;
+      if (code.event_id) {
+        // Count prior redemptions by this user for any QR tied to this event
+        // (excluding the one we just inserted).
+        const { data: priorCodes } = await supabaseAdmin
+          .from("qr_codes")
+          .select("id")
+          .eq("event_id", code.event_id);
+        const priorIds = (priorCodes ?? []).map((c) => c.id);
+        if (priorIds.length > 0) {
+          const { count } = await supabaseAdmin
+            .from("qr_redemptions")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", context.userId)
+            .in("code_id", priorIds)
+            .neq("id", redemption.id);
+          if ((count ?? 0) === 0) newAttended += 1;
+        }
+      }
+
       await supabaseAdmin.from("pop_balance_mirror").upsert(
         {
           user_id: context.userId,
           balance: newBalance,
-          events_attended: prev?.events_attended ?? 0,
+          events_attended: newAttended,
           last_synced_at: new Date().toISOString(),
         },
         { onConflict: "user_id" },
