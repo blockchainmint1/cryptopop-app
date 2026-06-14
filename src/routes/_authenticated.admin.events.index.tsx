@@ -46,27 +46,56 @@ function formatDate(iso: string) {
 function AdminEventsList() {
   const list = useServerFn(listAdminEvents);
   const create = useServerFn(createAdminEvent);
+  const update = useServerFn(updateAdminEvent);
   const [events, setEvents] = useState<AdminEventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Form state
-  const now = new Date();
-  const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    cover_url: "",
-    lat: "1.3521",
-    lng: "103.8198",
-    radius_m: "200",
-    start_at: toLocalInputValue(now.toISOString()),
-    end_at: toLocalInputValue(inTwoHours.toISOString()),
-    base_reward: "100",
-    referral_reward: "25",
-    qr_active_minutes_before: "60",
-  });
+  const emptyForm = () => {
+    const now = new Date();
+    const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    return {
+      name: "",
+      description: "",
+      cover_url: "",
+      lat: "1.3521",
+      lng: "103.8198",
+      radius_m: "200",
+      start_at: toLocalInputValue(now.toISOString()),
+      end_at: toLocalInputValue(inTwoHours.toISOString()),
+      base_reward: "100",
+      referral_reward: "25",
+      qr_active_minutes_before: "60",
+    };
+  };
+  const [form, setForm] = useState(emptyForm);
+
+  function startEdit(e: AdminEventRow) {
+    setEditingId(e.id);
+    setShowCreate(true);
+    setForm({
+      name: e.name,
+      description: e.description ?? "",
+      cover_url: e.cover_url ?? "",
+      lat: String(e.lat),
+      lng: String(e.lng),
+      radius_m: String(e.radius_m),
+      start_at: toLocalInputValue(e.start_at),
+      end_at: toLocalInputValue(e.end_at),
+      base_reward: String(e.base_reward),
+      referral_reward: String(e.referral_reward),
+      qr_active_minutes_before: String(e.qr_active_minutes_before ?? 0),
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelForm() {
+    setShowCreate(false);
+    setEditingId(null);
+    setForm(emptyForm());
+  }
 
   async function refresh() {
     setLoading(true);
