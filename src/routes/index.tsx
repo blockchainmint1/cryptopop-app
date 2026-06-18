@@ -181,8 +181,7 @@ function Landing() {
             style={{ animationDelay: "0.75s" }}
           >
             <Link
-              to="/events/$slug/rsvp"
-              params={{ slug: "july4-marina-bbq" }}
+              to="/my-pop"
               className="group inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-display font-semibold text-white transition hover:opacity-95"
               style={{
                 background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
@@ -190,7 +189,7 @@ function Landing() {
                   "0 18px 50px -12px rgba(255,122,40,0.7), 0 0 0 1px rgba(255,255,255,0.08) inset",
               }}
             >
-              RSVP — it's free
+              Get POP
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
             <a
