@@ -1,14 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Music, Flame, Anchor, Sailboat } from "lucide-react";
+import { QrCode, MapPin, Coins, Users, ArrowRight } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
-import bbqBg from "@/assets/bbq-marina-bg.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-
-const VENUE_MAP_URL =
-  "https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z";
 
 export const Route = createFileRoute("/")({
   component: Landing,
