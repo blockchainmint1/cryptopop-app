@@ -161,7 +161,7 @@ const EventConfirmationEmail = ({
             </Link>
             <Text style={socialDot}>·</Text>
             <Link href={SITE_URL} style={socialLink}>
-              cryptopop.sg
+              cryptopop.asia
             </Link>
           </Section>
 
