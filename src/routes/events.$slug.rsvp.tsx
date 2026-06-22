@@ -118,6 +118,8 @@ function SignupPage() {
         blurb: dbEvent.description ?? fallback?.blurb ?? "",
       }
     : fallback;
+  const navigate = useNavigate();
+  const saveSignup = useServerFn(createEventSignup);
   const [submitting, setSubmitting] = useState(false);
   const [isFriend, setIsFriend] = useState<"yes" | "no">("no");
   const [guestCount, setGuestCount] = useState(1);
