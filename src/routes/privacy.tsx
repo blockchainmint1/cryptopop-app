@@ -10,12 +10,12 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "How CryptoPOP collects, uses, and protects your personal data under Singapore's PDPA.",
+          "How CryptoPOP collects, uses, and protects your personal data.",
       },
       { property: "og:title", content: "Privacy Policy — CryptoPOP" },
       {
         property: "og:description",
-        content: "How CryptoPOP handles your data, written for the PDPA.",
+        content: "How CryptoPOP handles your data.",
       },
     ],
   }),
