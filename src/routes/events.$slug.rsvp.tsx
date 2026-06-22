@@ -76,6 +76,8 @@ function SignupPage() {
   const navigate = useNavigate();
   const saveSignup = useServerFn(createEventSignup);
   const [submitting, setSubmitting] = useState(false);
+  const [isFriend, setIsFriend] = useState<"yes" | "no">("no");
+  const [guestCount, setGuestCount] = useState(1);
 
   if (!ev) {
     return (
