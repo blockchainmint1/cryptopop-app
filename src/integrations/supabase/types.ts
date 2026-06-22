@@ -495,6 +495,7 @@ export type Database = {
           referral_reward: number
           slug: string | null
           start_at: string
+          time_zone: string
           updated_at: string
         }
         Insert: {
@@ -513,6 +514,7 @@ export type Database = {
           referral_reward?: number
           slug?: string | null
           start_at: string
+          time_zone?: string
           updated_at?: string
         }
         Update: {
@@ -531,6 +533,7 @@ export type Database = {
           referral_reward?: number
           slug?: string | null
           start_at?: string
+          time_zone?: string
           updated_at?: string
         }
         Relationships: []
