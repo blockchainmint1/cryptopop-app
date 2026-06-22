@@ -466,7 +466,7 @@ function EventSection({
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground font-mono">
                   <span className="flex items-center gap-1">
                     <CalendarDays className="h-3 w-3" />
-                    {formatDate(e.start_at)} → {formatDate(e.end_at)}
+                    {formatDate(e.start_at, e.time_zone)} → {formatDate(e.end_at, e.time_zone)} {tzAbbreviation(e.time_zone, new Date(e.start_at))}
                   </span>
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
