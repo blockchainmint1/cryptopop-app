@@ -383,6 +383,7 @@ function WalletHome() {
                           ctaLabel={checkedIn ? "Checked in" : "View details"}
                           ctaDisabled={checkedIn}
                           badge={checkedIn ? "Checked in" : "Going"}
+                          passSignupId={membership?.signup_id}
                         />
                       </li>
                     );
