@@ -292,7 +292,8 @@ function SignupPage() {
                         name="is_friend"
                         value={v}
                         required
-                        defaultChecked={v === "no"}
+                        checked={isFriend === v}
+                        onChange={() => setIsFriend(v)}
                         className="sr-only"
                       />
                       {v}
@@ -300,6 +301,46 @@ function SignupPage() {
                   ))}
                 </div>
               </fieldset>
+
+              {isFriend === "yes" && (
+                <Field label="How many guests?" htmlFor="guest_count">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount((n) => Math.max(1, n - 1))}
+                      className="h-11 w-11 rounded-xl border border-border bg-background font-display text-lg transition hover:border-primary hover:text-primary"
+                      aria-label="Decrease guests"
+                    >
+                      −
+                    </button>
+                    <input
+                      id="guest_count"
+                      name="guest_count"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={guestCount}
+                      onChange={(e) =>
+                        setGuestCount(
+                          Math.max(
+                            1,
+                            Math.min(20, Number(e.target.value) || 1),
+                          ),
+                        )
+                      }
+                      className={`${inputCls} text-center`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount((n) => Math.min(20, n + 1))}
+                      className="h-11 w-11 rounded-xl border border-border bg-background font-display text-lg transition hover:border-primary hover:text-primary"
+                      aria-label="Increase guests"
+                    >
+                      +
+                    </button>
+                  </div>
+                </Field>
+              )}
 
               <button
                 type="submit"
