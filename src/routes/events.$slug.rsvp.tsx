@@ -125,6 +125,8 @@ function SignupPage() {
           instagram_handle: parsed.data.instagram_handle || null,
           telegram_handle: parsed.data.telegram_handle || null,
           is_friend: parsed.data.is_friend === "yes",
+          guest_count:
+            parsed.data.is_friend === "yes" ? parsed.data.guest_count : 0,
         },
       });
       try {
