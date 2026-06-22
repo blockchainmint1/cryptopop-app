@@ -182,7 +182,7 @@ function PrivacyPage() {
               </li>
               <li>
                 <strong className="text-white">Authorities</strong> when required
-                by Singapore law or a valid legal process.
+                by applicable law or a valid legal process.
               </li>
             </ul>
             <p>We do not sell personal data.</p>
@@ -190,10 +190,10 @@ function PrivacyPage() {
 
           <Section title="5. International transfers">
             <p>
-              Some of our infrastructure providers are located outside
-              Singapore. When we transfer personal data overseas, we take
-              reasonable steps to ensure recipients provide a standard of
-              protection comparable to the PDPA.
+              Some of our infrastructure providers may be located in different
+              countries than you. When we transfer personal data internationally,
+              we take reasonable steps to ensure recipients provide a comparable
+              standard of protection.
             </p>
           </Section>
 
