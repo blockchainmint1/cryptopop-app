@@ -25,6 +25,7 @@ const eventSignupSchema = z.object({
   instagram_handle: z.string().trim().max(64).optional().nullable(),
   telegram_handle: z.string().trim().max(64).optional().nullable(),
   is_friend: z.boolean(),
+  guest_count: z.number().int().min(0).max(20).default(0),
 });
 
 // Public: create a signup without exposing the private signups table to public reads.
