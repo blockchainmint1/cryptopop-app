@@ -62,6 +62,7 @@ const signupSchema = z
       .max(32, "Mobile number is too long"),
     instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
     telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    external_wallet: z.string().trim().max(48).optional().or(z.literal("")),
     is_friend: z.enum(["yes", "no"]),
     guest_count: z.number().int().min(0).max(20),
   })
