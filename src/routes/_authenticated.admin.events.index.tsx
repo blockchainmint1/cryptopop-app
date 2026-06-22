@@ -262,6 +262,27 @@ function AdminEventsList() {
                 placeholder="https://…"
               />
             </div>
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="time_zone">Time zone</Label>
+              <Select
+                value={form.time_zone}
+                onValueChange={(v) => setForm({ ...form, time_zone: v })}
+              >
+                <SelectTrigger id="time_zone">
+                  <SelectValue placeholder="Select a time zone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMMON_TIMEZONES.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tzAbbreviation(tz.value)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="font-mono text-[10px] text-muted-foreground">
+                Start & end times are interpreted in this zone.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="start_at">Starts</Label>
               <Input
@@ -272,7 +293,7 @@ function AdminEventsList() {
                 onChange={(e) => setForm({ ...form, start_at: e.target.value })}
               />
               <p className="font-mono text-[10px] text-muted-foreground">
-                {usaPreview(form.start_at)}
+                {usaPreview(form.start_at, form.time_zone)}
               </p>
             </div>
             <div className="space-y-2">
@@ -285,7 +306,7 @@ function AdminEventsList() {
                 onChange={(e) => setForm({ ...form, end_at: e.target.value })}
               />
               <p className="font-mono text-[10px] text-muted-foreground">
-                {usaPreview(form.end_at)}
+                {usaPreview(form.end_at, form.time_zone)}
               </p>
             </div>
             <div className="md:col-span-2 space-y-2">
