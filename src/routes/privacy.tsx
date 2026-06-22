@@ -81,7 +81,7 @@ function PrivacyPage() {
         <main className="mx-auto max-w-3xl px-6 py-16 md:py-24">
           <div className="hero-fade-up">
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-white/60">
-              Legal · Singapore · PDPA
+              Legal · Privacy
             </p>
             <h1
               className="mt-4 font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight md:text-7xl"
@@ -108,9 +108,9 @@ function PrivacyPage() {
             >
               <p className="leading-relaxed">
                 This policy explains how CryptoPOP collects, uses, and discloses
-                personal data in accordance with Singapore's Personal Data
-                Protection Act 2012 ("PDPA"). It applies to the CryptoPOP
-                website, wallet, and related services.
+                personal data. It applies to the CryptoPOP website, wallet, and
+                related services, and is intended to align with applicable data
+                protection laws wherever you use the service.
               </p>
             </div>
           </div>
