@@ -39,10 +39,9 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
   },
 };
 
-// Format anchored to America/Los_Angeles so server (UTC) and client render
+// Format anchored to the event's configured tz so server (UTC) and client render
 // the same string and hydration matches.
-function formatEventDate(startIso: string, endIso: string) {
-  const tz = "America/Los_Angeles";
+function formatEventDate(startIso: string, endIso: string, tz: string) {
   const start = new Date(startIso);
   const end = new Date(endIso);
   const dayLabel = start.toLocaleDateString("en-US", {
@@ -54,12 +53,13 @@ function formatEventDate(startIso: string, endIso: string) {
   });
   const timeFmt = (d: Date) =>
     d
-      .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })
-      .replace(":00", "")
+      .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz, timeZoneName: "short" })
+      .replace(":00 ", " ")
       .toLowerCase()
-      .replace(/\s/g, "");
+      .replace(/\s(am|pm)/, "$1");
   return `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)}`;
 }
+
 
 function mapUrlFor(lat: number, lng: number) {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
