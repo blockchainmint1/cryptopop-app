@@ -18,7 +18,17 @@ type EventInfo = {
   blurb: string;
 };
 
-const EVENTS: Record<string, EventInfo> = {};
+const EVENTS: Record<string, EventInfo> = {
+  "4th-at-bobbys": {
+    slug: "4th-at-bobbys",
+    name: "4th of July at Bobby's",
+    date: "Saturday, July 4, 2026",
+    location: "Bobby's",
+    mapUrl: "https://www.google.com/maps",
+    blurb:
+      "Join us for the 4th at Bobby's — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
+  },
+};
 
 
 export const Route = createFileRoute("/events/$slug/rsvp")({
