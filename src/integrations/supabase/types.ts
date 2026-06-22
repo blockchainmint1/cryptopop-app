@@ -412,6 +412,7 @@ export type Database = {
           created_at: string
           email: string
           full_name: string
+          guest_count: number
           id: string
           instagram_handle: string | null
           is_friend: boolean
@@ -430,6 +431,7 @@ export type Database = {
           created_at?: string
           email: string
           full_name: string
+          guest_count?: number
           id?: string
           instagram_handle?: string | null
           is_friend?: boolean
@@ -448,6 +450,7 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string
+          guest_count?: number
           id?: string
           instagram_handle?: string | null
           is_friend?: boolean
