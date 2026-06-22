@@ -65,6 +65,22 @@ type PopTx = {
 
 const BACKED_UP_KEY = "cryptopop:backed-up";
 
+type PopActivity = {
+  key: string;
+  label: string;
+  reward: number;
+  description: string;
+};
+
+// Master list of ways to earn POP. "Earned" is derived from the user's
+// pop_awards (matched by source) and event check-ins.
+const POP_ACTIVITY_CATALOG: PopActivity[] = [
+  { key: "signup", label: "Joined CryptoPOP", reward: 10, description: "Welcome bonus for signing up." },
+  { key: "check_in", label: "Event check-in", reward: 25, description: "Scan in at the event." },
+  { key: "quiz", label: "POP quiz", reward: 10, description: "Answer an on-site quiz." },
+  { key: "referral", label: "Brought a friend", reward: 25, description: "Friend signs up using your link." },
+];
+
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Wallet — CryptoPOP" }] }),
   component: WalletHome,
