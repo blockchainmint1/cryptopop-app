@@ -27,6 +27,7 @@ import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getPopChainBalance } from "@/lib/pop-chain.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
+import { getMyPopSummary } from "@/lib/pop-summary.functions";
 import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
 
