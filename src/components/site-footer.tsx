@@ -46,9 +46,6 @@ export function SiteFooter() {
             <Link to="/change-log" className="hover:text-foreground transition">
               Change Log
             </Link>
-            <Link to="/api" className="hover:text-foreground transition">
-              Developer API
-            </Link>
             <Link to="/terms" className="hover:text-foreground transition">
               Terms
             </Link>
