@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createEventSignup } from "@/lib/signups.functions";
 import { getPublicEventBySlug } from "@/lib/public-event.functions";
+import { tzFriendlyName } from "@/lib/tz";
 
 type EventInfo = {
   slug: string;
