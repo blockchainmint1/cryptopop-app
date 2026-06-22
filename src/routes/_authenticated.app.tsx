@@ -27,6 +27,7 @@ import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getPopChainBalance } from "@/lib/pop-chain.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
+import { getMyPopSummary } from "@/lib/pop-summary.functions";
 import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
 
@@ -90,6 +91,7 @@ function WalletHome() {
   const fetchTxcTxs = useServerFn(getTxcTxs);
   const fetchPopChain = useServerFn(getPopChainBalance);
   const fetchMyEvents = useServerFn(getMyEventMemberships);
+  const fetchPopSummary = useServerFn(getMyPopSummary);
   const getAdminStatus = useServerFn(getMyAdminStatus);
 
   const [balance, setBalance] = useState<number>(0);
@@ -112,39 +114,32 @@ function WalletHome() {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     (async () => {
-      const { data: bal } = await supabase
-        .from("pop_balance_mirror")
-        .select("balance, events_attended")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (bal) {
-        setBalance(Number(bal.balance));
-        setEventsAttended(bal.events_attended);
-      }
-
-      const [{ data: cl }, { data: aw }, adminStatus] = await Promise.all([
+      const [summary, { data: cl }, adminStatus] = await Promise.all([
+        fetchPopSummary({}).catch((e) => {
+          console.error("[app] pop summary failed", e);
+          return { balance: 0, eventsAttended: 0, awards: [] as PopAward[] };
+        }),
         supabase
           .from("claims")
           .select("id, total, created_at, status, tx_hash, events(name)")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(20),
-        user.email
-          ? supabase
-              .from("pop_awards")
-              .select("id, amount, source, status, tx_hash, created_at")
-              .eq("email", user.email.toLowerCase())
-              .order("created_at", { ascending: false })
-              .limit(20)
-          : Promise.resolve({ data: [] as PopAward[] }),
         getAdminStatus().catch(() => ({ isAdmin: false })),
       ]);
+      if (cancelled) return;
+      setBalance(Number(summary.balance));
+      setEventsAttended(summary.eventsAttended);
+      setAwards(summary.awards as PopAward[]);
       if (cl) setClaims(cl as unknown as RecentClaim[]);
-      if (aw) setAwards(aw as unknown as PopAward[]);
       setIsAdmin(adminStatus.isAdmin);
     })();
-  }, [user, getAdminStatus]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, getAdminStatus, fetchPopSummary]);
 
   // Fetch TXC chain transactions once we have an address
   useEffect(() => {
@@ -194,17 +189,20 @@ function WalletHome() {
     };
   }, [address, fetchTxc]);
 
-  // Authoritative POP balance from on-chain Omni token #35. Overrides the
-  // mirror once it loads so the wallet reflects what's actually on-chain.
+  // On-chain POP balance from Omni token. Only override the awards-derived
+  // balance if the chain reports MORE than we've credited locally — a
+  // freshly-broadcast award sits at 0 on-chain until it confirms, and we
+  // don't want that to wipe the credited balance the user already earned.
   useEffect(() => {
     if (!address) return;
     let cancelled = false;
     fetchPopChain({ data: { address } })
       .then((r) => {
-        if (!cancelled && r.balance !== null) setBalance(r.balance);
+        if (cancelled || r.balance === null) return;
+        setBalance((prev) => (r.balance! > prev ? r.balance! : prev));
       })
       .catch(() => {
-        /* keep mirror value */
+        /* keep awards-derived value */
       });
     return () => {
       cancelled = true;
