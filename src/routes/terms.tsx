@@ -9,7 +9,7 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
-          "Terms of Service for CryptoPOP, a proof-of-participation wallet operated from Singapore.",
+          "Terms of Service for CryptoPOP, a proof-of-participation wallet.",
       },
       { property: "og:title", content: "Terms of Service — CryptoPOP" },
       {
