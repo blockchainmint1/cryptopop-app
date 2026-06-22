@@ -225,6 +225,9 @@ function AdminEventsList() {
                 value={form.start_at}
                 onChange={(e) => setForm({ ...form, start_at: e.target.value })}
               />
+              <p className="font-mono text-[10px] text-muted-foreground">
+                {usaPreview(form.start_at)}
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="end_at">Ends</Label>
@@ -235,6 +238,9 @@ function AdminEventsList() {
                 value={form.end_at}
                 onChange={(e) => setForm({ ...form, end_at: e.target.value })}
               />
+              <p className="font-mono text-[10px] text-muted-foreground">
+                {usaPreview(form.end_at)}
+              </p>
             </div>
             <div className="md:col-span-2 space-y-2">
               <Label>Location & geofence</Label>
