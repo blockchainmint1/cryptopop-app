@@ -112,7 +112,7 @@ function UnsubscribePage() {
               </h1>
               <p className="mt-3 text-sm text-muted-foreground">
                 You'll stop receiving event confirmations and updates. You can
-                always sign up again from cryptopop.sg.
+                always sign up again from cryptopop.asia.
               </p>
               <button
                 onClick={handleConfirm}
