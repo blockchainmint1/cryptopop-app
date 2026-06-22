@@ -549,6 +549,7 @@ export type Database = {
           start_at: string
           time_zone: string
           updated_at: string
+          visibility: Database["public"]["Enums"]["event_visibility"]
         }
         Insert: {
           base_reward?: number
@@ -569,6 +570,7 @@ export type Database = {
           start_at: string
           time_zone?: string
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["event_visibility"]
         }
         Update: {
           base_reward?: number
@@ -589,6 +591,7 @@ export type Database = {
           start_at?: string
           time_zone?: string
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["event_visibility"]
         }
         Relationships: [
           {
@@ -632,6 +635,38 @@ export type Database = {
           },
         ]
       }
+      organization_wallet_secrets: {
+        Row: {
+          created_at: string
+          encrypted_wif: string
+          encryption_key_id: string | null
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_wif: string
+          encryption_key_id?: string | null
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_wif?: string
+          encryption_key_id?: string | null
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_wallet_secrets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           accent_color: string | null
@@ -641,7 +676,6 @@ export type Database = {
           is_featured: boolean
           logo_url: string | null
           minter_wallet_address: string | null
-          minter_wallet_encrypted_wif: string | null
           name: string
           pop_token_name: string | null
           pop_token_symbol: string | null
@@ -659,7 +693,6 @@ export type Database = {
           is_featured?: boolean
           logo_url?: string | null
           minter_wallet_address?: string | null
-          minter_wallet_encrypted_wif?: string | null
           name: string
           pop_token_name?: string | null
           pop_token_symbol?: string | null
@@ -677,7 +710,6 @@ export type Database = {
           is_featured?: boolean
           logo_url?: string | null
           minter_wallet_address?: string | null
-          minter_wallet_encrypted_wif?: string | null
           name?: string
           pop_token_name?: string | null
           pop_token_symbol?: string | null
@@ -1126,6 +1158,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       claim_status: "pending" | "minted" | "failed"
+      event_visibility: "public" | "unlisted" | "private"
       org_role: "owner" | "admin" | "staff"
     }
     CompositeTypes: {
@@ -1256,6 +1289,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       claim_status: ["pending", "minted", "failed"],
+      event_visibility: ["public", "unlisted", "private"],
       org_role: ["owner", "admin", "staff"],
     },
   },
