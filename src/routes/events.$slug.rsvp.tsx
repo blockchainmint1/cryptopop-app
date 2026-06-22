@@ -39,21 +39,30 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
   },
 };
 
+// Format anchored to America/Los_Angeles so server (UTC) and client render
+// the same string and hydration matches.
 function formatEventDate(startIso: string, endIso: string) {
+  const tz = "America/Los_Angeles";
   const start = new Date(startIso);
   const end = new Date(endIso);
-  const dayLabel = start.toLocaleDateString(undefined, {
+  const dayLabel = start.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
+    timeZone: tz,
   });
   const timeFmt = (d: Date) =>
     d
-      .toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+      .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })
       .replace(":00", "")
-      .toLowerCase();
+      .toLowerCase()
+      .replace(/\s/g, "");
   return `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)}`;
+}
+
+function mapUrlFor(lat: number, lng: number) {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
 
 export const Route = createFileRoute("/events/$slug/rsvp")({
