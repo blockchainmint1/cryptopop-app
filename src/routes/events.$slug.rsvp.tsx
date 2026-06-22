@@ -51,18 +51,24 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
   component: SignupPage,
 });
 
-const signupSchema = z.object({
-  full_name: z.string().trim().min(1, "Your name is required").max(120),
-  email: z.string().trim().email("Enter a valid email").max(254),
-  mobile_number: z
-    .string()
-    .trim()
-    .min(3, "Mobile number is too short")
-    .max(32, "Mobile number is too long"),
-  instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
-  telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
-  is_friend: z.enum(["yes", "no"]),
-});
+const signupSchema = z
+  .object({
+    full_name: z.string().trim().min(1, "Your name is required").max(120),
+    email: z.string().trim().email("Enter a valid email").max(254),
+    mobile_number: z
+      .string()
+      .trim()
+      .min(3, "Mobile number is too short")
+      .max(32, "Mobile number is too long"),
+    instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    is_friend: z.enum(["yes", "no"]),
+    guest_count: z.number().int().min(0).max(20),
+  })
+  .refine((d) => d.is_friend === "no" || d.guest_count >= 1, {
+    message: "How many guests are you bringing?",
+    path: ["guest_count"],
+  });
 
 function SignupPage() {
   const { slug } = Route.useParams();
