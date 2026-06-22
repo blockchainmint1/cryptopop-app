@@ -21,7 +21,7 @@ export const PUBLIC_EVENTS: PublicEvent[] = [
   {
     slug: "4th-at-bobbys",
     name: "4th of July at The Lakehouse",
-    dateLabel: "Saturday, July 4, 2026",
+    dateLabel: "Saturday, July 4, 2026 · 3pm–dark",
     endsAt: "2026-07-05T03:00:00Z",
     location: "The Lakehouse",
     mapUrl: "https://www.google.com/maps",
