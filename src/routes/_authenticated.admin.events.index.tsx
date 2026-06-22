@@ -24,39 +24,64 @@ import {
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
 import { GeofenceMapPicker } from "@/components/geofence-map-picker";
+import {
+  COMMON_TIMEZONES,
+  browserTimeZone,
+  utcIsoToZonedWallTime,
+  zonedWallTimeToUtcIso,
+  tzAbbreviation,
+} from "@/lib/tz";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/admin/events/")({
   head: () => ({ meta: [{ title: "Events — CryptoPOP Admin" }] }),
   component: AdminEventsList,
 });
 
-function toLocalInputValue(iso?: string) {
-  const d = iso ? new Date(iso) : new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function toLocalInputValue(iso: string | undefined, tz: string) {
+  const isoStr = iso ?? new Date().toISOString();
+  return utcIsoToZonedWallTime(isoStr, tz);
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
+function formatDate(iso: string, tz: string) {
+  return new Date(iso).toLocaleString("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: tz,
   });
 }
 
-function usaPreview(local: string) {
+function usaPreview(local: string, tz: string) {
   if (!local) return "—";
-  const d = new Date(local);
-  if (isNaN(d.getTime())) return "—";
-  const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const pretty = d.toLocaleString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  return `${iso} · ${pretty}`;
+  // Treat `local` as wall-clock in `tz`; show ISO date + pretty in that tz.
+  try {
+    const utc = zonedWallTimeToUtcIso(local, tz);
+    const d = new Date(utc);
+    const ymd = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(d);
+    const pretty = d.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: tz,
+    });
+    return `${ymd} · ${pretty} ${tzAbbreviation(tz, d)}`;
+  } catch {
+    return "—";
+  }
 }
 
 function AdminEventsList() {
