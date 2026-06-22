@@ -117,16 +117,6 @@ function SignupPage() {
   const { dbEvent } = Route.useLoaderData();
   const fallback = EVENT_FALLBACK[slug];
   const staticBits = EVENT_STATIC[slug];
-  // Render in the event's tz on the server (stable for hydration), then swap
-  // to the viewer's local tz on the client so people see their own clock.
-  const [viewerTz, setViewerTz] = useState<string | null>(null);
-  useEffect(() => {
-    try {
-      setViewerTz(Intl.DateTimeFormat().resolvedOptions().timeZone || null);
-    } catch {
-      // ignore
-    }
-  }, []);
   const ev: EventInfo | undefined = dbEvent
     ? {
         slug: dbEvent.slug,
@@ -134,7 +124,7 @@ function SignupPage() {
         date: formatEventDate(
           dbEvent.start_at,
           dbEvent.end_at,
-          viewerTz ?? dbEvent.time_zone,
+          dbEvent.time_zone,
         ),
         location: staticBits?.location ?? fallback?.location ?? "",
         mapUrl: mapUrlFor(dbEvent.lat, dbEvent.lng),
