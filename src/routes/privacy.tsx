@@ -213,14 +213,14 @@ function PrivacyPage() {
               encryption at rest for wallet keys, row-level access controls on
               our database, and least-privilege server credentials. No system is
               perfectly secure; please report suspected vulnerabilities to{" "}
-              <BrandLink href="mailto:security@cryptopop.sg">
-                security@cryptopop.sg
+              <BrandLink href="mailto:security@cryptopop.asia">
+                security@cryptopop.asia
               </BrandLink>
               .
             </p>
           </Section>
 
-          <Section title="8. Your PDPA rights">
+          <Section title="8. Your rights">
             <p>You have the right to:</p>
             <ul className="ml-5 list-disc space-y-2">
               <li>Access the personal data we hold about you.</li>
@@ -234,11 +234,11 @@ function PrivacyPage() {
             </ul>
             <p>
               To exercise these rights, email our Data Protection Officer at{" "}
-              <BrandLink href="mailto:dpo@cryptopop.sg">
-                dpo@cryptopop.sg
+              <BrandLink href="mailto:dpo@cryptopop.asia">
+                dpo@cryptopop.asia
               </BrandLink>
-              . If you're unsatisfied with our response, you may contact the
-              Personal Data Protection Commission of Singapore.
+              . If you're unsatisfied with our response, you may contact your
+              local data protection authority.
             </p>
           </Section>
 
