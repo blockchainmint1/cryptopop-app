@@ -114,39 +114,32 @@ function WalletHome() {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     (async () => {
-      const { data: bal } = await supabase
-        .from("pop_balance_mirror")
-        .select("balance, events_attended")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (bal) {
-        setBalance(Number(bal.balance));
-        setEventsAttended(bal.events_attended);
-      }
-
-      const [{ data: cl }, { data: aw }, adminStatus] = await Promise.all([
+      const [summary, { data: cl }, adminStatus] = await Promise.all([
+        fetchPopSummary({}).catch((e) => {
+          console.error("[app] pop summary failed", e);
+          return { balance: 0, eventsAttended: 0, awards: [] as PopAward[] };
+        }),
         supabase
           .from("claims")
           .select("id, total, created_at, status, tx_hash, events(name)")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(20),
-        user.email
-          ? supabase
-              .from("pop_awards")
-              .select("id, amount, source, status, tx_hash, created_at")
-              .eq("email", user.email.toLowerCase())
-              .order("created_at", { ascending: false })
-              .limit(20)
-          : Promise.resolve({ data: [] as PopAward[] }),
         getAdminStatus().catch(() => ({ isAdmin: false })),
       ]);
+      if (cancelled) return;
+      setBalance(Number(summary.balance));
+      setEventsAttended(summary.eventsAttended);
+      setAwards(summary.awards as PopAward[]);
       if (cl) setClaims(cl as unknown as RecentClaim[]);
-      if (aw) setAwards(aw as unknown as PopAward[]);
       setIsAdmin(adminStatus.isAdmin);
     })();
-  }, [user, getAdminStatus]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, getAdminStatus, fetchPopSummary]);
 
   // Fetch TXC chain transactions once we have an address
   useEffect(() => {
