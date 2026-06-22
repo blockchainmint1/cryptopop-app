@@ -350,6 +350,23 @@ function SignupPage() {
                 </Field>
               )}
 
+              <Field label="TXC wallet address (optional)" htmlFor="external_wallet">
+                <input
+                  id="external_wallet"
+                  name="external_wallet"
+                  maxLength={48}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className={`${inputCls} font-mono`}
+                  placeholder="Tnnnnn… — leave blank & we'll spin one up for you"
+                />
+                <p className="mt-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Already have a TXC wallet? Drop your address & we'll mint POP straight to it.
+                </p>
+              </Field>
+
+
+
               <button
                 type="submit"
                 disabled={submitting}
