@@ -160,11 +160,19 @@ export async function awardPop(opts: {
   source: string;
   sourceId?: string | null;
   memo?: string;
+  /**
+   * If provided, mint to this external TXC address instead of deriving/creating
+   * an email-keyed custodial wallet. Used when a user supplies their own wallet
+   * at signup. Skips ensureEmailWallet entirely.
+   */
+  walletOverride?: string | null;
 }): Promise<{ awardId: string | null; status: "sent" | "failed" | "duplicate" }> {
   const email = normalizeEmail(opts.email);
 
-  // 1. Ensure wallet exists
-  const { walletAddress } = await ensureEmailWallet(email);
+  // 1. Resolve target wallet — external override wins; otherwise ensure custodial.
+  const walletAddress = opts.walletOverride
+    ? opts.walletOverride.trim()
+    : (await ensureEmailWallet(email)).walletAddress;
 
   // 2. Insert ledger row (pending). Unique (source, source_id) makes it idempotent.
   const { data: award, error: insertError } = await supabaseAdmin
