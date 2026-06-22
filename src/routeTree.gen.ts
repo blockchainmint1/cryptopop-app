@@ -18,6 +18,7 @@ import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ChangeLogRouteImport } from './routes/change-log'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -95,6 +96,11 @@ const LogoutRoute = LogoutRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChangeLogRoute = ChangeLogRouteImport.update({
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
+  '/docs': typeof DocsRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
+  '/docs': typeof DocsRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
+  '/docs': typeof DocsRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/change-log'
+    | '/docs'
     | '/login'
     | '/logout'
     | '/mission'
@@ -455,6 +465,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/change-log'
+    | '/docs'
     | '/login'
     | '/logout'
     | '/mission'
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/api'
     | '/change-log'
+    | '/docs'
     | '/login'
     | '/logout'
     | '/mission'
@@ -542,6 +554,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiRoute: typeof ApiRouteWithChildren
   ChangeLogRoute: typeof ChangeLogRoute
+  DocsRoute: typeof DocsRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   MissionRoute: typeof MissionRoute
@@ -626,6 +639,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/change-log': {
@@ -953,6 +973,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiRoute: ApiRouteWithChildren,
   ChangeLogRoute: ChangeLogRoute,
+  DocsRoute: DocsRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   MissionRoute: MissionRoute,
@@ -976,13 +997,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
