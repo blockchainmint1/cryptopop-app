@@ -11,7 +11,7 @@ const WIF = process.env.TXC_WIF!;
 const RPC_URL_RAW = process.env.TXC_RPC_URL ?? process.env.TXC_RPC_ADDRESS!;
 const RPC_USER = process.env.TXC_RPC_USER!;
 const RPC_PASS = process.env.TXC_RPC_PASS!;
-const MEMPOOL_BASE = (process.env.TXC_MEMPOOL_URL ?? "https://mempool.texitcoin.org/api").replace(/\/$/, "");
+const MEMPOOL_BASE = ((process.env.TXC_MEMPOOL_URL ?? "https://mempool.texitcoin.org").replace(/\/$/, "") + "/api").replace(/\/$/, "");
 const RPC_URL = RPC_URL_RAW.startsWith("http") ? RPC_URL_RAW : `https://${RPC_URL_RAW}`;
 
 async function rpc<T = any>(method: string, params: any[]): Promise<T> {
