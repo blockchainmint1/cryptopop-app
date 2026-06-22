@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createEventSignup } from "@/lib/signups.functions";
 import { getPublicEventBySlug } from "@/lib/public-event.functions";
+import { tzFriendlyName } from "@/lib/tz";
 
 type EventInfo = {
   slug: string;
@@ -39,25 +40,24 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
   },
 };
 
-// Format anchored to the event's configured tz so server (UTC) and client render
-// the same string and hydration matches.
+// Always render in the event's configured tz so server (UTC) and client render
+// the same string. Example output: "Sat Jun 28 · 3pm–6pm Central".
 function formatEventDate(startIso: string, endIso: string, tz: string) {
   const start = new Date(startIso);
   const end = new Date(endIso);
   const dayLabel = start.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
+    weekday: "short",
+    month: "short",
     day: "numeric",
-    year: "numeric",
     timeZone: tz,
   });
   const timeFmt = (d: Date) =>
     d
-      .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz, timeZoneName: "short" })
+      .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })
       .replace(":00 ", " ")
       .toLowerCase()
       .replace(/\s(am|pm)/, "$1");
-  return `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)}`;
+  return `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)} ${tzFriendlyName(tz, start)}`;
 }
 
 
@@ -117,16 +117,6 @@ function SignupPage() {
   const { dbEvent } = Route.useLoaderData();
   const fallback = EVENT_FALLBACK[slug];
   const staticBits = EVENT_STATIC[slug];
-  // Render in the event's tz on the server (stable for hydration), then swap
-  // to the viewer's local tz on the client so people see their own clock.
-  const [viewerTz, setViewerTz] = useState<string | null>(null);
-  useEffect(() => {
-    try {
-      setViewerTz(Intl.DateTimeFormat().resolvedOptions().timeZone || null);
-    } catch {
-      // ignore
-    }
-  }, []);
   const ev: EventInfo | undefined = dbEvent
     ? {
         slug: dbEvent.slug,
@@ -134,7 +124,7 @@ function SignupPage() {
         date: formatEventDate(
           dbEvent.start_at,
           dbEvent.end_at,
-          viewerTz ?? dbEvent.time_zone,
+          dbEvent.time_zone,
         ),
         location: staticBits?.location ?? fallback?.location ?? "",
         mapUrl: mapUrlFor(dbEvent.lat, dbEvent.lng),
