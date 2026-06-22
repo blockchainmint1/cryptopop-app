@@ -7,13 +7,13 @@ import { attachSupabaseAuth } from "./auth-client-middleware";
 const Input = z.object({ address: z.string().min(20).max(64) });
 
 function getPropertyId(): number {
-  const raw = process.env.TXC_TOKEN_ID ?? "35";
+  const raw = process.env.TXC_TOKEN_ID ?? "37";
   const n = Number(raw);
-  return Number.isInteger(n) && n > 0 ? n : 35;
+  return Number.isInteger(n) && n > 0 ? n : 37;
 }
 
 async function rpc<T>(method: string, params: unknown[]): Promise<T> {
-  const url = process.env.TXC_RPC_URL;
+  const url = process.env.TXC_RPC_URL ?? process.env.TXC_RPC_ADDRESS;
   const user = process.env.TXC_RPC_USER;
   const pass = process.env.TXC_RPC_PASS;
   if (!url || !user || !pass) throw new Error("TXC RPC not configured");

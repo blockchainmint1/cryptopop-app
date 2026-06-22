@@ -8,8 +8,9 @@
 //   4. Sign every input with MINTER_WIF (bitcoinjs-lib Psbt)
 //   5. POST raw hex to esplora /tx (broadcast), returns txid
 //
-// Env: TXC_RPC_URL, TXC_RPC_USER, TXC_RPC_PASS, MINTER_WIF, TXC_TOKEN_ID
-// Token defaults to #21 (POP, managed) if TXC_TOKEN_ID unset.
+// Env: TXC_RPC_URL (or TXC_RPC_ADDRESS), TXC_RPC_USER, TXC_RPC_PASS,
+//      MINTER_WIF (or TXC_WIF), TXC_TOKEN_ID
+// Token defaults to #37 (CryptoPOP .org, managed) if TXC_TOKEN_ID unset.
 
 import * as bitcoin from "bitcoinjs-lib";
 import { ECPairFactory } from "ecpair";
@@ -32,12 +33,19 @@ export const TXC_NETWORK: bitcoin.Network = {
 };
 
 function getPropertyId(): number {
-  // Property #35 = CryptoPOP (POP), indivisible, managed. Issued 2026-06-13.
-  // Issuer wallet: Thaotk2YYWiXG9EozU5dqABx7EB26fGrhn (MINTER_WIF).
-  const raw = process.env.TXC_TOKEN_ID ?? "35";
+  // Property #37 = CryptoPOP (POP), indivisible, managed. Issued for cryptopop.org.
+  // Issuer wallet: TbMELaDs18ANkWuF21iCWt7xYdmWx7GS9S (TXC_WIF).
+  // Issuance tx: 506581c4f1cbc392694e8602e9e0a65e02accb7bb73c6d630f8b87daa7c1ba8c
+  const raw = process.env.TXC_TOKEN_ID ?? "37";
   const n = Number(raw);
   if (!Number.isInteger(n) || n <= 0) throw new Error(`TXC_TOKEN_ID invalid: ${raw}`);
   return n;
+}
+
+function getMinterWif(): string {
+  const v = process.env.MINTER_WIF ?? process.env.TXC_WIF;
+  if (!v) throw new Error("MINTER_WIF (or TXC_WIF) not configured");
+  return v;
 }
 const DUST_SATS = 10000;
 const FEE_SATS_PER_VBYTE = 5;
@@ -52,7 +60,8 @@ function envOrThrow(name: string): string {
 }
 
 async function rpc<T = unknown>(method: string, params: unknown[]): Promise<T> {
-  const url = envOrThrow("TXC_RPC_URL");
+  const url = process.env.TXC_RPC_URL ?? process.env.TXC_RPC_ADDRESS;
+  if (!url) throw new Error("TXC_RPC_URL (or TXC_RPC_ADDRESS) not configured");
   const user = envOrThrow("TXC_RPC_USER");
   const pass = envOrThrow("TXC_RPC_PASS");
   const auth = "Basic " + Buffer.from(`${user}:${pass}`).toString("base64");
@@ -109,7 +118,7 @@ async function broadcast(rawHex: string): Promise<string> {
 // Decode the WIF using its embedded version byte (so we don't have to guess
 // TXC's WIF prefix). Returns the keypair + the discovered prefix for sanity.
 function loadKey(): { keyPair: ReturnType<typeof ECPair.fromWIF>; address: string } {
-  const wif = envOrThrow("MINTER_WIF");
+  const wif = getMinterWif();
   const decoded = bs58check.decode(wif);
   // 1 byte version, 32 byte priv, optional 1 byte compressed flag, optional 4 byte checksum
   const wifVersion = decoded[0];
@@ -172,7 +181,7 @@ export async function mintGrant(opts: {
   // Select UTXOs greedily (largest first) until we have enough for dust + est fee.
   // Fee estimate: vsize ≈ 10 + 148*inputs + 34*regular_outputs + (10 + opReturnLen)
   utxos.sort((a, b) => b.value - a.value);
-  const network: bitcoin.Network = { ...TXC_NETWORK, wif: bs58check.decode(envOrThrow("MINTER_WIF"))[0] };
+  const network: bitcoin.Network = { ...TXC_NETWORK, wif: bs58check.decode(getMinterWif())[0] };
   const opReturnData = buildOmniOpReturn(payloadHex);
   const opReturnScript = bitcoin.payments.embed({ data: [opReturnData] }).output!;
 
