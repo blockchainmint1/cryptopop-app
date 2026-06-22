@@ -189,17 +189,20 @@ function WalletHome() {
     };
   }, [address, fetchTxc]);
 
-  // Authoritative POP balance from on-chain Omni token #35. Overrides the
-  // mirror once it loads so the wallet reflects what's actually on-chain.
+  // On-chain POP balance from Omni token. Only override the awards-derived
+  // balance if the chain reports MORE than we've credited locally — a
+  // freshly-broadcast award sits at 0 on-chain until it confirms, and we
+  // don't want that to wipe the credited balance the user already earned.
   useEffect(() => {
     if (!address) return;
     let cancelled = false;
     fetchPopChain({ data: { address } })
       .then((r) => {
-        if (!cancelled && r.balance !== null) setBalance(r.balance);
+        if (cancelled || r.balance === null) return;
+        setBalance((prev) => (r.balance! > prev ? r.balance! : prev));
       })
       .catch(() => {
-        /* keep mirror value */
+        /* keep awards-derived value */
       });
     return () => {
       cancelled = true;
