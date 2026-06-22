@@ -251,7 +251,7 @@ function SignupPage() {
                     autoComplete="tel"
                     inputMode="tel"
                     className={inputCls}
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="(555) 123-4567"
                   />
                 </Field>
               </div>
