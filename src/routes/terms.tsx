@@ -92,7 +92,7 @@ function TermsPage() {
             <li>Use bots, scripts, or multiple accounts to claim a single event reward.</li>
             <li>Resell, repackage, or misrepresent POP as an investment product.</li>
             <li>Interfere with the service, our infrastructure, or the TXC network.</li>
-            <li>Use CryptoPOP for any unlawful purpose under Singapore law.</li>
+            <li>Use CryptoPOP for any unlawful purpose under applicable law.</li>
           </ul>
         </Section>
 
