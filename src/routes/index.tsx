@@ -20,7 +20,7 @@ function Landing() {
         {/* Background image (swap to <video> when uploaded) */}
         <img
           src={bbqHero}
-          alt="CryptoPOP at ONE°15 Marina"
+          alt="CryptoPOP — 4th of July at Bobby's"
           className="absolute inset-0 h-full w-full object-cover hero-zoom"
         />
 
