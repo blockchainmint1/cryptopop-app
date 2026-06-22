@@ -163,7 +163,7 @@ function ChangeLogPage() {
               <Link to="/" className="hover:text-foreground transition">Home</Link>
               <Link to="/mission" className="hover:text-foreground transition">Mission</Link>
               <Link to="/api" className="hover:text-foreground transition">Developer API</Link>
-              <Link to="/my-pop" className="hover:text-foreground transition">My POP</Link>
+              <Link to="/app" className="hover:text-foreground transition">My POP</Link>
             </nav>
           </div>
         </header>

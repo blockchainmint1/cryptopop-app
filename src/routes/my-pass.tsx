@@ -182,8 +182,7 @@ function PassCard({ signup }: { signup: Signup }) {
         </div>
 
         <Link
-          to="/my-pop"
-          search={{ id: signup.id }}
+          to="/app"
           className="mt-4 block w-full rounded-full bg-primary px-6 py-3 text-center font-display font-semibold text-primary-foreground hover:opacity-90"
         >
           View my POP & activities →

@@ -16,6 +16,9 @@ import {
   RefreshCw,
   CalendarDays,
   MapPin,
+  QrCode,
+  Sparkles,
+  Coins,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +64,22 @@ type PopTx = {
 };
 
 const BACKED_UP_KEY = "cryptopop:backed-up";
+
+type PopActivity = {
+  key: string;
+  label: string;
+  reward: number;
+  description: string;
+};
+
+// Master list of ways to earn POP. "Earned" is derived from the user's
+// pop_awards (matched by source) and event check-ins.
+const POP_ACTIVITY_CATALOG: PopActivity[] = [
+  { key: "signup", label: "Joined CryptoPOP", reward: 10, description: "Welcome bonus for signing up." },
+  { key: "check_in", label: "Event check-in", reward: 25, description: "Scan in at the event." },
+  { key: "quiz", label: "POP quiz", reward: 10, description: "Answer an on-site quiz." },
+  { key: "referral", label: "Brought a friend", reward: 25, description: "Friend signs up using your link." },
+];
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Wallet — CryptoPOP" }] }),
@@ -380,6 +399,7 @@ function WalletHome() {
                           ctaLabel={checkedIn ? "Checked in" : "View details"}
                           ctaDisabled={checkedIn}
                           badge={checkedIn ? "Checked in" : "Going"}
+                          passSignupId={membership?.signup_id}
                         />
                       </li>
                     );
@@ -529,6 +549,45 @@ function WalletHome() {
           )}
         </Card>
 
+        {/* Earn more POP — locked activities */}
+        {(() => {
+          const earned = new Set<string>(awards.map((a) => a.source));
+          if (eventsAttended > 0) earned.add("check_in");
+          const locked = POP_ACTIVITY_CATALOG.filter((a) => !earned.has(a.key));
+          if (locked.length === 0) return null;
+          return (
+            <Card className="p-6">
+              <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                Earn more POP
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Complete these at the event to collect more credits.
+              </p>
+              <ul className="mt-3 divide-y divide-border">
+                {locked.map((a) => (
+                  <li
+                    key={a.key}
+                    className="flex items-center gap-3 py-3 opacity-80"
+                  >
+                    <div className="rounded-full bg-muted p-2 text-muted-foreground">
+                      <Coins className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{a.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {a.description}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full border border-border px-2.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                      +{a.reward} POP
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          );
+        })()}
+
         <Card className="p-6">
           <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             TXC Transactions
@@ -620,11 +679,13 @@ function EventCard({
   ctaLabel,
   ctaDisabled,
   badge,
+  passSignupId,
 }: {
   ev: (typeof PUBLIC_EVENTS)[number];
   ctaLabel: string;
   ctaDisabled?: boolean;
   badge?: string;
+  passSignupId?: string;
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/40">
@@ -648,17 +709,36 @@ function EventCard({
           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>{ev.location}</span>
         </p>
-        {ctaDisabled ? (
-          <Button size="sm" variant="outline" disabled className="mt-2 w-full">
-            {ctaLabel}
-          </Button>
-        ) : (
-          <Button asChild size="sm" className="mt-2 w-full">
-            <Link to="/events/$slug/rsvp" params={{ slug: ev.slug }}>
+        <div className="mt-2 flex flex-col gap-2">
+          {passSignupId && (
+            <Button asChild size="sm" className="w-full">
+              <Link to="/my-pass" search={{ id: passSignupId }}>
+                <QrCode className="mr-1.5 h-3.5 w-3.5" /> Show my pass
+              </Link>
+            </Button>
+          )}
+          {ctaDisabled ? (
+            <Button
+              size="sm"
+              variant={passSignupId ? "outline" : "default"}
+              disabled
+              className="w-full"
+            >
               {ctaLabel}
-            </Link>
-          </Button>
-        )}
+            </Button>
+          ) : (
+            <Button
+              asChild
+              size="sm"
+              variant={passSignupId ? "outline" : "default"}
+              className="w-full"
+            >
+              <Link to="/events/$slug/rsvp" params={{ slug: ev.slug }}>
+                {ctaLabel}
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
