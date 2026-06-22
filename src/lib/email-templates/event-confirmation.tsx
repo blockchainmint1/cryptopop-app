@@ -16,7 +16,7 @@ import {
 import type { TemplateEntry } from './registry'
 
 const SITE_NAME = 'CryptoPOP'
-const SITE_URL = 'https://cryptopop.sg'
+const SITE_URL = 'https://cryptopop.asia'
 
 interface EventConfirmationProps {
   name?: string
@@ -33,11 +33,11 @@ interface EventConfirmationProps {
 const EventConfirmationEmail = ({
   name,
   passId,
-  eventName = 'Red, White & Barbecue — USA 250ᵗʰ',
-  eventDate = 'Saturday, 4 July 2026 · 11am – 4pm',
-  venueName = 'ONE°15 Marina, Sentosa Cove',
-  venueAddress = '11 Cove Drive, Sentosa Cove, Singapore 098497',
-  mapUrl = 'https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z',
+  eventName = 'CryptoPOP Event',
+  eventDate = 'TBA',
+  venueName = 'TBA',
+  venueAddress = '',
+  mapUrl = 'https://www.google.com/maps',
   popCredits = 10,
   walletAddress,
 }: EventConfirmationProps) => {
