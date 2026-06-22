@@ -74,7 +74,7 @@ function MissionPage() {
       <section className="overflow-hidden border-b border-border/60">
         <div className="mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-0">
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Education · Singapore
+            Education · Global
           </p>
           <h1 className="mt-3 font-display text-5xl font-bold tracking-tight md:text-6xl">
             <span className="text-neon-cyan">Connect.</span>{" "}
