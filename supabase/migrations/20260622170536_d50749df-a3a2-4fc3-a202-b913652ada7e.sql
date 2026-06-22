@@ -1,0 +1,1 @@
+ALTER TABLE public.event_signups ADD COLUMN IF NOT EXISTS external_wallet text;
