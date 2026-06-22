@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createEventSignup } from "@/lib/signups.functions";
+import { getPublicEventBySlug } from "@/lib/public-event.functions";
 
 type EventInfo = {
   slug: string;
@@ -19,7 +20,14 @@ type EventInfo = {
   blurb: string;
 };
 
-const EVENTS: Record<string, EventInfo> = {
+const EVENT_STATIC: Record<string, { location: string; mapUrl: string }> = {
+  "4th-at-bobbys": {
+    location: "The Lakehouse",
+    mapUrl: "https://www.google.com/maps",
+  },
+};
+
+const EVENT_FALLBACK: Record<string, EventInfo> = {
   "4th-at-bobbys": {
     slug: "4th-at-bobbys",
     name: "4th of July at The Lakehouse",
@@ -31,13 +39,37 @@ const EVENTS: Record<string, EventInfo> = {
   },
 };
 
+function formatEventDate(startIso: string, endIso: string) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  const dayLabel = start.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timeFmt = (d: Date) =>
+    d
+      .toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+      .replace(":00", "")
+      .toLowerCase();
+  return `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)}`;
+}
 
 export const Route = createFileRoute("/events/$slug/rsvp")({
-  head: ({ params }) => {
-    const ev = EVENTS[params.slug];
-    const title = ev ? `Sign up — ${ev.name}` : "Sign up — CryptoPOP";
-    const desc = ev
-      ? `Reserve your spot at ${ev.name} on ${ev.date}. Free, family-friendly, education-only.`
+  loader: async ({ params }) => {
+    const row = await getPublicEventBySlug({ data: { slug: params.slug } });
+    return { dbEvent: row };
+  },
+  head: ({ params, loaderData }) => {
+    const fallback = EVENT_FALLBACK[params.slug];
+    const name = loaderData?.dbEvent?.name ?? fallback?.name;
+    const dateLabel = loaderData?.dbEvent
+      ? formatEventDate(loaderData.dbEvent.start_at, loaderData.dbEvent.end_at)
+      : fallback?.date;
+    const title = name ? `Sign up — ${name}` : "Sign up — CryptoPOP";
+    const desc = name
+      ? `Reserve your spot at ${name}${dateLabel ? ` on ${dateLabel}` : ""}. Free, family-friendly, education-only.`
       : "Sign up to the next CryptoPOP event.";
     return {
       meta: [
