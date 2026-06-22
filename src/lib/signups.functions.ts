@@ -36,6 +36,18 @@ export const createEventSignup = createServerFn({ method: "POST" })
     const instagram = data.instagram_handle?.replace(/^@/, "").trim() || null;
     const telegram = data.telegram_handle?.replace(/^@/, "").trim() || null;
     const signupReward = await getRewardAmount("event_signup", 10);
+
+    // Resolve event_id from slug so the signup is linked to its event.
+    let eventId: string | null = null;
+    if (data.event_slug) {
+      const { data: ev } = await supabaseAdmin
+        .from("events")
+        .select("id")
+        .eq("slug", data.event_slug)
+        .maybeSingle();
+      eventId = ev?.id ?? null;
+    }
+
     const { data: inserted, error } = await supabaseAdmin
       .from("event_signups")
       .insert({
@@ -50,6 +62,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
         completed_activities: ["signup"],
         signup_source: "website",
         status: "confirmed",
+        event_id: eventId,
       })
       .select("id")
       .single();
