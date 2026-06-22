@@ -23,7 +23,7 @@ export type Database = {
           from_email: string
           from_name: string
           html: string
-          org_id: string | null
+          org_id: string
           preview_text: string | null
           recipients_raw: string
           reply_to: string | null
@@ -39,7 +39,7 @@ export type Database = {
           from_email: string
           from_name: string
           html: string
-          org_id?: string | null
+          org_id?: string
           preview_text?: string | null
           recipients_raw: string
           reply_to?: string | null
@@ -55,7 +55,7 @@ export type Database = {
           from_email?: string
           from_name?: string
           html?: string
-          org_id?: string | null
+          org_id?: string
           preview_text?: string | null
           recipients_raw?: string
           reply_to?: string | null
@@ -80,7 +80,7 @@ export type Database = {
           email: string
           error_message: string | null
           id: string
-          org_id: string | null
+          org_id: string
           queued_at: string
           sent_at: string | null
           ses_message_id: string | null
@@ -93,7 +93,7 @@ export type Database = {
           email: string
           error_message?: string | null
           id?: string
-          org_id?: string | null
+          org_id?: string
           queued_at?: string
           sent_at?: string | null
           ses_message_id?: string | null
@@ -106,7 +106,7 @@ export type Database = {
           email?: string
           error_message?: string | null
           id?: string
-          org_id?: string | null
+          org_id?: string
           queued_at?: string
           sent_at?: string | null
           ses_message_id?: string | null
@@ -139,7 +139,7 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
-          org_id: string | null
+          org_id: string
           qr_payload: string | null
           quiz_reward: number
           referral_reward: number
@@ -158,7 +158,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
-          org_id?: string | null
+          org_id?: string
           qr_payload?: string | null
           quiz_reward?: number
           referral_reward?: number
@@ -177,7 +177,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
-          org_id?: string | null
+          org_id?: string
           qr_payload?: string | null
           quiz_reward?: number
           referral_reward?: number
@@ -362,7 +362,7 @@ export type Database = {
           event_id: string
           id: string
           options: Json
-          org_id: string | null
+          org_id: string
           position: number
           question: string
           reward: number
@@ -373,7 +373,7 @@ export type Database = {
           event_id: string
           id?: string
           options: Json
-          org_id?: string | null
+          org_id?: string
           position?: number
           question: string
           reward?: number
@@ -384,7 +384,7 @@ export type Database = {
           event_id?: string
           id?: string
           options?: Json
-          org_id?: string | null
+          org_id?: string
           position?: number
           question?: string
           reward?: number
@@ -460,7 +460,7 @@ export type Database = {
           instagram_handle: string | null
           is_friend: boolean
           mobile_number: string
-          org_id: string | null
+          org_id: string
           pop_credits: number
           signed_up_at: string
           signup_source: string
@@ -482,7 +482,7 @@ export type Database = {
           instagram_handle?: string | null
           is_friend?: boolean
           mobile_number: string
-          org_id?: string | null
+          org_id?: string
           pop_credits?: number
           signed_up_at?: string
           signup_source?: string
@@ -504,7 +504,7 @@ export type Database = {
           instagram_handle?: string | null
           is_friend?: boolean
           mobile_number?: string
-          org_id?: string | null
+          org_id?: string
           pop_credits?: number
           signed_up_at?: string
           signup_source?: string
@@ -541,7 +541,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
-          org_id: string | null
+          org_id: string
           qr_active_minutes_before: number
           radius_m: number
           referral_reward: number
@@ -561,7 +561,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
-          org_id?: string | null
+          org_id?: string
           qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
@@ -581,7 +581,7 @@ export type Database = {
           lat?: number
           lng?: number
           name?: string
-          org_id?: string | null
+          org_id?: string
           qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
@@ -696,7 +696,7 @@ export type Database = {
           email: string
           error: string | null
           id: string
-          org_id: string | null
+          org_id: string
           sent_at: string | null
           source: string
           source_id: string | null
@@ -710,7 +710,7 @@ export type Database = {
           email: string
           error?: string | null
           id?: string
-          org_id?: string | null
+          org_id?: string
           sent_at?: string | null
           source: string
           source_id?: string | null
@@ -724,7 +724,7 @@ export type Database = {
           email?: string
           error?: string | null
           id?: string
-          org_id?: string | null
+          org_id?: string
           sent_at?: string | null
           source?: string
           source_id?: string | null
@@ -807,7 +807,7 @@ export type Database = {
           label: string
           lat: number | null
           lng: number | null
-          org_id: string | null
+          org_id: string
           pop_reward: number
           radius_m: number | null
           single_use: boolean
@@ -825,7 +825,7 @@ export type Database = {
           label: string
           lat?: number | null
           lng?: number | null
-          org_id?: string | null
+          org_id?: string
           pop_reward: number
           radius_m?: number | null
           single_use?: boolean
@@ -843,7 +843,7 @@ export type Database = {
           label?: string
           lat?: number | null
           lng?: number | null
-          org_id?: string | null
+          org_id?: string
           pop_reward?: number
           radius_m?: number | null
           single_use?: boolean
@@ -955,7 +955,7 @@ export type Database = {
           enabled: boolean
           id: string
           label: string
-          org_id: string | null
+          org_id: string
           pop_amount: number
           updated_at: string
         }
@@ -966,7 +966,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           label: string
-          org_id?: string | null
+          org_id?: string
           pop_amount: number
           updated_at?: string
         }
@@ -977,7 +977,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           label?: string
-          org_id?: string | null
+          org_id?: string
           pop_amount?: number
           updated_at?: string
         }
