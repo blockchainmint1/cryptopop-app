@@ -127,6 +127,7 @@ function SignupPage() {
           is_friend: parsed.data.is_friend === "yes",
           guest_count:
             parsed.data.is_friend === "yes" ? parsed.data.guest_count : 0,
+          event_slug: slug,
         },
       });
       try {

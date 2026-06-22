@@ -411,6 +411,7 @@ export type Database = {
           completed_activities: string[]
           created_at: string
           email: string
+          event_id: string | null
           full_name: string
           guest_count: number
           id: string
@@ -430,6 +431,7 @@ export type Database = {
           completed_activities?: string[]
           created_at?: string
           email: string
+          event_id?: string | null
           full_name: string
           guest_count?: number
           id?: string
@@ -449,6 +451,7 @@ export type Database = {
           completed_activities?: string[]
           created_at?: string
           email?: string
+          event_id?: string | null
           full_name?: string
           guest_count?: number
           id?: string
@@ -462,7 +465,15 @@ export type Database = {
           telegram_handle?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "event_signups_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -479,6 +490,7 @@ export type Database = {
           qr_active_minutes_before: number
           radius_m: number
           referral_reward: number
+          slug: string | null
           start_at: string
           updated_at: string
         }
@@ -496,6 +508,7 @@ export type Database = {
           qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
+          slug?: string | null
           start_at: string
           updated_at?: string
         }
@@ -513,6 +526,7 @@ export type Database = {
           qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
+          slug?: string | null
           start_at?: string
           updated_at?: string
         }
