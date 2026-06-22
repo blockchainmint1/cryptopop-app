@@ -157,7 +157,7 @@ function SignupPage() {
           <div className="mb-6 overflow-hidden rounded-3xl border border-border">
             <img
               src={bbqHero}
-              alt="Red, White & Barbecue — USA 250 at ONE°15 Marina"
+              alt="Red, White & Barbecue — USA 250th"
               width={1536}
               height={1024}
               className="h-48 w-full object-cover md:h-64"
@@ -213,7 +213,7 @@ function SignupPage() {
                   maxLength={120}
                   autoComplete="name"
                   className={inputCls}
-                  placeholder="Jane Tan"
+                  placeholder="John Smith"
                 />
               </Field>
 
@@ -239,7 +239,7 @@ function SignupPage() {
                     autoComplete="tel"
                     inputMode="tel"
                     className={inputCls}
-                    placeholder="+65 9123 4567"
+                    placeholder="+1 (555) 123-4567"
                   />
                 </Field>
               </div>
