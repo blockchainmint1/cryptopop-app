@@ -1,0 +1,1 @@
+ALTER TABLE public.event_signups ADD COLUMN guest_count integer NOT NULL DEFAULT 0;

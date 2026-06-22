@@ -25,6 +25,7 @@ const eventSignupSchema = z.object({
   instagram_handle: z.string().trim().max(64).optional().nullable(),
   telegram_handle: z.string().trim().max(64).optional().nullable(),
   is_friend: z.boolean(),
+  guest_count: z.number().int().min(0).max(20).default(0),
 });
 
 // Public: create a signup without exposing the private signups table to public reads.
@@ -43,6 +44,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
         instagram_handle: instagram,
         telegram_handle: telegram,
         is_friend: data.is_friend,
+        guest_count: data.is_friend ? data.guest_count : 0,
         pop_credits: signupReward,
         completed_activities: ["signup"],
         signup_source: "website",
@@ -90,6 +92,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
       instagram,
       telegram,
       isFriend: data.is_friend,
+      guestCount: data.is_friend ? data.guest_count : 0,
       signupId: inserted.id,
     });
 

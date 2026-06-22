@@ -51,18 +51,24 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
   component: SignupPage,
 });
 
-const signupSchema = z.object({
-  full_name: z.string().trim().min(1, "Your name is required").max(120),
-  email: z.string().trim().email("Enter a valid email").max(254),
-  mobile_number: z
-    .string()
-    .trim()
-    .min(3, "Mobile number is too short")
-    .max(32, "Mobile number is too long"),
-  instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
-  telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
-  is_friend: z.enum(["yes", "no"]),
-});
+const signupSchema = z
+  .object({
+    full_name: z.string().trim().min(1, "Your name is required").max(120),
+    email: z.string().trim().email("Enter a valid email").max(254),
+    mobile_number: z
+      .string()
+      .trim()
+      .min(3, "Mobile number is too short")
+      .max(32, "Mobile number is too long"),
+    instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    is_friend: z.enum(["yes", "no"]),
+    guest_count: z.number().int().min(0).max(20),
+  })
+  .refine((d) => d.is_friend === "no" || d.guest_count >= 1, {
+    message: "How many guests are you bringing?",
+    path: ["guest_count"],
+  });
 
 function SignupPage() {
   const { slug } = Route.useParams();
@@ -70,6 +76,8 @@ function SignupPage() {
   const navigate = useNavigate();
   const saveSignup = useServerFn(createEventSignup);
   const [submitting, setSubmitting] = useState(false);
+  const [isFriend, setIsFriend] = useState<"yes" | "no">("no");
+  const [guestCount, setGuestCount] = useState(1);
 
   if (!ev) {
     return (
@@ -101,6 +109,7 @@ function SignupPage() {
       instagram_handle: form.get("instagram_handle"),
       telegram_handle: form.get("telegram_handle"),
       is_friend: form.get("is_friend"),
+      guest_count: Number(form.get("guest_count") ?? 0),
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
@@ -116,6 +125,8 @@ function SignupPage() {
           instagram_handle: parsed.data.instagram_handle || null,
           telegram_handle: parsed.data.telegram_handle || null,
           is_friend: parsed.data.is_friend === "yes",
+          guest_count:
+            parsed.data.is_friend === "yes" ? parsed.data.guest_count : 0,
         },
       });
       try {
@@ -281,7 +292,8 @@ function SignupPage() {
                         name="is_friend"
                         value={v}
                         required
-                        defaultChecked={v === "no"}
+                        checked={isFriend === v}
+                        onChange={() => setIsFriend(v)}
                         className="sr-only"
                       />
                       {v}
@@ -289,6 +301,46 @@ function SignupPage() {
                   ))}
                 </div>
               </fieldset>
+
+              {isFriend === "yes" && (
+                <Field label="How many guests?" htmlFor="guest_count">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount((n) => Math.max(1, n - 1))}
+                      className="h-11 w-11 rounded-xl border border-border bg-background font-display text-lg transition hover:border-primary hover:text-primary"
+                      aria-label="Decrease guests"
+                    >
+                      −
+                    </button>
+                    <input
+                      id="guest_count"
+                      name="guest_count"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={guestCount}
+                      onChange={(e) =>
+                        setGuestCount(
+                          Math.max(
+                            1,
+                            Math.min(20, Number(e.target.value) || 1),
+                          ),
+                        )
+                      }
+                      className={`${inputCls} text-center`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount((n) => Math.min(20, n + 1))}
+                      className="h-11 w-11 rounded-xl border border-border bg-background font-display text-lg transition hover:border-primary hover:text-primary"
+                      aria-label="Increase guests"
+                    >
+                      +
+                    </button>
+                  </div>
+                </Field>
+              )}
 
               <button
                 type="submit"
