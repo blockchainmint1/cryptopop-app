@@ -43,6 +43,22 @@ function formatDate(iso: string) {
   });
 }
 
+function usaPreview(local: string) {
+  if (!local) return "—";
+  const d = new Date(local);
+  if (isNaN(d.getTime())) return "—";
+  const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const pretty = d.toLocaleString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${iso} · ${pretty}`;
+}
+
 function AdminEventsList() {
   const list = useServerFn(listAdminEvents);
   const create = useServerFn(createAdminEvent);
