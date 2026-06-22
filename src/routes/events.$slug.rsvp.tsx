@@ -74,7 +74,7 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
     const fallback = EVENT_FALLBACK[params.slug];
     const name = loaderData?.dbEvent?.name ?? fallback?.name;
     const dateLabel = loaderData?.dbEvent
-      ? formatEventDate(loaderData.dbEvent.start_at, loaderData.dbEvent.end_at)
+      ? formatEventDate(loaderData.dbEvent.start_at, loaderData.dbEvent.end_at, loaderData.dbEvent.time_zone)
       : fallback?.date;
     const title = name ? `Sign up — ${name}` : "Sign up — CryptoPOP";
     const desc = name
@@ -121,7 +121,7 @@ function SignupPage() {
     ? {
         slug: dbEvent.slug,
         name: dbEvent.name,
-        date: formatEventDate(dbEvent.start_at, dbEvent.end_at),
+        date: formatEventDate(dbEvent.start_at, dbEvent.end_at, dbEvent.time_zone),
         location: staticBits?.location ?? fallback?.location ?? "",
         mapUrl: mapUrlFor(dbEvent.lat, dbEvent.lng),
         blurb: dbEvent.description ?? fallback?.blurb ?? "",
