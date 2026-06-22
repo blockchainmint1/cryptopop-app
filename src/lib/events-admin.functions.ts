@@ -43,7 +43,7 @@ export const listAdminEvents = createServerFn({ method: "GET" })
     const { data: events, error } = await supabaseAdmin
       .from("events")
       .select(
-        "id, name, description, cover_url, lat, lng, radius_m, start_at, end_at, base_reward, referral_reward, qr_active_minutes_before, created_at",
+        "id, name, description, cover_url, lat, lng, radius_m, start_at, end_at, time_zone, base_reward, referral_reward, qr_active_minutes_before, created_at",
       )
       // Hide legacy seed/test rows — those live under POP Awards now.
       .not("name", "ilike", "CryptoPOP Test Drop%")
@@ -87,6 +87,7 @@ const CreateInput = z.object({
   radius_m: z.number().int().min(20).max(20000),
   start_at: z.string().min(1),
   end_at: z.string().min(1),
+  time_zone: z.string().trim().min(1).max(64).default("America/Los_Angeles"),
   base_reward: z.number().min(0).max(100000),
   referral_reward: z.number().min(0).max(100000),
   qr_active_minutes_before: z.number().int().min(0).max(1440).default(0),
@@ -109,6 +110,7 @@ export const createAdminEvent = createServerFn({ method: "POST" })
         radius_m: data.radius_m,
         start_at: data.start_at,
         end_at: data.end_at,
+        time_zone: data.time_zone,
         base_reward: data.base_reward,
         referral_reward: data.referral_reward,
         qr_active_minutes_before: data.qr_active_minutes_before ?? 0,
@@ -140,6 +142,7 @@ export const updateAdminEvent = createServerFn({ method: "POST" })
         radius_m: rest.radius_m,
         start_at: rest.start_at,
         end_at: rest.end_at,
+        time_zone: rest.time_zone,
         base_reward: rest.base_reward,
         referral_reward: rest.referral_reward,
         qr_active_minutes_before: rest.qr_active_minutes_before ?? 0,
