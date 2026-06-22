@@ -16,7 +16,7 @@ import {
 import type { TemplateEntry } from './registry'
 
 const SITE_NAME = 'CryptoPOP'
-const SITE_URL = 'https://cryptopop.asia'
+const SITE_URL = 'https://cryptopop.org'
 
 interface EventConfirmationProps {
   name?: string
@@ -121,7 +121,7 @@ const EventConfirmationEmail = ({
           <Text style={text}>
             Sign in with the same email at{' '}
             <Link href={`${SITE_URL}/login`} style={link}>
-              cryptopop.asia/login
+              cryptopop.org/login
             </Link>{' '}
             — it's magic-link, no password. Inside you'll see all your events,
             your live POP balance, and your check-in QR on the go. Your sandbox
@@ -161,7 +161,7 @@ const EventConfirmationEmail = ({
             </Link>
             <Text style={socialDot}>·</Text>
             <Link href={SITE_URL} style={socialLink}>
-              cryptopop.asia
+              cryptopop.org
             </Link>
           </Section>
 

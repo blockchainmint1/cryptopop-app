@@ -100,7 +100,7 @@ export const previewBlast = createServerFn({ method: "POST" })
       "./blast.server"
     );
     const token = await ensureUnsubscribeToken(data.sampleEmail.toLowerCase());
-    const url = `https://cryptopop.asia/unsubscribe?token=${encodeURIComponent(token)}`;
+    const url = `https://cryptopop.org/unsubscribe?token=${encodeURIComponent(token)}`;
     return { html: wrapWithFooter(data.html, url) };
   });
 
@@ -167,7 +167,7 @@ export const sendBlast = createServerFn({ method: "POST" })
     // Fire-and-forget kick the drainer
     try {
       const origin =
-        process.env.SITE_URL || "https://cryptopop.asia";
+        process.env.SITE_URL || "https://cryptopop.org";
       void fetch(`${origin}/api/public/hooks/blast-drain`, {
         method: "POST",
       }).catch(() => {});

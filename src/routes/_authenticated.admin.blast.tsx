@@ -19,7 +19,7 @@ function BlastLayout() {
           <p className="text-sm text-muted-foreground mt-1">
             Send branded email blasts via Amazon SES. From{" "}
             <span className="font-mono text-foreground">
-              noreply@cryptopop.asia
+              noreply@cryptopop.org
             </span>
             .
           </p>

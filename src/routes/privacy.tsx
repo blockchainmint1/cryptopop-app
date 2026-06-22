@@ -213,8 +213,8 @@ function PrivacyPage() {
               encryption at rest for wallet keys, row-level access controls on
               our database, and least-privilege server credentials. No system is
               perfectly secure; please report suspected vulnerabilities to{" "}
-              <BrandLink href="mailto:security@cryptopop.asia">
-                security@cryptopop.asia
+              <BrandLink href="mailto:security@cryptopop.org">
+                security@cryptopop.org
               </BrandLink>
               .
             </p>
@@ -234,8 +234,8 @@ function PrivacyPage() {
             </ul>
             <p>
               To exercise these rights, email our Data Protection Officer at{" "}
-              <BrandLink href="mailto:dpo@cryptopop.asia">
-                dpo@cryptopop.asia
+              <BrandLink href="mailto:dpo@cryptopop.org">
+                dpo@cryptopop.org
               </BrandLink>
               . If you're unsatisfied with our response, you may contact your
               local data protection authority.
@@ -267,8 +267,8 @@ function PrivacyPage() {
           <Section title="12. Contact">
             <p>
               Data Protection Officer · CryptoPOP ·{" "}
-              <BrandLink href="mailto:dpo@cryptopop.asia">
-                dpo@cryptopop.asia
+              <BrandLink href="mailto:dpo@cryptopop.org">
+                dpo@cryptopop.org
               </BrandLink>
             </p>
           </Section>

@@ -4,8 +4,8 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 const SITE_NAME = 'CryptoPOP'
-const SENDER_DOMAIN = 'notify.cryptopop.asia'
-const FROM_DOMAIN = 'cryptopop.asia'
+const SENDER_DOMAIN = 'notify.cryptopop.org'
+const FROM_DOMAIN = 'cryptopop.org'
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)

@@ -150,8 +150,8 @@ function TermsPage() {
         <Section title="12. Contact">
           <p>
             Questions about these Terms? Email{" "}
-            <a className="underline hover:text-foreground" href="mailto:hello@cryptopop.asia">
-              hello@cryptopop.asia
+            <a className="underline hover:text-foreground" href="mailto:hello@cryptopop.org">
+              hello@cryptopop.org
             </a>
             .
           </p>

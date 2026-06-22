@@ -33,9 +33,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "cryptopop"
-const SENDER_DOMAIN = "notify.cryptopop.asia"
-const ROOT_DOMAIN = "cryptopop.asia"
-const FROM_DOMAIN = "cryptopop.asia"
+const SENDER_DOMAIN = "notify.cryptopop.org"
+const ROOT_DOMAIN = "cryptopop.org"
+const FROM_DOMAIN = "cryptopop.org"
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
@@ -150,7 +150,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         const text = await render(element, { plainText: true })
 
         // Send directly via SES (bypasses the Lovable email queue's 100/hr cap
-        // and uses our verified noreply@cryptopop.asia identity).
+        // and uses our verified noreply@cryptopop.org identity).
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 

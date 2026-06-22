@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendSesEmail, htmlToText, FROM_EMAIL } from "./ses.server";
 
-const SITE_URL = "https://cryptopop.asia";
+const SITE_URL = "https://cryptopop.org";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function parseRecipients(raw: string): {
@@ -78,7 +78,7 @@ export function wrapWithFooter(html: string, unsubscribeUrl: string): string {
   <tr><td style="padding:16px 24px;text-align:center;font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#888;line-height:1.5;">
     You're receiving this because you signed up to a CryptoPOP event.<br/>
     <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Unsubscribe</a> &middot;
-    <a href="${SITE_URL}" style="color:#888;text-decoration:underline;">cryptopop.asia</a>
+    <a href="${SITE_URL}" style="color:#888;text-decoration:underline;">cryptopop.org</a>
   </td></tr>
 </table>`;
   if (/<\/body>/i.test(html)) {
