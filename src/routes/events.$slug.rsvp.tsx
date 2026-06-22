@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { ArrowLeft, CalendarDays, MapPin, Anchor } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
 import { SiteFooter } from "@/components/site-footer";
@@ -18,7 +18,17 @@ type EventInfo = {
   blurb: string;
 };
 
-const EVENTS: Record<string, EventInfo> = {};
+const EVENTS: Record<string, EventInfo> = {
+  "4th-at-bobbys": {
+    slug: "4th-at-bobbys",
+    name: "4th of July at Bobby's",
+    date: "Saturday, July 4, 2026",
+    location: "Bobby's",
+    mapUrl: "https://www.google.com/maps",
+    blurb:
+      "Join us for the 4th at Bobby's — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
+  },
+};
 
 
 export const Route = createFileRoute("/events/$slug/rsvp")({
@@ -165,10 +175,6 @@ function SignupPage() {
               ev.name
             )}
           </h1>
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            <Anchor className="h-3.5 w-3.5 text-primary" />
-            Complimentary exploratory yacht charters
-          </p>
           <div className="mt-6 space-y-3 text-sm">
             <p className="flex items-center gap-2 text-muted-foreground">
               <CalendarDays className="h-4 w-4 text-primary" />

@@ -17,10 +17,19 @@ export type PublicEvent = {
 
 import bbqHero from "@/assets/usa-250-bbq.png";
 
-export const PUBLIC_EVENTS: PublicEvent[] = [];
-// Note: July 4 Marina BBQ removed — event cancelled.
-// Hero asset retained for future use:
-void bbqHero;
+export const PUBLIC_EVENTS: PublicEvent[] = [
+  {
+    slug: "4th-at-bobbys",
+    name: "4th of July at Bobby's",
+    dateLabel: "Saturday, July 4, 2026",
+    endsAt: "2026-07-05T03:00:00Z",
+    location: "Bobby's",
+    mapUrl: "https://www.google.com/maps",
+    blurb:
+      "Join us for the 4th at Bobby's — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
+    heroUrl: bbqHero,
+  },
+];
 
 
 export function findPublicEvent(slug: string): PublicEvent | undefined {
