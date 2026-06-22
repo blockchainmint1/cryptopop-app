@@ -49,6 +49,18 @@ export const createEventSignup = createServerFn({ method: "POST" })
       eventId = ev?.id ?? null;
     }
 
+    // Optional: user-supplied external TXC wallet. If provided & valid we mint
+    // POP directly to it and skip creating a custodial wallet for their email.
+    let externalWallet: string | null = null;
+    const rawExternal = data.external_wallet?.trim();
+    if (rawExternal) {
+      try {
+        externalWallet = validateTxcAddress(rawExternal);
+      } catch {
+        throw new Error("invalid_wallet_address");
+      }
+    }
+
     const { data: inserted, error } = await supabaseAdmin
       .from("event_signups")
       .insert({
@@ -64,6 +76,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
         signup_source: "website",
         status: "confirmed",
         event_id: eventId,
+        external_wallet: externalWallet,
       })
       .select("id")
       .single();
@@ -74,16 +87,17 @@ export const createEventSignup = createServerFn({ method: "POST" })
     }
     const lcEmail = data.email.toLowerCase();
 
-    // Ensure a wallet exists for this email so the confirmation email can
-    // include it, and award the 10 signup POP. Both must be awaited —
-    // Cloudflare Workers terminate background tasks once the response is
-    // sent, so fire-and-forget would drop the on-chain mint + ledger row.
-    let walletAddress: string | null = null;
-    try {
-      const w = await ensureEmailWallet(lcEmail);
-      walletAddress = w.walletAddress;
-    } catch (e) {
-      console.error("[createEventSignup] ensureEmailWallet", e);
+    // Resolve the wallet shown in the confirmation email + POP mint target.
+    // If the user gave us their own TXC address, use it and do NOT spin up a
+    // custodial email wallet. Otherwise ensure their custodial one exists.
+    let walletAddress: string | null = externalWallet;
+    if (!externalWallet) {
+      try {
+        const w = await ensureEmailWallet(lcEmail);
+        walletAddress = w.walletAddress;
+      } catch (e) {
+        console.error("[createEventSignup] ensureEmailWallet", e);
+      }
     }
     try {
       await awardPop({
@@ -92,12 +106,14 @@ export const createEventSignup = createServerFn({ method: "POST" })
         source: "event_signup",
         sourceId: inserted.id,
         memo: "CryptoPOP signup",
+        walletOverride: externalWallet,
       });
     } catch (e) {
       // awardPop catches mint failures internally; this only catches insert
       // failures (e.g. RLS/constraint). Don't break the signup.
       console.error("[createEventSignup] awardPop", e);
     }
+
 
     // Telegram notification (awaited so it lands before Worker terminates)
     await notifyEventSignup({
