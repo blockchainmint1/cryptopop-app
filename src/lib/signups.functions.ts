@@ -44,6 +44,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
         instagram_handle: instagram,
         telegram_handle: telegram,
         is_friend: data.is_friend,
+        guest_count: data.is_friend ? data.guest_count : 0,
         pop_credits: signupReward,
         completed_activities: ["signup"],
         signup_source: "website",
