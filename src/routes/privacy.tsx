@@ -153,7 +153,7 @@ function PrivacyPage() {
               <li>
                 To respond to support requests and communicate service updates.
               </li>
-              <li>To comply with legal obligations under Singapore law.</li>
+              <li>To comply with legal obligations under applicable law.</li>
             </ul>
           </Section>
 
