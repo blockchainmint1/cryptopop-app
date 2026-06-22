@@ -248,7 +248,7 @@ function Landing() {
               </h2>
               <p className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                Saturday, July 4, 2026
+                Saturday, July 4, 2026 · 3pm–dark
               </p>
               <p className="mt-5 text-lg text-muted-foreground">
                 Join us for the 4th at The Lakehouse — play the CryptoPOP
