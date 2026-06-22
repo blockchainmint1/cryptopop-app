@@ -23,6 +23,7 @@ export type Database = {
           from_email: string
           from_name: string
           html: string
+          org_id: string | null
           preview_text: string | null
           recipients_raw: string
           reply_to: string | null
@@ -38,6 +39,7 @@ export type Database = {
           from_email: string
           from_name: string
           html: string
+          org_id?: string | null
           preview_text?: string | null
           recipients_raw: string
           reply_to?: string | null
@@ -53,6 +55,7 @@ export type Database = {
           from_email?: string
           from_name?: string
           html?: string
+          org_id?: string | null
           preview_text?: string | null
           recipients_raw?: string
           reply_to?: string | null
@@ -60,7 +63,15 @@ export type Database = {
           subject?: string
           total_recipients?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blast_campaigns_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blast_recipients: {
         Row: {
@@ -69,6 +80,7 @@ export type Database = {
           email: string
           error_message: string | null
           id: string
+          org_id: string | null
           queued_at: string
           sent_at: string | null
           ses_message_id: string | null
@@ -81,6 +93,7 @@ export type Database = {
           email: string
           error_message?: string | null
           id?: string
+          org_id?: string | null
           queued_at?: string
           sent_at?: string | null
           ses_message_id?: string | null
@@ -93,6 +106,7 @@ export type Database = {
           email?: string
           error_message?: string | null
           id?: string
+          org_id?: string | null
           queued_at?: string
           sent_at?: string | null
           ses_message_id?: string | null
@@ -107,6 +121,13 @@ export type Database = {
             referencedRelation: "blast_campaigns"
             referencedColumns: ["campaign_id"]
           },
+          {
+            foreignKeyName: "blast_recipients_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       claims: {
@@ -118,6 +139,7 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          org_id: string | null
           qr_payload: string | null
           quiz_reward: number
           referral_reward: number
@@ -136,6 +158,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          org_id?: string | null
           qr_payload?: string | null
           quiz_reward?: number
           referral_reward?: number
@@ -154,6 +177,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          org_id?: string | null
           qr_payload?: string | null
           quiz_reward?: number
           referral_reward?: number
@@ -170,6 +194,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -331,6 +362,7 @@ export type Database = {
           event_id: string
           id: string
           options: Json
+          org_id: string | null
           position: number
           question: string
           reward: number
@@ -341,6 +373,7 @@ export type Database = {
           event_id: string
           id?: string
           options: Json
+          org_id?: string | null
           position?: number
           question: string
           reward?: number
@@ -351,6 +384,7 @@ export type Database = {
           event_id?: string
           id?: string
           options?: Json
+          org_id?: string | null
           position?: number
           question?: string
           reward?: number
@@ -361,6 +395,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_quiz_questions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -419,6 +460,7 @@ export type Database = {
           instagram_handle: string | null
           is_friend: boolean
           mobile_number: string
+          org_id: string | null
           pop_credits: number
           signed_up_at: string
           signup_source: string
@@ -440,6 +482,7 @@ export type Database = {
           instagram_handle?: string | null
           is_friend?: boolean
           mobile_number: string
+          org_id?: string | null
           pop_credits?: number
           signed_up_at?: string
           signup_source?: string
@@ -461,6 +504,7 @@ export type Database = {
           instagram_handle?: string | null
           is_friend?: boolean
           mobile_number?: string
+          org_id?: string | null
           pop_credits?: number
           signed_up_at?: string
           signup_source?: string
@@ -474,6 +518,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_signups_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -490,6 +541,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
+          org_id: string | null
           qr_active_minutes_before: number
           radius_m: number
           referral_reward: number
@@ -509,6 +561,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
+          org_id?: string | null
           qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
@@ -528,12 +581,110 @@ export type Database = {
           lat?: number
           lng?: number
           name?: string
+          org_id?: string | null
           qr_active_minutes_before?: number
           radius_m?: number
           referral_reward?: number
           slug?: string | null
           start_at?: string
           time_zone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          accent_color: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_featured: boolean
+          logo_url: string | null
+          minter_wallet_address: string | null
+          minter_wallet_encrypted_wif: string | null
+          name: string
+          pop_token_name: string | null
+          pop_token_symbol: string | null
+          slug: string
+          status: string
+          tagline: string | null
+          txc_property_id: number | null
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_featured?: boolean
+          logo_url?: string | null
+          minter_wallet_address?: string | null
+          minter_wallet_encrypted_wif?: string | null
+          name: string
+          pop_token_name?: string | null
+          pop_token_symbol?: string | null
+          slug: string
+          status?: string
+          tagline?: string | null
+          txc_property_id?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_featured?: boolean
+          logo_url?: string | null
+          minter_wallet_address?: string | null
+          minter_wallet_encrypted_wif?: string | null
+          name?: string
+          pop_token_name?: string | null
+          pop_token_symbol?: string | null
+          slug?: string
+          status?: string
+          tagline?: string | null
+          txc_property_id?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -545,6 +696,7 @@ export type Database = {
           email: string
           error: string | null
           id: string
+          org_id: string | null
           sent_at: string | null
           source: string
           source_id: string | null
@@ -558,6 +710,7 @@ export type Database = {
           email: string
           error?: string | null
           id?: string
+          org_id?: string | null
           sent_at?: string | null
           source: string
           source_id?: string | null
@@ -571,6 +724,7 @@ export type Database = {
           email?: string
           error?: string | null
           id?: string
+          org_id?: string | null
           sent_at?: string | null
           source?: string
           source_id?: string | null
@@ -578,7 +732,15 @@ export type Database = {
           tx_hash?: string | null
           wallet_address?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pop_awards_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pop_balance_mirror: {
         Row: {
@@ -645,6 +807,7 @@ export type Database = {
           label: string
           lat: number | null
           lng: number | null
+          org_id: string | null
           pop_reward: number
           radius_m: number | null
           single_use: boolean
@@ -662,6 +825,7 @@ export type Database = {
           label: string
           lat?: number | null
           lng?: number | null
+          org_id?: string | null
           pop_reward: number
           radius_m?: number | null
           single_use?: boolean
@@ -679,6 +843,7 @@ export type Database = {
           label?: string
           lat?: number | null
           lng?: number | null
+          org_id?: string | null
           pop_reward?: number
           radius_m?: number | null
           single_use?: boolean
@@ -692,6 +857,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_codes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -783,6 +955,7 @@ export type Database = {
           enabled: boolean
           id: string
           label: string
+          org_id: string | null
           pop_amount: number
           updated_at: string
         }
@@ -793,6 +966,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           label: string
+          org_id?: string | null
           pop_amount: number
           updated_at?: string
         }
@@ -803,10 +977,19 @@ export type Database = {
           enabled?: boolean
           id?: string
           label?: string
+          org_id?: string | null
           pop_amount?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reward_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppressed_emails: {
         Row: {
@@ -899,11 +1082,23 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      has_org_role: {
+        Args: {
+          _org_id: string
+          _roles: Database["public"]["Enums"]["org_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       move_to_dlq: {
@@ -931,6 +1126,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       claim_status: "pending" | "minted" | "failed"
+      org_role: "owner" | "admin" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1060,6 +1256,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       claim_status: ["pending", "minted", "failed"],
+      org_role: ["owner", "admin", "staff"],
     },
   },
 } as const
