@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { QrCode, MapPin, Coins, Users, ArrowRight } from "lucide-react";
+import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Sparkles } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
 import { SiteFooter } from "@/components/site-footer";
