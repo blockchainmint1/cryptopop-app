@@ -26,6 +26,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as DocsUsersRouteImport } from './routes/docs.users'
+import { Route as DocsAdminRouteImport } from './routes/docs.admin'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
@@ -137,6 +138,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
 const DocsUsersRoute = DocsUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsAdminRoute = DocsAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => DocsRoute,
 } as any)
 const ClaimTokenRoute = ClaimTokenRouteImport.update({
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/docs/': typeof DocsIndexRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/docs': typeof DocsIndexRoute
@@ -406,6 +414,7 @@ export interface FileRoutesById {
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/docs/': typeof DocsIndexRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/auth/callback'
     | '/claim/$token'
+    | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
     | '/docs/'
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/auth/callback'
     | '/claim/$token'
+    | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
     | '/docs'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scan'
     | '/auth/callback'
     | '/claim/$token'
+    | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
     | '/docs/'
@@ -717,6 +729,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/docs/users'
       preLoaderRoute: typeof DocsUsersRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/admin': {
+      id: '/docs/admin'
+      path: '/admin'
+      fullPath: '/docs/admin'
+      preLoaderRoute: typeof DocsAdminRouteImport
       parentRoute: typeof DocsRoute
     }
     '/claim/$token': {
@@ -1005,11 +1024,13 @@ const ApiRouteChildren: ApiRouteChildren = {
 const ApiRouteWithChildren = ApiRoute._addFileChildren(ApiRouteChildren)
 
 interface DocsRouteChildren {
+  DocsAdminRoute: typeof DocsAdminRoute
   DocsUsersRoute: typeof DocsUsersRoute
   DocsIndexRoute: typeof DocsIndexRoute
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
+  DocsAdminRoute: DocsAdminRoute,
   DocsUsersRoute: DocsUsersRoute,
   DocsIndexRoute: DocsIndexRoute,
 }

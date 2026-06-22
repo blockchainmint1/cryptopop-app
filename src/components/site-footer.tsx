@@ -43,6 +43,9 @@ export function SiteFooter() {
             <Link to="/mission" className="hover:text-foreground transition">
               Mission
             </Link>
+            <Link to="/docs" className="hover:text-foreground transition">
+              Docs
+            </Link>
             <Link to="/change-log" className="hover:text-foreground transition">
               Change Log
             </Link>
