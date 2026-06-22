@@ -26,6 +26,7 @@ const eventSignupSchema = z.object({
   telegram_handle: z.string().trim().max(64).optional().nullable(),
   is_friend: z.boolean(),
   guest_count: z.number().int().min(0).max(20).default(0),
+  event_slug: z.string().trim().max(120).optional().nullable(),
 });
 
 // Public: create a signup without exposing the private signups table to public reads.
