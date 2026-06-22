@@ -16,7 +16,7 @@ import {
 import type { TemplateEntry } from './registry'
 
 const SITE_NAME = 'CryptoPOP'
-const SITE_URL = 'https://cryptopop.sg'
+const SITE_URL = 'https://cryptopop.asia'
 
 interface EventConfirmationProps {
   name?: string
@@ -33,11 +33,11 @@ interface EventConfirmationProps {
 const EventConfirmationEmail = ({
   name,
   passId,
-  eventName = 'Red, White & Barbecue — USA 250ᵗʰ',
-  eventDate = 'Saturday, 4 July 2026 · 11am – 4pm',
-  venueName = 'ONE°15 Marina, Sentosa Cove',
-  venueAddress = '11 Cove Drive, Sentosa Cove, Singapore 098497',
-  mapUrl = 'https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z',
+  eventName = 'CryptoPOP Event',
+  eventDate = 'TBA',
+  venueName = 'TBA',
+  venueAddress = '',
+  mapUrl = 'https://www.google.com/maps',
   popCredits = 10,
   walletAddress,
 }: EventConfirmationProps) => {
@@ -121,7 +121,7 @@ const EventConfirmationEmail = ({
           <Text style={text}>
             Sign in with the same email at{' '}
             <Link href={`${SITE_URL}/login`} style={link}>
-              cryptopop.sg/login
+              cryptopop.asia/login
             </Link>{' '}
             — it's magic-link, no password. Inside you'll see all your events,
             your live POP balance, and your check-in QR on the go. Your sandbox
@@ -133,36 +133,11 @@ const EventConfirmationEmail = ({
           </Text>
 
           <Heading as="h2" style={h2}>
-            Getting there
-          </Heading>
-          <Text style={text}>
-            <strong>Taxi / Grab:</strong> ~20 min from the city. Tell the
-            driver "ONE°15 Marina, Sentosa Cove" — they'll know it. No Sentosa
-            entry charge for drop-off.
-            <br />
-            <br />
-            <strong>MRT:</strong> Take the NE / CC line to HarbourFront, then
-            grab a taxi (~10 min). The Sentosa Express doesn't reach the Cove
-            — taxi is the move.
-            <br />
-            <br />
-            <strong>Parking:</strong> Open-air parking is available at the
-            marina. Arrive 15 min early on the day — Sentosa Cove can back up.
-          </Text>
-
-          <Heading as="h2" style={h2}>
             What to expect on the day
           </Heading>
           <Text style={text}>
-            • Doors open <strong>11am sharp</strong>. Head to the CryptoPOP
-            check-in tent at the marina entrance.
-            <br />
-            • Dress code: <strong>red, white & blue</strong> if you're feeling
-            it — otherwise smart-casual.
-            <br />
-            • BBQ + drinks all afternoon, live music, face painting for the
-            kids, and complimentary exploratory yacht charters (first-come,
-            first-served — sign up on arrival).
+            • Arrive a few minutes early and look for the CryptoPOP check-in
+            tent at the entrance.
             <br />
             • Pick up bonus POP for activities. Bring a friend? Both of you
             earn extra.
@@ -186,7 +161,7 @@ const EventConfirmationEmail = ({
             </Link>
             <Text style={socialDot}>·</Text>
             <Link href={SITE_URL} style={socialLink}>
-              cryptopop.sg
+              cryptopop.asia
             </Link>
           </Section>
 
@@ -208,12 +183,11 @@ export const template = {
   previewData: {
     name: 'Jane',
     passId: '00000000-0000-0000-0000-000000000000',
-    eventName: 'Red, White & Barbecue — USA 250ᵗʰ',
-    eventDate: 'Saturday, 4 July 2026 · 11am – 4pm',
-    venueName: 'ONE°15 Marina, Sentosa Cove',
-    venueAddress: '11 Cove Drive, Sentosa Cove, Singapore 098497',
-    mapUrl:
-      'https://www.google.com/maps/place/ONE%C2%B015+Marina+Sentosa+Cove,+Singapore/@1.2462,103.8378,17z',
+    eventName: 'CryptoPOP Event',
+    eventDate: 'TBA',
+    venueName: 'Venue TBA',
+    venueAddress: '',
+    mapUrl: 'https://www.google.com/maps',
     popCredits: 10,
   },
 } satisfies TemplateEntry

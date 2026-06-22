@@ -9,7 +9,7 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
-          "Terms of Service for CryptoPOP, a proof-of-participation wallet operated from Singapore.",
+          "Terms of Service for CryptoPOP, a proof-of-participation wallet.",
       },
       { property: "og:title", content: "Terms of Service — CryptoPOP" },
       {
@@ -43,7 +43,7 @@ function TermsPage() {
 
       <main className="mx-auto max-w-3xl px-6 py-12">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          Legal · Singapore
+          Legal
         </p>
         <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
           Terms of Service
@@ -53,9 +53,8 @@ function TermsPage() {
         <Section title="1. About CryptoPOP">
           <p>
             CryptoPOP ("we", "us", "our") is a proof-of-participation wallet that lets
-            you collect POP by attending real-world events in Singapore and
-            beyond. The service is operated from Singapore. By using CryptoPOP you
-            agree to these Terms.
+            you collect POP by attending real-world events around the world. By using
+            CryptoPOP you agree to these Terms.
           </p>
         </Section>
 
@@ -93,7 +92,7 @@ function TermsPage() {
             <li>Use bots, scripts, or multiple accounts to claim a single event reward.</li>
             <li>Resell, repackage, or misrepresent POP as an investment product.</li>
             <li>Interfere with the service, our infrastructure, or the TXC network.</li>
-            <li>Use CryptoPOP for any unlawful purpose under Singapore law.</li>
+            <li>Use CryptoPOP for any unlawful purpose under applicable law.</li>
           </ul>
         </Section>
 
@@ -126,7 +125,7 @@ function TermsPage() {
         <Section title="9. Limitation of liability">
           <p>
             To the maximum extent permitted by law, our total liability arising out
-            of or relating to your use of CryptoPOP will not exceed SGD 100. We are
+            of or relating to your use of CryptoPOP will not exceed USD 100. We are
             not liable for indirect, incidental, special, consequential, or punitive
             damages, or for loss of POP, profits, data, or goodwill.
           </p>
@@ -142,20 +141,17 @@ function TermsPage() {
 
         <Section title="11. Governing law">
           <p>
-            These Terms are governed by the laws of Singapore. Any dispute arising
-            out of or in connection with these Terms, including any question of
-            existence, validity, or termination, shall be referred to and finally
-            resolved by the Singapore International Arbitration Centre (SIAC) in
-            accordance with its rules in force at the time. The seat of arbitration
-            shall be Singapore and the language shall be English.
+            These Terms are governed by the laws applicable to where CryptoPOP is
+            operated, without regard to conflict-of-laws principles. Any dispute
+            shall be resolved by binding arbitration, conducted in English.
           </p>
         </Section>
 
         <Section title="12. Contact">
           <p>
             Questions about these Terms? Email{" "}
-            <a className="underline hover:text-foreground" href="mailto:hello@cryptopop.sg">
-              hello@cryptopop.sg
+            <a className="underline hover:text-foreground" href="mailto:hello@cryptopop.asia">
+              hello@cryptopop.asia
             </a>
             .
           </p>

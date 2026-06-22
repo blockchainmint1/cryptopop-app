@@ -10,12 +10,12 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "How CryptoPOP collects, uses, and protects your personal data under Singapore's PDPA.",
+          "How CryptoPOP collects, uses, and protects your personal data.",
       },
       { property: "og:title", content: "Privacy Policy — CryptoPOP" },
       {
         property: "og:description",
-        content: "How CryptoPOP handles your data, written for the PDPA.",
+        content: "How CryptoPOP handles your data.",
       },
     ],
   }),
@@ -81,7 +81,7 @@ function PrivacyPage() {
         <main className="mx-auto max-w-3xl px-6 py-16 md:py-24">
           <div className="hero-fade-up">
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-white/60">
-              Legal · Singapore · PDPA
+              Legal · Privacy
             </p>
             <h1
               className="mt-4 font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight md:text-7xl"
@@ -108,9 +108,9 @@ function PrivacyPage() {
             >
               <p className="leading-relaxed">
                 This policy explains how CryptoPOP collects, uses, and discloses
-                personal data in accordance with Singapore's Personal Data
-                Protection Act 2012 ("PDPA"). It applies to the CryptoPOP
-                website, wallet, and related services.
+                personal data. It applies to the CryptoPOP website, wallet, and
+                related services, and is intended to align with applicable data
+                protection laws wherever you use the service.
               </p>
             </div>
           </div>
@@ -153,7 +153,7 @@ function PrivacyPage() {
               <li>
                 To respond to support requests and communicate service updates.
               </li>
-              <li>To comply with legal obligations under Singapore law.</li>
+              <li>To comply with legal obligations under applicable law.</li>
             </ul>
           </Section>
 
@@ -182,7 +182,7 @@ function PrivacyPage() {
               </li>
               <li>
                 <strong className="text-white">Authorities</strong> when required
-                by Singapore law or a valid legal process.
+                by applicable law or a valid legal process.
               </li>
             </ul>
             <p>We do not sell personal data.</p>
@@ -190,10 +190,10 @@ function PrivacyPage() {
 
           <Section title="5. International transfers">
             <p>
-              Some of our infrastructure providers are located outside
-              Singapore. When we transfer personal data overseas, we take
-              reasonable steps to ensure recipients provide a standard of
-              protection comparable to the PDPA.
+              Some of our infrastructure providers may be located in different
+              countries than you. When we transfer personal data internationally,
+              we take reasonable steps to ensure recipients provide a comparable
+              standard of protection.
             </p>
           </Section>
 
@@ -213,14 +213,14 @@ function PrivacyPage() {
               encryption at rest for wallet keys, row-level access controls on
               our database, and least-privilege server credentials. No system is
               perfectly secure; please report suspected vulnerabilities to{" "}
-              <BrandLink href="mailto:security@cryptopop.sg">
-                security@cryptopop.sg
+              <BrandLink href="mailto:security@cryptopop.asia">
+                security@cryptopop.asia
               </BrandLink>
               .
             </p>
           </Section>
 
-          <Section title="8. Your PDPA rights">
+          <Section title="8. Your rights">
             <p>You have the right to:</p>
             <ul className="ml-5 list-disc space-y-2">
               <li>Access the personal data we hold about you.</li>
@@ -234,11 +234,11 @@ function PrivacyPage() {
             </ul>
             <p>
               To exercise these rights, email our Data Protection Officer at{" "}
-              <BrandLink href="mailto:dpo@cryptopop.sg">
-                dpo@cryptopop.sg
+              <BrandLink href="mailto:dpo@cryptopop.asia">
+                dpo@cryptopop.asia
               </BrandLink>
-              . If you're unsatisfied with our response, you may contact the
-              Personal Data Protection Commission of Singapore.
+              . If you're unsatisfied with our response, you may contact your
+              local data protection authority.
             </p>
           </Section>
 
@@ -266,9 +266,9 @@ function PrivacyPage() {
 
           <Section title="12. Contact">
             <p>
-              Data Protection Officer · CryptoPOP · Singapore ·{" "}
-              <BrandLink href="mailto:dpo@cryptopop.sg">
-                dpo@cryptopop.sg
+              Data Protection Officer · CryptoPOP ·{" "}
+              <BrandLink href="mailto:dpo@cryptopop.asia">
+                dpo@cryptopop.asia
               </BrandLink>
             </p>
           </Section>

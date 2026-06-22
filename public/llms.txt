@@ -1,6 +1,6 @@
 # CryptoPOP
 
-> An education-first community campaign in Singapore that connects people through real-world events, experiences, and culture — with a Web3 twist.
+> An education-first community campaign that connects people through real-world events, experiences, and culture — with a Web3 twist.
 
 CryptoPOP makes Web3 feel human, social, and accessible. We run events — yacht parties, BBQs, wellness activations, nightlife, and community experiences — where participants scan QR codes, verify their presence via geolocation, and earn digital participation rewards called POP. No complicated jargon. No hard selling. Just show up, join the fun, and learn about the digital future by doing.
 
@@ -11,4 +11,3 @@ POP rewards are designed as digital participation rewards that users collect thr
 - [Home](/): Discover upcoming events, learn how CryptoPOP works, and RSVP to the next experience.
 - [Mission](/mission): What CryptoPOP is, who it's for, and why we believe the future of community starts offline first.
 - [Developer API](/api): A field guide to issuing, minting, and moving Omni-Layer tokens on the Texitcoin (TXC) chain — the same infrastructure that powers POP rewards.
-- [Sign up — Red, White & Barbecue](/events/july4-marina-bbq/rsvp): Reserve your spot at the USA 250th anniversary celebration at ONE°15 Marina, Sentosa Cove.

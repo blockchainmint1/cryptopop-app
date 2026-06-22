@@ -13,13 +13,13 @@ export const Route = createFileRoute("/mission")({
       {
         name: "description",
         content:
-          "CryptoPOP is an education-first campaign in Singapore. Connect, experience, learn — about Web3, AI, and the digital future.",
+          "CryptoPOP is an education-first campaign. Connect, experience, learn — about Web3, AI, and the digital future.",
       },
       { property: "og:title", content: "Our Mission — CryptoPOP" },
       {
         property: "og:description",
         content:
-          "An education-only campaign helping Singaporeans connect, experience, and learn about Web3, AI and blockchain.",
+          "An education-only campaign helping people everywhere connect, experience, and learn about Web3, AI and blockchain.",
       },
     ],
   }),
@@ -74,7 +74,7 @@ function MissionPage() {
       <section className="overflow-hidden border-b border-border/60">
         <div className="mx-auto max-w-3xl px-6 py-20 md:py-28 border-none border-0">
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Education · Singapore
+            Education · Global
           </p>
           <h1 className="mt-3 font-display text-5xl font-bold tracking-tight md:text-6xl">
             <span className="text-neon-cyan">Connect.</span>{" "}
@@ -146,7 +146,7 @@ function MissionPage() {
           <p>
             Curious students. Aunties and uncles who want to understand what their kids
             are talking about. Designers, developers, chefs, DJs, dancers, founders, and
-            policy folks. If you live in Singapore and you're ready to learn by doing,
+            policy folks. Wherever you are in the world, if you're ready to learn by doing,
             CryptoPOP is for you.
           </p>
         </Section>
