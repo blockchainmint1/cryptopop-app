@@ -59,7 +59,7 @@ function MissionPage() {
               </Link>
             )}
             {session ? (
-              <Link to="/my-pop" className="hover:text-foreground transition">
+              <Link to="/app" className="hover:text-foreground transition">
                 My POP
               </Link>
             ) : (

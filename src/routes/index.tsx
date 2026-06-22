@@ -127,7 +127,7 @@ function Landing() {
               </Link>
             )}
             {session ? (
-              <Link to="/my-pop" className="rounded-full border border-white/25 px-4 py-2 text-white hover:bg-white/10 transition">
+              <Link to="/app" className="rounded-full border border-white/25 px-4 py-2 text-white hover:bg-white/10 transition">
                 My POP
               </Link>
             ) : (
