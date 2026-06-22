@@ -266,9 +266,9 @@ function PrivacyPage() {
 
           <Section title="12. Contact">
             <p>
-              Data Protection Officer · CryptoPOP · Singapore ·{" "}
-              <BrandLink href="mailto:dpo@cryptopop.sg">
-                dpo@cryptopop.sg
+              Data Protection Officer · CryptoPOP ·{" "}
+              <BrandLink href="mailto:dpo@cryptopop.asia">
+                dpo@cryptopop.asia
               </BrandLink>
             </p>
           </Section>
