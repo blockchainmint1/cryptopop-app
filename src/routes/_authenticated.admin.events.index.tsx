@@ -97,6 +97,7 @@ function AdminEventsList() {
   const emptyForm = () => {
     const now = new Date();
     const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const tz = browserTimeZone();
     return {
       name: "",
       description: "",
@@ -104,8 +105,9 @@ function AdminEventsList() {
       lat: "1.3521",
       lng: "103.8198",
       radius_m: "200",
-      start_at: toLocalInputValue(now.toISOString()),
-      end_at: toLocalInputValue(inTwoHours.toISOString()),
+      time_zone: tz,
+      start_at: toLocalInputValue(now.toISOString(), tz),
+      end_at: toLocalInputValue(inTwoHours.toISOString(), tz),
       base_reward: "100",
       referral_reward: "25",
       qr_active_minutes_before: "60",
@@ -116,6 +118,7 @@ function AdminEventsList() {
   function startEdit(e: AdminEventRow) {
     setEditingId(e.id);
     setShowCreate(true);
+    const tz = e.time_zone || browserTimeZone();
     setForm({
       name: e.name,
       description: e.description ?? "",
@@ -123,8 +126,9 @@ function AdminEventsList() {
       lat: String(e.lat),
       lng: String(e.lng),
       radius_m: String(e.radius_m),
-      start_at: toLocalInputValue(e.start_at),
-      end_at: toLocalInputValue(e.end_at),
+      time_zone: tz,
+      start_at: toLocalInputValue(e.start_at, tz),
+      end_at: toLocalInputValue(e.end_at, tz),
       base_reward: String(e.base_reward),
       referral_reward: String(e.referral_reward),
       qr_active_minutes_before: String(e.qr_active_minutes_before ?? 0),
