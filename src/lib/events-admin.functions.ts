@@ -25,6 +25,7 @@ export type AdminEventRow = {
   radius_m: number;
   start_at: string;
   end_at: string;
+  time_zone: string;
   base_reward: number;
   referral_reward: number;
   qr_active_minutes_before: number;
