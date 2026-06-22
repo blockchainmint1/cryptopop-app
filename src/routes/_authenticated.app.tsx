@@ -624,11 +624,13 @@ function EventCard({
   ctaLabel,
   ctaDisabled,
   badge,
+  passSignupId,
 }: {
   ev: (typeof PUBLIC_EVENTS)[number];
   ctaLabel: string;
   ctaDisabled?: boolean;
   badge?: string;
+  passSignupId?: string;
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/40">
@@ -652,17 +654,36 @@ function EventCard({
           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>{ev.location}</span>
         </p>
-        {ctaDisabled ? (
-          <Button size="sm" variant="outline" disabled className="mt-2 w-full">
-            {ctaLabel}
-          </Button>
-        ) : (
-          <Button asChild size="sm" className="mt-2 w-full">
-            <Link to="/events/$slug/rsvp" params={{ slug: ev.slug }}>
+        <div className="mt-2 flex flex-col gap-2">
+          {passSignupId && (
+            <Button asChild size="sm" className="w-full">
+              <Link to="/my-pass" search={{ id: passSignupId }}>
+                <QrCode className="mr-1.5 h-3.5 w-3.5" /> Show my pass
+              </Link>
+            </Button>
+          )}
+          {ctaDisabled ? (
+            <Button
+              size="sm"
+              variant={passSignupId ? "outline" : "default"}
+              disabled
+              className="w-full"
+            >
               {ctaLabel}
-            </Link>
-          </Button>
-        )}
+            </Button>
+          ) : (
+            <Button
+              asChild
+              size="sm"
+              variant={passSignupId ? "outline" : "default"}
+              className="w-full"
+            >
+              <Link to="/events/$slug/rsvp" params={{ slug: ev.slug }}>
+                {ctaLabel}
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
