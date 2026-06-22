@@ -9,6 +9,7 @@ export type PublicEventDb = {
   description: string | null;
   start_at: string;
   end_at: string;
+  time_zone: string;
   lat: number;
   lng: number;
 } | null;
@@ -19,7 +20,7 @@ export const getPublicEventBySlug = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("events")
-      .select("slug, name, description, start_at, end_at, lat, lng")
+      .select("slug, name, description, start_at, end_at, time_zone, lat, lng")
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) return null;
@@ -30,6 +31,7 @@ export const getPublicEventBySlug = createServerFn({ method: "GET" })
       description: row.description,
       start_at: row.start_at,
       end_at: row.end_at,
+      time_zone: row.time_zone ?? "America/Los_Angeles",
       lat: Number(row.lat),
       lng: Number(row.lng),
     };

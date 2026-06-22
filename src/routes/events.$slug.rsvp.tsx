@@ -39,10 +39,9 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
   },
 };
 
-// Format anchored to America/Los_Angeles so server (UTC) and client render
+// Format anchored to the event's configured tz so server (UTC) and client render
 // the same string and hydration matches.
-function formatEventDate(startIso: string, endIso: string) {
-  const tz = "America/Los_Angeles";
+function formatEventDate(startIso: string, endIso: string, tz: string) {
   const start = new Date(startIso);
   const end = new Date(endIso);
   const dayLabel = start.toLocaleDateString("en-US", {
@@ -54,12 +53,13 @@ function formatEventDate(startIso: string, endIso: string) {
   });
   const timeFmt = (d: Date) =>
     d
-      .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })
-      .replace(":00", "")
+      .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz, timeZoneName: "short" })
+      .replace(":00 ", " ")
       .toLowerCase()
-      .replace(/\s/g, "");
+      .replace(/\s(am|pm)/, "$1");
   return `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)}`;
 }
+
 
 function mapUrlFor(lat: number, lng: number) {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
     const fallback = EVENT_FALLBACK[params.slug];
     const name = loaderData?.dbEvent?.name ?? fallback?.name;
     const dateLabel = loaderData?.dbEvent
-      ? formatEventDate(loaderData.dbEvent.start_at, loaderData.dbEvent.end_at)
+      ? formatEventDate(loaderData.dbEvent.start_at, loaderData.dbEvent.end_at, loaderData.dbEvent.time_zone)
       : fallback?.date;
     const title = name ? `Sign up — ${name}` : "Sign up — CryptoPOP";
     const desc = name
@@ -121,7 +121,7 @@ function SignupPage() {
     ? {
         slug: dbEvent.slug,
         name: dbEvent.name,
-        date: formatEventDate(dbEvent.start_at, dbEvent.end_at),
+        date: formatEventDate(dbEvent.start_at, dbEvent.end_at, dbEvent.time_zone),
         location: staticBits?.location ?? fallback?.location ?? "",
         mapUrl: mapUrlFor(dbEvent.lat, dbEvent.lng),
         blurb: dbEvent.description ?? fallback?.blurb ?? "",

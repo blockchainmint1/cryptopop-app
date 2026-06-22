@@ -24,39 +24,64 @@ import {
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
 import { GeofenceMapPicker } from "@/components/geofence-map-picker";
+import {
+  COMMON_TIMEZONES,
+  browserTimeZone,
+  utcIsoToZonedWallTime,
+  zonedWallTimeToUtcIso,
+  tzAbbreviation,
+} from "@/lib/tz";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/admin/events/")({
   head: () => ({ meta: [{ title: "Events — CryptoPOP Admin" }] }),
   component: AdminEventsList,
 });
 
-function toLocalInputValue(iso?: string) {
-  const d = iso ? new Date(iso) : new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function toLocalInputValue(iso: string | undefined, tz: string) {
+  const isoStr = iso ?? new Date().toISOString();
+  return utcIsoToZonedWallTime(isoStr, tz);
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
+function formatDate(iso: string, tz: string) {
+  return new Date(iso).toLocaleString("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: tz,
   });
 }
 
-function usaPreview(local: string) {
+function usaPreview(local: string, tz: string) {
   if (!local) return "—";
-  const d = new Date(local);
-  if (isNaN(d.getTime())) return "—";
-  const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const pretty = d.toLocaleString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  return `${iso} · ${pretty}`;
+  // Treat `local` as wall-clock in `tz`; show ISO date + pretty in that tz.
+  try {
+    const utc = zonedWallTimeToUtcIso(local, tz);
+    const d = new Date(utc);
+    const ymd = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(d);
+    const pretty = d.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: tz,
+    });
+    return `${ymd} · ${pretty} ${tzAbbreviation(tz, d)}`;
+  } catch {
+    return "—";
+  }
 }
 
 function AdminEventsList() {
@@ -72,6 +97,7 @@ function AdminEventsList() {
   const emptyForm = () => {
     const now = new Date();
     const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const tz = browserTimeZone();
     return {
       name: "",
       description: "",
@@ -79,8 +105,9 @@ function AdminEventsList() {
       lat: "1.3521",
       lng: "103.8198",
       radius_m: "200",
-      start_at: toLocalInputValue(now.toISOString()),
-      end_at: toLocalInputValue(inTwoHours.toISOString()),
+      time_zone: tz,
+      start_at: toLocalInputValue(now.toISOString(), tz),
+      end_at: toLocalInputValue(inTwoHours.toISOString(), tz),
       base_reward: "100",
       referral_reward: "25",
       qr_active_minutes_before: "60",
@@ -91,6 +118,7 @@ function AdminEventsList() {
   function startEdit(e: AdminEventRow) {
     setEditingId(e.id);
     setShowCreate(true);
+    const tz = e.time_zone || browserTimeZone();
     setForm({
       name: e.name,
       description: e.description ?? "",
@@ -98,8 +126,9 @@ function AdminEventsList() {
       lat: String(e.lat),
       lng: String(e.lng),
       radius_m: String(e.radius_m),
-      start_at: toLocalInputValue(e.start_at),
-      end_at: toLocalInputValue(e.end_at),
+      time_zone: tz,
+      start_at: toLocalInputValue(e.start_at, tz),
+      end_at: toLocalInputValue(e.end_at, tz),
       base_reward: String(e.base_reward),
       referral_reward: String(e.referral_reward),
       qr_active_minutes_before: String(e.qr_active_minutes_before ?? 0),
@@ -141,8 +170,9 @@ function AdminEventsList() {
         lat: Number(form.lat),
         lng: Number(form.lng),
         radius_m: Math.round(Number(form.radius_m)),
-        start_at: new Date(form.start_at).toISOString(),
-        end_at: new Date(form.end_at).toISOString(),
+        time_zone: form.time_zone,
+        start_at: zonedWallTimeToUtcIso(form.start_at, form.time_zone),
+        end_at: zonedWallTimeToUtcIso(form.end_at, form.time_zone),
         base_reward: Number(form.base_reward),
         referral_reward: Number(form.referral_reward),
         qr_active_minutes_before: Math.round(Number(form.qr_active_minutes_before) || 0),
@@ -232,6 +262,27 @@ function AdminEventsList() {
                 placeholder="https://…"
               />
             </div>
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="time_zone">Time zone</Label>
+              <Select
+                value={form.time_zone}
+                onValueChange={(v) => setForm({ ...form, time_zone: v })}
+              >
+                <SelectTrigger id="time_zone">
+                  <SelectValue placeholder="Select a time zone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMMON_TIMEZONES.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tzAbbreviation(tz.value)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="font-mono text-[10px] text-muted-foreground">
+                Start & end times are interpreted in this zone.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="start_at">Starts</Label>
               <Input
@@ -242,7 +293,7 @@ function AdminEventsList() {
                 onChange={(e) => setForm({ ...form, start_at: e.target.value })}
               />
               <p className="font-mono text-[10px] text-muted-foreground">
-                {usaPreview(form.start_at)}
+                {usaPreview(form.start_at, form.time_zone)}
               </p>
             </div>
             <div className="space-y-2">
@@ -255,7 +306,7 @@ function AdminEventsList() {
                 onChange={(e) => setForm({ ...form, end_at: e.target.value })}
               />
               <p className="font-mono text-[10px] text-muted-foreground">
-                {usaPreview(form.end_at)}
+                {usaPreview(form.end_at, form.time_zone)}
               </p>
             </div>
             <div className="md:col-span-2 space-y-2">
@@ -415,7 +466,7 @@ function EventSection({
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground font-mono">
                   <span className="flex items-center gap-1">
                     <CalendarDays className="h-3 w-3" />
-                    {formatDate(e.start_at)} → {formatDate(e.end_at)}
+                    {formatDate(e.start_at, e.time_zone)} → {formatDate(e.end_at, e.time_zone)} {tzAbbreviation(e.time_zone, new Date(e.start_at))}
                   </span>
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
