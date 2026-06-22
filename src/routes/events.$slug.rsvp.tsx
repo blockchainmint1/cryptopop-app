@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
+import lakehouseAsset from "@/assets/lakehouse.jpg.asset.json";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -21,12 +22,12 @@ type EventInfo = {
 const EVENTS: Record<string, EventInfo> = {
   "4th-at-bobbys": {
     slug: "4th-at-bobbys",
-    name: "4th of July at Bobby's",
+    name: "4th of July at The Lakehouse",
     date: "Saturday, July 4, 2026",
-    location: "Bobby's",
+    location: "The Lakehouse",
     mapUrl: "https://www.google.com/maps",
     blurb:
-      "Join us for the 4th at Bobby's — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
+      "Join us for the 4th at The Lakehouse — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
   },
 };
 
@@ -156,8 +157,8 @@ function SignupPage() {
         <aside>
           <div className="mb-6 overflow-hidden rounded-3xl border border-border">
             <img
-              src={bbqHero}
-              alt="Red, White & Barbecue — USA 250th"
+              src={lakehouseAsset.url}
+              alt="The Lakehouse — aerial view of the venue"
               width={1536}
               height={1024}
               className="h-48 w-full object-cover md:h-64"

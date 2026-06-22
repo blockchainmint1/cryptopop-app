@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Sparkles } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
+import lakehouseAsset from "@/assets/lakehouse.jpg.asset.json";
 import { SiteFooter } from "@/components/site-footer";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -232,8 +233,8 @@ function Landing() {
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div className="overflow-hidden rounded-3xl border border-border shadow-[0_30px_80px_-30px] shadow-foreground/30">
               <img
-                src={bbqHero}
-                alt="4th of July at Bobby's"
+                src={lakehouseAsset.url}
+                alt="The Lakehouse — venue for 4th of July"
                 className="h-64 w-full object-cover md:h-96"
               />
             </div>
@@ -243,16 +244,16 @@ function Landing() {
                 Next event
               </p>
               <h2 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-5xl">
-                4th of July at Bobby's
+                4th of July at The Lakehouse
               </h2>
               <p className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 <CalendarDays className="h-4 w-4 text-primary" />
                 Saturday, July 4, 2026
               </p>
               <p className="mt-5 text-lg text-muted-foreground">
-                Join us for the 4th at Bobby's — play the CryptoPOP scavenger
-                hunt for fun &amp; prizes, bring your favorite dish to share
-                with the community, and let's have a blast!
+                Join us for the 4th at The Lakehouse — play the CryptoPOP
+                scavenger hunt for fun &amp; prizes, bring your favorite dish
+                to share with the community, and let's have a blast!
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
