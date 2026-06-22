@@ -46,11 +46,11 @@ console.log("Issuer address:", issuer);
 const ECOSYSTEM = 1;
 const TYPE = 1; // indivisible
 const PREVIOUS_ID = 0;
-const CATEGORY = "Rewards";
-const SUBCATEGORY = "Community POP";
+const CATEGORY = "";
+const SUBCATEGORY = "";
 const NAME = "CryptoPOP";
 const URL = "https://cryptopop.org";
-const DATA = "CryptoPOP community reward token";
+const DATA = "";
 
 const FEE_RATE = 5;
 const DUST = 10000;
