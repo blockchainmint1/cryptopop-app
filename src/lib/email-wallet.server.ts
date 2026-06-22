@@ -47,13 +47,13 @@ function addressFromPubkey(pubkey: Uint8Array): string {
   return base58check.encode(payload);
 }
 
-// TXC WIF prefix is discovered from MINTER_WIF (decoded base58check).
+// TXC WIF prefix is discovered from MINTER_WIF / TXC_WIF (decoded base58check).
 // Cached after first call. Falls back to 0xC2 (Bitcoin-fork convention:
-// pubKeyHash 0x42 + 0x80) so derivation works even before MINTER_WIF is set.
+// pubKeyHash 0x42 + 0x80) so derivation works even before the WIF is set.
 let WIF_PREFIX: number | null = null;
 function txcWifPrefix(): number {
   if (WIF_PREFIX !== null) return WIF_PREFIX;
-  const m = process.env.MINTER_WIF;
+  const m = process.env.MINTER_WIF ?? process.env.TXC_WIF;
   if (m) {
     try {
       WIF_PREFIX = base58check.decode(m.trim())[0];
