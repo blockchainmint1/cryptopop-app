@@ -13,13 +13,13 @@ export const Route = createFileRoute("/mission")({
       {
         name: "description",
         content:
-          "CryptoPOP is an education-first campaign in Singapore. Connect, experience, learn — about Web3, AI, and the digital future.",
+          "CryptoPOP is an education-first campaign. Connect, experience, learn — about Web3, AI, and the digital future.",
       },
       { property: "og:title", content: "Our Mission — CryptoPOP" },
       {
         property: "og:description",
         content:
-          "An education-only campaign helping Singaporeans connect, experience, and learn about Web3, AI and blockchain.",
+          "An education-only campaign helping people everywhere connect, experience, and learn about Web3, AI and blockchain.",
       },
     ],
   }),
