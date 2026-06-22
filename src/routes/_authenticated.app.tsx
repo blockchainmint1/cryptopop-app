@@ -91,6 +91,7 @@ function WalletHome() {
   const fetchTxcTxs = useServerFn(getTxcTxs);
   const fetchPopChain = useServerFn(getPopChainBalance);
   const fetchMyEvents = useServerFn(getMyEventMemberships);
+  const fetchPopSummary = useServerFn(getMyPopSummary);
   const getAdminStatus = useServerFn(getMyAdminStatus);
 
   const [balance, setBalance] = useState<number>(0);
