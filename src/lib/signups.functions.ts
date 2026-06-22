@@ -92,6 +92,7 @@ export const createEventSignup = createServerFn({ method: "POST" })
       instagram,
       telegram,
       isFriend: data.is_friend,
+      guestCount: data.is_friend ? data.guest_count : 0,
       signupId: inserted.id,
     });
 
