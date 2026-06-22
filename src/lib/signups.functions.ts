@@ -27,6 +27,7 @@ const eventSignupSchema = z.object({
   is_friend: z.boolean(),
   guest_count: z.number().int().min(0).max(20).default(0),
   event_slug: z.string().trim().max(120).optional().nullable(),
+  external_wallet: z.string().trim().min(26).max(48).optional().nullable(),
 });
 
 // Public: create a signup without exposing the private signups table to public reads.
