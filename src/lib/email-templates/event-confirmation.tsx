@@ -121,7 +121,7 @@ const EventConfirmationEmail = ({
           <Text style={text}>
             Sign in with the same email at{' '}
             <Link href={`${SITE_URL}/login`} style={link}>
-              cryptopop.sg/login
+              cryptopop.asia/login
             </Link>{' '}
             — it's magic-link, no password. Inside you'll see all your events,
             your live POP balance, and your check-in QR on the go. Your sandbox
@@ -133,36 +133,11 @@ const EventConfirmationEmail = ({
           </Text>
 
           <Heading as="h2" style={h2}>
-            Getting there
-          </Heading>
-          <Text style={text}>
-            <strong>Taxi / Grab:</strong> ~20 min from the city. Tell the
-            driver "ONE°15 Marina, Sentosa Cove" — they'll know it. No Sentosa
-            entry charge for drop-off.
-            <br />
-            <br />
-            <strong>MRT:</strong> Take the NE / CC line to HarbourFront, then
-            grab a taxi (~10 min). The Sentosa Express doesn't reach the Cove
-            — taxi is the move.
-            <br />
-            <br />
-            <strong>Parking:</strong> Open-air parking is available at the
-            marina. Arrive 15 min early on the day — Sentosa Cove can back up.
-          </Text>
-
-          <Heading as="h2" style={h2}>
             What to expect on the day
           </Heading>
           <Text style={text}>
-            • Doors open <strong>11am sharp</strong>. Head to the CryptoPOP
-            check-in tent at the marina entrance.
-            <br />
-            • Dress code: <strong>red, white & blue</strong> if you're feeling
-            it — otherwise smart-casual.
-            <br />
-            • BBQ + drinks all afternoon, live music, face painting for the
-            kids, and complimentary exploratory yacht charters (first-come,
-            first-served — sign up on arrival).
+            • Arrive a few minutes early and look for the CryptoPOP check-in
+            tent at the entrance.
             <br />
             • Pick up bonus POP for activities. Bring a friend? Both of you
             earn extra.
