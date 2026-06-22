@@ -84,8 +84,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "CryptoPOP — Proof of Participation" },
       { name: "twitter:description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/480d7cb5-bdd0-4dc6-b1d5-a67cc85222e8/id-preview-76fd0efe--61638397-bf4f-48a5-9653-a3fa885ac8d2.lovable.app-1778660069362.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/480d7cb5-bdd0-4dc6-b1d5-a67cc85222e8/id-preview-76fd0efe--61638397-bf4f-48a5-9653-a3fa885ac8d2.lovable.app-1778660069362.png" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/d697ac2c-dc29-4272-8ebf-b2b4a54c8be7" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/d697ac2c-dc29-4272-8ebf-b2b4a54c8be7" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
