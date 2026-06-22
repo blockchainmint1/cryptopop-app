@@ -109,6 +109,7 @@ function SignupPage() {
       instagram_handle: form.get("instagram_handle"),
       telegram_handle: form.get("telegram_handle"),
       is_friend: form.get("is_friend"),
+      guest_count: Number(form.get("guest_count") ?? 0),
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
