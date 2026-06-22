@@ -39,7 +39,7 @@ export const getMyEventMemberships = createServerFn({ method: "GET" })
     }
 
     const memberships: MyEventMembership[] = (data ?? []).map((row) => ({
-      slug: "july4-marina-bbq",
+      slug: "4th-at-bobbys",
       signed_up_at: row.signed_up_at,
       status: row.status,
       checked_in_at: row.checked_in_at,
