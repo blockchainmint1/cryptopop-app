@@ -23,7 +23,7 @@ const EVENTS: Record<string, EventInfo> = {
   "4th-at-bobbys": {
     slug: "4th-at-bobbys",
     name: "4th of July at The Lakehouse",
-    date: "Saturday, July 4, 2026",
+    date: "Saturday, July 4, 2026 · 3pm–dark",
     location: "The Lakehouse",
     mapUrl: "https://www.google.com/maps",
     blurb:
