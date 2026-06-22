@@ -16,6 +16,9 @@ import {
   RefreshCw,
   CalendarDays,
   MapPin,
+  QrCode,
+  Sparkles,
+  Coins,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
