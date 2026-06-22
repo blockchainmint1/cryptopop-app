@@ -109,6 +109,7 @@ function SignupPage() {
       mobile_number: form.get("mobile_number"),
       instagram_handle: form.get("instagram_handle"),
       telegram_handle: form.get("telegram_handle"),
+      external_wallet: form.get("external_wallet"),
       is_friend: form.get("is_friend"),
       guest_count: Number(form.get("guest_count") ?? 0),
     });
@@ -129,6 +130,7 @@ function SignupPage() {
           guest_count:
             parsed.data.is_friend === "yes" ? parsed.data.guest_count : 0,
           event_slug: slug,
+          external_wallet: parsed.data.external_wallet || null,
         },
       });
       try {
