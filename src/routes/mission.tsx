@@ -146,7 +146,7 @@ function MissionPage() {
           <p>
             Curious students. Aunties and uncles who want to understand what their kids
             are talking about. Designers, developers, chefs, DJs, dancers, founders, and
-            policy folks. If you live in Singapore and you're ready to learn by doing,
+            policy folks. Wherever you are in the world, if you're ready to learn by doing,
             CryptoPOP is for you.
           </p>
         </Section>
