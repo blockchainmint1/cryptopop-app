@@ -1,7 +1,6 @@
 // Server-only envelope encryption for sandbox POP wallet seeds.
-// AES-256-GCM with a per-user random salt + iv. The master key (WALLET_KMS_KEY)
-// lives in Lovable Cloud secrets, NEVER in the DB. A DB dump alone leaks
-// nothing useful.
+// AES-256-GCM with a per-user random salt + iv. The master key lives in
+// Lovable Cloud secrets, NEVER in the DB. A DB dump alone leaks nothing useful.
 //
 // POP is non-monetary reward points; the wallet is a sandbox wallet. This
 // gives a sensible safety net without pretending to be a custodial bank.
@@ -14,9 +13,9 @@ const IV_LEN = 12;
 const SALT_LEN = 16;
 
 function getMasterKey(): Buffer {
-  const raw = process.env.WALLET_KMS_KEY;
+  const raw = process.env.WALLET_KMS_KEY ?? process.env.WALLET_MASTER_SEED ?? process.env.TXC_SEED;
   if (!raw || raw.length < 16) {
-    throw new Error("WALLET_KMS_KEY not configured");
+    throw new Error("Wallet encryption key not configured");
   }
   return Buffer.from(raw, "utf8");
 }
