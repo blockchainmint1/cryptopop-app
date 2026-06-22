@@ -105,9 +105,19 @@ const signupSchema = z
 
 function SignupPage() {
   const { slug } = Route.useParams();
-  const ev = EVENTS[slug];
-  const navigate = useNavigate();
-  const saveSignup = useServerFn(createEventSignup);
+  const { dbEvent } = Route.useLoaderData();
+  const fallback = EVENT_FALLBACK[slug];
+  const staticBits = EVENT_STATIC[slug];
+  const ev: EventInfo | undefined = dbEvent
+    ? {
+        slug: dbEvent.slug,
+        name: dbEvent.name,
+        date: formatEventDate(dbEvent.start_at, dbEvent.end_at),
+        location: staticBits?.location ?? fallback?.location ?? "",
+        mapUrl: staticBits?.mapUrl ?? fallback?.mapUrl ?? "#",
+        blurb: dbEvent.description ?? fallback?.blurb ?? "",
+      }
+    : fallback;
   const [submitting, setSubmitting] = useState(false);
   const [isFriend, setIsFriend] = useState<"yes" | "no">("no");
   const [guestCount, setGuestCount] = useState(1);
