@@ -1,103 +1,86 @@
-# Admin QR Codes (`/admin/codes`)
+## My take
 
-A new admin tool to mint ad‑hoc QR codes that grant POP when scanned.
+This works, and the right shape is an **org-per-admin platform** (like Eventbrite + Loyalty + on-chain receipts). The two hardest pieces are (1) custody of each org's TXC minter wallet and (2) cleanly scoping every existing table to an org without breaking CryptoPOP USA. Everything else is incremental.
 
-## Behaviour
+I'd **strongly recommend custodied minter wallets to start** (we hold the WIF, encrypted) — same model we use today, just one wallet per org instead of one global wallet. "Bring your own wallet" can come later as an upgrade. Otherwise onboarding becomes a 30-minute crypto tutorial and adoption dies.
 
-Each QR code has:
-- **Label** — internal name (e.g. "Booth A — Friday")
-- **POP reward** — integer amount to mint per scan
-- **Event** (optional) — links scan to an `events` row (for reporting)
-- **Geofence** (optional) — `lat`, `lng`, `radius_m` (default 200m). When set, scanner's browser geolocation must be within radius
-- **Expires at** — required UTC timestamp
-- **Single‑use** — boolean. If true, first successful scan locks the code; if false, each *user* can only scan once (no farming)
-- **Active** — admin can disable at any time
+I'd also recommend **defaulting new events to Unlisted** (link/QR only, not on the public directory). Admins opt in to Public per event. Protects token supply by default and matches how most community organizers actually think.
 
-When a code is created, a random `token` (22+ char base62) is generated. The QR encodes `https://<host>/claim/<token>`.
+---
 
-## Scan flow (`/claim/$token`)
+## Phases
 
-1. Route is **public** (top-level), shows a "Scanning…" screen.
-2. If the visitor isn't signed in, render a "Sign in to claim" CTA that returns to the same URL.
-3. Once signed in, client gets geolocation (only if the code has a geofence — fetched via a public lookup server fn that returns `requiresLocation`, `label`, `popReward`, `expired`, `disabled`).
-4. POSTs to `redeemQrCode({ token, lat?, lng? })`:
-   - Validates: not expired, active, geofence (haversine), single-use lock, per-user dedupe.
-   - Mints POP via the existing `awardPop` ledger using `source = 'qr_code'`, `source_id = code_id + ':' + user_id` (idempotent).
-   - Returns success/failure with reason.
-5. Success screen shows amount + link to `/app`.
+### Phase 1 — Multi-tenancy foundation (no UI changes for existing users)
+- New `organizations` table: name, slug, brand (logo/colors), `txc_property_id` (nullable until minted), `minter_wallet_address`, `minter_wallet_encrypted_wif`, `pop_token_symbol`, `pop_token_name`, status.
+- New `organization_members` table: (org_id, user_id, role: owner/admin/staff). Replaces the global `user_roles='admin'` check for org-scoped actions. Global `admin` role stays for platform superadmin (you).
+- Add `org_id` (nullable for migration, then NOT NULL) to: `events`, `qr_codes`, `pop_awards`, `claims`, `event_signups`, `reward_rules`, `event_quiz_questions`, `blast_campaigns`, `blast_recipients`.
+- Migration: create `org_id = <CryptoPOP USA org>` and backfill every existing row to it. You become its owner.
+- Rewrite every admin server fn to filter by `org_id` from context, not show all rows globally.
 
-## Data model
+### Phase 2 — Public signup + onboarding
+- Open signup (currently the app is invite-only-feeling). New `/start` flow: sign up → "Create your community" → org name, slug, brand colors, logo.
+- Lands on a blank `/admin` dashboard scoped to that org with three big "next step" cards: **Mint your POP token → Create your first event → Print your QR poster**.
+- Until token is minted, the rest of the dashboard is locked with explanatory copy.
 
-New table `public.qr_codes`:
+### Phase 3 — Guided POP token minting
+- "Mint POP Token" wizard:
+  1. Pick token name + symbol (e.g. "Lakehouse POP", "LAKE") and total supply cap.
+  2. Confirm — show estimated TXC fee, explain it's permanent + on-chain.
+  3. Server: generate a new TXC issuer keypair, encrypt the WIF with a per-row key derived from `WALLET_ENCRYPTION_KEY` + org_id, store address + ciphertext.
+  4. **Funding step**: show the new issuer address with a small TXC funding requirement (covers issuance + first ~100 mints). User sends TXC to it; we poll mempool.texitcoin.org until funded.
+  5. Issue the Omni property (managed, indivisible) via `omni_sendissuancemanaged`, broadcast, wait for confirmation, store `txc_property_id` on the org.
+- Refactor `src/lib/txc.server.ts` to take `propertyId` + `minterWif` from the org row instead of `process.env`. Existing CryptoPOP USA org row holds property #37 + current WIF so nothing breaks.
 
-| column         | type                 | notes                                |
-| -------------- | -------------------- | ------------------------------------ |
-| id             | uuid PK              |                                      |
-| token          | text UNIQUE          | URL-safe random, indexed             |
-| label          | text                 | admin-facing                         |
-| pop_reward     | integer              | >0                                   |
-| event_id       | uuid NULL → events   | optional                             |
-| lat, lng       | double precision NULL| geofence center (both or neither)    |
-| radius_m       | integer NULL         | default 200                          |
-| expires_at     | timestamptz          |                                      |
-| single_use     | boolean              | default false                        |
-| max_uses       | integer NULL         | computed: 1 when single_use else null|
-| use_count      | integer              | default 0                            |
-| active         | boolean              | default true                         |
-| created_by     | uuid → auth.users    |                                      |
-| created_at, updated_at | timestamptz  |                                      |
+### Phase 4 — Per-event visibility + public directory
+- Add `visibility` to `events`: `public | unlisted | private`. Default `unlisted`.
+  - `public` — listed in `/discover` and the org's `/o/<slug>` page; anyone can RSVP and claim.
+  - `unlisted` — accessible by direct link / QR only; not in directories.
+  - `private` — RSVP requires invite or pre-added email; QR claim still respects geofence/time window.
+- New routes:
+  - `/discover` — public global directory; filter by location/date/org.
+  - `/o/$slug` — org public page (brand, upcoming public events, "claimed X POP from this community" counter).
+  - `/o/$slug/events/$event` — public event detail.
+- Existing `/events/$slug/rsvp` continues to work for direct links.
 
-New table `public.qr_redemptions` (per-scan log, also serves as per-user dedupe):
+### Phase 5 — Platform polish (after MVP works)
+- Org switcher in the admin header (for users who belong to multiple orgs — staff at events, contractors).
+- "Featured orgs" surface on homepage; CryptoPOP USA is the seed featured org and stays on the marketing site.
+- Public API key per org for embedding their own POP balance widget.
+- Bring-your-own-wallet upgrade path: rotate from custodial to external.
 
-| column      | type            | notes                          |
-| ----------- | --------------- | ------------------------------ |
-| id          | uuid PK         |                                |
-| code_id     | uuid → qr_codes |                                |
-| user_id     | uuid → auth.users |                              |
-| pop_amount  | integer         |                                |
-| tx_hash     | text NULL       | from award                     |
-| status      | text            | 'sent' / 'failed' / 'duplicate'|
-| lat, lng    | double precision NULL |                          |
-| created_at  | timestamptz     |                                |
+---
 
-UNIQUE `(code_id, user_id)` enforces "one scan per user per code".
+## Technical detail (engineer-facing)
 
-RLS:
-- `qr_codes`: only admins manage; `requireSupabaseAuth` admin path used for create/list. Public lookup goes via `supabaseAdmin` in a server fn that returns only safe fields.
-- `qr_redemptions`: user can see their own rows; admins see all.
+**Permissions model**
+- Keep global `user_roles` ('admin' = platform staff, only you to start).
+- All admin server fns become: `assertOrgRole(userId, orgId, ['owner','admin'])` instead of `assertAdmin(userId)`. The `orgId` comes from a header, route param, or the org membership lookup for the resource's `org_id`.
+- RLS: every org-scoped table gets a policy "user is a member of this row's org_id" via a `is_org_member(org_id, role[])` security-definer function.
 
-Grants for both: `authenticated` SELECT/INSERT/UPDATE/DELETE, `service_role` ALL.
+**TXC refactor (low risk, mechanical)**
+- `mintGrant({ to, amount })` → `mintGrant({ to, amount, propertyId, minterWif })`.
+- Resolve those two from the award's `org_id` → org row before calling.
+- Decrypt minterWif at call time; never log it. Encryption uses the existing `wallet-crypto.server` pattern.
 
-## Server functions (`src/lib/qr-codes.functions.ts`)
+**Backfill safety**
+- Add `org_id` as nullable in migration A → backfill in migration B → set NOT NULL + FK + RLS in migration C. Three migrations, each reversible.
 
-- `createQrCode(input)` — admin, inserts row, returns row + scan URL.
-- `listQrCodes({ status })` — admin, lists with use counts.
-- `updateQrCode({ id, active?, expires_at?, label?, … })` — admin.
-- `deleteQrCode({ id })` — admin (soft via `active=false` keeps audit; we'll go hard delete + cascade redemptions on request).
-- `lookupQrCode({ token })` — **public** (no auth), returns minimal info for the claim page: `{ label, popReward, requiresLocation, eventName, expired, disabled, exhausted }`.
-- `redeemQrCode({ token, lat?, lng? })` — auth required, performs validation + `awardPop`, inserts `qr_redemptions`.
+**Routes**
+- `_authenticated/admin/*` becomes org-scoped via a parent layout that resolves the active org (from URL param or "last used" cookie) and provides it in context.
+- New top-level public routes for discovery as above. Each gets its own loader + `head()` with org-/event-specific OG tags.
 
-## Routes
+**Onboarding funding UX**
+- "Send X TXC to this address" with a copy button, QR code of the address, and a live poller. Confirmation in ~1 block. If never funded, the wizard can resume later from the dashboard.
 
-- `src/routes/_authenticated.admin.codes.tsx` — list + "New code" dialog with: label, POP, event picker (optional), "Geofence this code" toggle revealing lat/lng/radius, expires_at, single-use toggle. Each row shows scan URL, copy-link, "Show QR" (renders QR using existing `qrcode` lib if installed, else lightweight inline via Google chart API — actually we'll add `qrcode` if not present), use count, disable/delete, expiry status.
-- `src/routes/claim.$token.tsx` — public claim page (sign-in CTA + scan flow). Replaces nothing (existing `/app` claim flow stays).
+**What stays the same**
+- The on-chain mint pipeline (`txc.server.ts`), POP awards reconciliation, QR signing/scanning, email blasts, geofence enforcement. All of it just gets `org_id` threaded through.
 
-Add a link to the admin dashboard quick-actions for "QR Codes".
+---
 
-## Validation
+## Open question to resolve before Phase 3
 
-- `pop_reward`: int 1–1_000_000
-- `radius_m`: int 10–50_000 when geofence enabled
-- `expires_at`: must be future on create
-- Either both `lat`/`lng` set or neither; if set, `radius_m` required.
+**Funding the first 100 mints.** Two paths:
+1. **Org pays.** Cleaner accounting, but means every new admin needs to acquire and send TXC before their first event — real friction.
+2. **Platform sponsors a starter pool.** We send a small TXC float to each new org wallet on creation; pay it back from a future "creator fee" or org subscription. Best for adoption.
 
-## Out of scope (future)
-
-- Bulk QR generation
-- CSV export of redemptions
-- Per-code reward tiers / quiz integration
-
-## Open questions
-
-1. **Hard delete vs deactivate?** Default: deactivate (`active=false`) so audit/log survives; hard delete available too.
-2. **Anonymous scan?** Plan assumes scanner must sign in (so we have a wallet). If you want anonymous → wallet-by-email-on-the-spot flow, that's an extra phase.
+I'd pick #2 for launch, capped at e.g. enough TXC for ~50 mints. We can add billing later.
