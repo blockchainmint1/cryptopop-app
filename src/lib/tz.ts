@@ -96,3 +96,36 @@ export function tzAbbreviation(tz: string, at: Date = new Date()): string {
     return tz;
   }
 }
+
+// Friendly long name for a tz, e.g. "America/Chicago" -> "Central".
+// Falls back to the short abbreviation (e.g. "CST") for tzs we don't have a
+// friendly label for.
+const FRIENDLY_TZ_NAMES: Record<string, string> = {
+  "America/Los_Angeles": "Pacific",
+  "America/Vancouver": "Pacific",
+  "America/Tijuana": "Pacific",
+  "America/Denver": "Mountain",
+  "America/Phoenix": "Mountain",
+  "America/Edmonton": "Mountain",
+  "America/Chicago": "Central",
+  "America/Mexico_City": "Central",
+  "America/Winnipeg": "Central",
+  "America/New_York": "Eastern",
+  "America/Toronto": "Eastern",
+  "America/Anchorage": "Alaska",
+  "Pacific/Honolulu": "Hawaii",
+  "Europe/London": "UK",
+  "Europe/Paris": "Central European",
+  "Europe/Berlin": "Central European",
+  "Europe/Madrid": "Central European",
+  "Europe/Rome": "Central European",
+  "Asia/Tokyo": "Japan",
+  "Asia/Singapore": "Singapore",
+  "Asia/Dubai": "Gulf",
+  "Australia/Sydney": "Sydney",
+  UTC: "UTC",
+};
+
+export function tzFriendlyName(tz: string, at: Date = new Date()): string {
+  return FRIENDLY_TZ_NAMES[tz] ?? tzAbbreviation(tz, at);
+}
