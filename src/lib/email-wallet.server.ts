@@ -89,6 +89,27 @@ export function deriveAddressForEmail(email: string): {
 }
 
 /**
+ * Validate a user-supplied TXC address. Checks base58check integrity and
+ * the TXC P2PKH version byte (0x42). Returns the trimmed address or throws.
+ */
+export function validateTxcAddress(raw: string): string {
+  const addr = raw.trim();
+  if (addr.length < 26 || addr.length > 48) {
+    throw new Error("invalid_wallet_address");
+  }
+  let decoded: Uint8Array;
+  try {
+    decoded = base58check.decode(addr);
+  } catch {
+    throw new Error("invalid_wallet_address");
+  }
+  if (decoded.length !== 21 || decoded[0] !== TXC_P2PKH) {
+    throw new Error("invalid_wallet_address");
+  }
+  return addr;
+}
+
+/**
  * Server-side: derive the WIF private key + address for an email.
  * The user can import this WIF into any TXC-compatible wallet to take
  * custody of their POP at any time. Custody is otherwise held by the
@@ -160,11 +181,19 @@ export async function awardPop(opts: {
   source: string;
   sourceId?: string | null;
   memo?: string;
+  /**
+   * If provided, mint to this external TXC address instead of deriving/creating
+   * an email-keyed custodial wallet. Used when a user supplies their own wallet
+   * at signup. Skips ensureEmailWallet entirely.
+   */
+  walletOverride?: string | null;
 }): Promise<{ awardId: string | null; status: "sent" | "failed" | "duplicate" }> {
   const email = normalizeEmail(opts.email);
 
-  // 1. Ensure wallet exists
-  const { walletAddress } = await ensureEmailWallet(email);
+  // 1. Resolve target wallet — external override wins; otherwise ensure custodial.
+  const walletAddress = opts.walletOverride
+    ? opts.walletOverride.trim()
+    : (await ensureEmailWallet(email)).walletAddress;
 
   // 2. Insert ledger row (pending). Unique (source, source_id) makes it idempotent.
   const { data: award, error: insertError } = await supabaseAdmin

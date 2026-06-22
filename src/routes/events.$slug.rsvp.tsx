@@ -62,6 +62,7 @@ const signupSchema = z
       .max(32, "Mobile number is too long"),
     instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
     telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    external_wallet: z.string().trim().max(48).optional().or(z.literal("")),
     is_friend: z.enum(["yes", "no"]),
     guest_count: z.number().int().min(0).max(20),
   })
@@ -108,6 +109,7 @@ function SignupPage() {
       mobile_number: form.get("mobile_number"),
       instagram_handle: form.get("instagram_handle"),
       telegram_handle: form.get("telegram_handle"),
+      external_wallet: form.get("external_wallet"),
       is_friend: form.get("is_friend"),
       guest_count: Number(form.get("guest_count") ?? 0),
     });
@@ -128,6 +130,7 @@ function SignupPage() {
           guest_count:
             parsed.data.is_friend === "yes" ? parsed.data.guest_count : 0,
           event_slug: slug,
+          external_wallet: parsed.data.external_wallet || null,
         },
       });
       try {
@@ -140,6 +143,10 @@ function SignupPage() {
     } catch (error) {
       if (error instanceof Error && error.message === "duplicate_signup") {
         toast.error("That email or mobile number is already signed up.");
+        return;
+      }
+      if (error instanceof Error && error.message === "invalid_wallet_address") {
+        toast.error("That doesn't look like a valid TXC address.");
         return;
       }
       toast.error("Couldn't save your signup. Please try again.");
@@ -342,6 +349,23 @@ function SignupPage() {
                   </div>
                 </Field>
               )}
+
+              <Field label="TXC wallet address (optional)" htmlFor="external_wallet">
+                <input
+                  id="external_wallet"
+                  name="external_wallet"
+                  maxLength={48}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className={`${inputCls} font-mono`}
+                  placeholder="Tnnnnn… — leave blank & we'll spin one up for you"
+                />
+                <p className="mt-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Already have a TXC wallet? Drop your address & we'll mint POP straight to it.
+                </p>
+              </Field>
+
+
 
               <button
                 type="submit"
