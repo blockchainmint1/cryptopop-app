@@ -43,7 +43,7 @@ function TermsPage() {
 
       <main className="mx-auto max-w-3xl px-6 py-12">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          Legal · Singapore
+          Legal
         </p>
         <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
           Terms of Service
@@ -53,9 +53,8 @@ function TermsPage() {
         <Section title="1. About CryptoPOP">
           <p>
             CryptoPOP ("we", "us", "our") is a proof-of-participation wallet that lets
-            you collect POP by attending real-world events in Singapore and
-            beyond. The service is operated from Singapore. By using CryptoPOP you
-            agree to these Terms.
+            you collect POP by attending real-world events around the world. By using
+            CryptoPOP you agree to these Terms.
           </p>
         </Section>
 
