@@ -5,7 +5,7 @@ import { createHash, createHmac } from "node:crypto";
  * Cloudflare Workers / TanStack server runtime.
  */
 
-export const FROM_EMAIL = "noreply@cryptopop.asia";
+export const FROM_EMAIL = "noreply@cryptopop.org";
 export const FROM_NAME_DEFAULT = "CryptoPOP";
 
 type SesHeader = { Name: string; Value: string };

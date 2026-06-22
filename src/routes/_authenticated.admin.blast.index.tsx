@@ -52,7 +52,7 @@ function BlastCompose() {
   const [previewText, setPreviewText] = useState("");
   const [html, setHtml] = useState(DEFAULT_HTML);
   const [fromName, setFromName] = useState("CryptoPOP");
-  const [fromEmail, setFromEmail] = useState("noreply@cryptopop.asia");
+  const [fromEmail, setFromEmail] = useState("noreply@cryptopop.org");
   const [replyTo, setReplyTo] = useState("");
   const [recipientsRaw, setRecipientsRaw] = useState("");
   const [testEmail, setTestEmail] = useState("");
@@ -167,7 +167,7 @@ function BlastCompose() {
             </div>
             <div className="col-span-2">
               <Label>Reply-To (optional)</Label>
-              <Input value={replyTo} onChange={(e) => setReplyTo(e.target.value)} placeholder="hello@cryptopop.asia" />
+              <Input value={replyTo} onChange={(e) => setReplyTo(e.target.value)} placeholder="hello@cryptopop.org" />
             </div>
             <div className="col-span-2">
               <Label>Subject</Label>

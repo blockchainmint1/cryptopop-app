@@ -33,7 +33,7 @@ export const BRAND = {
 }
 
 const LOGO_URL =
-  'https://cryptopop.asia/cryptopop-logo.png' // best-effort; falls back to wordmark text
+  'https://cryptopop.org/cryptopop-logo.png' // best-effort; falls back to wordmark text
 
 interface ShellProps {
   preview: string
@@ -90,8 +90,8 @@ export const BrandShell = ({ preview, children }: ShellProps) => (
         <Section style={{ textAlign: 'center', padding: '24px 16px 8px' }}>
           <Text style={footerText}>
             © {new Date().getFullYear()} CryptoPOP ·{' '}
-            <Link href="https://cryptopop.asia" style={footerLink}>
-              cryptopop.asia
+            <Link href="https://cryptopop.org" style={footerLink}>
+              cryptopop.org
             </Link>
           </Text>
           <Text style={footerSmall}>

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cryptopop.asia/sitemap.xml
+Sitemap: https://cryptopop.org/sitemap.xml
