@@ -52,6 +52,7 @@ export async function notifyEventSignup(data: {
   instagram?: string | null;
   telegram?: string | null;
   isFriend: boolean;
+  guestCount?: number;
   signupId: string;
 }) {
   const lines = [
@@ -63,7 +64,10 @@ export async function notifyEventSignup(data: {
   ];
   if (data.instagram) lines.push(`📸 IG: @${escapeHtml(data.instagram)}`);
   if (data.telegram) lines.push(`💬 TG: @${escapeHtml(data.telegram)}`);
-  lines.push(`👥 Bringing a friend: ${data.isFriend ? "Yes" : "No"}`);
+  const guests = data.guestCount ?? 0;
+  lines.push(
+    `👥 Bringing a friend: ${data.isFriend ? `Yes${guests > 0 ? ` (+${guests} guest${guests === 1 ? "" : "s"})` : ""}` : "No"}`,
+  );
   lines.push(``);
   lines.push(`<code>${data.signupId}</code>`);
   await sendTelegramMessage({ chatId: SIGNUPS_CHAT_ID, text: lines.join("\n") });
