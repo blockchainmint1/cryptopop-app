@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueTransactionalEmail } from "./email/send.server";
-import { ensureEmailWallet, awardPop } from "./email-wallet.server";
+import { ensureEmailWallet, awardPop, validateTxcAddress } from "./email-wallet.server";
 import { getRewardAmount } from "./reward-rules.server";
 import { notifyEventSignup } from "./telegram.server";
 
