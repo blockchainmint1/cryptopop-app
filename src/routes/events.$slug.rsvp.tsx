@@ -145,6 +145,10 @@ function SignupPage() {
         toast.error("That email or mobile number is already signed up.");
         return;
       }
+      if (error instanceof Error && error.message === "invalid_wallet_address") {
+        toast.error("That doesn't look like a valid TXC address.");
+        return;
+      }
       toast.error("Couldn't save your signup. Please try again.");
       return;
     } finally {
