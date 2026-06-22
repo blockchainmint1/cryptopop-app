@@ -23,6 +23,7 @@ import { Route as ChangeLogRouteImport } from './routes/change-log'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -121,6 +122,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DocsRoute,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
@@ -287,7 +293,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
-  '/docs': typeof DocsRoute
+  '/docs': typeof DocsRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
@@ -304,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/docs/': typeof DocsIndexRoute
   '/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
@@ -331,7 +338,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
-  '/docs': typeof DocsRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
@@ -347,6 +353,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/docs': typeof DocsIndexRoute
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
@@ -375,7 +382,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
-  '/docs': typeof DocsRoute
+  '/docs': typeof DocsRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/mission': typeof MissionRoute
@@ -392,6 +399,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/docs/': typeof DocsIndexRoute
   '/_authenticated/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/_authenticated/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
@@ -438,6 +446,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/email/unsubscribe'
+    | '/docs/'
     | '/admin/blast'
     | '/admin/codes'
     | '/admin/crm'
@@ -465,7 +474,6 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/change-log'
-    | '/docs'
     | '/login'
     | '/logout'
     | '/mission'
@@ -481,6 +489,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/email/unsubscribe'
+    | '/docs'
     | '/admin/codes'
     | '/admin/crm'
     | '/admin/email-templates'
@@ -525,6 +534,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/email/unsubscribe'
+    | '/docs/'
     | '/_authenticated/admin/blast'
     | '/_authenticated/admin/codes'
     | '/_authenticated/admin/crm'
@@ -554,7 +564,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiRoute: typeof ApiRouteWithChildren
   ChangeLogRoute: typeof ChangeLogRoute
-  DocsRoute: typeof DocsRoute
+  DocsRoute: typeof DocsRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   MissionRoute: typeof MissionRoute
@@ -675,6 +685,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/docs/': {
+      id: '/docs/'
+      path: '/'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
@@ -968,12 +985,22 @@ const ApiRouteChildren: ApiRouteChildren = {
 
 const ApiRouteWithChildren = ApiRoute._addFileChildren(ApiRouteChildren)
 
+interface DocsRouteChildren {
+  DocsIndexRoute: typeof DocsIndexRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsIndexRoute: DocsIndexRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiRoute: ApiRouteWithChildren,
   ChangeLogRoute: ChangeLogRoute,
-  DocsRoute: DocsRoute,
+  DocsRoute: DocsRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   MissionRoute: MissionRoute,
