@@ -30,10 +30,10 @@ function indexForEmail(email: string): number {
 }
 
 function loadMasterRoot(): HDKey {
-  const mnemonic = process.env.WALLET_MASTER_SEED;
-  if (!mnemonic) throw new Error("WALLET_MASTER_SEED not configured");
+  const mnemonic = process.env.WALLET_MASTER_SEED ?? process.env.TXC_SEED;
+  if (!mnemonic) throw new Error("WALLET_MASTER_SEED (or TXC_SEED) not configured");
   if (!validateMnemonic(mnemonic.trim(), wordlist)) {
-    throw new Error("WALLET_MASTER_SEED is not a valid BIP39 mnemonic");
+    throw new Error("Master seed is not a valid BIP39 mnemonic");
   }
   const seed = mnemonicToSeedSync(mnemonic.trim());
   return HDKey.fromMasterSeed(seed);
