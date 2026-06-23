@@ -1,16 +1,13 @@
-// TXC L2 (Omni Layer) mint pipeline — server-only.
-// Builds + signs an Omni "Grant" transaction with MINTER_WIF and broadcasts it.
+// TXC L2 (Omni Layer) pipeline — server-only.
+// Builds + signs Omni transactions and broadcasts via mempool.texitcoin.org.
 //
-// Flow per mint:
-//   1. omni_createpayload_grant <propertyId> <amount>   → payload hex (RPC)
-//   2. GET issuer UTXOs (esplora)
-//   3. Build tx: OP_RETURN("omni\0\0" + payload) + dust to receiver + change
-//   4. Sign every input with MINTER_WIF (bitcoinjs-lib Psbt)
-//   5. POST raw hex to esplora /tx (broadcast), returns txid
+// Two entry points share the same UTXO/sign/broadcast plumbing:
+//   - mintGrant({ amount, toAddress, memo, propertyId?, minterWif? })
+//   - issueManagedProperty({ tokenName, category, subcategory, url, minterWif })
 //
-// Env: TXC_RPC_URL (or TXC_RPC_ADDRESS), TXC_RPC_USER, TXC_RPC_PASS,
-//      MINTER_WIF (or TXC_WIF), TXC_TOKEN_ID
-// Token defaults to #37 (CryptoPOP .org, managed) if TXC_TOKEN_ID unset.
+// If propertyId/minterWif are omitted, mintGrant falls back to env
+// (TXC_TOKEN_ID, MINTER_WIF/TXC_WIF) so the CryptoPOP USA flagship org
+// keeps working with zero caller changes.
 
 import * as bitcoin from "bitcoinjs-lib";
 import { ECPairFactory } from "ecpair";
@@ -21,43 +18,40 @@ bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
 // ---------- TXC network params ----------
-// P2PKH version byte 0x42 (decoded from issuer addr `ToeTASHn3LNNTgShPRDhP8r8npqDd3PauJ`).
-// P2SH and bech32 are placeholders we don't actually use for the mint flow.
+// P2PKH version byte 0x42 (decoded from issuer addr `ToeT...`).
 export const TXC_NETWORK: bitcoin.Network = {
   messagePrefix: "\x18Texitcoin Signed Message:\n",
   bech32: "tx",
   bip32: { public: 0x0488b21e, private: 0x0488ade4 },
   pubKeyHash: 0x42,
   scriptHash: 0x05,
-  wif: 0x80, // overridden per-WIF in decodeWif()
+  wif: 0x80, // overridden per-WIF in loadKey()
 };
 
-function getPropertyId(): number {
-  // Property #37 = CryptoPOP (POP), indivisible, managed. Issued for cryptopop.org.
-  // Issuer wallet: TbMELaDs18ANkWuF21iCWt7xYdmWx7GS9S (TXC_WIF).
-  // Issuance tx: 506581c4f1cbc392694e8602e9e0a65e02accb7bb73c6d630f8b87daa7c1ba8c
+const DUST_SATS = 10_000;
+const FEE_SATS_PER_VBYTE = 5;
+const MEMPOOL_BASE = "https://mempool.texitcoin.org/api";
+
+function envPropertyId(): number {
   const raw = process.env.TXC_TOKEN_ID ?? "37";
   const n = Number(raw);
   if (!Number.isInteger(n) || n <= 0) throw new Error(`TXC_TOKEN_ID invalid: ${raw}`);
   return n;
 }
 
-function getMinterWif(): string {
+function envMinterWif(): string {
   const v = process.env.MINTER_WIF ?? process.env.TXC_WIF;
   if (!v) throw new Error("MINTER_WIF (or TXC_WIF) not configured");
   return v;
 }
-const DUST_SATS = 10000;
-const FEE_SATS_PER_VBYTE = 5;
-const MEMPOOL_BASE = "https://mempool.texitcoin.org/api";
-
-// ---------- helpers ----------
 
 function envOrThrow(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`${name} not configured`);
   return v;
 }
+
+// ---------- RPC ----------
 
 async function rpc<T = unknown>(method: string, params: unknown[]): Promise<T> {
   const url = process.env.TXC_RPC_URL ?? process.env.TXC_RPC_ADDRESS;
@@ -77,6 +71,8 @@ async function rpc<T = unknown>(method: string, params: unknown[]): Promise<T> {
   return json.result;
 }
 
+// ---------- mempool helpers ----------
+
 type Utxo = { txid: string; vout: number; value: number };
 
 async function getUtxos(addr: string): Promise<Utxo[]> {
@@ -88,10 +84,6 @@ async function getUtxos(addr: string): Promise<Utxo[]> {
     value: number;
     status: { confirmed: boolean };
   }>;
-  // Include unconfirmed UTXOs — after a rapid mint, our own change output is
-  // still in mempool and we'd otherwise see "no UTXOs" until it confirms.
-  // Confirmed first so we prefer settled coins; unconfirmed (our change) only
-  // gets pulled in when needed.
   return raw
     .map((u) => ({ txid: u.txid, vout: u.vout, value: u.value, confirmed: u.status.confirmed }))
     .sort((a, b) => Number(b.confirmed) - Number(a.confirmed))
@@ -115,12 +107,29 @@ async function broadcast(rawHex: string): Promise<string> {
   return text;
 }
 
-// Decode the WIF using its embedded version byte (so we don't have to guess
-// TXC's WIF prefix). Returns the keypair + the discovered prefix for sanity.
-function loadKey(): { keyPair: ReturnType<typeof ECPair.fromWIF>; address: string } {
-  const wif = getMinterWif();
+export async function getAddressBalanceSats(
+  addr: string,
+): Promise<{ confirmed: number; unconfirmed: number }> {
+  const res = await fetch(`${MEMPOOL_BASE}/address/${addr}`);
+  if (!res.ok) throw new Error(`address stats http ${res.status}`);
+  const j = (await res.json()) as {
+    chain_stats: { funded_txo_sum: number; spent_txo_sum: number };
+    mempool_stats: { funded_txo_sum: number; spent_txo_sum: number };
+  };
+  return {
+    confirmed: j.chain_stats.funded_txo_sum - j.chain_stats.spent_txo_sum,
+    unconfirmed: j.mempool_stats.funded_txo_sum - j.mempool_stats.spent_txo_sum,
+  };
+}
+
+// ---------- key loading ----------
+
+function loadKey(wif: string): {
+  keyPair: ReturnType<typeof ECPair.fromWIF>;
+  address: string;
+  network: bitcoin.Network;
+} {
   const decoded = bs58check.decode(wif);
-  // 1 byte version, 32 byte priv, optional 1 byte compressed flag, optional 4 byte checksum
   const wifVersion = decoded[0];
   const network: bitcoin.Network = { ...TXC_NETWORK, wif: wifVersion };
   const keyPair = ECPair.fromWIF(wif, network);
@@ -128,68 +137,61 @@ function loadKey(): { keyPair: ReturnType<typeof ECPair.fromWIF>; address: strin
     pubkey: Buffer.from(keyPair.publicKey),
     network,
   });
-  if (!address) throw new Error("could not derive minter address from WIF");
-  return { keyPair, address };
+  if (!address) throw new Error("could not derive address from WIF");
+  return { keyPair, address, network };
 }
 
-// ---------- omni payload assembly ----------
+/**
+ * Generate a fresh TXC P2PKH keypair. Used by the org-minter wallet wizard.
+ * WIF version byte mirrors P2PKH (0x42 + 0x80 = 0xC2), matching the TXC
+ * convention used by all existing wallets in the system.
+ */
+export function generateMinterKeypair(): { address: string; wif: string } {
+  const network: bitcoin.Network = { ...TXC_NETWORK, wif: 0xc2 };
+  const keyPair = ECPair.makeRandom({ network });
+  const wif = keyPair.toWIF();
+  const { address } = bitcoin.payments.p2pkh({
+    pubkey: Buffer.from(keyPair.publicKey),
+    network,
+  });
+  if (!address) throw new Error("keypair generation failed");
+  return { address, wif };
+}
 
-// Class C OP_RETURN payload: "omni" magic + Omni RPC payload bytes.
-// `omni_createpayload_*` already includes the version/type bytes; adding extra
-// zero bytes shifts the payload and makes the node decode it as a Simple Send.
-function buildOmniOpReturn(grantPayloadHex: string): Buffer {
+// ---------- Omni payload helpers ----------
+
+function buildOmniOpReturn(payloadHex: string): Buffer {
   const magic = Buffer.from("omni", "ascii");
-  const grant = Buffer.from(grantPayloadHex, "hex");
-  return Buffer.concat([magic, grant]);
+  const payload = Buffer.from(payloadHex, "hex");
+  return Buffer.concat([magic, payload]);
 }
 
-// Format a mint count as a decimal-string acceptable to Omni. The node accepts
-// both "100" and "100.00000000" for indivisible token #21, normalizing to 100.
 function formatDivisibleAmount(units: number | string): string {
   const n = typeof units === "string" ? Number(units) : units;
   if (!Number.isFinite(n) || n <= 0) throw new Error("amount must be positive");
   return n.toFixed(8);
 }
 
-// ---------- main entry ----------
+// ---------- shared build + sign + broadcast ----------
 
-export type MintResult = { txHash: string; minterAddress: string };
+async function buildAndBroadcast(opts: {
+  payloadHex: string;
+  refAddress: string; // dust reference output (receiver for grants, issuer for issuance)
+  minterWif: string;
+}): Promise<{ txHash: string; minterAddress: string }> {
+  const { keyPair, address: issuer, network } = loadKey(opts.minterWif);
 
-export async function mintGrant(opts: {
-  amount: number;
-  toAddress: string;
-  memo?: string;
-}): Promise<MintResult> {
-  const { keyPair, address: issuer } = loadKey();
-
-  // 1. Get omni payload. The 3rd `grantdata` arg is an on-chain memo embedded
-  // in the Omni payload itself — perfect for attribution ("why this POP was
-  // granted"). Keep it short: the whole OP_RETURN must stay under the node's
-  // datacarrier size limit, so we cap memo at 60 bytes.
-  const amountStr = formatDivisibleAmount(opts.amount);
-  const memo = (opts.memo ?? "").slice(0, 60);
-  const payloadHex = await rpc<string>("omni_createpayload_grant", [
-    getPropertyId(),
-    amountStr,
-    memo,
-  ]);
-
-  // 2. Get UTXOs
   const utxos = await getUtxos(issuer);
   if (utxos.length === 0) throw new Error("issuer has no UTXOs — needs funding");
 
-  // Select UTXOs greedily (largest first) until we have enough for dust + est fee.
-  // Fee estimate: vsize ≈ 10 + 148*inputs + 34*regular_outputs + (10 + opReturnLen)
   utxos.sort((a, b) => b.value - a.value);
-  const network: bitcoin.Network = { ...TXC_NETWORK, wif: bs58check.decode(getMinterWif())[0] };
-  const opReturnData = buildOmniOpReturn(payloadHex);
+  const opReturnData = buildOmniOpReturn(opts.payloadHex);
   const opReturnScript = bitcoin.payments.embed({ data: [opReturnData] }).output!;
 
   const psbt = new bitcoin.Psbt({ network });
   let inputSats = 0;
   const usedUtxos: Utxo[] = [];
 
-  // Naive but reliable: include UTXOs until covered (dust + change_threshold + fee for current size)
   for (const u of utxos) {
     const hex = await getTxHex(u.txid);
     psbt.addInput({
@@ -199,28 +201,22 @@ export async function mintGrant(opts: {
     });
     usedUtxos.push(u);
     inputSats += u.value;
-
-    const estVsize =
-      10 + 148 * usedUtxos.length + 34 * 2 + (10 + opReturnData.length);
+    const estVsize = 10 + 148 * usedUtxos.length + 34 * 2 + (10 + opReturnData.length);
     const estFee = estVsize * FEE_SATS_PER_VBYTE;
     if (inputSats >= DUST_SATS + estFee + DUST_SATS) break;
   }
 
-  const finalVsize =
-    10 + 148 * usedUtxos.length + 34 * 2 + (10 + opReturnData.length);
+  const finalVsize = 10 + 148 * usedUtxos.length + 34 * 2 + (10 + opReturnData.length);
   const fee = finalVsize * FEE_SATS_PER_VBYTE;
   const change = inputSats - DUST_SATS - fee;
-  if (change < 0) throw new Error("insufficient TXC funds for mint fee");
+  if (change < 0) throw new Error("insufficient TXC funds for tx fee");
 
-  // Outputs (Omni Class C ordering: OP_RETURN first, then reference output)
   psbt.addOutput({ script: opReturnScript, value: 0n });
-  psbt.addOutput({ address: opts.toAddress, value: BigInt(DUST_SATS) });
+  psbt.addOutput({ address: opts.refAddress, value: BigInt(DUST_SATS) });
   if (change >= DUST_SATS) {
     psbt.addOutput({ address: issuer, value: BigInt(change) });
   }
 
-  // Sign all inputs
-  // bitcoinjs-lib's Signer interface expects sync sign returning Buffer
   const signer: bitcoin.Signer = {
     publicKey: Buffer.from(keyPair.publicKey),
     sign: (hash: Buffer) => Buffer.from(keyPair.sign(hash)),
@@ -229,10 +225,79 @@ export async function mintGrant(opts: {
     psbt.signInput(i, signer);
   }
   psbt.finalizeAllInputs();
-  const tx = psbt.extractTransaction();
-  const rawHex = tx.toHex();
+  const rawHex = psbt.extractTransaction().toHex();
 
-  // Broadcast
   const txid = await broadcast(rawHex);
   return { txHash: txid, minterAddress: issuer };
+}
+
+// ---------- public API ----------
+
+export type MintResult = { txHash: string; minterAddress: string };
+
+export async function mintGrant(opts: {
+  amount: number;
+  toAddress: string;
+  memo?: string;
+  /** Override property id (per-org). Falls back to TXC_TOKEN_ID env. */
+  propertyId?: number;
+  /** Override minter WIF (per-org). Falls back to MINTER_WIF/TXC_WIF env. */
+  minterWif?: string;
+}): Promise<MintResult> {
+  const propertyId = opts.propertyId ?? envPropertyId();
+  const minterWif = opts.minterWif ?? envMinterWif();
+  const amountStr = formatDivisibleAmount(opts.amount);
+  const memo = (opts.memo ?? "").slice(0, 60);
+  const payloadHex = await rpc<string>("omni_createpayload_grant", [
+    propertyId,
+    amountStr,
+    memo,
+  ]);
+  return buildAndBroadcast({ payloadHex, refAddress: opts.toAddress, minterWif });
+}
+
+/**
+ * Issue a new Omni managed property (== a community's POP token).
+ * Ecosystem 1 (main), type 1 (indivisible, managed). After confirmation,
+ * the property id is queryable via omni_gettransaction(txid).
+ */
+export async function issueManagedProperty(opts: {
+  tokenName: string;
+  category?: string;
+  subcategory?: string;
+  url?: string;
+  data?: string;
+  minterWif: string;
+}): Promise<MintResult> {
+  const { address: issuer } = loadKey(opts.minterWif);
+  const payloadHex = await rpc<string>("omni_createpayload_issuancemanaged", [
+    1, // ecosystem (main)
+    1, // type (indivisible)
+    0, // previousId (0 = new property)
+    (opts.category ?? "POP").slice(0, 70),
+    (opts.subcategory ?? "Community").slice(0, 70),
+    opts.tokenName.slice(0, 70),
+    (opts.url ?? "").slice(0, 70),
+    (opts.data ?? "").slice(0, 70),
+  ]);
+  return buildAndBroadcast({ payloadHex, refAddress: issuer, minterWif: opts.minterWif });
+}
+
+/**
+ * Resolve the property id created by an issuance transaction. Returns null
+ * until the tx is confirmed and the Omni node has indexed it.
+ */
+export async function getPropertyIdForIssuanceTx(txid: string): Promise<number | null> {
+  try {
+    const tx = await rpc<{ propertyid?: number; valid?: boolean; confirmations?: number }>(
+      "omni_gettransaction",
+      [txid],
+    );
+    if (tx && tx.valid && typeof tx.propertyid === "number" && tx.propertyid > 0) {
+      return tx.propertyid;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
