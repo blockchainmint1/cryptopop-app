@@ -10,10 +10,12 @@ import {
   ScanLine,
   Settings2,
   Plus,
+  Zap,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminStats } from "@/lib/events-admin.functions";
+import { getMyActiveOrg } from "@/lib/mint-token.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({ meta: [{ title: "Admin Dashboard — CryptoPOP" }] }),
@@ -21,17 +23,26 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 });
 
 type Stats = Awaited<ReturnType<typeof getAdminStats>>;
+type ActiveOrg = Awaited<ReturnType<typeof getMyActiveOrg>>["org"];
 
 function AdminDashboard() {
   const fetchStats = useServerFn(getAdminStats);
+  const fetchOrg = useServerFn(getMyActiveOrg);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [org, setOrg] = useState<ActiveOrg>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats()
       .then(setStats)
       .catch((e) => setErr(e instanceof Error ? e.message : "Failed to load"));
-  }, [fetchStats]);
+    fetchOrg()
+      .then((r) => setOrg(r.org))
+      .catch(() => {});
+  }, [fetchStats, fetchOrg]);
+
+  const mintLocked = org !== null && !org.mintComplete;
+
 
   const cards = [
     {
@@ -93,6 +104,33 @@ function AdminDashboard() {
           {err}
         </Card>
       )}
+
+      {mintLocked && org && (
+        <Card className="p-6 border-primary/40 bg-primary/5 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-primary/15 p-2">
+              <Zap className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-xl font-semibold">
+                Mint your POP token to unlock {org.name}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+                POP is your community's on-chain reward token. Until it's issued on TEXITcoin,
+                events and rewards stay locked. The wizard walks you through naming, funding, and
+                broadcasting — takes about 5 minutes.
+              </p>
+            </div>
+            <Button asChild>
+              <Link to="/admin/mint-token">
+                Start <Zap className="h-4 w-4 ml-1" />
+              </Link>
+            </Button>
+          </div>
+        </Card>
+      )}
+
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (

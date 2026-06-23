@@ -1,86 +1,76 @@
-## My take
+# Phase 3 — Guided POP Token Minting
 
-This works, and the right shape is an **org-per-admin platform** (like Eventbrite + Loyalty + on-chain receipts). The two hardest pieces are (1) custody of each org's TXC minter wallet and (2) cleanly scoping every existing table to an org without breaking CryptoPOP USA. Everything else is incremental.
+Goal: every org can mint its own POP token on TXC L2 (Omni managed property) through a 4-step wizard. CryptoPOP USA stays on property #37 / current WIF — nothing breaks for it.
 
-I'd **strongly recommend custodied minter wallets to start** (we hold the WIF, encrypted) — same model we use today, just one wallet per org instead of one global wallet. "Bring your own wallet" can come later as an upgrade. Otherwise onboarding becomes a 30-minute crypto tutorial and adoption dies.
+## Strategy: de-risk first
 
-I'd also recommend **defaulting new events to Unlisted** (link/QR only, not on the public directory). Admins opt in to Public per event. Protects token supply by default and matches how most community organizers actually think.
+Build the on-chain plumbing as standalone server functions and prove it against a **second** test token issued from a fresh wallet under the CryptoPOP USA org row before exposing the wizard to new admins. CryptoPOP USA keeps property #37 either way.
 
----
+## Slice A — Refactor TXC pipeline to be org-aware (no UI)
 
-## Phases
+1. `src/lib/txc.server.ts` — `mintGrant({ to, amount, memo, propertyId, minterWif })`. Drop env fallbacks at the call site; keep them only inside a `resolveMinterFromEnv()` helper used for one-off scripts.
+2. New `src/lib/org-minter.server.ts` — `getOrgMinter(orgId)` returns `{ propertyId, minterWif, address }`. Looks up `organizations.txc_property_id` + joins `organization_wallet_secrets`, decrypts WIF with `wallet-crypto.server`. Throws `OrgNotMintedError` if `txc_property_id` is null.
+3. Thread `orgId` through every mint call site:
+   - `pop-awards-admin.functions.ts` (admin manual award) — derive from event's `org_id`
+   - `pop-reconcile.functions.ts` — derive per pending row
+   - `qr.functions.ts` (claim) — derive from qr_code's event's `org_id`
+   - `email-wallet.server.ts` — derive from award row's `org_id`
+4. Backfill check: CryptoPOP USA org row already has property 37 + minter_wallet_address. We need to **insert** its existing TXC_WIF (encrypted) into `organization_wallet_secrets` so prod keeps working. One-time migration.
 
-### Phase 1 — Multi-tenancy foundation (no UI changes for existing users)
-- New `organizations` table: name, slug, brand (logo/colors), `txc_property_id` (nullable until minted), `minter_wallet_address`, `minter_wallet_encrypted_wif`, `pop_token_symbol`, `pop_token_name`, status.
-- New `organization_members` table: (org_id, user_id, role: owner/admin/staff). Replaces the global `user_roles='admin'` check for org-scoped actions. Global `admin` role stays for platform superadmin (you).
-- Add `org_id` (nullable for migration, then NOT NULL) to: `events`, `qr_codes`, `pop_awards`, `claims`, `event_signups`, `reward_rules`, `event_quiz_questions`, `blast_campaigns`, `blast_recipients`.
-- Migration: create `org_id = <CryptoPOP USA org>` and backfill every existing row to it. You become its owner.
-- Rewrite every admin server fn to filter by `org_id` from context, not show all rows globally.
+## Slice B — Wallet generation + storage
 
-### Phase 2 — Public signup + onboarding
-- Open signup (currently the app is invite-only-feeling). New `/start` flow: sign up → "Create your community" → org name, slug, brand colors, logo.
-- Lands on a blank `/admin` dashboard scoped to that org with three big "next step" cards: **Mint your POP token → Create your first event → Print your QR poster**.
-- Until token is minted, the rest of the dashboard is locked with explanatory copy.
+5. `wallet-crypto.server.ts` already encrypts; add `encryptOrgMinterWif(orgId, wif)` / `decryptOrgMinterWif(orgId, ciphertext)` keyed by `WALLET_ENCRYPTION_KEY + orgId`.
+6. Server fn `createOrgMinterWallet({ orgId })` — owners only:
+   - generate fresh ECPair on TXC network
+   - derive P2PKH address
+   - encrypt WIF
+   - upsert into `organization_wallet_secrets`, set `organizations.minter_wallet_address`
+   - idempotent: if address already set and secret already exists, return existing
 
-### Phase 3 — Guided POP token minting
-- "Mint POP Token" wizard:
-  1. Pick token name + symbol (e.g. "Lakehouse POP", "LAKE") and total supply cap.
-  2. Confirm — show estimated TXC fee, explain it's permanent + on-chain.
-  3. Server: generate a new TXC issuer keypair, encrypt the WIF with a per-row key derived from `WALLET_ENCRYPTION_KEY` + org_id, store address + ciphertext.
-  4. **Funding step**: show the new issuer address with a small TXC funding requirement (covers issuance + first ~100 mints). User sends TXC to it; we poll mempool.texitcoin.org until funded.
-  5. Issue the Omni property (managed, indivisible) via `omni_sendissuancemanaged`, broadcast, wait for confirmation, store `txc_property_id` on the org.
-- Refactor `src/lib/txc.server.ts` to take `propertyId` + `minterWif` from the org row instead of `process.env`. Existing CryptoPOP USA org row holds property #37 + current WIF so nothing breaks.
+## Slice C — Funding poller
 
-### Phase 4 — Per-event visibility + public directory
-- Add `visibility` to `events`: `public | unlisted | private`. Default `unlisted`.
-  - `public` — listed in `/discover` and the org's `/o/<slug>` page; anyone can RSVP and claim.
-  - `unlisted` — accessible by direct link / QR only; not in directories.
-  - `private` — RSVP requires invite or pre-added email; QR claim still respects geofence/time window.
-- New routes:
-  - `/discover` — public global directory; filter by location/date/org.
-  - `/o/$slug` — org public page (brand, upcoming public events, "claimed X POP from this community" counter).
-  - `/o/$slug/events/$event` — public event detail.
-- Existing `/events/$slug/rsvp` continues to work for direct links.
+7. Server fn `getMinterFundingStatus({ orgId })` — returns `{ address, balanceSats, requiredSats, confirmations, ready }`. Polls mempool.texitcoin.org `/address/<addr>` for confirmed balance. Required = enough TXC for issuance (~3k sats) + ~100 mints buffer.
+8. UI polls every 6s while wizard is open on this step.
 
-### Phase 5 — Platform polish (after MVP works)
-- Org switcher in the admin header (for users who belong to multiple orgs — staff at events, contractors).
-- "Featured orgs" surface on homepage; CryptoPOP USA is the seed featured org and stays on the marketing site.
-- Public API key per org for embedding their own POP balance widget.
-- Bring-your-own-wallet upgrade path: rotate from custodial to external.
+## Slice D — Issue Omni managed property
 
----
+9. Server fn `issueOrgPopToken({ orgId, tokenName, tokenSymbol })` — owners only:
+   - guard: already has `txc_property_id` → return existing
+   - guard: funding status `ready` true
+   - RPC `omni_sendissuancemanaged` from minter wif (we sign locally same as mintGrant), broadcast via mempool /tx
+   - poll `omni_listproperties` until new property visible, store `txc_property_id` on org
+   - store `pop_token_name`, `pop_token_symbol` on org
+10. Wizard step shows broadcast txid + link to mempool.texitcoin.org and live "waiting for confirmation".
 
-## Technical detail (engineer-facing)
+## Slice E — Wizard UI
 
-**Permissions model**
-- Keep global `user_roles` ('admin' = platform staff, only you to start).
-- All admin server fns become: `assertOrgRole(userId, orgId, ['owner','admin'])` instead of `assertAdmin(userId)`. The `orgId` comes from a header, route param, or the org membership lookup for the resource's `org_id`.
-- RLS: every org-scoped table gets a policy "user is a member of this row's org_id" via a `is_org_member(org_id, role[])` security-definer function.
+11. New route `_authenticated.admin.mint-token.tsx` — 4 steps:
+    1. **Name your token** — name (e.g. "Lakehouse POP"), symbol (e.g. "LAKE", 3–5 chars, uppercase). Validate uniqueness on submit only at wizard-finish.
+    2. **Review** — show on-chain fee estimate, "this is permanent", confirm.
+    3. **Fund the minter** — show address + QR + live balance + amount needed. "Send X TXC to this address." Auto-advances when ready.
+    4. **Issue** — one button → calls `issueOrgPopToken`, shows txid, polls until property id assigned. Done → redirect to `/admin`.
+12. Dashboard lock: `_authenticated.admin.index.tsx` checks org's `txc_property_id`. If null → big card "Mint your POP token" → wizard. Existing tiles disabled with explanatory copy. CryptoPOP USA unaffected (property already set).
 
-**TXC refactor (low risk, mechanical)**
-- `mintGrant({ to, amount })` → `mintGrant({ to, amount, propertyId, minterWif })`.
-- Resolve those two from the award's `org_id` → org row before calling.
-- Decrypt minterWif at call time; never log it. Encryption uses the existing `wallet-crypto.server` pattern.
+## Slice F — De-risk run (manual, you + me)
 
-**Backfill safety**
-- Add `org_id` as nullable in migration A → backfill in migration B → set NOT NULL + FK + RLS in migration C. Three migrations, each reversible.
+13. Create a second test org "TXC Test Org" (owner = you).
+14. Run the wizard end-to-end against it on prod. Verify: wallet creation → fund with ~5000 sats → issuance broadcasts → property id stored → mint a grant to a test address → balance shows on chain.
+15. Only after that, expose the "Create your community" public flow (Phase 2).
 
-**Routes**
-- `_authenticated/admin/*` becomes org-scoped via a parent layout that resolves the active org (from URL param or "last used" cookie) and provides it in context.
-- New top-level public routes for discovery as above. Each gets its own loader + `head()` with org-/event-specific OG tags.
+## Technical notes (engineer-facing)
 
-**Onboarding funding UX**
-- "Send X TXC to this address" with a copy button, QR code of the address, and a live poller. Confirmation in ~1 block. If never funded, the wizard can resume later from the dashboard.
+- `omni_sendissuancemanaged` RPC returns a complete signed hex if the node holds the WIF; we don't want the node to hold WIFs. Instead use `omni_createpayload_issuancemanaged` + same UTXO/sign/broadcast path as `mintGrant`. Reuse helpers from `txc.server.ts` (factor `buildOmniTx({ payloadHex, toAddress, wif })` so both grant and issuance share it).
+- WIF encryption: AES-GCM with key = HKDF(WALLET_ENCRYPTION_KEY, salt=orgId). Same pattern as existing `wallet-crypto.server`.
+- Funding requirement: 1 issuance tx (~250 vbytes × 5 sat/vb = 1250 sats) + 100 mints × ~1500 sats = ~150k sats buffer. Show as TXC (8 decimals).
+- Property naming on chain: name, category="POP", subcategory="Community", url=org's public page, data="" — managed, indivisible.
+- All wizard mutations gated by `has_org_role(uid, orgId, ARRAY['owner']::org_role[])`.
 
-**What stays the same**
-- The on-chain mint pipeline (`txc.server.ts`), POP awards reconciliation, QR signing/scanning, email blasts, geofence enforcement. All of it just gets `org_id` threaded through.
+## Out of scope for Phase 3
 
----
+- Platform-sponsored funding pool (open question #1 from the original plan). Wizard says "send X TXC yourself" for now; we add sponsorship in Phase 5.
+- Bring-your-own-wallet rotation.
+- Mint-time fee billing.
 
-## Open question to resolve before Phase 3
+## Open question
 
-**Funding the first 100 mints.** Two paths:
-1. **Org pays.** Cleaner accounting, but means every new admin needs to acquire and send TXC before their first event — real friction.
-2. **Platform sponsors a starter pool.** We send a small TXC float to each new org wallet on creation; pay it back from a future "creator fee" or org subscription. Best for adoption.
-
-I'd pick #2 for launch, capped at e.g. enough TXC for ~50 mints. We can add billing later.
+The original plan listed funding the first 100 mints as an open question. **I'm proposing org-pays-itself for the de-risk pass** — simplest, no platform float to manage, you control the test. We can add platform sponsorship later. OK?
