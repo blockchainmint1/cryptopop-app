@@ -29,6 +29,7 @@ import { Route as DocsUsersRouteImport } from './routes/docs.users'
 import { Route as DocsAdminRouteImport } from './routes/docs.admin'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated.start'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
@@ -155,6 +156,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedStartRoute = AuthenticatedStartRouteImport.update({
+  id: '/start',
+  path: '/start',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   id: '/scan',
@@ -326,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/docs/admin': typeof DocsAdminRoute
@@ -372,6 +379,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/docs/admin': typeof DocsAdminRoute
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
+  '/_authenticated/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/docs/admin': typeof DocsAdminRoute
@@ -471,6 +480,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/start'
     | '/auth/callback'
     | '/claim/$token'
     | '/docs/admin'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/start'
     | '/auth/callback'
     | '/claim/$token'
     | '/docs/admin'
@@ -565,6 +576,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
+    | '/_authenticated/start'
     | '/auth/callback'
     | '/claim/$token'
     | '/docs/admin'
@@ -764,6 +776,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/start': {
+      id: '/_authenticated/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof AuthenticatedStartRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/scan': {
       id: '/_authenticated/scan'
@@ -1022,6 +1041,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedRecoverWalletRoute: typeof AuthenticatedRecoverWalletRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
+  AuthenticatedStartRoute: typeof AuthenticatedStartRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1029,6 +1049,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedRecoverWalletRoute: AuthenticatedRecoverWalletRoute,
   AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
+  AuthenticatedStartRoute: AuthenticatedStartRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
