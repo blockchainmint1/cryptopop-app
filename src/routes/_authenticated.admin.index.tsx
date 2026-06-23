@@ -10,10 +10,12 @@ import {
   ScanLine,
   Settings2,
   Plus,
+  Zap,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminStats } from "@/lib/events-admin.functions";
+import { getMyActiveOrg } from "@/lib/mint-token.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({ meta: [{ title: "Admin Dashboard — CryptoPOP" }] }),
@@ -21,17 +23,26 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 });
 
 type Stats = Awaited<ReturnType<typeof getAdminStats>>;
+type ActiveOrg = Awaited<ReturnType<typeof getMyActiveOrg>>["org"];
 
 function AdminDashboard() {
   const fetchStats = useServerFn(getAdminStats);
+  const fetchOrg = useServerFn(getMyActiveOrg);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [org, setOrg] = useState<ActiveOrg>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats()
       .then(setStats)
       .catch((e) => setErr(e instanceof Error ? e.message : "Failed to load"));
-  }, [fetchStats]);
+    fetchOrg()
+      .then((r) => setOrg(r.org))
+      .catch(() => {});
+  }, [fetchStats, fetchOrg]);
+
+  const mintLocked = org !== null && !org.mintComplete;
+
 
   const cards = [
     {

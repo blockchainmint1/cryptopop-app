@@ -41,6 +41,7 @@ import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated.admin.signups'
 import { Route as AuthenticatedAdminRewardsRouteImport } from './routes/_authenticated.admin.rewards'
 import { Route as AuthenticatedAdminPopAwardsRouteImport } from './routes/_authenticated.admin.pop-awards'
+import { Route as AuthenticatedAdminMintTokenRouteImport } from './routes/_authenticated.admin.mint-token'
 import { Route as AuthenticatedAdminEmailTemplatesRouteImport } from './routes/_authenticated.admin.email-templates'
 import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated.admin.crm'
 import { Route as AuthenticatedAdminCodesRouteImport } from './routes/_authenticated.admin.codes'
@@ -221,6 +222,12 @@ const AuthenticatedAdminPopAwardsRoute =
     path: '/pop-awards',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminMintTokenRoute =
+  AuthenticatedAdminMintTokenRouteImport.update({
+    id: '/mint-token',
+    path: '/mint-token',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEmailTemplatesRoute =
   AuthenticatedAdminEmailTemplatesRouteImport.update({
     id: '/email-templates',
@@ -329,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
+  '/admin/mint-token': typeof AuthenticatedAdminMintTokenRoute
   '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
   '/admin/rewards': typeof AuthenticatedAdminRewardsRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -373,6 +381,7 @@ export interface FileRoutesByTo {
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
+  '/admin/mint-token': typeof AuthenticatedAdminMintTokenRoute
   '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
   '/admin/rewards': typeof AuthenticatedAdminRewardsRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -422,6 +431,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/_authenticated/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
+  '/_authenticated/admin/mint-token': typeof AuthenticatedAdminMintTokenRoute
   '/_authenticated/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
   '/_authenticated/admin/rewards': typeof AuthenticatedAdminRewardsRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/admin/codes'
     | '/admin/crm'
     | '/admin/email-templates'
+    | '/admin/mint-token'
     | '/admin/pop-awards'
     | '/admin/rewards'
     | '/admin/signups'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/admin/codes'
     | '/admin/crm'
     | '/admin/email-templates'
+    | '/admin/mint-token'
     | '/admin/pop-awards'
     | '/admin/rewards'
     | '/admin/signups'
@@ -563,6 +575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/codes'
     | '/_authenticated/admin/crm'
     | '/_authenticated/admin/email-templates'
+    | '/_authenticated/admin/mint-token'
     | '/_authenticated/admin/pop-awards'
     | '/_authenticated/admin/rewards'
     | '/_authenticated/admin/signups'
@@ -836,6 +849,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPopAwardsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/mint-token': {
+      id: '/_authenticated/admin/mint-token'
+      path: '/mint-token'
+      fullPath: '/admin/mint-token'
+      preLoaderRoute: typeof AuthenticatedAdminMintTokenRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/email-templates': {
       id: '/_authenticated/admin/email-templates'
       path: '/email-templates'
@@ -958,6 +978,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCodesRoute: typeof AuthenticatedAdminCodesRoute
   AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRoute
   AuthenticatedAdminEmailTemplatesRoute: typeof AuthenticatedAdminEmailTemplatesRoute
+  AuthenticatedAdminMintTokenRoute: typeof AuthenticatedAdminMintTokenRoute
   AuthenticatedAdminPopAwardsRoute: typeof AuthenticatedAdminPopAwardsRoute
   AuthenticatedAdminRewardsRoute: typeof AuthenticatedAdminRewardsRoute
   AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
@@ -972,6 +993,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCodesRoute: AuthenticatedAdminCodesRoute,
   AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRoute,
   AuthenticatedAdminEmailTemplatesRoute: AuthenticatedAdminEmailTemplatesRoute,
+  AuthenticatedAdminMintTokenRoute: AuthenticatedAdminMintTokenRoute,
   AuthenticatedAdminPopAwardsRoute: AuthenticatedAdminPopAwardsRoute,
   AuthenticatedAdminRewardsRoute: AuthenticatedAdminRewardsRoute,
   AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
