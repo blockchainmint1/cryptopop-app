@@ -124,7 +124,7 @@ function PassCard({ signup }: { signup: Signup }) {
         <h1 className="mt-3 font-display text-3xl font-bold">You're in!</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           You've earned your first <span className="font-semibold text-foreground">10 POP</span>.
-          Show this QR at the marina to check in.
+          Show this QR at the party to check in.
         </p>
       </div>
 
