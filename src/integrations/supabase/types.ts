@@ -603,6 +603,101 @@ export type Database = {
           },
         ]
       }
+      market_requests: {
+        Row: {
+          city: string
+          country: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          region: string | null
+          status: string
+          why: string | null
+        }
+        Insert: {
+          city: string
+          country?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          region?: string | null
+          status?: string
+          why?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          region?: string | null
+          status?: string
+          why?: string | null
+        }
+        Relationships: []
+      }
+      merchants: {
+        Row: {
+          address: string | null
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          market_slug: string
+          name: string
+          pop_per_visit: number
+          sort_order: number
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          market_slug: string
+          name: string
+          pop_per_visit?: number
+          sort_order?: number
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          market_slug?: string
+          name?: string
+          pop_per_visit?: number
+          sort_order?: number
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchants_market_slug_fkey"
+            columns: ["market_slug"]
+            isOneToOne: false
+            referencedRelation: "pop_markets"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -794,6 +889,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pop_markets: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          hero_copy: string | null
+          id: string
+          lat: number | null
+          launched_at: string | null
+          lng: number | null
+          org_id: string | null
+          region: string | null
+          slug: string
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          country?: string
+          created_at?: string
+          hero_copy?: string | null
+          id?: string
+          lat?: number | null
+          launched_at?: string | null
+          lng?: number | null
+          org_id?: string | null
+          region?: string | null
+          slug: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          hero_copy?: string | null
+          id?: string
+          lat?: number | null
+          launched_at?: string | null
+          lng?: number | null
+          org_id?: string | null
+          region?: string | null
+          slug?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pop_markets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
