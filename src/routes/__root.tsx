@@ -74,7 +74,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "google-site-verification", content: "YlJQb4J6GHbzwTU4VY2EgcI9uUHznXxDQYTXgYNPIGE" },
+      { name: "google-site-verification", content: "MFLZfKLuP3jN4CvPZmT4lhReUvqBzzuJqvb97VI6aG8" },
       { title: "CryptoPOP — Proof of Participation" },
       { name: "description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
       { name: "theme-color", content: "#FF3DBE" },
