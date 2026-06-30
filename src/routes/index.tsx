@@ -118,8 +118,14 @@ function Landing() {
         <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 hero-fade">
           <img src={logo} alt="CryptoPOP" width={200} height={48} className="h-14 w-auto" />
           <nav className="flex items-center gap-3 font-mono text-xs">
-            <Link to="/mission" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
-              Mission
+            <Link to="/markets" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+              Markets
+            </Link>
+            <Link to="/how-it-works" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+              How it works
+            </Link>
+            <Link to="/earn" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
+              Earn
             </Link>
             {session && isAdmin && (
               <Link to="/admin" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
@@ -145,7 +151,7 @@ function Landing() {
             style={{ animationDelay: "0.15s" }}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-[#ff8c32] shadow-[0_0_12px_rgba(255,140,50,0.9)] animate-pulse" />
-            Connect · Experience · Learn
+            Connect · Experience · Support · Learn
           </p>
 
           <h1
