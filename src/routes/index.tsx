@@ -284,7 +284,7 @@ function Landing() {
       <section id="how" className="border-t border-border bg-card">
         <div className="mx-auto grid max-w-6xl gap-px bg-border md:grid-cols-4">
           {[
-            { icon: QrCode, title: "Scan", body: "Scan our QR codes at CryptoPOP events." },
+            { icon: QrCode, title: "Scan", body: "Scan QR codes at CryptoPOP events and participating merchants." },
             { icon: MapPin, title: "Verify", body: "Geofence + time window confirms you're really there." },
             { icon: Coins, title: "Earn POP", body: "POP unlocks experiences, perks, and community rewards along the way." },
             { icon: Users, title: "Climb", body: "Build your POP score. Invite friends for bonuses." },
