@@ -16,14 +16,18 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MissionRouteImport } from './routes/mission'
+import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as EarnRouteImport } from './routes/earn'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ChangeLogRouteImport } from './routes/change-log'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
+import { Route as MarketsRequestRouteImport } from './routes/markets.request'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as DocsUsersRouteImport } from './routes/docs.users'
 import { Route as DocsAdminRouteImport } from './routes/docs.admin'
@@ -93,6 +97,11 @@ const MissionRoute = MissionRouteImport.update({
   path: '/mission',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketsRoute = MarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
@@ -101,6 +110,16 @@ const LogoutRoute = LogoutRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EarnRoute = EarnRouteImport.update({
+  id: '/earn',
+  path: '/earn',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -131,6 +150,11 @@ const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DocsRoute,
+} as any)
+const MarketsRequestRoute = MarketsRequestRouteImport.update({
+  id: '/request',
+  path: '/request',
+  getParentRoute: () => MarketsRoute,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
@@ -319,8 +343,11 @@ export interface FileRoutesByFullPath {
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/docs': typeof DocsRouteWithChildren
+  '/earn': typeof EarnRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
@@ -338,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/markets/request': typeof MarketsRequestRoute
   '/docs/': typeof DocsIndexRoute
   '/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
@@ -367,8 +395,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
+  '/earn': typeof EarnRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
@@ -385,6 +416,7 @@ export interface FileRoutesByTo {
   '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/markets/request': typeof MarketsRequestRoute
   '/docs': typeof DocsIndexRoute
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
@@ -416,8 +448,11 @@ export interface FileRoutesById {
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
   '/docs': typeof DocsRouteWithChildren
+  '/earn': typeof EarnRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
@@ -435,6 +470,7 @@ export interface FileRoutesById {
   '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/markets/request': typeof MarketsRequestRoute
   '/docs/': typeof DocsIndexRoute
   '/_authenticated/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/_authenticated/admin/codes': typeof AuthenticatedAdminCodesRoute
@@ -467,8 +503,11 @@ export interface FileRouteTypes {
     | '/api'
     | '/change-log'
     | '/docs'
+    | '/earn'
+    | '/how-it-works'
     | '/login'
     | '/logout'
+    | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
@@ -486,6 +525,7 @@ export interface FileRouteTypes {
     | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
+    | '/markets/request'
     | '/docs/'
     | '/admin/blast'
     | '/admin/codes'
@@ -515,8 +555,11 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/change-log'
+    | '/earn'
+    | '/how-it-works'
     | '/login'
     | '/logout'
+    | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
@@ -533,6 +576,7 @@ export interface FileRouteTypes {
     | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
+    | '/markets/request'
     | '/docs'
     | '/admin/codes'
     | '/admin/crm'
@@ -563,8 +607,11 @@ export interface FileRouteTypes {
     | '/api'
     | '/change-log'
     | '/docs'
+    | '/earn'
+    | '/how-it-works'
     | '/login'
     | '/logout'
+    | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
@@ -582,6 +629,7 @@ export interface FileRouteTypes {
     | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
+    | '/markets/request'
     | '/docs/'
     | '/_authenticated/admin/blast'
     | '/_authenticated/admin/codes'
@@ -614,8 +662,11 @@ export interface RootRouteChildren {
   ApiRoute: typeof ApiRouteWithChildren
   ChangeLogRoute: typeof ChangeLogRoute
   DocsRoute: typeof DocsRouteWithChildren
+  EarnRoute: typeof EarnRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  MarketsRoute: typeof MarketsRouteWithChildren
   MissionRoute: typeof MissionRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
@@ -686,6 +737,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MissionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/markets': {
+      id: '/markets'
+      path: '/markets'
+      fullPath: '/markets'
+      preLoaderRoute: typeof MarketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logout': {
       id: '/logout'
       path: '/logout'
@@ -698,6 +756,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/earn': {
+      id: '/earn'
+      path: '/earn'
+      fullPath: '/earn'
+      preLoaderRoute: typeof EarnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -741,6 +813,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/'
       preLoaderRoute: typeof DocsIndexRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/markets/request': {
+      id: '/markets/request'
+      path: '/request'
+      fullPath: '/markets/request'
+      preLoaderRoute: typeof MarketsRequestRouteImport
+      parentRoute: typeof MarketsRoute
     }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
@@ -1080,14 +1159,28 @@ const DocsRouteChildren: DocsRouteChildren = {
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
+interface MarketsRouteChildren {
+  MarketsRequestRoute: typeof MarketsRequestRoute
+}
+
+const MarketsRouteChildren: MarketsRouteChildren = {
+  MarketsRequestRoute: MarketsRequestRoute,
+}
+
+const MarketsRouteWithChildren =
+  MarketsRoute._addFileChildren(MarketsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiRoute: ApiRouteWithChildren,
   ChangeLogRoute: ChangeLogRoute,
   DocsRoute: DocsRouteWithChildren,
+  EarnRoute: EarnRoute,
+  HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  MarketsRoute: MarketsRouteWithChildren,
   MissionRoute: MissionRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,

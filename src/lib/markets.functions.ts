@@ -19,7 +19,7 @@ export const getMarkets = createServerFn({ method: "GET" }).handler(async () => 
   );
   const { data, error } = await sb
     .from("pop_markets")
-    .select("slug, city, region, country, status, hero_copy, sort_order, launched_at")
+    .select("slug, city, region, country, status, hero_copy, sort_order, launched_at, lat, lng")
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
   return { markets: data ?? [] };
