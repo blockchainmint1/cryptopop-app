@@ -178,9 +178,8 @@ function Landing() {
             className="hero-fade-up mt-7 max-w-xl text-lg text-white/75 font-normal"
             style={{ animationDelay: "0.55s" }}
           >
-            Show up, join the fun, complete activities, and earn POP
-            along the way. From games and socials to community experiences —
-            every interaction counts.
+            Small business support, gamified. Show up at events and local merchants,
+            scan a QR, and earn POP for every real-world interaction.
           </p>
 
           <div
@@ -200,12 +199,12 @@ function Landing() {
               RSVP & Get POP
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
-            <a
-              href="#how"
+            <Link
+              to="/how-it-works"
               className="rounded-full border border-white/25 px-7 py-3.5 font-display font-semibold text-white backdrop-blur-md hover:bg-white/10 transition"
             >
               How it works
-            </a>
+            </Link>
           </div>
 
           <div
