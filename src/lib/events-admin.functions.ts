@@ -54,17 +54,19 @@ export const listAdminEvents = createServerFn({ method: "GET" })
     const ids = (events ?? []).map((e) => e.id);
     const [signupsRes, claimsRes] = await Promise.all([
       ids.length
-        ? supabaseAdmin.from("event_signups").select("event_id").in("event_id", ids)
-        : Promise.resolve({ data: [] as { event_id: string | null }[], error: null }),
+        ? supabaseAdmin.from("event_signups").select("event_id, guest_count").in("event_id", ids)
+        : Promise.resolve({ data: [] as { event_id: string | null; guest_count: number | null }[], error: null }),
       ids.length
         ? supabaseAdmin.from("claims").select("event_id").in("event_id", ids)
         : Promise.resolve({ data: [] as { event_id: string }[], error: null }),
     ]);
 
     const signupCounts = new Map<string, number>();
-    for (const r of (signupsRes.data ?? []) as { event_id: string | null }[]) {
+    const guestCounts = new Map<string, number>();
+    for (const r of (signupsRes.data ?? []) as { event_id: string | null; guest_count: number | null }[]) {
       if (!r.event_id) continue;
       signupCounts.set(r.event_id, (signupCounts.get(r.event_id) ?? 0) + 1);
+      guestCounts.set(r.event_id, (guestCounts.get(r.event_id) ?? 0) + Number(r.guest_count ?? 0));
     }
     const claimCounts = new Map<string, number>();
     for (const r of (claimsRes.data ?? []) as { event_id: string }[]) {
@@ -74,6 +76,7 @@ export const listAdminEvents = createServerFn({ method: "GET" })
     const rows: AdminEventRow[] = (events ?? []).map((e) => ({
       ...e,
       signup_count: signupCounts.get(e.id) ?? 0,
+      guest_count: guestCounts.get(e.id) ?? 0,
       claim_count: claimCounts.get(e.id) ?? 0,
     }));
     return { events: rows };
