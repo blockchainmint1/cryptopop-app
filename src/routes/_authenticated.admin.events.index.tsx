@@ -474,7 +474,11 @@ function EventSection({
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
-                    {e.signup_count} signups · {e.claim_count} claims
+                    {e.signup_count} signups
+                    {e.guest_count > 0 && (
+                      <> +{e.guest_count} guests ({e.signup_count + e.guest_count} total)</>
+                    )}
+                    {" · "}{e.claim_count} claims
                   </span>
                 </div>
               </div>
