@@ -10,7 +10,7 @@ import { notifyEventSignup } from "./telegram.server";
 
 // Admin-only columns (includes PII). Never expose to public endpoints.
 const adminColumns =
-  "id, full_name, email, mobile_number, instagram_handle, telegram_handle, is_friend, pop_credits, completed_activities, signup_source, status, signed_up_at, checked_in_at";
+  "id, full_name, email, mobile_number, instagram_handle, telegram_handle, is_friend, guest_count, pop_credits, completed_activities, signup_source, status, signed_up_at, checked_in_at";
 
 // Public pass columns — what the holder of the pass UUID can see.
 // Excludes PII (email, mobile, IG, Telegram) to avoid leaking contact info
