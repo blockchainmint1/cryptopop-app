@@ -175,7 +175,12 @@ function AdminSignups() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-display font-semibold">{s.full_name}</p>
-                      {s.is_friend && (
+                      {s.is_friend && (s.guest_count ?? 0) > 0 && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary">
+                          +{s.guest_count}
+                        </span>
+                      )}
+                      {s.is_friend && !(s.guest_count ?? 0) && (
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                           +1
                         </span>
