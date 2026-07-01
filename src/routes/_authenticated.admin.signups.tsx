@@ -21,6 +21,7 @@ type Signup = {
   instagram_handle: string | null;
   telegram_handle: string | null;
   is_friend: boolean;
+  guest_count: number | null;
   pop_credits: number;
   completed_activities: string[] | null;
   signup_source: string;
