@@ -31,6 +31,7 @@ export type AdminEventRow = {
   qr_active_minutes_before: number;
   created_at: string;
   signup_count: number;
+  guest_count: number;
   claim_count: number;
 };
 
