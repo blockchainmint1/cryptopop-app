@@ -187,8 +187,7 @@ function Landing() {
             style={{ animationDelay: "0.75s" }}
           >
             <Link
-              to="/events/$slug/rsvp"
-              params={{ slug: "4th-at-bobbys" }}
+              to="/markets"
               className="group inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-display font-semibold text-white transition hover:opacity-95"
               style={{
                 background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
@@ -196,7 +195,7 @@ function Landing() {
                   "0 18px 50px -12px rgba(255,122,40,0.7), 0 0 0 1px rgba(255,255,255,0.08) inset",
               }}
             >
-              RSVP & Get POP
+              Explore POP Markets
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
             <Link
@@ -244,9 +243,9 @@ function Landing() {
               />
             </div>
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+              <p className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 <Sparkles className="h-3.5 w-3.5" />
-                Next event
+                RSVPs closed
               </p>
               <h2 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-5xl">
                 4th of July at The Lakehouse
@@ -256,22 +255,15 @@ function Landing() {
                 Saturday, July 4, 2026 · 3pm–dark
               </p>
               <p className="mt-5 text-lg text-muted-foreground">
-                Join us for the 4th at The Lakehouse — play the CryptoPOP
-                scavenger hunt for fun &amp; prizes, bring your favorite dish
-                to share with the community, and let's have a blast!
+                RSVPs for this one are closed — thanks to everyone who signed up!
+                We'll be announcing the next CryptoPOP gathering soon. Stay tuned.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  to="/events/$slug/rsvp"
-                  params={{ slug: "4th-at-bobbys" }}
-                  className="group inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-display font-semibold text-white transition hover:opacity-95"
-                  style={{
-                    background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
-                    boxShadow:
-                      "0 18px 50px -12px rgba(255,122,40,0.7), 0 0 0 1px rgba(255,255,255,0.08) inset",
-                  }}
+                  to="/markets"
+                  className="group inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 font-display font-semibold text-foreground transition hover:bg-muted"
                 >
-                  RSVP &amp; Get POP
+                  Explore POP Markets
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </Link>
               </div>
