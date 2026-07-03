@@ -1,14 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { z } from "zod";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
-import bbqHero from "@/assets/usa-250-bbq.png";
 import lakehouseAsset from "@/assets/lakehouse.jpg.asset.json";
 import { SiteFooter } from "@/components/site-footer";
-import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
-import { createEventSignup } from "@/lib/signups.functions";
 import { getPublicEventBySlug } from "@/lib/public-event.functions";
 import { tzFriendlyName } from "@/lib/tz";
 
@@ -16,16 +10,7 @@ type EventInfo = {
   slug: string;
   name: string;
   date: string;
-  location: string;
-  mapUrl: string;
   blurb: string;
-};
-
-const EVENT_STATIC: Record<string, { location: string; mapUrl: string }> = {
-  "4th-at-bobbys": {
-    location: "The Lakehouse",
-    mapUrl: "https://www.google.com/maps",
-  },
 };
 
 const EVENT_FALLBACK: Record<string, EventInfo> = {
@@ -33,8 +18,6 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
     slug: "4th-at-bobbys",
     name: "4th of July at The Lakehouse",
     date: "Saturday, July 4, 2026 · 3pm–dark",
-    location: "The Lakehouse",
-    mapUrl: "https://www.google.com/maps",
     blurb:
       "Join us for the 4th at The Lakehouse — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
   },
@@ -60,11 +43,6 @@ function formatEventDate(startIso: string, endIso: string, tz: string) {
   return `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)} ${tzFriendlyName(tz, start)}`;
 }
 
-
-function mapUrlFor(lat: number, lng: number) {
-  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-}
-
 export const Route = createFileRoute("/events/$slug/rsvp")({
   loader: async ({ params }) => {
     const row = await getPublicEventBySlug({ data: { slug: params.slug } });
@@ -73,13 +51,10 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
   head: ({ params, loaderData }) => {
     const fallback = EVENT_FALLBACK[params.slug];
     const name = loaderData?.dbEvent?.name ?? fallback?.name;
-    const dateLabel = loaderData?.dbEvent
-      ? formatEventDate(loaderData.dbEvent.start_at, loaderData.dbEvent.end_at, loaderData.dbEvent.time_zone)
-      : fallback?.date;
-    const title = name ? `Sign up — ${name}` : "Sign up — CryptoPOP";
+    const title = name ? `${name} — RSVPs closed` : "Event — CryptoPOP";
     const desc = name
-      ? `Reserve your spot at ${name}${dateLabel ? ` on ${dateLabel}` : ""}. Free, family-friendly, education-only.`
-      : "Sign up to the next CryptoPOP event.";
+      ? `RSVPs for ${name} are now closed. Another CryptoPOP event is coming soon.`
+      : "RSVPs are closed. Another CryptoPOP event is coming soon.";
     return {
       meta: [
         { title },
@@ -92,50 +67,18 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
   component: SignupPage,
 });
 
-const signupSchema = z
-  .object({
-    full_name: z.string().trim().min(1, "Your name is required").max(120),
-    email: z.string().trim().email("Enter a valid email").max(254),
-    mobile_number: z
-      .string()
-      .trim()
-      .min(3, "Mobile number is too short")
-      .max(32, "Mobile number is too long"),
-    instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
-    telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
-    external_wallet: z.string().trim().max(48).optional().or(z.literal("")),
-    is_friend: z.enum(["yes", "no"]),
-    guest_count: z.number().int().min(0).max(20),
-  })
-  .refine((d) => d.is_friend === "no" || d.guest_count >= 1, {
-    message: "How many guests are you bringing?",
-    path: ["guest_count"],
-  });
-
 function SignupPage() {
   const { slug } = Route.useParams();
   const { dbEvent } = Route.useLoaderData();
   const fallback = EVENT_FALLBACK[slug];
-  const staticBits = EVENT_STATIC[slug];
   const ev: EventInfo | undefined = dbEvent
     ? {
         slug: dbEvent.slug,
         name: dbEvent.name,
-        date: formatEventDate(
-          dbEvent.start_at,
-          dbEvent.end_at,
-          dbEvent.time_zone,
-        ),
-        location: staticBits?.location ?? fallback?.location ?? "",
-        mapUrl: mapUrlFor(dbEvent.lat, dbEvent.lng),
+        date: formatEventDate(dbEvent.start_at, dbEvent.end_at, dbEvent.time_zone),
         blurb: dbEvent.description ?? fallback?.blurb ?? "",
       }
     : fallback;
-  const navigate = useNavigate();
-  const saveSignup = useServerFn(createEventSignup);
-  const [submitting, setSubmitting] = useState(false);
-  const [isFriend, setIsFriend] = useState<"yes" | "no">("no");
-  const [guestCount, setGuestCount] = useState(1);
 
   if (!ev) {
     return (
@@ -154,63 +97,6 @@ function SignupPage() {
         </div>
       </div>
     );
-  }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!ev) return;
-    const form = new FormData(e.currentTarget);
-    const parsed = signupSchema.safeParse({
-      full_name: form.get("full_name"),
-      email: form.get("email"),
-      mobile_number: form.get("mobile_number"),
-      instagram_handle: form.get("instagram_handle"),
-      telegram_handle: form.get("telegram_handle"),
-      external_wallet: form.get("external_wallet"),
-      is_friend: form.get("is_friend"),
-      guest_count: Number(form.get("guest_count") ?? 0),
-    });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const inserted = await saveSignup({
-        data: {
-          full_name: parsed.data.full_name,
-          email: parsed.data.email,
-          mobile_number: parsed.data.mobile_number,
-          instagram_handle: parsed.data.instagram_handle || null,
-          telegram_handle: parsed.data.telegram_handle || null,
-          is_friend: parsed.data.is_friend === "yes",
-          guest_count:
-            parsed.data.is_friend === "yes" ? parsed.data.guest_count : 0,
-          event_slug: slug,
-          external_wallet: parsed.data.external_wallet || null,
-        },
-      });
-      try {
-        localStorage.setItem("cryptopop_signup_id", inserted.id);
-      } catch {
-        // ignore storage failures
-      }
-      toast.success("You're in! 10 POP added.");
-      navigate({ to: "/my-pass", search: { id: inserted.id } });
-    } catch (error) {
-      if (error instanceof Error && error.message === "duplicate_signup") {
-        toast.error("That email or mobile number is already signed up.");
-        return;
-      }
-      if (error instanceof Error && error.message === "invalid_wallet_address") {
-        toast.error("That doesn't look like a valid TXC address.");
-        return;
-      }
-      toast.error("Couldn't save your signup. Please try again.");
-      return;
-    } finally {
-      setSubmitting(false);
-    }
   }
 
   return (
@@ -244,13 +130,7 @@ function SignupPage() {
             CryptoPOP event
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
-            {ev.slug === "july4-marina-bbq" ? (
-              <>
-                <span className="text-red-500">Red</span>, White & <span className="text-blue-400">Barbecue</span> — USA 250ᵗʰ
-              </>
-            ) : (
-              ev.name
-            )}
+            {ev.name}
           </h1>
           <div className="mt-6 space-y-3 text-sm">
             <p className="flex items-center gap-2 text-muted-foreground">
@@ -300,32 +180,6 @@ function SignupPage() {
       </main>
 
       <SiteFooter />
-    </div>
-  );
-}
-
-
-const inputCls =
-  "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30";
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label
-        htmlFor={htmlFor}
-        className="mb-2 block font-mono text-[11px] uppercase tracking-widest text-muted-foreground"
-      >
-        {label}
-      </label>
-      {children}
     </div>
   );
 }
