@@ -257,21 +257,55 @@ function SignupPage() {
               <CalendarDays className="h-4 w-4 text-primary" />
               {ev.date}
             </p>
-            <a
-              href={ev.mapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-            >
+            <p className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="h-4 w-4 text-primary" />
-              {ev.location} — open in Google Maps
-            </a>
+              Location shared with confirmed guests
+            </p>
           </div>
           <p className="mt-6 text-muted-foreground">{ev.blurb}</p>
           <p className="mt-6 rounded-2xl border border-border bg-card p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             JUST FOR FUN EVENT. POP ARE A PARTICIPATION RECORD.
           </p>
         </aside>
+
+        <section className="rounded-3xl border border-border bg-card p-8 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-10">
+          <div className="text-center">
+            <p className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+              RSVPs closed
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-bold">
+              Thanks — we're all set!
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              RSVPs for this event are now closed. We'll be announcing the next
+              CryptoPOP gathering soon — check back shortly, or explore what's
+              happening in your POP market.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/markets"
+                className="rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition hover:opacity-90"
+              >
+                Explore POP Markets
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="rounded-full border border-border px-6 py-3 font-display font-semibold text-foreground transition hover:bg-muted"
+              >
+                How it works
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter />
+    </div>
+  );
+}
+
+// --- Signup form archived: RSVPs closed ---
+const _archivedForm = false;
 
         <section className="rounded-3xl border border-border bg-card p-6 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
