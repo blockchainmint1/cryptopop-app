@@ -252,7 +252,22 @@ async function buildAndBroadcast(opts: {
   refAddress: string; // dust reference output (receiver for grants, issuer for issuance)
   minterWif: string;
 }): Promise<{ txHash: string; minterAddress: string }> {
-  return withMintLock(() => buildAndBroadcastLocked(opts));
+  return withMintLock(async () => {
+    // Explorer indexing can lag a beat behind a just-broadcast tx; if we still
+    // pick a spent coin, wait and rebuild with a fresh UTXO view.
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await buildAndBroadcastLocked(opts);
+      } catch (e) {
+        lastErr = e;
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("txn-mempool-conflict")) throw e;
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+    }
+    throw lastErr;
+  });
 }
 
 async function buildAndBroadcastLocked(opts: {
