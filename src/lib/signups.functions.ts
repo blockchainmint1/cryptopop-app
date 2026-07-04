@@ -383,12 +383,13 @@ export const adminAddGuest = createServerFn({ method: "POST" })
     const lcEmail = data.email.toLowerCase();
     const signupReward = await getRewardAmount("event_signup", 10);
 
+    const trimmedMobile = data.mobile_number?.trim() || null;
     const { data: inserted, error } = await supabaseAdmin
       .from("event_signups")
       .insert({
         full_name: data.full_name,
         email: lcEmail,
-        mobile_number: data.mobile_number?.trim() || "",
+        mobile_number: trimmedMobile,
         is_friend: data.guest_count > 0,
         guest_count: data.guest_count,
         pop_credits: signupReward,
@@ -401,7 +402,15 @@ export const adminAddGuest = createServerFn({ method: "POST" })
       .single();
     if (error) {
       console.error("[adminAddGuest]", error);
-      if (error.code === "23505") throw new Error("This email is already registered for this event.");
+      if (error.code === "23505") {
+        // Distinguish email vs mobile collision so the door person sees the
+        // real reason instead of a misleading "email already registered".
+        const msg = (error.message || "").toLowerCase();
+        if (msg.includes("mobile")) {
+          throw new Error("That mobile number is already registered on another signup.");
+        }
+        throw new Error("This email is already registered.");
+      }
       throw new Error("Failed to add guest");
     }
 
