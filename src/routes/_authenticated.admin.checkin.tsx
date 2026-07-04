@@ -34,7 +34,7 @@ const UUID_RE =
   /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 type LastResult =
-  | { kind: "success"; name: string; already: boolean }
+  | { kind: "success"; name: string; already: boolean; heads: number; pop: number }
   | { kind: "error"; message: string };
 
 type CheckinEvent = {
