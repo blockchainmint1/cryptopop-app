@@ -327,13 +327,16 @@ function Stat({
   );
 }
 
-function StatusPill({ status }: { status: "pending" | "sent" | "failed" }) {
+function StatusPill({ status }: { status: string }) {
   const styles =
     status === "sent"
       ? "bg-emerald-500/15 text-emerald-600"
       : status === "failed"
         ? "bg-destructive/15 text-destructive"
-        : "bg-amber-500/15 text-amber-600";
+        : status === "sending"
+          ? "bg-sky-500/15 text-sky-500"
+          : "bg-amber-500/15 text-amber-600";
+
   return (
     <span
       className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest ${styles}`}
