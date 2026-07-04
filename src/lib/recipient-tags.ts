@@ -171,6 +171,28 @@ async function emailsForRsvpSlug(
   );
 }
 
+async function emailsForSignupSlug(
+  supabaseAdmin: SupabaseClient,
+  slug: string,
+): Promise<string[]> {
+  const { data: ev, error } = await supabaseAdmin
+    .from("events")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!ev?.id) return [];
+  return pageAll(
+    (a, b) =>
+      supabaseAdmin
+        .from("event_signups")
+        .select("email")
+        .eq("event_id", ev.id)
+        .range(a, b),
+    (r) => (r as { email: string }).email,
+  );
+}
+
 export async function expandRecipientTags(
   supabaseAdmin: SupabaseClient,
   raw: string,
