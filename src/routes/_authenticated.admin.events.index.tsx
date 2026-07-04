@@ -577,12 +577,15 @@ function EventSection({
   rows,
   muted,
   onEdit,
+  onAddGuest,
 }: {
   title: string;
   rows: AdminEventRow[];
   muted?: boolean;
   onEdit: (e: AdminEventRow) => void;
+  onAddGuest?: (e: AdminEventRow) => void;
 }) {
+
   if (rows.length === 0) {
     return (
       <section>
