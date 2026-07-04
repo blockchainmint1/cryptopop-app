@@ -18,6 +18,7 @@ export type AdminRow = {
   email: string | null;
   displayName: string | null;
   createdAt: string | null;
+  isSelf: boolean;
 };
 
 export const listAdmins = createServerFn({ method: "GET" })
@@ -48,6 +49,7 @@ export const listAdmins = createServerFn({ method: "GET" })
         email: u.user?.email ?? null,
         displayName: nameMap.get(r.user_id) ?? null,
         createdAt: (r as { created_at?: string }).created_at ?? null,
+        isSelf: r.user_id === context.userId,
       });
     }
     return rows.sort((a, b) => (a.email ?? "").localeCompare(b.email ?? ""));
@@ -64,31 +66,25 @@ export const addAdminByEmail = createServerFn({ method: "POST" })
     await assertGlobalAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Find the user by email via admin listUsers (paginated search)
-    let target: { id: string; email?: string } | null = null;
-    for (let page = 1; page <= 20 && !target; page++) {
-      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+    let targetId: string | null = null;
+    for (let page = 1; page <= 20 && !targetId; page++) {
+      const { data: pageData, error } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage: 200,
+      });
       if (error) throw new Error(error.message);
-      target = data.users.find((u) => (u.email ?? "").toLowerCase() === data.email) ?? null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const found = data.users.find((u) => (u.email ?? "").toLowerCase() === (data as any).email);
-      target = found ?? data.users.find((u) => (u.email ?? "").toLowerCase() === data.email) ?? null;
-      // simpler correct search:
-      target = data.users.find((u) => (u.email ?? "").toLowerCase() === (data as any).email) ?? null;
-      const match = data.users.find((u) => (u.email ?? "").toLowerCase() === (data as any).email);
-      target = match ?? null;
-      const t = data.users.find((u) => (u.email ?? "").toLowerCase() === (data as any).email);
-      target = t ?? null;
-      if (data.users.length < 200) break;
+      const match = pageData.users.find((u) => (u.email ?? "").toLowerCase() === data.email);
+      if (match) targetId = match.id;
+      if (pageData.users.length < 200) break;
     }
-    if (!target) throw new Error("No user found with that email — they must sign up first");
+    if (!targetId) throw new Error("No user found with that email — they must sign up first");
 
     const { error: insErr } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: target.id, role: "admin" });
+      .insert({ user_id: targetId, role: "admin" });
     if (insErr && !/duplicate/i.test(insErr.message)) throw new Error(insErr.message);
 
-    return { ok: true, userId: target.id };
+    return { ok: true, userId: targetId };
   });
 
 export const removeAdmin = createServerFn({ method: "POST" })
