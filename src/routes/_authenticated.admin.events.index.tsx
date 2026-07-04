@@ -641,7 +641,7 @@ function EventSection({
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-wrap gap-2 mt-4">
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/events/$id" params={{ id: e.id }}>
                   <QrCode className="h-3.5 w-3.5 mr-1.5" /> QR poster
@@ -650,10 +650,16 @@ function EventSection({
               <Button size="sm" variant="outline" onClick={() => onEdit(e)}>
                 <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
               </Button>
+              {onAddGuest && (
+                <Button size="sm" onClick={() => onAddGuest(e)}>
+                  <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Add guest
+                </Button>
+              )}
             </div>
           </Card>
         ))}
       </div>
+
     </section>
   );
 }
