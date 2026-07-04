@@ -75,19 +75,61 @@ async function rpc<T = unknown>(method: string, params: unknown[]): Promise<T> {
 
 type Utxo = { txid: string; vout: number; value: number };
 
+type MempoolTx = {
+  txid: string;
+  vin: Array<{ txid: string; vout: number }>;
+  vout: Array<{ scriptpubkey_address?: string; value: number }>;
+};
+
+async function getMempoolTxs(addr: string): Promise<MempoolTx[]> {
+  try {
+    const res = await fetch(`${MEMPOOL_BASE}/address/${addr}/txs/mempool`);
+    if (!res.ok) return [];
+    return (await res.json()) as MempoolTx[];
+  } catch {
+    return [];
+  }
+}
+
 async function getUtxos(addr: string): Promise<Utxo[]> {
-  const res = await fetch(`${MEMPOOL_BASE}/address/${addr}/utxo`);
-  if (!res.ok) throw new Error(`utxo fetch http ${res.status}`);
-  const raw = (await res.json()) as Array<{
+  const [utxoRes, mempoolTxs] = await Promise.all([
+    fetch(`${MEMPOOL_BASE}/address/${addr}/utxo`),
+    getMempoolTxs(addr),
+  ]);
+  if (!utxoRes.ok) throw new Error(`utxo fetch http ${utxoRes.status}`);
+  const raw = (await utxoRes.json()) as Array<{
     txid: string;
     vout: number;
     value: number;
     status: { confirmed: boolean };
   }>;
-  return raw
+
+  // Outpoints already spent by unconfirmed txs — the explorer's utxo list can
+  // lag behind mempool spends; using one causes txn-mempool-conflict.
+  const spent = new Set<string>();
+  for (const tx of mempoolTxs) {
+    for (const vin of tx.vin) spent.add(`${vin.txid}:${vin.vout}`);
+  }
+
+  const utxos = raw
+    .filter((u) => !spent.has(`${u.txid}:${u.vout}`))
     .map((u) => ({ txid: u.txid, vout: u.vout, value: u.value, confirmed: u.status.confirmed }))
     .sort((a, b) => Number(b.confirmed) - Number(a.confirmed))
     .map(({ txid, vout, value }) => ({ txid, vout, value }));
+
+  // Add unconfirmed change outputs back to us (spendable, may be missing from
+  // the utxo endpoint while it lags).
+  const seen = new Set(utxos.map((u) => `${u.txid}:${u.vout}`));
+  for (const tx of mempoolTxs) {
+    tx.vout.forEach((o, i) => {
+      const key = `${tx.txid}:${i}`;
+      if (o.scriptpubkey_address === addr && !spent.has(key) && !seen.has(key)) {
+        utxos.push({ txid: tx.txid, vout: i, value: o.value });
+        seen.add(key);
+      }
+    });
+  }
+  return utxos;
 }
 
 async function getTxHex(txid: string): Promise<string> {
