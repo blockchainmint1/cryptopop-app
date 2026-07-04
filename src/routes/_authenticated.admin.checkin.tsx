@@ -54,6 +54,7 @@ function CheckinScannerPage() {
   const [busy, setBusy] = useState(false);
   const [last, setLast] = useState<LastResult | null>(null);
   const [count, setCount] = useState(0);
+  const [heads, setHeads] = useState(0); // extra guests present at the door (0 = solo)
   const lockRef = useRef(false);
   const lastValueRef = useRef<{ v: string; at: number } | null>(null);
 
@@ -91,13 +92,20 @@ function CheckinScannerPage() {
       lockRef.current = true;
       setBusy(true);
       try {
-        const res = await checkIn({ data: { id } });
+        const res = await checkIn({
+          data: { id, guest_count: heads },
+        });
         setLast({
           kind: "success",
           name: res.fullName ?? "Attendee",
           already: res.alreadyCheckedIn,
+          heads: res.heads ?? 1 + heads,
+          pop: res.popAwarded ?? 0,
         });
-        if (!res.alreadyCheckedIn) setCount((c) => c + 1);
+        if (!res.alreadyCheckedIn) {
+          setCount((c) => c + (res.heads ?? 1 + heads));
+          setHeads(0); // reset for the next attendee
+        }
       } catch (e) {
         setLast({
           kind: "error",
@@ -110,8 +118,9 @@ function CheckinScannerPage() {
         }, 1500);
       }
     },
-    [checkIn, showAdd],
+    [checkIn, showAdd, heads],
   );
+
 
   const openAddGuest = useCallback(() => {
     setShowAdd(true);
