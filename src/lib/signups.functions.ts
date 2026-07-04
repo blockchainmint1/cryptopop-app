@@ -265,7 +265,11 @@ export const checkInSignup = createServerFn({ method: "POST" })
         ? data.guest_count
         : (existing.guest_count ?? 0);
 
-    const update: Record<string, unknown> = {
+    const update: {
+      checked_in_at: string;
+      checked_in_by: string;
+      guest_count?: number;
+    } = {
       checked_in_at: now,
       checked_in_by: context.userId,
     };
