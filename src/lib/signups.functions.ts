@@ -187,6 +187,19 @@ async function assertAdmin(userId: string) {
   if (!data) throw new Error("forbidden");
 }
 
+// Door check-in + on-the-spot Add Guest can be done by either an admin
+// or a gatekeeper (role scoped ONLY to /admin/checkin).
+async function assertAdminOrGatekeeper(userId: string) {
+  const { data } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "gatekeeper"])
+    .limit(1)
+    .maybeSingle();
+  if (!data) throw new Error("forbidden");
+}
+
 // Admin: search signups by name/email/phone
 export const searchSignups = createServerFn({ method: "POST" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
