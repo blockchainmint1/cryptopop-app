@@ -468,13 +468,107 @@ function AdminEventsList() {
         </Card>
       ) : (
         <div className="space-y-8">
-          <EventSection title="Upcoming & active" rows={upcoming} onEdit={startEdit} />
+          <EventSection
+            title="Upcoming & active"
+            rows={upcoming}
+            onEdit={startEdit}
+            onAddGuest={openGuestDialog}
+          />
           <EventSection title="Past events" rows={past} muted onEdit={startEdit} />
         </div>
       )}
+
+      <Dialog open={!!guestFor} onOpenChange={(o) => !o && setGuestFor(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Add guest</DialogTitle>
+            <DialogDescription>
+              {guestFor
+                ? `Manually register a late arrival for ${guestFor.name}. They'll get a confirmation email with their pass QR and event info.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitGuest} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="guest_name">Full name</Label>
+              <Input
+                id="guest_name"
+                required
+                autoFocus
+                value={guestForm.full_name}
+                onChange={(e) =>
+                  setGuestForm({ ...guestForm, full_name: e.target.value })
+                }
+                placeholder="Jane Doe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="guest_email">Email</Label>
+              <Input
+                id="guest_email"
+                type="email"
+                required
+                value={guestForm.email}
+                onChange={(e) =>
+                  setGuestForm({ ...guestForm, email: e.target.value })
+                }
+                placeholder="jane@example.com"
+              />
+              <p className="font-mono text-[10px] text-muted-foreground">
+                Confirmation email + pass link go here.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="guest_mobile">Mobile (optional)</Label>
+                <Input
+                  id="guest_mobile"
+                  value={guestForm.mobile_number}
+                  onChange={(e) =>
+                    setGuestForm({ ...guestForm, mobile_number: e.target.value })
+                  }
+                  placeholder="+1 555 …"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="guest_plus">+ guests</Label>
+                <Input
+                  id="guest_plus"
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={guestForm.guest_count}
+                  onChange={(e) =>
+                    setGuestForm({ ...guestForm, guest_count: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setGuestFor(null)}
+                disabled={guestSaving}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={guestSaving}>
+                {guestSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4 mr-2" />
+                )}
+                Add & send invite
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function EventSection({
   title,
