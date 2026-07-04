@@ -150,7 +150,24 @@ function AdminLayout() {
             </span>
           </header>
           <main className="flex-1 min-w-0">
-            <Outlet />
+            {onAllowedRoute ? (
+              <Outlet />
+            ) : (
+              <div className="p-8">
+                <Card className="max-w-md mx-auto p-8 text-center space-y-4">
+                  <Shield className="mx-auto h-10 w-10 text-muted-foreground" />
+                  <div>
+                    <h1 className="font-display text-xl font-semibold">Gatekeeper access</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Your role only permits door check-in.
+                    </p>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link to="/admin/checkin">Open check-in scanner</Link>
+                  </Button>
+                </Card>
+              </div>
+            )}
           </main>
         </div>
       </div>
