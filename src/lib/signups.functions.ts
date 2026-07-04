@@ -248,13 +248,56 @@ export const checkInSignup = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (!existing) throw new Error("Signup not found");
+    const perHead = await getRewardAmount("event_checkin", 25);
+
     if (existing.checked_in_at) {
+      // Re-scan of an already-checked-in pass. If the door person set a guest
+      // count on the stepper, treat it as an additional wave that showed up
+      // later — increment the recorded guest_count and mint POP for the delta
+      // only. Idempotent per (source, source_id): repeated identical top-ups
+      // with the same resulting total are a no-op.
+      const addedHeads = Math.max(0, data.guest_count ?? 0);
+      if (addedHeads > 0) {
+        const newGuestCount = (existing.guest_count ?? 0) + addedHeads;
+        await supabaseAdmin
+          .from("event_signups")
+          .update({ guest_count: newGuestCount })
+          .eq("id", data.id);
+        const topUp = perHead * addedHeads;
+        if (topUp > 0 && existing.email) {
+          try {
+            await awardPop({
+              email: existing.email,
+              amount: topUp,
+              source: "event_checkin",
+              sourceId: `${existing.id}:g${newGuestCount}`,
+              memo: `Check-in +${addedHeads}`,
+              walletOverride: existing.external_wallet,
+            });
+          } catch (e) {
+            console.error("[checkInSignup] top-up awardPop", e);
+          }
+        }
+        return {
+          ok: true,
+          alreadyCheckedIn: true,
+          toppedUp: true,
+          addedHeads,
+          checkedInAt: existing.checked_in_at,
+          fullName: existing.full_name,
+          popAwarded: topUp,
+          heads: addedHeads,
+        };
+      }
       return {
         ok: true,
         alreadyCheckedIn: true,
+        toppedUp: false,
+        addedHeads: 0,
         checkedInAt: existing.checked_in_at,
         fullName: existing.full_name,
         popAwarded: 0,
+        heads: 0,
       };
     }
     const now = new Date().toISOString();
@@ -283,7 +326,6 @@ export const checkInSignup = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Award POP per head (attendee + guests). Idempotent via (source, source_id).
-    const perHead = await getRewardAmount("event_checkin", 25);
     const heads = 1 + Math.max(0, guestCount);
     const total = perHead * heads;
     if (total > 0 && existing.email) {
