@@ -187,6 +187,19 @@ async function assertAdmin(userId: string) {
   if (!data) throw new Error("forbidden");
 }
 
+// Door check-in + on-the-spot Add Guest can be done by either an admin
+// or a gatekeeper (role scoped ONLY to /admin/checkin).
+async function assertAdminOrGatekeeper(userId: string) {
+  const { data } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "gatekeeper"])
+    .limit(1)
+    .maybeSingle();
+  if (!data) throw new Error("forbidden");
+}
+
 // Admin: search signups by name/email/phone
 export const searchSignups = createServerFn({ method: "POST" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
@@ -217,7 +230,7 @@ export const checkInSignup = createServerFn({ method: "POST" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertAdminOrGatekeeper(context.userId);
     const { data: existing } = await supabaseAdmin
       .from("event_signups")
       .select("id, full_name, checked_in_at")
@@ -263,7 +276,8 @@ export const adminAddGuest = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    // Admins add guests from /admin/events; gatekeepers add walk-ins at the door.
+    await assertAdminOrGatekeeper(context.userId);
 
     const { data: ev, error: evErr } = await supabaseAdmin
       .from("events")
@@ -370,3 +384,38 @@ export const adminAddGuest = createServerFn({ method: "POST" })
   });
 
 
+
+// Lightweight events list for the door check-in scanner. Admin OR gatekeeper.
+// Returns events that are live now or start within the next 7 days, plus any
+// event that ended in the last 6 hours (late arrivals). Sorted so the most
+// relevant "current" event is first.
+export const listCheckinEvents = createServerFn({ method: "GET" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdminOrGatekeeper(context.userId);
+    const now = new Date();
+    const lookbackMs = 6 * 60 * 60 * 1000;
+    const lookaheadMs = 7 * 24 * 60 * 60 * 1000;
+    const fromEnd = new Date(now.getTime() - lookbackMs).toISOString();
+    const toStart = new Date(now.getTime() + lookaheadMs).toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from("events")
+      .select("id, name, start_at, end_at, time_zone")
+      .gte("end_at", fromEnd)
+      .lte("start_at", toStart)
+      .order("start_at", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    const nowTs = now.getTime();
+    const events = (data ?? []).map((e) => {
+      const startTs = new Date(e.start_at).getTime();
+      const endTs = new Date(e.end_at).getTime();
+      return { ...e, live: nowTs >= startTs && nowTs <= endTs };
+    });
+    events.sort((a, b) => {
+      if (a.live !== b.live) return a.live ? -1 : 1;
+      return new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
+    });
+    return { events };
+  });

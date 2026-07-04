@@ -1,9 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { ArrowLeft, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
-import { checkInSignup } from "@/lib/signups.functions";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  UserPlus,
+  X,
+  Sparkles,
+} from "lucide-react";
+import {
+  checkInSignup,
+  adminAddGuest,
+  listCheckinEvents,
+} from "@/lib/signups.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/checkin")({
   head: () => ({
@@ -22,18 +35,41 @@ type LastResult =
   | { kind: "success"; name: string; already: boolean }
   | { kind: "error"; message: string };
 
+type CheckinEvent = {
+  id: string;
+  name: string;
+  start_at: string;
+  end_at: string;
+  time_zone: string;
+  live: boolean;
+};
+
 function CheckinScannerPage() {
   const checkIn = useServerFn(checkInSignup);
+  const addGuest = useServerFn(adminAddGuest);
+  const fetchEvents = useServerFn(listCheckinEvents);
+
   const [busy, setBusy] = useState(false);
   const [last, setLast] = useState<LastResult | null>(null);
   const [count, setCount] = useState(0);
-  // Debounce identical scans and lock while a request is in-flight.
   const lockRef = useRef(false);
   const lastValueRef = useRef<{ v: string; at: number } | null>(null);
 
+  const [showAdd, setShowAdd] = useState(false);
+  const [events, setEvents] = useState<CheckinEvent[] | null>(null);
+  const [eventsErr, setEventsErr] = useState<string | null>(null);
+  const [guestBusy, setGuestBusy] = useState(false);
+  const [guestForm, setGuestForm] = useState({
+    event_id: "",
+    full_name: "",
+    email: "",
+    mobile_number: "",
+    guest_count: "0",
+  });
+
   const handleScan = useCallback(
     async (raw: string) => {
-      if (lockRef.current) return;
+      if (lockRef.current || showAdd) return;
       const now = Date.now();
       if (
         lastValueRef.current &&
@@ -67,14 +103,83 @@ function CheckinScannerPage() {
         });
       } finally {
         setBusy(false);
-        // Small cooldown so the same QR sitting in frame doesn't re-fire.
         setTimeout(() => {
           lockRef.current = false;
         }, 1500);
       }
     },
-    [checkIn],
+    [checkIn, showAdd],
   );
+
+  const openAddGuest = useCallback(() => {
+    setShowAdd(true);
+    setEventsErr(null);
+    if (!events) {
+      fetchEvents()
+        .then((res) => {
+          setEvents(res.events);
+          // Pre-select the top event (live > upcoming).
+          setGuestForm((f) => ({
+            ...f,
+            event_id: f.event_id || res.events[0]?.id || "",
+          }));
+        })
+        .catch((e) =>
+          setEventsErr(e instanceof Error ? e.message : "Failed to load events"),
+        );
+    }
+  }, [events, fetchEvents]);
+
+  const closeAddGuest = () => {
+    if (guestBusy) return;
+    setShowAdd(false);
+  };
+
+  const submitGuest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (guestBusy) return;
+    if (!guestForm.event_id) {
+      toast.error("Select an event");
+      return;
+    }
+    if (!guestForm.full_name.trim() || !guestForm.email.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+    setGuestBusy(true);
+    try {
+      await addGuest({
+        data: {
+          event_id: guestForm.event_id,
+          full_name: guestForm.full_name.trim(),
+          email: guestForm.email.trim(),
+          mobile_number: guestForm.mobile_number.trim() || null,
+          guest_count: Math.max(0, Number(guestForm.guest_count) || 0),
+        },
+      });
+      toast.success(
+        `${guestForm.full_name || "Guest"} added — pass emailed. They can scan in when it arrives.`,
+      );
+      setGuestForm((f) => ({
+        ...f,
+        full_name: "",
+        email: "",
+        mobile_number: "",
+        guest_count: "0",
+      }));
+      setShowAdd(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add guest");
+    } finally {
+      setGuestBusy(false);
+    }
+  };
+
+  // Focus name input when sheet opens.
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (showAdd) setTimeout(() => nameRef.current?.focus(), 100);
+  }, [showAdd]);
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-black text-white">
@@ -117,6 +222,7 @@ function CheckinScannerPage() {
           }}
           components={{ finder: false }}
           sound={false}
+          paused={showAdd}
         />
 
         {/* Reticle overlay */}
@@ -139,8 +245,8 @@ function CheckinScannerPage() {
         )}
       </div>
 
-      {/* Result banner */}
-      <footer className="border-t border-white/10 bg-black/80 px-4 py-4 backdrop-blur supports-[padding:max(0px)]:pb-[max(1rem,env(safe-area-inset-bottom))]">
+      {/* Result banner + Add Guest button */}
+      <footer className="border-t border-white/10 bg-black/80 px-4 py-3 backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-3">
         {!last ? (
           <p className="text-center text-sm text-white/70">
             Point the camera at an attendee's pass QR.
@@ -176,7 +282,176 @@ function CheckinScannerPage() {
             </div>
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={openAddGuest}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 font-display text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.99] transition"
+        >
+          <UserPlus className="h-4 w-4" />
+          Not on the list? Add guest
+        </button>
       </footer>
+
+      {/* Add Guest bottom sheet */}
+      {showAdd && (
+        <div className="absolute inset-0 z-50 flex flex-col bg-black/80 backdrop-blur">
+          <button
+            type="button"
+            onClick={closeAddGuest}
+            aria-label="Close"
+            className="flex-1"
+          />
+          <form
+            onSubmit={submitGuest}
+            className="rounded-t-3xl bg-neutral-950 border-t border-white/10 shadow-2xl px-5 pt-5 pb-6 supports-[padding:max(0px)]:pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-4 max-h-[92vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display text-lg font-bold flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" /> Add walk-in guest
+                </p>
+                <p className="text-[11px] font-mono uppercase tracking-widest text-white/50 mt-0.5">
+                  Bypasses RSVP deadline · Pass emailed instantly
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeAddGuest}
+                disabled={guestBusy}
+                className="rounded-full bg-white/10 p-2 hover:bg-white/20 disabled:opacity-40"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <label className="block space-y-1.5">
+              <span className="text-xs font-mono uppercase tracking-widest text-white/60">
+                Event
+              </span>
+              {eventsErr ? (
+                <p className="text-sm text-red-300">{eventsErr}</p>
+              ) : !events ? (
+                <div className="flex items-center gap-2 text-sm text-white/60">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading events…
+                </div>
+              ) : events.length === 0 ? (
+                <p className="text-sm text-white/60">
+                  No live or upcoming events found.
+                </p>
+              ) : (
+                <select
+                  value={guestForm.event_id}
+                  onChange={(e) =>
+                    setGuestForm((f) => ({ ...f, event_id: e.target.value }))
+                  }
+                  className="w-full rounded-xl bg-white/10 border border-white/10 px-3 py-2.5 text-base text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  required
+                >
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id} className="bg-neutral-900">
+                      {ev.live ? "🟢 LIVE · " : ""}
+                      {ev.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-xs font-mono uppercase tracking-widest text-white/60">
+                Full name
+              </span>
+              <input
+                ref={nameRef}
+                type="text"
+                value={guestForm.full_name}
+                onChange={(e) =>
+                  setGuestForm((f) => ({ ...f, full_name: e.target.value }))
+                }
+                required
+                autoCapitalize="words"
+                className="w-full rounded-xl bg-white/10 border border-white/10 px-3 py-2.5 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Alex Chen"
+              />
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-xs font-mono uppercase tracking-widest text-white/60">
+                Email
+              </span>
+              <input
+                type="email"
+                inputMode="email"
+                autoCapitalize="off"
+                autoCorrect="off"
+                value={guestForm.email}
+                onChange={(e) =>
+                  setGuestForm((f) => ({ ...f, email: e.target.value }))
+                }
+                required
+                className="w-full rounded-xl bg-white/10 border border-white/10 px-3 py-2.5 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="alex@example.com"
+              />
+            </label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block space-y-1.5">
+                <span className="text-xs font-mono uppercase tracking-widest text-white/60">
+                  Mobile (optional)
+                </span>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  value={guestForm.mobile_number}
+                  onChange={(e) =>
+                    setGuestForm((f) => ({ ...f, mobile_number: e.target.value }))
+                  }
+                  className="w-full rounded-xl bg-white/10 border border-white/10 px-3 py-2.5 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="+1 555…"
+                />
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-xs font-mono uppercase tracking-widest text-white/60">
+                  +guests
+                </span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={20}
+                  value={guestForm.guest_count}
+                  onChange={(e) =>
+                    setGuestForm((f) => ({ ...f, guest_count: e.target.value }))
+                  }
+                  className="w-full rounded-xl bg-white/10 border border-white/10 px-3 py-2.5 text-base text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={guestBusy || !events || events.length === 0}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 font-display text-base font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 disabled:opacity-50 active:scale-[0.99] transition"
+            >
+              {guestBusy ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Adding…
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4" /> Add guest & email pass
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-center text-white/50 leading-snug">
+              They'll get a confirmation email with their pass QR. Scan it when
+              they show it to check them in.
+            </p>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
