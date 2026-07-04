@@ -446,33 +446,44 @@ export const adminAddGuest = createServerFn({ method: "POST" })
     const eventDate = `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)}`;
     const mapUrl = `https://www.google.com/maps?q=${ev.lat},${ev.lng}`;
 
-    // Telegram notification
-    notifyEventSignup({
-      fullName: data.full_name,
-      email: lcEmail,
-      mobile: data.mobile_number ?? "",
-      instagram: null,
-      telegram: null,
-      isFriend: data.guest_count > 0,
-      guestCount: data.guest_count,
-      signupId: inserted.id,
-    }).catch((e) => console.error("[adminAddGuest] telegram", e));
+    // Telegram notification (awaited — Worker may terminate before
+    // fire-and-forget promises resolve).
+    try {
+      await notifyEventSignup({
+        fullName: data.full_name,
+        email: lcEmail,
+        mobile: data.mobile_number ?? "",
+        instagram: null,
+        telegram: null,
+        isFriend: data.guest_count > 0,
+        guestCount: data.guest_count,
+        signupId: inserted.id,
+      });
+    } catch (e) {
+      console.error("[adminAddGuest] telegram", e);
+    }
 
     // Confirmation email — same template used by the public RSVP flow.
-    enqueueTransactionalEmail({
-      templateName: "event-confirmation",
-      recipientEmail: lcEmail,
-      idempotencyKey: `event-confirm-${inserted.id}`,
-      templateData: {
-        name: data.full_name,
-        passId: inserted.id,
-        eventName: ev.name,
-        eventDate,
-        mapUrl,
-        popCredits: signupReward,
-        walletAddress,
-      },
-    }).catch((e) => console.error("[adminAddGuest] email enqueue", e));
+    // Awaited so the enqueue + email_send_log insert complete before the
+    // Worker terminates.
+    try {
+      await enqueueTransactionalEmail({
+        templateName: "event-confirmation",
+        recipientEmail: lcEmail,
+        idempotencyKey: `event-confirm-${inserted.id}`,
+        templateData: {
+          name: data.full_name,
+          passId: inserted.id,
+          eventName: ev.name,
+          eventDate,
+          mapUrl,
+          popCredits: signupReward,
+          walletAddress,
+        },
+      });
+    } catch (e) {
+      console.error("[adminAddGuest] email enqueue", e);
+    }
 
     return { id: inserted.id, walletAddress };
   });
