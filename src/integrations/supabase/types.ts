@@ -459,7 +459,7 @@ export type Database = {
           id: string
           instagram_handle: string | null
           is_friend: boolean
-          mobile_number: string
+          mobile_number: string | null
           org_id: string
           pop_credits: number
           signed_up_at: string
@@ -481,7 +481,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           is_friend?: boolean
-          mobile_number: string
+          mobile_number?: string | null
           org_id?: string
           pop_credits?: number
           signed_up_at?: string
@@ -503,7 +503,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           is_friend?: boolean
-          mobile_number?: string
+          mobile_number?: string | null
           org_id?: string
           pop_credits?: number
           signed_up_at?: string
