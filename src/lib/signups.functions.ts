@@ -225,15 +225,26 @@ export const searchSignups = createServerFn({ method: "POST" })
     return { signups: rows ?? [] };
   });
 
-// Admin: mark a signup as checked-in (idempotent — no-op if already checked in)
+// Admin: mark a signup as checked-in (idempotent — no-op if already checked in).
+// On first check-in, mints POP for the attendee + each accompanying guest
+// (25 POP per head by default, configurable via the `event_checkin` reward rule).
 export const checkInSignup = createServerFn({ method: "POST" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
-  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        // Optional override of the guest count recorded at signup — lets the
+        // door scanner reflect how many people actually walked in together.
+        guest_count: z.number().int().min(0).max(20).optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     await assertAdminOrGatekeeper(context.userId);
     const { data: existing } = await supabaseAdmin
       .from("event_signups")
-      .select("id, full_name, checked_in_at")
+      .select("id, full_name, email, external_wallet, guest_count, checked_in_at")
       .eq("id", data.id)
       .maybeSingle();
     if (!existing) throw new Error("Signup not found");
@@ -243,19 +254,56 @@ export const checkInSignup = createServerFn({ method: "POST" })
         alreadyCheckedIn: true,
         checkedInAt: existing.checked_in_at,
         fullName: existing.full_name,
+        popAwarded: 0,
       };
     }
     const now = new Date().toISOString();
+
+    // Persist the door-observed guest count when supplied so records match reality.
+    const guestCount =
+      typeof data.guest_count === "number"
+        ? data.guest_count
+        : (existing.guest_count ?? 0);
+
+    const update: Record<string, unknown> = {
+      checked_in_at: now,
+      checked_in_by: context.userId,
+    };
+    if (typeof data.guest_count === "number") {
+      update.guest_count = guestCount;
+    }
     const { error } = await supabaseAdmin
       .from("event_signups")
-      .update({ checked_in_at: now, checked_in_by: context.userId })
+      .update(update)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    // Award POP per head (attendee + guests). Idempotent via (source, source_id).
+    const perHead = await getRewardAmount("event_checkin", 25);
+    const heads = 1 + Math.max(0, guestCount);
+    const total = perHead * heads;
+    if (total > 0 && existing.email) {
+      try {
+        await awardPop({
+          email: existing.email,
+          amount: total,
+          source: "event_checkin",
+          sourceId: existing.id,
+          memo: heads > 1 ? `Check-in ×${heads}` : "Event check-in",
+          walletOverride: existing.external_wallet,
+        });
+      } catch (e) {
+        console.error("[checkInSignup] awardPop", e);
+      }
+    }
+
     return {
       ok: true,
       alreadyCheckedIn: false,
       checkedInAt: now,
       fullName: existing.full_name,
+      popAwarded: total,
+      heads,
     };
   });
 
