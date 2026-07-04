@@ -384,3 +384,38 @@ export const adminAddGuest = createServerFn({ method: "POST" })
   });
 
 
+
+// Lightweight events list for the door check-in scanner. Admin OR gatekeeper.
+// Returns events that are live now or start within the next 7 days, plus any
+// event that ended in the last 6 hours (late arrivals). Sorted so the most
+// relevant "current" event is first.
+export const listCheckinEvents = createServerFn({ method: "GET" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdminOrGatekeeper(context.userId);
+    const now = new Date();
+    const lookbackMs = 6 * 60 * 60 * 1000;
+    const lookaheadMs = 7 * 24 * 60 * 60 * 1000;
+    const fromEnd = new Date(now.getTime() - lookbackMs).toISOString();
+    const toStart = new Date(now.getTime() + lookaheadMs).toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from("events")
+      .select("id, name, start_at, end_at, time_zone")
+      .gte("end_at", fromEnd)
+      .lte("start_at", toStart)
+      .order("start_at", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    const nowTs = now.getTime();
+    const events = (data ?? []).map((e) => {
+      const startTs = new Date(e.start_at).getTime();
+      const endTs = new Date(e.end_at).getTime();
+      return { ...e, live: nowTs >= startTs && nowTs <= endTs };
+    });
+    events.sort((a, b) => {
+      if (a.live !== b.live) return a.live ? -1 : 1;
+      return new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
+    });
+    return { events };
+  });
