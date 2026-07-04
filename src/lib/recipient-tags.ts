@@ -37,17 +37,14 @@ export function findRecipientTags(raw: string): RecipientTag[] {
   return found;
 }
 
-/** Tags like `#event:<uuid>` or `#rsvp:<slug>` for per-event audiences. */
-function findParamTags(raw: string): Array<{ kind: "event" | "rsvp"; arg: string; raw: string }> {
-  const out: Array<{ kind: "event" | "rsvp"; arg: string; raw: string }> = [];
-  const re = /(?:^|[\s,;])#(event|rsvp):([a-z0-9_-]+)(?=$|[\s,;])/gi;
+/** Tags like `#event:<uuid>`, `#rsvp:<slug>`, or `#signup:<slug>` for per-event audiences. */
+function findParamTags(raw: string): Array<{ kind: "event" | "rsvp" | "signup"; arg: string; raw: string }> {
+  const out: Array<{ kind: "event" | "rsvp" | "signup"; arg: string; raw: string }> = [];
+  const re = /(?:^|[\s,;])#(event|rsvp|signup):([a-z0-9_-]+)(?=$|[\s,;])/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(raw))) {
-    out.push({
-      kind: m[1].toLowerCase() as "event" | "rsvp",
-      arg: m[2],
-      raw: `#${m[1].toLowerCase()}:${m[2]}`,
-    });
+    const kind = m[1].toLowerCase() as "event" | "rsvp" | "signup";
+    out.push({ kind, arg: m[2], raw: `#${kind}:${m[2]}` });
   }
   return out;
 }
