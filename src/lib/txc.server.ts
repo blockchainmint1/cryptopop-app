@@ -168,8 +168,12 @@ async function getUtxos(addr: string): Promise<Utxo[]> {
 
 async function getTxHex(txid: string): Promise<string> {
   const res = await fetch(`${MEMPOOL_BASE}/tx/${txid}/hex`);
-  if (!res.ok) throw new Error(`tx hex fetch http ${res.status}`);
-  return (await res.text()).trim();
+  if (res.ok) {
+    const hex = (await res.text()).trim();
+    if (/^[0-9a-fA-F]+$/.test(hex)) return hex;
+  }
+  // Explorer may not have indexed a just-broadcast tx yet — ask the node.
+  return rpc<string>("getrawtransaction", [txid]);
 }
 
 async function broadcast(rawHex: string): Promise<string> {
@@ -179,7 +183,15 @@ async function broadcast(rawHex: string): Promise<string> {
     body: rawHex,
   });
   const text = (await res.text()).trim();
-  if (!res.ok) throw new Error(`broadcast failed: ${text || res.status}`);
+  if (!res.ok || text.startsWith("<")) {
+    // Explorer down or returning an HTML error page — broadcast via the node.
+    try {
+      return await rpc<string>("sendrawtransaction", [rawHex]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      throw new Error(`broadcast failed: ${text.startsWith("<") ? "explorer error page" : text || res.status}; node: ${msg}`);
+    }
+  }
   return text;
 }
 
