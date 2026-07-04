@@ -10,6 +10,8 @@ import {
   UserPlus,
   X,
   Sparkles,
+  Minus,
+  Plus,
 } from "lucide-react";
 import {
   checkInSignup,
