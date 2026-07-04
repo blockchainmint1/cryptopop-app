@@ -214,9 +214,39 @@ function AdminEventsList() {
     }
   }
 
+  function openGuestDialog(ev: AdminEventRow) {
+    setGuestFor(ev);
+    setGuestForm({ full_name: "", email: "", mobile_number: "", guest_count: "0" });
+  }
+
+  async function submitGuest(e: React.FormEvent) {
+    e.preventDefault();
+    if (!guestFor) return;
+    setGuestSaving(true);
+    try {
+      await addGuest({
+        data: {
+          event_id: guestFor.id,
+          full_name: guestForm.full_name.trim(),
+          email: guestForm.email.trim(),
+          mobile_number: guestForm.mobile_number.trim() || null,
+          guest_count: Math.max(0, Number(guestForm.guest_count) || 0),
+        },
+      });
+      toast.success(`${guestForm.full_name || "Guest"} added — confirmation email sent.`);
+      setGuestFor(null);
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add guest");
+    } finally {
+      setGuestSaving(false);
+    }
+  }
+
   const nowTs = Date.now();
   const upcoming = events.filter((e) => new Date(e.end_at).getTime() >= nowTs);
   const past = events.filter((e) => new Date(e.end_at).getTime() < nowTs);
+
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
