@@ -276,7 +276,8 @@ export const adminAddGuest = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    // Admins add guests from /admin/events; gatekeepers add walk-ins at the door.
+    await assertAdminOrGatekeeper(context.userId);
 
     const { data: ev, error: evErr } = await supabaseAdmin
       .from("events")
