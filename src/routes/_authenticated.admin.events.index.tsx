@@ -11,7 +11,9 @@ import {
   Loader2,
   Pencil,
   UserPlus,
+  Mail,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
