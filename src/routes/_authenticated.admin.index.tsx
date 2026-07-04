@@ -11,6 +11,8 @@ import {
   Settings2,
   Plus,
   Zap,
+  Shield,
+
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -193,6 +195,12 @@ function AdminDashboard() {
                 <Settings2 className="h-4 w-4 mr-2" /> Edit reward rules
               </Link>
             </Button>
+            <Button asChild variant="outline" className="justify-start">
+              <Link to="/admin/admins">
+                <Shield className="h-4 w-4 mr-2" /> Manage admins
+              </Link>
+            </Button>
+
           </div>
         </Card>
 
