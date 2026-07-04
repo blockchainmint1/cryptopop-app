@@ -102,16 +102,22 @@ function CheckinScannerPage() {
         const res = await checkIn({
           data: { id, guest_count: heads },
         });
+        const toppedUp = Boolean(res.toppedUp);
         setLast({
           kind: "success",
           name: res.fullName ?? "Attendee",
           already: res.alreadyCheckedIn,
+          toppedUp,
           heads: res.heads ?? 1 + heads,
           pop: res.popAwarded ?? 0,
         });
+        // First check-in bumps count by full party; top-ups bump by added heads.
         if (!res.alreadyCheckedIn) {
           setCount((c) => c + (res.heads ?? 1 + heads));
-          setHeads(0); // reset for the next attendee
+          setHeads(0);
+        } else if (toppedUp) {
+          setCount((c) => c + (res.addedHeads ?? heads));
+          setHeads(0);
         }
       } catch (e) {
         setLast({
