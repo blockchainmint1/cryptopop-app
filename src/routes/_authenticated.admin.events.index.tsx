@@ -99,11 +99,21 @@ function AdminEventsList() {
   const list = useServerFn(listAdminEvents);
   const create = useServerFn(createAdminEvent);
   const update = useServerFn(updateAdminEvent);
+  const addGuest = useServerFn(adminAddGuest);
   const [events, setEvents] = useState<AdminEventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [guestFor, setGuestFor] = useState<AdminEventRow | null>(null);
+  const [guestForm, setGuestForm] = useState({
+    full_name: "",
+    email: "",
+    mobile_number: "",
+    guest_count: "0",
+  });
+  const [guestSaving, setGuestSaving] = useState(false);
+
 
   const emptyForm = () => {
     const now = new Date();
