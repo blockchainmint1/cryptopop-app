@@ -10,6 +10,8 @@ import {
   UserPlus,
   X,
   Sparkles,
+  Minus,
+  Plus,
 } from "lucide-react";
 import {
   checkInSignup,
@@ -32,7 +34,7 @@ const UUID_RE =
   /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 type LastResult =
-  | { kind: "success"; name: string; already: boolean }
+  | { kind: "success"; name: string; already: boolean; heads: number; pop: number }
   | { kind: "error"; message: string };
 
 type CheckinEvent = {
@@ -52,6 +54,7 @@ function CheckinScannerPage() {
   const [busy, setBusy] = useState(false);
   const [last, setLast] = useState<LastResult | null>(null);
   const [count, setCount] = useState(0);
+  const [heads, setHeads] = useState(0); // extra guests present at the door (0 = solo)
   const lockRef = useRef(false);
   const lastValueRef = useRef<{ v: string; at: number } | null>(null);
 
@@ -89,13 +92,20 @@ function CheckinScannerPage() {
       lockRef.current = true;
       setBusy(true);
       try {
-        const res = await checkIn({ data: { id } });
+        const res = await checkIn({
+          data: { id, guest_count: heads },
+        });
         setLast({
           kind: "success",
           name: res.fullName ?? "Attendee",
           already: res.alreadyCheckedIn,
+          heads: res.heads ?? 1 + heads,
+          pop: res.popAwarded ?? 0,
         });
-        if (!res.alreadyCheckedIn) setCount((c) => c + 1);
+        if (!res.alreadyCheckedIn) {
+          setCount((c) => c + (res.heads ?? 1 + heads));
+          setHeads(0); // reset for the next attendee
+        }
       } catch (e) {
         setLast({
           kind: "error",
@@ -108,8 +118,9 @@ function CheckinScannerPage() {
         }, 1500);
       }
     },
-    [checkIn, showAdd],
+    [checkIn, showAdd, heads],
   );
+
 
   const openAddGuest = useCallback(() => {
     setShowAdd(true);
@@ -263,9 +274,18 @@ function CheckinScannerPage() {
             <div className="min-w-0 flex-1">
               <p className="font-display text-lg font-bold leading-tight truncate">
                 {last.name}
+                {!last.already && last.heads > 1 && (
+                  <span className="ml-2 rounded-full bg-white/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest">
+                    ×{last.heads}
+                  </span>
+                )}
               </p>
               <p className="font-mono text-[11px] uppercase tracking-widest opacity-80">
-                {last.already ? "Already checked in" : "Checked in ✓"}
+                {last.already
+                  ? "Already checked in"
+                  : last.pop > 0
+                    ? `Checked in ✓ · +${last.pop} POP`
+                    : "Checked in ✓"}
               </p>
             </div>
           </div>
@@ -283,6 +303,40 @@ function CheckinScannerPage() {
           </div>
         )}
 
+        {/* Guests-present stepper — applies to the NEXT scan */}
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+          <div className="min-w-0">
+            <p className="font-display text-sm font-semibold leading-tight">
+              Guests with them
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-white/50">
+              Applies to next scan · resets after
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setHeads((h) => Math.max(0, h - 1))}
+              disabled={heads === 0}
+              aria-label="Fewer guests"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="w-8 text-center font-display text-xl font-black tabular-nums">
+              {heads}
+            </span>
+            <button
+              type="button"
+              onClick={() => setHeads((h) => Math.min(20, h + 1))}
+              aria-label="More guests"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={openAddGuest}
@@ -292,6 +346,7 @@ function CheckinScannerPage() {
           Not on the list? Add guest
         </button>
       </footer>
+
 
       {/* Add Guest bottom sheet */}
       {showAdd && (
