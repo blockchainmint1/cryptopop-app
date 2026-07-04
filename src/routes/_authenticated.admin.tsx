@@ -54,7 +54,7 @@ const navItems = [
 
 function AdminLayout() {
   const { user, loading } = useAuth();
-  const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { isAdmin, isGatekeeper, loading: adminLoading } = useIsAdmin();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   if (loading || adminLoading) {
@@ -65,7 +65,9 @@ function AdminLayout() {
     );
   }
 
-  if (!user || !isAdmin) {
+  const canAccess = isAdmin || isGatekeeper;
+
+  if (!user || !canAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <Card className="max-w-md p-8 text-center space-y-4">
@@ -87,6 +89,13 @@ function AdminLayout() {
   const isActive = (to: string, exact: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
+  // Gatekeepers can only reach /admin/checkin.
+  const gatekeeperOnly = isGatekeeper && !isAdmin;
+  const visibleNav = gatekeeperOnly
+    ? navItems.filter((i) => i.gatekeeper)
+    : navItems;
+  const onAllowedRoute = !gatekeeperOnly || pathname === "/admin/checkin";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background text-foreground">
@@ -102,7 +111,7 @@ function AdminLayout() {
               <SidebarGroupLabel>Manage</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {navItems.map((item) => (
+                  {visibleNav.map((item) => (
                     <SidebarMenuItem key={item.to}>
                       <SidebarMenuButton asChild isActive={isActive(item.to, item.exact)}>
                         <Link to={item.to} className="flex items-center gap-2">
