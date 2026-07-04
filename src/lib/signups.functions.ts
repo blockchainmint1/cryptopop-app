@@ -246,3 +246,127 @@ export const checkInSignup = createServerFn({ method: "POST" })
     };
   });
 
+// Admin: manually add a guest to an event, bypassing the public RSVP flow.
+// Creates the signup, awards signup POP, and emails the guest their pass +
+// event info (same shape the RSVP form triggers).
+export const adminAddGuest = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        event_id: z.string().uuid(),
+        full_name: z.string().trim().min(1).max(120),
+        email: z.string().trim().email().max(254),
+        mobile_number: z.string().trim().max(32).optional().nullable(),
+        guest_count: z.number().int().min(0).max(20).default(0),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+
+    const { data: ev, error: evErr } = await supabaseAdmin
+      .from("events")
+      .select("id, name, start_at, end_at, time_zone, lat, lng")
+      .eq("id", data.event_id)
+      .maybeSingle();
+    if (evErr || !ev) throw new Error("Event not found");
+
+    const lcEmail = data.email.toLowerCase();
+    const signupReward = await getRewardAmount("event_signup", 10);
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("event_signups")
+      .insert({
+        full_name: data.full_name,
+        email: lcEmail,
+        mobile_number: data.mobile_number?.trim() || "",
+        is_friend: data.guest_count > 0,
+        guest_count: data.guest_count,
+        pop_credits: signupReward,
+        completed_activities: ["signup"],
+        signup_source: "admin_manual",
+        status: "confirmed",
+        event_id: ev.id,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      console.error("[adminAddGuest]", error);
+      if (error.code === "23505") throw new Error("This email is already registered for this event.");
+      throw new Error("Failed to add guest");
+    }
+
+    // Custodial wallet + signup POP award (mirrors createEventSignup).
+    let walletAddress: string | null = null;
+    try {
+      const w = await ensureEmailWallet(lcEmail);
+      walletAddress = w.walletAddress;
+    } catch (e) {
+      console.error("[adminAddGuest] ensureEmailWallet", e);
+    }
+    try {
+      await awardPop({
+        email: lcEmail,
+        amount: signupReward,
+        source: "event_signup",
+        sourceId: inserted.id,
+        memo: "CryptoPOP signup (admin added)",
+      });
+    } catch (e) {
+      console.error("[adminAddGuest] awardPop", e);
+    }
+
+    // Format event date for the email in the event's time zone.
+    const start = new Date(ev.start_at);
+    const end = new Date(ev.end_at);
+    const dayLabel = start.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: ev.time_zone,
+    });
+    const timeFmt = (d: Date) =>
+      d
+        .toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone: ev.time_zone,
+        })
+        .replace(":00 ", " ");
+    const eventDate = `${dayLabel} · ${timeFmt(start)}–${timeFmt(end)}`;
+    const mapUrl = `https://www.google.com/maps?q=${ev.lat},${ev.lng}`;
+
+    // Telegram notification
+    notifyEventSignup({
+      fullName: data.full_name,
+      email: lcEmail,
+      mobile: data.mobile_number ?? "",
+      instagram: null,
+      telegram: null,
+      isFriend: data.guest_count > 0,
+      guestCount: data.guest_count,
+      signupId: inserted.id,
+    }).catch((e) => console.error("[adminAddGuest] telegram", e));
+
+    // Confirmation email — same template used by the public RSVP flow.
+    enqueueTransactionalEmail({
+      templateName: "event-confirmation",
+      recipientEmail: lcEmail,
+      idempotencyKey: `event-confirm-${inserted.id}`,
+      templateData: {
+        name: data.full_name,
+        passId: inserted.id,
+        eventName: ev.name,
+        eventDate,
+        mapUrl,
+        popCredits: signupReward,
+        walletAddress,
+      },
+    }).catch((e) => console.error("[adminAddGuest] email enqueue", e));
+
+    return { id: inserted.id, walletAddress };
+  });
+
+

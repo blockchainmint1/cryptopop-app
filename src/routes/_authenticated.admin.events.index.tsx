@@ -10,7 +10,10 @@ import {
   X,
   Loader2,
   Pencil,
+  UserPlus,
+  Mail,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,11 +21,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   listAdminEvents,
   createAdminEvent,
   updateAdminEvent,
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
+import { adminAddGuest } from "@/lib/signups.functions";
+
 import { GeofenceMapPicker } from "@/components/geofence-map-picker";
 import {
   COMMON_TIMEZONES,
@@ -88,11 +101,21 @@ function AdminEventsList() {
   const list = useServerFn(listAdminEvents);
   const create = useServerFn(createAdminEvent);
   const update = useServerFn(updateAdminEvent);
+  const addGuest = useServerFn(adminAddGuest);
   const [events, setEvents] = useState<AdminEventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [guestFor, setGuestFor] = useState<AdminEventRow | null>(null);
+  const [guestForm, setGuestForm] = useState({
+    full_name: "",
+    email: "",
+    mobile_number: "",
+    guest_count: "0",
+  });
+  const [guestSaving, setGuestSaving] = useState(false);
+
 
   const emptyForm = () => {
     const now = new Date();
@@ -193,9 +216,39 @@ function AdminEventsList() {
     }
   }
 
+  function openGuestDialog(ev: AdminEventRow) {
+    setGuestFor(ev);
+    setGuestForm({ full_name: "", email: "", mobile_number: "", guest_count: "0" });
+  }
+
+  async function submitGuest(e: React.FormEvent) {
+    e.preventDefault();
+    if (!guestFor) return;
+    setGuestSaving(true);
+    try {
+      await addGuest({
+        data: {
+          event_id: guestFor.id,
+          full_name: guestForm.full_name.trim(),
+          email: guestForm.email.trim(),
+          mobile_number: guestForm.mobile_number.trim() || null,
+          guest_count: Math.max(0, Number(guestForm.guest_count) || 0),
+        },
+      });
+      toast.success(`${guestForm.full_name || "Guest"} added — confirmation email sent.`);
+      setGuestFor(null);
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add guest");
+    } finally {
+      setGuestSaving(false);
+    }
+  }
+
   const nowTs = Date.now();
   const upcoming = events.filter((e) => new Date(e.end_at).getTime() >= nowTs);
   const past = events.filter((e) => new Date(e.end_at).getTime() < nowTs);
+
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -417,25 +470,122 @@ function AdminEventsList() {
         </Card>
       ) : (
         <div className="space-y-8">
-          <EventSection title="Upcoming & active" rows={upcoming} onEdit={startEdit} />
+          <EventSection
+            title="Upcoming & active"
+            rows={upcoming}
+            onEdit={startEdit}
+            onAddGuest={openGuestDialog}
+          />
           <EventSection title="Past events" rows={past} muted onEdit={startEdit} />
         </div>
       )}
+
+      <Dialog open={!!guestFor} onOpenChange={(o) => !o && setGuestFor(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Add guest</DialogTitle>
+            <DialogDescription>
+              {guestFor
+                ? `Manually register a late arrival for ${guestFor.name}. They'll get a confirmation email with their pass QR and event info.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitGuest} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="guest_name">Full name</Label>
+              <Input
+                id="guest_name"
+                required
+                autoFocus
+                value={guestForm.full_name}
+                onChange={(e) =>
+                  setGuestForm({ ...guestForm, full_name: e.target.value })
+                }
+                placeholder="Jane Doe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="guest_email">Email</Label>
+              <Input
+                id="guest_email"
+                type="email"
+                required
+                value={guestForm.email}
+                onChange={(e) =>
+                  setGuestForm({ ...guestForm, email: e.target.value })
+                }
+                placeholder="jane@example.com"
+              />
+              <p className="font-mono text-[10px] text-muted-foreground">
+                Confirmation email + pass link go here.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="guest_mobile">Mobile (optional)</Label>
+                <Input
+                  id="guest_mobile"
+                  value={guestForm.mobile_number}
+                  onChange={(e) =>
+                    setGuestForm({ ...guestForm, mobile_number: e.target.value })
+                  }
+                  placeholder="+1 555 …"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="guest_plus">+ guests</Label>
+                <Input
+                  id="guest_plus"
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={guestForm.guest_count}
+                  onChange={(e) =>
+                    setGuestForm({ ...guestForm, guest_count: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setGuestFor(null)}
+                disabled={guestSaving}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={guestSaving}>
+                {guestSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4 mr-2" />
+                )}
+                Add & send invite
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function EventSection({
   title,
   rows,
   muted,
   onEdit,
+  onAddGuest,
 }: {
   title: string;
   rows: AdminEventRow[];
   muted?: boolean;
   onEdit: (e: AdminEventRow) => void;
+  onAddGuest?: (e: AdminEventRow) => void;
 }) {
+
   if (rows.length === 0) {
     return (
       <section>
@@ -491,7 +641,7 @@ function EventSection({
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-wrap gap-2 mt-4">
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/events/$id" params={{ id: e.id }}>
                   <QrCode className="h-3.5 w-3.5 mr-1.5" /> QR poster
@@ -500,10 +650,16 @@ function EventSection({
               <Button size="sm" variant="outline" onClick={() => onEdit(e)}>
                 <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
               </Button>
+              {onAddGuest && (
+                <Button size="sm" onClick={() => onAddGuest(e)}>
+                  <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Add guest
+                </Button>
+              )}
             </div>
           </Card>
         ))}
       </div>
+
     </section>
   );
 }
