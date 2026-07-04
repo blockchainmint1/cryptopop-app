@@ -278,7 +278,7 @@ function CheckinScannerPage() {
         ) : last.kind === "success" ? (
           <div
             className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${
-              last.already
+              last.already && !last.toppedUp
                 ? "bg-amber-500/15 text-amber-200"
                 : "bg-emerald-500/15 text-emerald-200"
             }`}
@@ -287,21 +287,29 @@ function CheckinScannerPage() {
             <div className="min-w-0 flex-1">
               <p className="font-display text-lg font-bold leading-tight truncate">
                 {last.name}
-                {!last.already && last.heads > 1 && (
+                {last.heads > 1 && !last.already && (
                   <span className="ml-2 rounded-full bg-white/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest">
                     ×{last.heads}
                   </span>
                 )}
+                {last.toppedUp && (
+                  <span className="ml-2 rounded-full bg-white/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest">
+                    +{last.heads}
+                  </span>
+                )}
               </p>
               <p className="font-mono text-[11px] uppercase tracking-widest opacity-80">
-                {last.already
-                  ? "Already checked in"
-                  : last.pop > 0
-                    ? `Checked in ✓ · +${last.pop} POP`
-                    : "Checked in ✓"}
+                {last.toppedUp
+                  ? `Guests added ✓ · +${last.pop} POP`
+                  : last.already
+                    ? "Already checked in"
+                    : last.pop > 0
+                      ? `Checked in ✓ · +${last.pop} POP`
+                      : "Checked in ✓"}
               </p>
             </div>
           </div>
+
         ) : (
           <div className="flex items-center gap-3 rounded-2xl bg-red-500/15 px-4 py-3 text-red-200">
             <AlertTriangle className="h-6 w-6 shrink-0" />
