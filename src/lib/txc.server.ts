@@ -75,27 +75,63 @@ async function rpc<T = unknown>(method: string, params: unknown[]): Promise<T> {
 
 type Utxo = { txid: string; vout: number; value: number };
 
-type MempoolTx = {
+type RawMempoolTx = {
   txid: string;
-  vin: Array<{ txid: string; vout: number }>;
-  vout: Array<{ scriptpubkey_address?: string; value: number }>;
+  vin: Array<{ txid?: string; vout?: number }>;
+  vout: Array<{
+    value: number; // in TXC
+    n: number;
+    scriptPubKey?: { addresses?: string[] };
+  }>;
 };
 
-async function getMempoolTxs(addr: string): Promise<MempoolTx[]> {
+/**
+ * True if the outpoint is still spendable, considering the node's mempool.
+ * gettxout(..., include_mempool=true) returns null when a mempool tx
+ * already spends it — the exact condition that causes txn-mempool-conflict.
+ */
+async function isOutpointSpendable(txid: string, vout: number): Promise<boolean> {
   try {
-    const res = await fetch(`${MEMPOOL_BASE}/address/${addr}/txs/mempool`);
-    if (!res.ok) return [];
-    return (await res.json()) as MempoolTx[];
+    const res = await rpc<unknown>("gettxout", [txid, vout, true]);
+    return res !== null && res !== undefined;
+  } catch {
+    // If the node can't answer, keep the utxo and let broadcast decide.
+    return true;
+  }
+}
+
+/**
+ * Scan the node's mempool for unconfirmed outputs paying `addr` that are not
+ * themselves spent — i.e. change from our own just-broadcast mints. Chaining
+ * off unconfirmed change lets back-to-back mints proceed without waiting for
+ * a block.
+ */
+async function getMempoolChangeUtxos(addr: string): Promise<Utxo[]> {
+  try {
+    const txids = await rpc<string[]>("getrawmempool", []);
+    const out: Utxo[] = [];
+    for (const txid of txids.slice(0, 100)) {
+      let tx: RawMempoolTx;
+      try {
+        tx = await rpc<RawMempoolTx>("getrawtransaction", [txid, 1]);
+      } catch {
+        continue;
+      }
+      for (const o of tx.vout ?? []) {
+        if (!o.scriptPubKey?.addresses?.includes(addr)) continue;
+        if (await isOutpointSpendable(txid, o.n)) {
+          out.push({ txid, vout: o.n, value: Math.round(o.value * 1e8) });
+        }
+      }
+    }
+    return out;
   } catch {
     return [];
   }
 }
 
 async function getUtxos(addr: string): Promise<Utxo[]> {
-  const [utxoRes, mempoolTxs] = await Promise.all([
-    fetch(`${MEMPOOL_BASE}/address/${addr}/utxo`),
-    getMempoolTxs(addr),
-  ]);
+  const utxoRes = await fetch(`${MEMPOOL_BASE}/address/${addr}/utxo`);
   if (!utxoRes.ok) throw new Error(`utxo fetch http ${utxoRes.status}`);
   const raw = (await utxoRes.json()) as Array<{
     txid: string;
@@ -104,30 +140,28 @@ async function getUtxos(addr: string): Promise<Utxo[]> {
     status: { confirmed: boolean };
   }>;
 
-  // Outpoints already spent by unconfirmed txs — the explorer's utxo list can
-  // lag behind mempool spends; using one causes txn-mempool-conflict.
-  const spent = new Set<string>();
-  for (const tx of mempoolTxs) {
-    for (const vin of tx.vin) spent.add(`${vin.txid}:${vin.vout}`);
+  // The explorer's utxo list lags behind mempool spends. Verify every
+  // candidate against the node (mempool-aware) — spending an outpoint a
+  // pending tx already used is exactly what triggers txn-mempool-conflict.
+  const verified: Array<Utxo & { confirmed: boolean }> = [];
+  for (const u of raw) {
+    if (await isOutpointSpendable(u.txid, u.vout)) {
+      verified.push({ txid: u.txid, vout: u.vout, value: u.value, confirmed: u.status.confirmed });
+    }
   }
 
-  const utxos = raw
-    .filter((u) => !spent.has(`${u.txid}:${u.vout}`))
-    .map((u) => ({ txid: u.txid, vout: u.vout, value: u.value, confirmed: u.status.confirmed }))
+  const utxos = verified
     .sort((a, b) => Number(b.confirmed) - Number(a.confirmed))
     .map(({ txid, vout, value }) => ({ txid, vout, value }));
 
-  // Add unconfirmed change outputs back to us (spendable, may be missing from
-  // the utxo endpoint while it lags).
+  // Add spendable unconfirmed change from our own pending mints.
   const seen = new Set(utxos.map((u) => `${u.txid}:${u.vout}`));
-  for (const tx of mempoolTxs) {
-    tx.vout.forEach((o, i) => {
-      const key = `${tx.txid}:${i}`;
-      if (o.scriptpubkey_address === addr && !spent.has(key) && !seen.has(key)) {
-        utxos.push({ txid: tx.txid, vout: i, value: o.value });
-        seen.add(key);
-      }
-    });
+  for (const u of await getMempoolChangeUtxos(addr)) {
+    const key = `${u.txid}:${u.vout}`;
+    if (!seen.has(key)) {
+      utxos.push(u);
+      seen.add(key);
+    }
   }
   return utxos;
 }
