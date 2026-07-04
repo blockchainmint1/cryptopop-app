@@ -12,7 +12,7 @@ type Award = {
   amount: number;
   source: string;
   source_id: string | null;
-  status: "pending" | "sent" | "failed";
+  status: "pending" | "sending" | "sent" | "failed";
   tx_hash: string | null;
   error: string | null;
   created_at: string;
