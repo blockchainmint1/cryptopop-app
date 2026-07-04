@@ -1,13 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   listBlastCampaigns,
   getBlastProgress,
+  getBlastCampaign,
 } from "@/lib/blast.functions";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Loader2, Eye, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/blast/history")({
   head: () => ({ meta: [{ title: "Blast History — CryptoPOP Admin" }] }),
@@ -29,8 +39,20 @@ type Row = {
 function BlastHistory() {
   const list = useServerFn(listBlastCampaigns);
   const progressFn = useServerFn(getBlastProgress);
+  const getCampaign = useServerFn(getBlastCampaign);
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewing, setViewing] = useState<{
+    subject: string;
+    preview_text: string | null;
+    html: string;
+    from_name: string;
+    from_email: string;
+    reply_to: string | null;
+    recipients_raw: string;
+  } | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
 
   async function refresh() {
     const r = await list({ data: {} as never });
@@ -56,6 +78,43 @@ function BlastHistory() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function handleView(id: string) {
+    setOpening(id);
+    try {
+      const c = await getCampaign({ data: { campaignId: id } });
+      setViewing(c);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to load email");
+    } finally {
+      setOpening(null);
+    }
+  }
+
+  async function handleReuse(id: string) {
+    setOpening(id);
+    try {
+      const c = await getCampaign({ data: { campaignId: id } });
+      sessionStorage.setItem(
+        "blast:prefill",
+        JSON.stringify({
+          subject: c.subject,
+          previewText: c.preview_text ?? "",
+          html: c.html,
+          fromName: c.from_name,
+          fromEmail: c.from_email,
+          replyTo: c.reply_to ?? "",
+          recipientsRaw: c.recipients_raw ?? "",
+        }),
+      );
+      toast.success("Loaded into composer");
+      navigate({ to: "/admin/blast" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reuse");
+      setOpening(null);
+    }
+  }
+
+
   return (
     <Card className="p-4">
       {loading ? (
@@ -77,6 +136,7 @@ function BlastHistory() {
                 <th className="py-2 pr-3 text-right">Recipients</th>
                 <th className="py-2 pr-3">Progress</th>
                 <th className="py-2 pr-3">Status</th>
+                <th className="py-2 pr-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -126,6 +186,26 @@ function BlastHistory() {
                         <Badge className="text-[10px]">sending</Badge>
                       )}
                     </td>
+                    <td className="py-2 pr-3">
+                      <div className="flex gap-1 justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleView(r.campaign_id)}
+                          disabled={opening === r.campaign_id}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" /> View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReuse(r.campaign_id)}
+                          disabled={opening === r.campaign_id}
+                        >
+                          <Copy className="h-3.5 w-3.5 mr-1" /> Reuse
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -133,6 +213,56 @@ function BlastHistory() {
           </table>
         </div>
       )}
+
+      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{viewing?.subject}</DialogTitle>
+          </DialogHeader>
+          {viewing && (
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground font-mono">
+                From: {viewing.from_name} &lt;{viewing.from_email}&gt;
+                {viewing.reply_to ? ` • Reply-To: ${viewing.reply_to}` : ""}
+              </div>
+              {viewing.preview_text && (
+                <div className="text-xs text-muted-foreground italic">
+                  Preview: {viewing.preview_text}
+                </div>
+              )}
+              <iframe
+                title="email preview"
+                className="w-full h-[500px] rounded-md border border-border bg-white"
+                srcDoc={viewing.html}
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!viewing) return;
+                sessionStorage.setItem(
+                  "blast:prefill",
+                  JSON.stringify({
+                    subject: viewing.subject,
+                    previewText: viewing.preview_text ?? "",
+                    html: viewing.html,
+                    fromName: viewing.from_name,
+                    fromEmail: viewing.from_email,
+                    replyTo: viewing.reply_to ?? "",
+                    recipientsRaw: viewing.recipients_raw ?? "",
+                  }),
+                );
+                toast.success("Loaded into composer");
+                navigate({ to: "/admin/blast" });
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Reuse in composer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

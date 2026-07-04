@@ -80,6 +80,25 @@ function BlastCompose() {
       .catch(() => {});
   }, [listTemplates]);
 
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("blast:prefill");
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (typeof p.subject === "string") setSubject(p.subject);
+      if (typeof p.previewText === "string") setPreviewText(p.previewText);
+      if (typeof p.html === "string") setHtml(p.html);
+      if (typeof p.fromName === "string") setFromName(p.fromName);
+      if (typeof p.fromEmail === "string") setFromEmail(p.fromEmail);
+      if (typeof p.replyTo === "string") setReplyTo(p.replyTo);
+      if (typeof p.recipientsRaw === "string") setRecipientsRaw(p.recipientsRaw);
+      sessionStorage.removeItem("blast:prefill");
+      toast.success("Prefilled from previous blast — edit and send");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   async function handleValidate() {
     setBusy("validate");
     try {
