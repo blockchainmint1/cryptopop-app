@@ -1,0 +1,2 @@
+ALTER TABLE public.pop_awards DROP CONSTRAINT pop_awards_status_check;
+ALTER TABLE public.pop_awards ADD CONSTRAINT pop_awards_status_check CHECK (status = ANY (ARRAY['pending'::text, 'sending'::text, 'sent'::text, 'failed'::text]));
