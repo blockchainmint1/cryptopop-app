@@ -172,6 +172,37 @@ function formatDivisibleAmount(units: number | string): string {
   return n.toFixed(8);
 }
 
+// ---------- mint serialization lock ----------
+// Concurrent mints select the same issuer UTXOs and the second broadcast is
+// rejected by the mempool (txn-mempool-conflict). A single-row DB lock
+// (public.pop_mint_lock) serializes broadcasts across all server instances.
+async function withMintLock<T>(fn: () => Promise<T>): Promise<T> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const holder = crypto.randomUUID();
+  const deadline = Date.now() + 45_000;
+  for (;;) {
+    const { data, error } = await supabaseAdmin.rpc("acquire_pop_mint_lock", {
+      p_holder: holder,
+      p_ttl_seconds: 90,
+    });
+    if (error) throw new Error(`mint lock: ${error.message}`);
+    if (data === true) break;
+    if (Date.now() > deadline) {
+      throw new Error("another mint is in progress — try again shortly");
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  try {
+    return await fn();
+  } finally {
+    try {
+      await supabaseAdmin.rpc("release_pop_mint_lock", { p_holder: holder });
+    } catch {
+      // TTL expiry frees the lock if release fails
+    }
+  }
+}
+
 // ---------- shared build + sign + broadcast ----------
 
 async function buildAndBroadcast(opts: {
@@ -179,7 +210,16 @@ async function buildAndBroadcast(opts: {
   refAddress: string; // dust reference output (receiver for grants, issuer for issuance)
   minterWif: string;
 }): Promise<{ txHash: string; minterAddress: string }> {
+  return withMintLock(() => buildAndBroadcastLocked(opts));
+}
+
+async function buildAndBroadcastLocked(opts: {
+  payloadHex: string;
+  refAddress: string;
+  minterWif: string;
+}): Promise<{ txHash: string; minterAddress: string }> {
   const { keyPair, address: issuer, network } = loadKey(opts.minterWif);
+
 
   const utxos = await getUtxos(issuer);
   if (utxos.length === 0) throw new Error("issuer has no UTXOs — needs funding");

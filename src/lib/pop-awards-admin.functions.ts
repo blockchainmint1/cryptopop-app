@@ -77,16 +77,25 @@ export const retryPopAward = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const { data: row, error } = await supabaseAdmin
-      .from("pop_awards")
-      .select("id, wallet_address, amount, source, status")
-      .eq("id", data.id)
-      .maybeSingle();
+    // Atomic DB claim: flips the row to 'sending' only if it's still
+    // pending/failed. A concurrent retry of the same row gets nothing back
+    // and skips the mint entirely (no double-spend, no mempool conflict).
+    const { data: claimed, error } = await supabaseAdmin.rpc("claim_pop_award", {
+      p_award_id: data.id,
+    });
     if (error) throw new Error(error.message);
-    if (!row) throw new Error("Award not found");
-    if (row.status === "sent") {
-      return { ok: true, alreadySent: true };
+    const row = Array.isArray(claimed) ? claimed[0] : null;
+    if (!row) {
+      const { data: existing } = await supabaseAdmin
+        .from("pop_awards")
+        .select("status")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (!existing) throw new Error("Award not found");
+      if (existing.status === "sent") return { ok: true, alreadySent: true };
+      return { ok: true, inProgress: true };
     }
+
     try {
       const result = await mintGrant({
         amount: Number(row.amount),

@@ -40,12 +40,18 @@ export const reconcileFailedPopAwards = createServerFn({ method: "POST" })
     }> = [];
 
     for (const row of rows ?? []) {
+      // Atomic DB claim — skip rows another process is already sending.
+      const { data: claimed } = await supabaseAdmin.rpc("claim_pop_award", {
+        p_award_id: row.id,
+      });
+      if (!Array.isArray(claimed) || claimed.length === 0) continue;
       try {
         const result = await mintGrant({
           amount: Number(row.amount),
           toAddress: row.wallet_address,
           memo: (row.source ?? "reconcile").slice(0, 60),
         });
+
         await supabaseAdmin
           .from("pop_awards")
           .update({
