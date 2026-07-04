@@ -220,12 +220,17 @@ export const checkInSignup = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { data: existing } = await supabaseAdmin
       .from("event_signups")
-      .select("id, checked_in_at")
+      .select("id, full_name, checked_in_at")
       .eq("id", data.id)
       .maybeSingle();
     if (!existing) throw new Error("Signup not found");
     if (existing.checked_in_at) {
-      return { ok: true, alreadyCheckedIn: true, checkedInAt: existing.checked_in_at };
+      return {
+        ok: true,
+        alreadyCheckedIn: true,
+        checkedInAt: existing.checked_in_at,
+        fullName: existing.full_name,
+      };
     }
     const now = new Date().toISOString();
     const { error } = await supabaseAdmin
@@ -233,5 +238,11 @@ export const checkInSignup = createServerFn({ method: "POST" })
       .update({ checked_in_at: now, checked_in_by: context.userId })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
-    return { ok: true, alreadyCheckedIn: false, checkedInAt: now };
+    return {
+      ok: true,
+      alreadyCheckedIn: false,
+      checkedInAt: now,
+      fullName: existing.full_name,
+    };
   });
+
