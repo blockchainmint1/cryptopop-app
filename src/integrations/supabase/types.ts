@@ -819,6 +819,7 @@ export type Database = {
       pop_awards: {
         Row: {
           amount: number
+          claimed_at: string | null
           created_at: string
           email: string
           error: string | null
@@ -833,6 +834,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          claimed_at?: string | null
           created_at?: string
           email: string
           error?: string | null
@@ -847,6 +849,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          claimed_at?: string | null
           created_at?: string
           email?: string
           error?: string | null
@@ -948,6 +951,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pop_mint_lock: {
+        Row: {
+          created_at: string
+          holder: string | null
+          id: number
+          locked_until: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          holder?: string | null
+          id?: number
+          locked_until?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          holder?: string | null
+          id?: number
+          locked_until?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1260,6 +1287,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acquire_pop_mint_lock: {
+        Args: { p_holder: string; p_ttl_seconds?: number }
+        Returns: boolean
+      }
+      claim_pop_award: {
+        Args: { p_award_id: string }
+        Returns: {
+          amount: number
+          claimed_at: string | null
+          created_at: string
+          email: string
+          error: string | null
+          id: string
+          org_id: string
+          sent_at: string | null
+          source: string
+          source_id: string | null
+          status: string
+          tx_hash: string | null
+          wallet_address: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "pop_awards"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1305,6 +1360,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      release_pop_mint_lock: { Args: { p_holder: string }; Returns: undefined }
       user_owns_email: {
         Args: { _email: string; _user_id: string }
         Returns: boolean
