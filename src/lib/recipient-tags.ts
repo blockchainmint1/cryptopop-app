@@ -37,17 +37,14 @@ export function findRecipientTags(raw: string): RecipientTag[] {
   return found;
 }
 
-/** Tags like `#event:<uuid>` or `#rsvp:<slug>` for per-event audiences. */
-function findParamTags(raw: string): Array<{ kind: "event" | "rsvp"; arg: string; raw: string }> {
-  const out: Array<{ kind: "event" | "rsvp"; arg: string; raw: string }> = [];
-  const re = /(?:^|[\s,;])#(event|rsvp):([a-z0-9_-]+)(?=$|[\s,;])/gi;
+/** Tags like `#event:<uuid>`, `#rsvp:<slug>`, or `#signup:<slug>` for per-event audiences. */
+function findParamTags(raw: string): Array<{ kind: "event" | "rsvp" | "signup"; arg: string; raw: string }> {
+  const out: Array<{ kind: "event" | "rsvp" | "signup"; arg: string; raw: string }> = [];
+  const re = /(?:^|[\s,;])#(event|rsvp|signup):([a-z0-9_-]+)(?=$|[\s,;])/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(raw))) {
-    out.push({
-      kind: m[1].toLowerCase() as "event" | "rsvp",
-      arg: m[2],
-      raw: `#${m[1].toLowerCase()}:${m[2]}`,
-    });
+    const kind = m[1].toLowerCase() as "event" | "rsvp" | "signup";
+    out.push({ kind, arg: m[2], raw: `#${kind}:${m[2]}` });
   }
   return out;
 }
@@ -174,6 +171,28 @@ async function emailsForRsvpSlug(
   );
 }
 
+async function emailsForSignupSlug(
+  supabaseAdmin: SupabaseClient,
+  slug: string,
+): Promise<string[]> {
+  const { data: ev, error } = await supabaseAdmin
+    .from("events")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!ev?.id) return [];
+  return pageAll(
+    (a, b) =>
+      supabaseAdmin
+        .from("event_signups")
+        .select("email")
+        .eq("event_id", ev.id)
+        .range(a, b),
+    (r) => (r as { email: string }).email,
+  );
+}
+
 export async function expandRecipientTags(
   supabaseAdmin: SupabaseClient,
   raw: string,
@@ -203,7 +222,9 @@ export async function expandRecipientTags(
     const emails =
       p.kind === "rsvp"
         ? await emailsForRsvpSlug(supabaseAdmin, p.arg)
-        : await emailsForEvent(supabaseAdmin, p.arg);
+        : p.kind === "signup"
+          ? await emailsForSignupSlug(supabaseAdmin, p.arg)
+          : await emailsForEvent(supabaseAdmin, p.arg);
     resolved.push({ tag: p.raw, count: emails.length });
     const re = new RegExp(
       `(^|[\\s,;])${escapeRegex(p.raw)}(?=$|[\\s,;])`,
