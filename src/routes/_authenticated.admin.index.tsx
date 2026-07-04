@@ -168,10 +168,16 @@ function AdminDashboard() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
-              <Link to="/admin/signups">
-                <Users className="h-4 w-4 mr-2" /> Check in attendee
+              <Link to="/admin/checkin">
+                <ScanLine className="h-4 w-4 mr-2" /> Check in (scanner)
               </Link>
             </Button>
+            <Button asChild variant="outline" className="justify-start">
+              <Link to="/admin/signups">
+                <Users className="h-4 w-4 mr-2" /> Check in (list)
+              </Link>
+            </Button>
+
             <Button asChild variant="outline" className="justify-start">
               <Link to="/admin/pop-awards">
                 <Coins className="h-4 w-4 mr-2" /> Review POP awards
