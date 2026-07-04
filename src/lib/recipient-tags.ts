@@ -222,7 +222,9 @@ export async function expandRecipientTags(
     const emails =
       p.kind === "rsvp"
         ? await emailsForRsvpSlug(supabaseAdmin, p.arg)
-        : await emailsForEvent(supabaseAdmin, p.arg);
+        : p.kind === "signup"
+          ? await emailsForSignupSlug(supabaseAdmin, p.arg)
+          : await emailsForEvent(supabaseAdmin, p.arg);
     resolved.push({ tag: p.raw, count: emails.length });
     const re = new RegExp(
       `(^|[\\s,;])${escapeRegex(p.raw)}(?=$|[\\s,;])`,
