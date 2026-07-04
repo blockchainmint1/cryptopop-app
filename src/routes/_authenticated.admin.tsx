@@ -7,11 +7,13 @@ import {
   ScanLine,
   Settings2,
   Shield,
+  ShieldCheck,
   ArrowLeft,
   Contact,
   Send,
   FileText,
   Wallet,
+  DoorOpen,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useAuth } from "@/hooks/use-auth";
@@ -36,21 +38,23 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const navItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/events", label: "Events", icon: CalendarDays, exact: false },
-  { to: "/admin/signups", label: "Signups", icon: Users, exact: true },
-  { to: "/admin/wallets", label: "Wallets", icon: Wallet, exact: true },
-  { to: "/admin/crm", label: "CRM", icon: Contact, exact: true },
-  { to: "/admin/blast", label: "Email Blast", icon: Send, exact: false },
-  { to: "/admin/email-templates", label: "Templates", icon: FileText, exact: true },
-  { to: "/admin/pop-awards", label: "POP Awards", icon: Coins, exact: true },
-  { to: "/admin/codes", label: "QR Codes", icon: ScanLine, exact: false },
-  { to: "/admin/rewards", label: "Reward Rules", icon: Settings2, exact: true },
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, gatekeeper: false },
+  { to: "/admin/events", label: "Events", icon: CalendarDays, exact: false, gatekeeper: false },
+  { to: "/admin/signups", label: "Signups", icon: Users, exact: true, gatekeeper: false },
+  { to: "/admin/wallets", label: "Wallets", icon: Wallet, exact: true, gatekeeper: false },
+  { to: "/admin/crm", label: "CRM", icon: Contact, exact: true, gatekeeper: false },
+  { to: "/admin/blast", label: "Email Blast", icon: Send, exact: false, gatekeeper: false },
+  { to: "/admin/email-templates", label: "Templates", icon: FileText, exact: true, gatekeeper: false },
+  { to: "/admin/pop-awards", label: "POP Awards", icon: Coins, exact: true, gatekeeper: false },
+  { to: "/admin/codes", label: "QR Codes", icon: ScanLine, exact: false, gatekeeper: false },
+  { to: "/admin/rewards", label: "Reward Rules", icon: Settings2, exact: true, gatekeeper: false },
+  { to: "/admin/checkin", label: "Door Check-in", icon: DoorOpen, exact: true, gatekeeper: true },
+  { to: "/admin/admins", label: "Admins", icon: ShieldCheck, exact: true, gatekeeper: false },
 ] as const;
 
 function AdminLayout() {
   const { user, loading } = useAuth();
-  const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { isAdmin, isGatekeeper, loading: adminLoading } = useIsAdmin();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   if (loading || adminLoading) {
@@ -61,7 +65,9 @@ function AdminLayout() {
     );
   }
 
-  if (!user || !isAdmin) {
+  const canAccess = isAdmin || isGatekeeper;
+
+  if (!user || !canAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <Card className="max-w-md p-8 text-center space-y-4">
@@ -83,6 +89,13 @@ function AdminLayout() {
   const isActive = (to: string, exact: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
+  // Gatekeepers can only reach /admin/checkin.
+  const gatekeeperOnly = isGatekeeper && !isAdmin;
+  const visibleNav = gatekeeperOnly
+    ? navItems.filter((i) => i.gatekeeper)
+    : navItems;
+  const onAllowedRoute = !gatekeeperOnly || pathname === "/admin/checkin";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background text-foreground">
@@ -98,7 +111,7 @@ function AdminLayout() {
               <SidebarGroupLabel>Manage</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {navItems.map((item) => (
+                  {visibleNav.map((item) => (
                     <SidebarMenuItem key={item.to}>
                       <SidebarMenuButton asChild isActive={isActive(item.to, item.exact)}>
                         <Link to={item.to} className="flex items-center gap-2">
@@ -137,7 +150,24 @@ function AdminLayout() {
             </span>
           </header>
           <main className="flex-1 min-w-0">
-            <Outlet />
+            {onAllowedRoute ? (
+              <Outlet />
+            ) : (
+              <div className="p-8">
+                <Card className="max-w-md mx-auto p-8 text-center space-y-4">
+                  <Shield className="mx-auto h-10 w-10 text-muted-foreground" />
+                  <div>
+                    <h1 className="font-display text-xl font-semibold">Gatekeeper access</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Your role only permits door check-in.
+                    </p>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link to="/admin/checkin">Open check-in scanner</Link>
+                  </Button>
+                </Card>
+              </div>
+            )}
           </main>
         </div>
       </div>
