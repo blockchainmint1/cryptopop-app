@@ -326,7 +326,6 @@ export const checkInSignup = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Award POP per head (attendee + guests). Idempotent via (source, source_id).
-    const perHead = await getRewardAmount("event_checkin", 25);
     const heads = 1 + Math.max(0, guestCount);
     const total = perHead * heads;
     if (total > 0 && existing.email) {
