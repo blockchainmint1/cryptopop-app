@@ -39,8 +39,20 @@ type Row = {
 function BlastHistory() {
   const list = useServerFn(listBlastCampaigns);
   const progressFn = useServerFn(getBlastProgress);
+  const getCampaign = useServerFn(getBlastCampaign);
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewing, setViewing] = useState<{
+    subject: string;
+    preview_text: string | null;
+    html: string;
+    from_name: string;
+    from_email: string;
+    reply_to: string | null;
+    recipients_raw: string;
+  } | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
 
   async function refresh() {
     const r = await list({ data: {} as never });
@@ -65,6 +77,43 @@ function BlastHistory() {
     return () => clearInterval(i);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleView(id: string) {
+    setOpening(id);
+    try {
+      const c = await getCampaign({ data: { campaignId: id } });
+      setViewing(c);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to load email");
+    } finally {
+      setOpening(null);
+    }
+  }
+
+  async function handleReuse(id: string) {
+    setOpening(id);
+    try {
+      const c = await getCampaign({ data: { campaignId: id } });
+      sessionStorage.setItem(
+        "blast:prefill",
+        JSON.stringify({
+          subject: c.subject,
+          previewText: c.preview_text ?? "",
+          html: c.html,
+          fromName: c.from_name,
+          fromEmail: c.from_email,
+          replyTo: c.reply_to ?? "",
+          recipientsRaw: c.recipients_raw ?? "",
+        }),
+      );
+      toast.success("Loaded into composer");
+      navigate({ to: "/admin/blast" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reuse");
+      setOpening(null);
+    }
+  }
+
 
   return (
     <Card className="p-4">
