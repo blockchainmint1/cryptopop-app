@@ -230,7 +230,7 @@ export const checkInSignup = createServerFn({ method: "POST" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertAdminOrGatekeeper(context.userId);
     const { data: existing } = await supabaseAdmin
       .from("event_signups")
       .select("id, full_name, checked_in_at")
