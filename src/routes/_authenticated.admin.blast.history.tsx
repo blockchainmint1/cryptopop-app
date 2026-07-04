@@ -136,6 +136,7 @@ function BlastHistory() {
                 <th className="py-2 pr-3 text-right">Recipients</th>
                 <th className="py-2 pr-3">Progress</th>
                 <th className="py-2 pr-3">Status</th>
+                <th className="py-2 pr-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -185,6 +186,26 @@ function BlastHistory() {
                         <Badge className="text-[10px]">sending</Badge>
                       )}
                     </td>
+                    <td className="py-2 pr-3">
+                      <div className="flex gap-1 justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleView(r.campaign_id)}
+                          disabled={opening === r.campaign_id}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" /> View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReuse(r.campaign_id)}
+                          disabled={opening === r.campaign_id}
+                        >
+                          <Copy className="h-3.5 w-3.5 mr-1" /> Reuse
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -192,6 +213,56 @@ function BlastHistory() {
           </table>
         </div>
       )}
+
+      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{viewing?.subject}</DialogTitle>
+          </DialogHeader>
+          {viewing && (
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground font-mono">
+                From: {viewing.from_name} &lt;{viewing.from_email}&gt;
+                {viewing.reply_to ? ` • Reply-To: ${viewing.reply_to}` : ""}
+              </div>
+              {viewing.preview_text && (
+                <div className="text-xs text-muted-foreground italic">
+                  Preview: {viewing.preview_text}
+                </div>
+              )}
+              <iframe
+                title="email preview"
+                className="w-full h-[500px] rounded-md border border-border bg-white"
+                srcDoc={viewing.html}
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!viewing) return;
+                sessionStorage.setItem(
+                  "blast:prefill",
+                  JSON.stringify({
+                    subject: viewing.subject,
+                    previewText: viewing.preview_text ?? "",
+                    html: viewing.html,
+                    fromName: viewing.from_name,
+                    fromEmail: viewing.from_email,
+                    replyTo: viewing.reply_to ?? "",
+                    recipientsRaw: viewing.recipients_raw ?? "",
+                  }),
+                );
+                toast.success("Loaded into composer");
+                navigate({ to: "/admin/blast" });
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Reuse in composer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
