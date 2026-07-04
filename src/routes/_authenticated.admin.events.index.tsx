@@ -10,6 +10,7 @@ import {
   X,
   Loader2,
   Pencil,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -18,11 +19,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   listAdminEvents,
   createAdminEvent,
   updateAdminEvent,
   type AdminEventRow,
 } from "@/lib/events-admin.functions";
+import { adminAddGuest } from "@/lib/signups.functions";
+
 import { GeofenceMapPicker } from "@/components/geofence-map-picker";
 import {
   COMMON_TIMEZONES,
