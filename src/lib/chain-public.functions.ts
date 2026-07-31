@@ -15,6 +15,13 @@ function getPropertyId(): number {
   return Number.isInteger(n) && n > 0 ? n : 37;
 }
 
+/** TSD (Texas Stable Dollar) Omni property id — null until configured. */
+function getTsdPropertyId(): number | null {
+  const raw = process.env.TXC_TSD_TOKEN_ID;
+  const n = Number(raw);
+  return raw && Number.isInteger(n) && n > 0 ? n : null;
+}
+
 async function rpc<T>(method: string, params: unknown[]): Promise<T> {
   const url = process.env.TXC_RPC_URL ?? process.env.TXC_RPC_ADDRESS;
   const user = process.env.TXC_RPC_USER;
@@ -33,13 +40,13 @@ async function rpc<T>(method: string, params: unknown[]): Promise<T> {
   return json.result;
 }
 
-export type ChainSummary = { pop: number | null; txc: number | null };
+export type ChainSummary = { pop: number | null; tsd: number | null; txc: number | null };
 
 /** POP (Omni token) + native TXC balance for any address. Public explorer data. */
 export const getAddressChainSummary = createServerFn({ method: "POST" })
   .inputValidator((input) => Input.parse(input))
   .handler(async ({ data }): Promise<ChainSummary> => {
-    const [pop, txc] = await Promise.all([
+    const [pop, tsd, txc] = await Promise.all([
       (async () => {
         try {
           const result = await rpc<{ balance: string }>("omni_getbalance", [
@@ -50,6 +57,18 @@ export const getAddressChainSummary = createServerFn({ method: "POST" })
           return Number.isFinite(bal) ? bal : null;
         } catch (e) {
           console.error("[getAddressChainSummary] omni", e);
+          return null;
+        }
+      })(),
+      (async () => {
+        const prop = getTsdPropertyId();
+        if (!prop) return null;
+        try {
+          const result = await rpc<{ balance: string }>("omni_getbalance", [data.address, prop]);
+          const bal = Number(result?.balance ?? 0);
+          return Number.isFinite(bal) ? bal : null;
+        } catch (e) {
+          console.error("[getAddressChainSummary] tsd", e);
           return null;
         }
       })(),
@@ -75,5 +94,5 @@ export const getAddressChainSummary = createServerFn({ method: "POST" })
         }
       })(),
     ]);
-    return { pop, txc };
+    return { pop, tsd, txc };
   });

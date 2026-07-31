@@ -73,6 +73,16 @@ function propertyId(): number {
   return Number.isInteger(n) && n > 0 ? n : 37;
 }
 
+/** TSD (Texas Stable Dollar) Omni property id. */
+function tsdPropertyId(): number {
+  const raw = process.env.TXC_TSD_TOKEN_ID;
+  const n = Number(raw);
+  if (!raw || !Number.isInteger(n) || n <= 0) {
+    throw new Error("TSD is not configured on this network yet.");
+  }
+  return n;
+}
+
 export type UnsignedSend = {
   psbtBase64: string;
   feeSats: number;
@@ -83,11 +93,11 @@ export type UnsignedSend = {
 
 /**
  * Build an unsigned P2PKH transaction spending `from`.
- * asset "pop"  → Omni simple send (OP_RETURN + dust to recipient)
+ * asset "pop" / "tsd" → Omni simple send (OP_RETURN + dust to recipient)
  * asset "txc"  → plain value transfer
  */
 export async function buildUnsignedSend(opts: {
-  asset: "pop" | "txc";
+  asset: "pop" | "tsd" | "txc";
   from: string;
   to: string;
   /** POP: whole tokens. TXC: whole coins. */
@@ -103,12 +113,13 @@ export async function buildUnsignedSend(opts: {
   let opReturnLen = 0;
   let recipientSats = DUST_SATS;
 
-  if (opts.asset === "pop") {
-    if (!Number.isInteger(opts.amount) || opts.amount <= 0) {
+  if (opts.asset === "pop" || opts.asset === "tsd") {
+    if (opts.asset === "pop" && !Number.isInteger(opts.amount)) {
       throw new Error("POP amount must be a whole number");
     }
+    if (opts.amount <= 0) throw new Error("Amount must be greater than zero");
     const payloadHex = await rpc<string>("omni_createpayload_simplesend", [
-      propertyId(),
+      opts.asset === "tsd" ? tsdPropertyId() : propertyId(),
       opts.amount.toFixed(8),
     ]);
     const data = Buffer.concat([
