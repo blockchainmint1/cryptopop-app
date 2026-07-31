@@ -49,7 +49,7 @@ jobs:
           node scripts/patch-native.mjs ios
 
       - name: Generate icons and splash
-        run: bunx capacitor-assets generate --ios
+        run: bunx capacitor-assets generate --ios --assetPath resources
 
       - name: Install CocoaPods
         working-directory: ios/App

@@ -51,7 +51,7 @@ jobs:
           node scripts/patch-native.mjs android
 
       - name: Generate icons and splash
-        run: bunx capacitor-assets generate --android
+        run: bunx capacitor-assets generate --android --assetPath resources
 
       - name: Build debug APK
         working-directory: android
