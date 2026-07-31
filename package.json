@@ -12,6 +12,8 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@aparajita/capacitor-biometric-auth": "^10.0.0",
+    "@aparajita/capacitor-secure-storage": "^8.0.0",
     "@bitcoinerlab/secp256k1": "^1.2.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.4.2",

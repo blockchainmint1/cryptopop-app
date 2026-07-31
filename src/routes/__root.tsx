@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/use-auth";
+import { WalletProvider } from "@/lib/wallet/wallet-context";
+
 
 import appCss from "../styles.css?url";
 
@@ -120,9 +122,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
-        <Toaster richColors position="top-center" />
+        <WalletProvider>
+          <Outlet />
+          <Toaster richColors position="top-center" />
+        </WalletProvider>
       </AuthProvider>
     </QueryClientProvider>
+
   );
 }
