@@ -15,7 +15,6 @@ export type PublicEvent = {
   heroUrl?: string;
 };
 
-import lakehouseAsset from "@/assets/lakehouse.jpg.asset.json";
 import nectarpayHero from "@/assets/nectarpay-training.jpg";
 
 export const PUBLIC_EVENTS: PublicEvent[] = [
@@ -31,18 +30,8 @@ export const PUBLIC_EVENTS: PublicEvent[] = [
       "A full day of NectarPay training with Tim Blake. Only 40 spots available — earn 10 POP for registering and 25 POP when you show up.",
     heroUrl: nectarpayHero,
   },
-  {
-    slug: "4th-at-bobbys",
-    name: "4th of July at The Lakehouse",
-    dateLabel: "Saturday, July 4, 2026 · 3pm–dark",
-    endsAt: "2026-07-05T03:00:00Z",
-    location: "The Lakehouse",
-    mapUrl: "https://www.google.com/maps",
-    blurb:
-      "Join us for the 4th at The Lakehouse — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
-    heroUrl: lakehouseAsset.url,
-  },
 ];
+
 
 
 

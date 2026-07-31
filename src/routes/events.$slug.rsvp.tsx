@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { ArrowLeft, CalendarDays, MapPin, Users } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
-import lakehouseAsset from "@/assets/lakehouse.jpg.asset.json";
+
 import nectarpayHero from "@/assets/nectarpay-training.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
@@ -21,10 +21,6 @@ type EventInfo = {
 };
 
 const EVENT_HERO: Record<string, { src: string; alt: string }> = {
-  "4th-at-bobbys": {
-    src: lakehouseAsset.url,
-    alt: "The Lakehouse — aerial view of the venue",
-  },
   "nectarpay-training-mckinney": {
     src: nectarpayHero,
     alt: "Training room set up for the NectarPay full-day session",
@@ -32,21 +28,12 @@ const EVENT_HERO: Record<string, { src: string; alt: string }> = {
 };
 
 const EVENT_STATIC: Record<string, { location: string }> = {
-  "4th-at-bobbys": { location: "The Lakehouse" },
   "nectarpay-training-mckinney": {
     location: "Springhill Suites — McKinney, Texas",
   },
 };
 
 const EVENT_FALLBACK: Record<string, EventInfo> = {
-  "4th-at-bobbys": {
-    slug: "4th-at-bobbys",
-    name: "4th of July at The Lakehouse",
-    date: "Saturday, July 4, 2026 · 3pm–dark",
-    location: "The Lakehouse",
-    blurb:
-      "Join us for the 4th at The Lakehouse — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
-  },
   "nectarpay-training-mckinney": {
     slug: "nectarpay-training-mckinney",
     name: "NectarPay Training with Tim Blake",
@@ -56,6 +43,7 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
       "A full day of NectarPay training with Tim Blake. Only 40 spots available — earn 10 POP for registering and 25 POP when you show up.",
   },
 };
+
 
 // Always render in the event's configured tz so server (UTC) and client render
 // the same string. Example output: "Sat Jun 28 · 3pm–6pm Central".
