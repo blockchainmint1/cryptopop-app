@@ -30,6 +30,7 @@ import {
   getBiometricStatus,
 } from "@/lib/native/biometric";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
+import { CloudBackupCard } from "./cloud-backup-card";
 import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
 
@@ -258,6 +259,8 @@ function WalletSettings({ onForget }: { onForget: () => void }) {
           </Button>
         </div>
       )}
+
+      <CloudBackupCard />
 
       <Button
         variant="ghost"
