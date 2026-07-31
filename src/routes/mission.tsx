@@ -56,7 +56,7 @@ function MissionPage() {
                 My POP
               </Link>
             ) : (
-              <Link to="/login" className="hover:text-foreground transition">
+              <Link to="/login" search={{ redirect: undefined }} className="hover:text-foreground transition">
                 Sign in
               </Link>
             )}
@@ -148,6 +148,7 @@ function MissionPage() {
         <div className="mt-10 flex flex-wrap gap-3">
           <Link
             to="/login"
+            search={{ redirect: undefined }}
             className="rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground hover:opacity-90 transition"
           >
             Join the next event

@@ -1,0 +1,115 @@
+name: Build iOS app
+
+# Produces an UNSIGNED iOS build you can run in the Simulator, plus (optionally)
+# an ad-hoc .ipa when signing secrets are configured.
+#
+# Requires no Apple account for the Simulator build. For a device build / TestFlight,
+# add these repo secrets and the "Signed archive" step turns on automatically:
+#   IOS_CERTIFICATE_P12         base64 of your Apple distribution .p12
+#   IOS_CERTIFICATE_PASSWORD    password for that .p12
+#   IOS_PROVISIONING_PROFILE    base64 of the .mobileprovision
+#   IOS_TEAM_ID                 10-char Apple Team ID
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: "URL the app shell loads (blank = https://app.cryptopop.org)"
+        required: false
+        default: ""
+  push:
+    tags:
+      - "ios-v*"
+
+jobs:
+  ios:
+    runs-on: macos-14
+    env:
+      IOS_CERTIFICATE_P12: ${{ secrets.IOS_CERTIFICATE_P12 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      IOS_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+      IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Add iOS platform
+        env:
+          CAP_SERVER_URL: ${{ github.event.inputs.server_url }}
+        run: |
+          mkdir -p native/webdir
+          bunx cap add ios
+          bunx cap sync ios
+          node scripts/patch-native.mjs ios
+
+      - name: Generate icons and splash
+        run: bunx capacitor-assets generate --ios --assetPath resources
+
+      - name: Install CocoaPods
+        working-directory: ios/App
+        run: pod install
+
+      - name: Build (Simulator, unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Zip simulator app
+        run: |
+          cd ios/App/build/Build/Products/Release-iphonesimulator
+          zip -r "$GITHUB_WORKSPACE/CryptoPOPWallet-simulator.zip" App.app
+
+      - name: Upload simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptopop-wallet-ios-simulator
+          path: CryptoPOPWallet-simulator.zip
+          if-no-files-found: error
+
+      - name: Signed archive + IPA
+        if: ${{ env.IOS_CERTIFICATE_P12 != '' }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN=build.keychain
+          security create-keychain -p ci "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+          security unlock-keychain -p ci "$KEYCHAIN"
+          echo "$IOS_CERTIFICATE_P12" | base64 --decode > cert.p12
+          security import cert.p12 -k "$KEYCHAIN" -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci "$KEYCHAIN"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$IOS_PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/app.mobileprovision
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            -sdk iphoneos -archivePath build/App.xcarchive \
+            DEVELOPMENT_TEAM="$IOS_TEAM_ID" archive
+          cat > ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>ad-hoc</string>
+            <key>teamID</key><string>${IOS_TEAM_ID}</string>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath build/App.xcarchive \
+            -exportOptionsPlist ExportOptions.plist -exportPath build/ipa
+
+      - name: Upload IPA
+        if: ${{ hashFiles('ios/App/build/ipa/*.ipa') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptopop-wallet-ios-ipa
+          path: ios/App/build/ipa/*.ipa

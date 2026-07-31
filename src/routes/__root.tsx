@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -10,6 +11,7 @@ import {
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { WalletProvider } from "@/lib/wallet/wallet-context";
+import { initNativeShell } from "@/lib/native/shell";
 
 
 import appCss from "../styles.css?url";
@@ -118,6 +120,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    void initNativeShell();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
