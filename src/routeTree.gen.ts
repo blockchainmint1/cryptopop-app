@@ -26,6 +26,7 @@ import { Route as ChangeLogRouteImport } from './routes/change-log'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as MarketsRequestRouteImport } from './routes/markets.request'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -146,6 +147,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
@@ -381,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/markets/request': typeof MarketsRequestRoute
   '/docs/': typeof DocsIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/admin/admins': typeof AuthenticatedAdminAdminsRoute
   '/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/admin/checkin': typeof AuthenticatedAdminCheckinRoute
@@ -434,6 +441,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/markets/request': typeof MarketsRequestRoute
   '/docs': typeof DocsIndexRoute
+  '/events': typeof EventsIndexRoute
   '/admin/admins': typeof AuthenticatedAdminAdminsRoute
   '/admin/checkin': typeof AuthenticatedAdminCheckinRoute
   '/admin/codes': typeof AuthenticatedAdminCodesRoute
@@ -490,6 +498,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/markets/request': typeof MarketsRequestRoute
   '/docs/': typeof DocsIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/_authenticated/admin/admins': typeof AuthenticatedAdminAdminsRoute
   '/_authenticated/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
   '/_authenticated/admin/checkin': typeof AuthenticatedAdminCheckinRoute
@@ -547,6 +556,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/markets/request'
     | '/docs/'
+    | '/events/'
     | '/admin/admins'
     | '/admin/blast'
     | '/admin/checkin'
@@ -600,6 +610,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/markets/request'
     | '/docs'
+    | '/events'
     | '/admin/admins'
     | '/admin/checkin'
     | '/admin/codes'
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/markets/request'
     | '/docs/'
+    | '/events/'
     | '/_authenticated/admin/admins'
     | '/_authenticated/admin/blast'
     | '/_authenticated/admin/checkin'
@@ -703,6 +715,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  EventsIndexRoute: typeof EventsIndexRoute
   EventsSlugRsvpRoute: typeof EventsSlugRsvpRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -831,6 +844,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/': {
+      id: '/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof EventsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/': {
@@ -1235,6 +1255,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  EventsIndexRoute: EventsIndexRoute,
   EventsSlugRsvpRoute: EventsSlugRsvpRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
