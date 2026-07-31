@@ -115,7 +115,7 @@ export async function buildUnsignedSend(opts: {
       Buffer.from("omni", "ascii"),
       Buffer.from(payloadHex, "hex"),
     ]);
-    opReturnScript = bitcoin.payments.embed({ data: [data] }).output!;
+    opReturnScript = Buffer.from(bitcoin.payments.embed({ data: [data] }).output!);
     opReturnLen = data.length;
   } else {
     recipientSats = Math.round(opts.amount * 1e8);
