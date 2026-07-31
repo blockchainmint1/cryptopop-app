@@ -146,6 +146,11 @@ export function parseScan(input: string): ScanIntent {
     const s = scheme[1].toLowerCase();
     const body = scheme[2];
     const params = new URLSearchParams(scheme[3] ?? "");
+    // cryptopop://claim?e=<eventId>&s=<sig>  (geofenced event check-in)
+    if (s === "cryptopop") {
+      const ci = checkinFrom(params, raw);
+      if (ci) return ci;
+    }
     // cryptopop:award?token=…
     if (s === "cryptopop" && /award|claim|pop/i.test(body)) {
       const token = params.get("token") ?? params.get("t") ?? "";
