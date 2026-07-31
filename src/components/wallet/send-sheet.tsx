@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowUpRight, Camera, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Camera, Loader2, ShieldCheck, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,9 +15,17 @@ import {
 import { isValidTxcAddress } from "@/lib/wallet";
 import { signPsbt } from "@/lib/wallet/sign";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
+import { ASSETS, assetMeta, type AssetId } from "@/lib/wallet/assets";
+import { parseScan } from "@/lib/wallet/scan-parse";
 import { QrScanDialog } from "./qr-scan-dialog";
 
-type Asset = "pop" | "txc";
+export type SendPrefill = {
+  to?: string;
+  amount?: number | null;
+  asset?: AssetId;
+  merchant?: string | null;
+  memo?: string | null;
+};
 
 export function SendSheet({
   open,
@@ -25,7 +33,9 @@ export function SendSheet({
   address,
   mnemonic,
   popBalance,
+  tsdBalance,
   txcBalance,
+  prefill,
   onSent,
 }: {
   open: boolean;
@@ -33,25 +43,62 @@ export function SendSheet({
   address: string | null;
   mnemonic: string | null;
   popBalance: number | null;
+  tsdBalance: number | null;
   txcBalance: number | null;
+  prefill?: SendPrefill | null;
   onSent: () => void;
 }) {
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
 
-  const [asset, setAsset] = useState<Asset>("pop");
+  const [asset, setAsset] = useState<AssetId>("tsd");
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [txid, setTxid] = useState<string | null>(null);
+  const [request, setRequest] = useState<SendPrefill | null>(null);
 
-  const available = asset === "pop" ? popBalance : txcBalance;
+  const balances: Record<AssetId, number | null> = {
+    pop: popBalance,
+    tsd: tsdBalance,
+    txc: txcBalance,
+  };
+  const available = balances[asset];
+  const decimals = assetMeta(asset).decimals;
+
+  // Apply a scanned merchant / payment request when the sheet opens.
+  useEffect(() => {
+    if (!open || !prefill) return;
+    if (prefill.to) setTo(prefill.to);
+    if (prefill.asset) setAsset(prefill.asset);
+    if (prefill.amount != null) setAmount(String(prefill.amount));
+    setRequest(prefill.merchant || prefill.memo || prefill.amount != null ? prefill : null);
+  }, [open, prefill]);
 
   function reset() {
     setTo("");
     setAmount("");
     setTxid(null);
+    setRequest(null);
+  }
+
+  function applyScan(text: string) {
+    const intent = parseScan(text);
+    setScanOpen(false);
+    if (intent.kind === "payment") {
+      setTo(intent.to);
+      setAsset(intent.asset);
+      if (intent.amount != null) setAmount(String(intent.amount));
+      setRequest(intent);
+      toast.success(intent.merchant ? `Payment request from ${intent.merchant}` : "Payment request loaded");
+      return;
+    }
+    if (intent.kind === "address") {
+      setTo(intent.address);
+      return;
+    }
+    toast.error("That code isn't a wallet address or payment request");
   }
 
   async function submit() {
@@ -113,27 +160,33 @@ export function SendSheet({
           </div>
         ) : (
           <div className="space-y-4 pb-6">
-            <div className="grid grid-cols-2 gap-2">
-              {(["pop", "txc"] as Asset[]).map((a) => (
+            {request && (
+              <div className="rounded-2xl border border-primary/40 bg-primary/10 p-3">
+                <p className="flex items-center gap-2 font-display text-sm font-semibold uppercase">
+                  <Store className="h-4 w-4 text-primary" />
+                  {request.merchant ?? "Payment request"}
+                </p>
+                {request.memo && (
+                  <p className="mt-1 text-xs text-muted-foreground">{request.memo}</p>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-3 gap-2">
+              {ASSETS.map((a) => (
                 <button
-                  key={a}
+                  key={a.id}
                   type="button"
-                  onClick={() => setAsset(a)}
-                  className={`rounded-2xl border px-3 py-3 text-center transition ${
-                    asset === a
+                  onClick={() => setAsset(a.id)}
+                  className={`rounded-2xl border px-2 py-3 text-center transition ${
+                    asset === a.id
                       ? "border-primary bg-primary/15"
                       : "border-white/12 bg-white/5 hover:bg-white/10"
                   }`}
                 >
-                  <p className="font-display text-sm font-semibold uppercase">{a}</p>
+                  <p className="font-display text-sm font-semibold uppercase">{a.name}</p>
                   <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {a === "pop"
-                      ? popBalance === null
-                        ? "—"
-                        : popBalance.toLocaleString()
-                      : txcBalance === null
-                        ? "—"
-                        : txcBalance.toFixed(8)}
+                    {balances[a.id] === null ? "—" : balances[a.id]!.toFixed(a.decimals)}
                   </p>
                 </button>
               ))}
@@ -171,7 +224,7 @@ export function SendSheet({
                   inputMode="decimal"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder={asset === "pop" ? "100" : "0.00000000"}
+                  placeholder={asset === "pop" ? "100" : asset === "tsd" ? "0.00" : "0.00000000"}
                   className="h-11 font-mono text-sm"
                 />
                 {available !== null && (
@@ -182,7 +235,9 @@ export function SendSheet({
                       setAmount(
                         asset === "pop"
                           ? String(Math.floor(available))
-                          : Math.max(available - 0.001, 0).toFixed(8),
+                          : asset === "tsd"
+                            ? available.toFixed(2)
+                            : Math.max(available - 0.001, 0).toFixed(8),
                       )
                     }
                   >
@@ -191,9 +246,9 @@ export function SendSheet({
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {asset === "pop"
-                  ? "POP transfers ride on TEXITcoin — a small TXC balance covers the network fee."
-                  : "Network fee is deducted from your TXC balance."}
+                {asset === "txc"
+                  ? "Network fee is deducted from your TXC balance."
+                  : `${asset.toUpperCase()} transfers ride on TEXITcoin (Omni) — a small TXC balance covers the network fee.`}
               </p>
             </div>
 
@@ -211,13 +266,9 @@ export function SendSheet({
         <QrScanDialog
           open={scanOpen}
           onOpenChange={setScanOpen}
-          onResult={(text) => {
-            const t = text.trim().replace(/^texitcoin:/i, "").split("?")[0];
-            setTo(t);
-            setScanOpen(false);
-          }}
-          title="Scan address"
-          description="Point the camera at a TXC wallet QR code."
+          onResult={applyScan}
+          title="Scan to pay"
+          description="Point the camera at a wallet address or merchant payment code."
         />
       </SheetContent>
     </Sheet>
