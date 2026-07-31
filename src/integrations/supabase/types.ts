@@ -532,6 +532,7 @@ export type Database = {
       events: {
         Row: {
           base_reward: number
+          capacity: number | null
           cover_url: string | null
           created_at: string
           created_by: string | null
@@ -553,6 +554,7 @@ export type Database = {
         }
         Insert: {
           base_reward?: number
+          capacity?: number | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -574,6 +576,7 @@ export type Database = {
         }
         Update: {
           base_reward?: number
+          capacity?: number | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null

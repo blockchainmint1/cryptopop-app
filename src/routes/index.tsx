@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Sparkles } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
-import lakehouseAsset from "@/assets/lakehouse.jpg.asset.json";
+import nectarpayHero from "@/assets/nectarpay-training.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -237,28 +237,39 @@ function Landing() {
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div className="overflow-hidden rounded-3xl border border-border shadow-[0_30px_80px_-30px] shadow-foreground/30">
               <img
-                src={lakehouseAsset.url}
-                alt="The Lakehouse — venue for 4th of July"
+                src={nectarpayHero}
+                alt="Training room set up for the NectarPay full-day session in McKinney, Texas"
+                loading="lazy"
+                width={1536}
+                height={1024}
                 className="h-64 w-full object-cover md:h-96"
               />
             </div>
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
-                RSVPs closed
+                RSVPs open · 40 spots
               </p>
               <h2 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-5xl">
-                4th of July at The Lakehouse
+                NectarPay Training with Tim Blake
               </h2>
               <p className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                Saturday, July 4, 2026 · 3pm–dark
+                Wednesday, August 5, 2026 · 9am–5pm · Springhill Suites, McKinney TX
               </p>
               <p className="mt-5 text-lg text-muted-foreground">
-                RSVPs for this one are closed — thanks to everyone who signed up!
-                We'll be announcing the next CryptoPOP gathering soon. Stay tuned.
+                A full day of NectarPay training with Tim Blake. Only 40 spots
+                available — earn 10 POP for registering and 25 POP when you show up.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  to="/events/$slug/rsvp"
+                  params={{ slug: "nectarpay-training-mckinney" }}
+                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-display font-semibold text-primary-foreground transition hover:opacity-90"
+                >
+                  RSVP & get POP
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                </Link>
                 <Link
                   to="/markets"
                   className="group inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 font-display font-semibold text-foreground transition hover:bg-muted"
@@ -268,6 +279,7 @@ function Landing() {
                 </Link>
               </div>
             </div>
+
           </div>
         </div>
       </section>
