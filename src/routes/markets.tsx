@@ -4,6 +4,15 @@ import { MapPin, ArrowRight, Sparkles } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 import { getMarkets } from "@/lib/markets.functions";
+const MARKET_PATHS: Record<string, "/dallas" | "/lax" | "/denver" | "/nashville" | "/slc" | "/singapore" | undefined> = {
+  dallas: "/dallas",
+  "los-angeles": "/lax",
+  denver: "/denver",
+  nashville: "/nashville",
+  "salt-lake": "/slc",
+  singapore: "/singapore",
+};
+
 
 const marketsQuery = queryOptions({
   queryKey: ["markets"],
