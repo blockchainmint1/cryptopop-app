@@ -1,8 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
+import { ArrowLeft, CalendarDays, MapPin, Users } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import lakehouseAsset from "@/assets/lakehouse.jpg.asset.json";
+import nectarpayHero from "@/assets/nectarpay-training.jpg";
 import { SiteFooter } from "@/components/site-footer";
+import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { createEventSignup } from "@/lib/signups.functions";
 import { getPublicEventBySlug } from "@/lib/public-event.functions";
 import { tzFriendlyName } from "@/lib/tz";
 
@@ -10,7 +16,26 @@ type EventInfo = {
   slug: string;
   name: string;
   date: string;
+  location: string;
   blurb: string;
+};
+
+const EVENT_HERO: Record<string, { src: string; alt: string }> = {
+  "4th-at-bobbys": {
+    src: lakehouseAsset.url,
+    alt: "The Lakehouse — aerial view of the venue",
+  },
+  "nectarpay-training-mckinney": {
+    src: nectarpayHero,
+    alt: "Training room set up for the NectarPay full-day session",
+  },
+};
+
+const EVENT_STATIC: Record<string, { location: string }> = {
+  "4th-at-bobbys": { location: "The Lakehouse" },
+  "nectarpay-training-mckinney": {
+    location: "Springhill Suites — McKinney, Texas",
+  },
 };
 
 const EVENT_FALLBACK: Record<string, EventInfo> = {
@@ -18,8 +43,17 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
     slug: "4th-at-bobbys",
     name: "4th of July at The Lakehouse",
     date: "Saturday, July 4, 2026 · 3pm–dark",
+    location: "The Lakehouse",
     blurb:
       "Join us for the 4th at The Lakehouse — play the CryptoPOP scavenger hunt for fun & prizes, bring your favorite dish to share with the community, and let's have a blast!",
+  },
+  "nectarpay-training-mckinney": {
+    slug: "nectarpay-training-mckinney",
+    name: "NectarPay Training with Tim Blake",
+    date: "Wednesday, August 5, 2026 · 9am–5pm Central",
+    location: "Springhill Suites — McKinney, Texas",
+    blurb:
+      "A full day of NectarPay training with Tim Blake. Only 40 spots available — earn 10 POP for registering and 25 POP when you show up.",
   },
 };
 
@@ -51,9 +85,16 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
   head: ({ params, loaderData }) => {
     const fallback = EVENT_FALLBACK[params.slug];
     const name = loaderData?.dbEvent?.name ?? fallback?.name;
-    const title = name ? `${name} — RSVPs closed` : "Event — CryptoPOP";
+    const open = loaderData?.dbEvent?.rsvpOpen ?? false;
+    const title = name
+      ? open
+        ? `RSVP — ${name}`
+        : `${name} — RSVPs closed`
+      : "Event — CryptoPOP";
     const desc = name
-      ? `RSVPs for ${name} are now closed. Another CryptoPOP event is coming soon.`
+      ? open
+        ? `Reserve your spot at ${name}. Free to join — earn POP for registering and showing up.`
+        : `RSVPs for ${name} are now closed. Another CryptoPOP event is coming soon.`
       : "RSVPs are closed. Another CryptoPOP event is coming soon.";
     return {
       meta: [
@@ -61,24 +102,116 @@ export const Route = createFileRoute("/events/$slug/rsvp")({
         { name: "description", content: desc },
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
       ],
     };
   },
   component: SignupPage,
 });
 
+const signupSchema = z
+  .object({
+    full_name: z.string().trim().min(1, "Your name is required").max(120),
+    email: z.string().trim().email("Enter a valid email").max(254),
+    mobile_number: z
+      .string()
+      .trim()
+      .min(3, "Mobile number is too short")
+      .max(32, "Mobile number is too long"),
+    instagram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    telegram_handle: z.string().trim().max(64).optional().or(z.literal("")),
+    external_wallet: z.string().trim().max(48).optional().or(z.literal("")),
+    is_friend: z.enum(["yes", "no"]),
+    guest_count: z.number().int().min(0).max(20),
+  })
+  .refine((d) => d.is_friend === "no" || d.guest_count >= 1, {
+    message: "How many guests are you bringing?",
+    path: ["guest_count"],
+  });
+
 function SignupPage() {
   const { slug } = Route.useParams();
   const { dbEvent } = Route.useLoaderData();
   const fallback = EVENT_FALLBACK[slug];
+  const staticBits = EVENT_STATIC[slug];
+  const hero = EVENT_HERO[slug];
   const ev: EventInfo | undefined = dbEvent
     ? {
         slug: dbEvent.slug,
         name: dbEvent.name,
         date: formatEventDate(dbEvent.start_at, dbEvent.end_at, dbEvent.time_zone),
+        location: staticBits?.location ?? fallback?.location ?? "",
         blurb: dbEvent.description ?? fallback?.blurb ?? "",
       }
     : fallback;
+
+  const rsvpOpen = dbEvent?.rsvpOpen ?? false;
+  const spotsLeft = dbEvent?.spotsLeft ?? null;
+  const capacity = dbEvent?.capacity ?? null;
+
+  const navigate = useNavigate();
+  const saveSignup = useServerFn(createEventSignup);
+  const [submitting, setSubmitting] = useState(false);
+  const [isFriend, setIsFriend] = useState<"yes" | "no">("no");
+  const [guestCount, setGuestCount] = useState(1);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!ev) return;
+    const form = new FormData(e.currentTarget);
+    const parsed = signupSchema.safeParse({
+      full_name: form.get("full_name"),
+      email: form.get("email"),
+      mobile_number: form.get("mobile_number"),
+      instagram_handle: form.get("instagram_handle"),
+      telegram_handle: form.get("telegram_handle"),
+      external_wallet: form.get("external_wallet"),
+      is_friend: form.get("is_friend"),
+      guest_count: Number(form.get("guest_count") ?? 0),
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const inserted = await saveSignup({
+        data: {
+          full_name: parsed.data.full_name,
+          email: parsed.data.email,
+          mobile_number: parsed.data.mobile_number,
+          instagram_handle: parsed.data.instagram_handle || null,
+          telegram_handle: parsed.data.telegram_handle || null,
+          is_friend: parsed.data.is_friend === "yes",
+          guest_count:
+            parsed.data.is_friend === "yes" ? parsed.data.guest_count : 0,
+          event_slug: slug,
+          external_wallet: parsed.data.external_wallet || null,
+        },
+      });
+      try {
+        localStorage.setItem("cryptopop_signup_id", inserted.id);
+      } catch {
+        // ignore storage failures
+      }
+      toast.success("You're in! 10 POP added.");
+      navigate({ to: "/my-pass", search: { id: inserted.id } });
+    } catch (error) {
+      if (error instanceof Error && error.message === "duplicate_signup") {
+        toast.error("That email or mobile number is already signed up.");
+        return;
+      }
+      if (error instanceof Error && error.message === "invalid_wallet_address") {
+        toast.error("That doesn't look like a valid TXC address.");
+        return;
+      }
+      toast.error("Couldn't save your signup. Please try again.");
+      return;
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   if (!ev) {
     return (
@@ -117,15 +250,17 @@ function SignupPage() {
 
       <main className="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1fr_1.1fr]">
         <aside>
-          <div className="mb-6 overflow-hidden rounded-3xl border border-border">
-            <img
-              src={lakehouseAsset.url}
-              alt="The Lakehouse — aerial view of the venue"
-              width={1536}
-              height={1024}
-              className="h-48 w-full object-cover md:h-64"
-            />
-          </div>
+          {hero && (
+            <div className="mb-6 overflow-hidden rounded-3xl border border-border">
+              <img
+                src={hero.src}
+                alt={hero.alt}
+                width={1536}
+                height={1024}
+                className="h-48 w-full object-cover md:h-64"
+              />
+            </div>
+          )}
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             CryptoPOP event
           </p>
@@ -139,47 +274,245 @@ function SignupPage() {
             </p>
             <p className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="h-4 w-4 text-primary" />
-              Location shared with confirmed guests
+              {ev.location || "Location shared with confirmed guests"}
             </p>
+            {capacity != null && (
+              <p className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4 text-primary" />
+                {spotsLeft != null && spotsLeft > 0
+                  ? `${spotsLeft} of ${capacity} spots left`
+                  : `Full — all ${capacity} spots taken`}
+              </p>
+            )}
           </div>
           <p className="mt-6 text-muted-foreground">{ev.blurb}</p>
           <p className="mt-6 rounded-2xl border border-border bg-card p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            JUST FOR FUN EVENT. POP ARE A PARTICIPATION RECORD.
+            POP ARE A PARTICIPATION RECORD.
           </p>
         </aside>
 
-        <section className="rounded-3xl border border-border bg-card p-8 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-10">
-          <div className="text-center">
-            <p className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-              RSVPs closed
-            </p>
-            <h2 className="mt-4 font-display text-3xl font-bold">
-              Thanks — we're all set!
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              RSVPs for this event are now closed. We'll be announcing the next
-              CryptoPOP gathering soon — check back shortly, or explore what's
-              happening in your POP market.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/markets"
-                className="rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition hover:opacity-90"
+        {rsvpOpen ? (
+          <section className="rounded-3xl border border-border bg-card p-6 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <header>
+                <h2 className="font-display text-2xl font-bold">Sign up</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Free signup. You'll earn{" "}
+                  <span className="font-semibold text-foreground">10 POP</span>{" "}
+                  the moment you join, and{" "}
+                  <span className="font-semibold text-foreground">25 POP</span>{" "}
+                  when you show up.
+                </p>
+              </header>
+
+              <Field label="Full name" htmlFor="full_name">
+                <input
+                  id="full_name"
+                  name="full_name"
+                  required
+                  maxLength={120}
+                  autoComplete="name"
+                  className={inputCls}
+                  placeholder="John Smith"
+                />
+              </Field>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Email" htmlFor="email">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    maxLength={254}
+                    autoComplete="email"
+                    className={inputCls}
+                    placeholder="jane@example.com"
+                  />
+                </Field>
+                <Field label="Mobile number" htmlFor="mobile_number">
+                  <input
+                    id="mobile_number"
+                    name="mobile_number"
+                    required
+                    maxLength={32}
+                    autoComplete="tel"
+                    inputMode="tel"
+                    className={inputCls}
+                    placeholder="(555) 123-4567"
+                  />
+                </Field>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Instagram handle (optional)" htmlFor="instagram_handle">
+                  <input
+                    id="instagram_handle"
+                    name="instagram_handle"
+                    maxLength={64}
+                    className={inputCls}
+                    placeholder="@cryptopop"
+                  />
+                </Field>
+                <Field label="Telegram handle (optional)" htmlFor="telegram_handle">
+                  <input
+                    id="telegram_handle"
+                    name="telegram_handle"
+                    maxLength={64}
+                    className={inputCls}
+                    placeholder="@cryptopop"
+                  />
+                </Field>
+              </div>
+
+              <fieldset>
+                <legend className="mb-2 block font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Bringing a friend?
+                </legend>
+                <div className="flex gap-2">
+                  {(["yes", "no"] as const).map((v) => (
+                    <label
+                      key={v}
+                      className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm capitalize transition has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:checked]:text-foreground"
+                    >
+                      <input
+                        type="radio"
+                        name="is_friend"
+                        value={v}
+                        required
+                        checked={isFriend === v}
+                        onChange={() => setIsFriend(v)}
+                        className="sr-only"
+                      />
+                      {v}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
+              {isFriend === "yes" && (
+                <Field label="How many guests?" htmlFor="guest_count">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount((n) => Math.max(1, n - 1))}
+                      className="h-11 w-11 rounded-xl border border-border bg-background font-display text-lg transition hover:border-primary hover:text-primary"
+                      aria-label="Decrease guests"
+                    >
+                      −
+                    </button>
+                    <input
+                      id="guest_count"
+                      name="guest_count"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={guestCount}
+                      onChange={(e) =>
+                        setGuestCount(
+                          Math.max(1, Math.min(20, Number(e.target.value) || 1)),
+                        )
+                      }
+                      className={`${inputCls} text-center`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount((n) => Math.min(20, n + 1))}
+                      className="h-11 w-11 rounded-xl border border-border bg-background font-display text-lg transition hover:border-primary hover:text-primary"
+                      aria-label="Increase guests"
+                    >
+                      +
+                    </button>
+                  </div>
+                </Field>
+              )}
+
+              <Field label="TXC wallet address (optional)" htmlFor="external_wallet">
+                <input
+                  id="external_wallet"
+                  name="external_wallet"
+                  maxLength={48}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className={`${inputCls} font-mono`}
+                  placeholder="Tnnnnn… — leave blank & we'll spin one up for you"
+                />
+                <p className="mt-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Already have a TXC wallet? Drop your address & we'll mint POP straight to it.
+                </p>
+              </Field>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-full bg-primary px-6 py-3.5 font-display font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
               >
-                Explore POP Markets
-              </Link>
-              <Link
-                to="/how-it-works"
-                className="rounded-full border border-border px-6 py-3 font-display font-semibold text-foreground transition hover:bg-muted"
-              >
-                How it works
-              </Link>
+                {submitting ? "Signing you up…" : "Sign up & claim 10 POP"}
+              </button>
+              <p className="text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                We'll only use your details to confirm this signup.
+              </p>
+            </form>
+          </section>
+        ) : (
+          <section className="rounded-3xl border border-border bg-card p-8 shadow-[0_30px_80px_-30px] shadow-foreground/20 md:p-10">
+            <div className="text-center">
+              <p className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                RSVPs closed
+              </p>
+              <h2 className="mt-4 font-display text-3xl font-bold">
+                {spotsLeft === 0 ? "This one's full" : "Thanks — we're all set!"}
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                {spotsLeft === 0
+                  ? "Every spot for this event has been claimed. We'll be announcing the next CryptoPOP gathering soon."
+                  : "RSVPs for this event are now closed. We'll be announcing the next CryptoPOP gathering soon — check back shortly, or explore what's happening in your POP market."}
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link
+                  to="/markets"
+                  className="rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition hover:opacity-90"
+                >
+                  Explore POP Markets
+                </Link>
+                <Link
+                  to="/how-it-works"
+                  className="rounded-full border border-border px-6 py-3 font-display font-semibold text-foreground transition hover:bg-muted"
+                >
+                  How it works
+                </Link>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
       <SiteFooter />
+    </div>
+  );
+}
+
+const inputCls =
+  "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={htmlFor}
+        className="mb-2 block font-mono text-[11px] uppercase tracking-widest text-muted-foreground"
+      >
+        {label}
+      </label>
+      {children}
     </div>
   );
 }
