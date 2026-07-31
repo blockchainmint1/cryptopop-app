@@ -489,10 +489,10 @@ function SignupPage() {
                   See upcoming events
                 </Link>
                 <Link
-                  to="/how-it-works"
+                  to="/earn"
                   className="rounded-full border border-border px-6 py-3 font-display font-semibold text-foreground transition hover:bg-muted"
                 >
-                  How it works
+                  Ways to earn
                 </Link>
               </div>
             </div>

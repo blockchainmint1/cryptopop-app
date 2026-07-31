@@ -71,8 +71,8 @@ function PrivacyPage() {
               <Link to="/terms" className="hover:text-white transition-colors">
                 Terms
               </Link>
-              <Link to="/api" className="hover:text-white transition-colors">
-                API
+              <Link to="/events" className="hover:text-white transition-colors">
+                Events
               </Link>
             </nav>
           </div>

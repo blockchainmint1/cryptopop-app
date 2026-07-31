@@ -271,7 +271,7 @@ export function WalletHome() {
           <span className="font-display text-lg font-semibold tracking-tight">CryptoPOP</span>
           <div className="flex items-center gap-1">
             <Button asChild variant="ghost" size="sm">
-              <Link to="/mission">Mission</Link>
+              <Link to="/events">Events</Link>
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4" />
