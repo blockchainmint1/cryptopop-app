@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { ArrowLeft, Loader2, Keyboard, Wallet, ScanLine, X } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { claimPop, type ClaimError, type ClaimResult } from "@/lib/qr.functions";
+import { claimAtHub, type HubClaimError, type HubClaimResult } from "@/lib/pop-hub";
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import logo from "@/assets/cryptopop-logo.png";
 
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/scan")({
   component: ScanPage,
 });
 
-const ERROR_COPY: Record<ClaimError, string> = {
+const ERROR_COPY: Record<HubClaimError, string> = {
   invalid_qr: "Not a CryptoPOP QR.",
   bad_signature: "QR signature invalid — possibly tampered.",
   event_not_found: "This event no longer exists.",
@@ -28,11 +27,13 @@ const ERROR_COPY: Record<ClaimError, string> = {
   event_ended: "This event has ended.",
   outside_geofence: "You're outside the event area.",
   low_gps_accuracy: "GPS signal too weak. Move outdoors and retry.",
-  already_claimed: "You've already claimed POP for this event.",
+  already_claimed: "This wallet already claimed POP for this event.",
   no_wallet: "Wallet setup interrupted. Open your wallet, then try again.",
+  hub_unreachable: "Couldn't reach CryptoPOP. Check your connection and retry.",
 };
 
-type Success = Extract<ClaimResult, { ok: true }>;
+type Success = Extract<HubClaimResult, { ok: true }>;
+
 
 const POP_COLORS = ["#ff3ea5", "#ff8a00", "#ffd400", "#3ad29f", "#3ec1ff", "#a855f7"];
 
