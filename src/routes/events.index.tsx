@@ -103,13 +103,6 @@ function EventsPage() {
             <p className="mt-3 text-muted-foreground">
               New events drop regularly. Check back soon — or bring POP to your city.
             </p>
-            <Link
-              to="/markets/request"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition hover:opacity-90"
-            >
-              Bring POP to your city
-              <ArrowRight className="h-4 w-4" />
-            </Link>
           </div>
         ) : (
           <div className="grid gap-8 md:grid-cols-2">

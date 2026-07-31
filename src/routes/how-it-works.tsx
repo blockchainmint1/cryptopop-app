@@ -50,7 +50,6 @@ function HowPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link to="/"><img src={logo} alt="CryptoPOP" className="h-8 w-auto" /></Link>
           <nav className="flex items-center gap-4 font-mono text-xs text-muted-foreground">
-            <Link to="/markets" className="hover:text-foreground">Markets</Link>
             <Link to="/earn" className="hover:text-foreground">Earn</Link>
           </nav>
         </div>

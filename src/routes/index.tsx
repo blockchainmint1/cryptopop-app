@@ -6,7 +6,6 @@ import bbqHero from "@/assets/usa-250-bbq.png";
 import nectarpayHero from "@/assets/nectarpay-training.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,7 +37,6 @@ function Home() {
 
 function Landing() {
   const { session } = useAuth();
-  const { isAdmin } = useIsAdmin();
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* Cinematic fullscreen hero */}
@@ -143,20 +141,12 @@ function Landing() {
         <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 hero-fade">
           <img src={logo} alt="CryptoPOP" width={200} height={48} className="h-14 w-auto" />
           <nav className="flex items-center gap-3 font-mono text-xs">
-            <Link to="/markets" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
-              Markets
-            </Link>
             <Link to="/how-it-works" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
               How it works
             </Link>
             <Link to="/earn" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
               Earn
             </Link>
-            {session && isAdmin && (
-              <Link to="/admin" className="hidden sm:inline rounded-full px-4 py-2 text-white/70 hover:text-white transition">
-                Admin
-              </Link>
-            )}
             {session ? (
               <Link to="/app" className="rounded-full border border-white/25 px-4 py-2 text-white hover:bg-white/10 transition">
                 My POP
@@ -212,7 +202,7 @@ function Landing() {
             style={{ animationDelay: "0.75s" }}
           >
             <Link
-              to="/markets"
+              to="/events"
               className="group inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-display font-semibold text-white transition hover:opacity-95"
               style={{
                 background: "linear-gradient(90deg, #ff7a28, #ff3dbe)",
@@ -220,7 +210,7 @@ function Landing() {
                   "0 18px 50px -12px rgba(255,122,40,0.7), 0 0 0 1px rgba(255,255,255,0.08) inset",
               }}
             >
-              Explore POP Markets
+              See upcoming events
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
             <Link

@@ -107,7 +107,6 @@ function EarnPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link to="/"><img src={logo} alt="CryptoPOP" className="h-8 w-auto" /></Link>
           <nav className="flex items-center gap-4 font-mono text-xs text-muted-foreground">
-            <Link to="/markets" className="hover:text-foreground">Markets</Link>
             <Link to="/how-it-works" className="hover:text-foreground">How it works</Link>
           </nav>
         </div>
@@ -155,8 +154,7 @@ function EarnPage() {
 
           {merchants.merchants.length === 0 ? (
             <div className="mt-8 rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-              We're onboarding merchants now.{" "}
-              <Link to="/markets/request" className="underline">Want yours listed?</Link>
+              We're onboarding merchants now.
             </div>
           ) : (
             <div className="mt-8 space-y-8">

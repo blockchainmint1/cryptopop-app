@@ -4,7 +4,6 @@ import logo from "@/assets/cryptopop-logo.png";
 import wellnessBg from "@/assets/wellness-variant.jpg";
 import { SiteFooter } from "@/components/site-footer";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export const Route = createFileRoute("/mission")({
   head: () => ({
@@ -28,7 +27,6 @@ export const Route = createFileRoute("/mission")({
 
 function MissionPage() {
   const { session } = useAuth();
-  const { isAdmin } = useIsAdmin();
   return (
     <div className="relative min-h-screen text-foreground">
       {/* Background image with dark overlay for readability */}
@@ -53,11 +51,6 @@ function MissionPage() {
             <Link to="/api" className="hover:text-foreground transition">
               Developer API
             </Link>
-            {session && isAdmin && (
-              <Link to="/admin" className="hover:text-foreground transition">
-                Admin
-              </Link>
-            )}
             {session ? (
               <Link to="/app" className="hover:text-foreground transition">
                 My POP

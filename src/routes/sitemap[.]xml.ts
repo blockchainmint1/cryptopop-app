@@ -21,13 +21,6 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
           { path: "/events", changefreq: "weekly", priority: "0.9" },
           { path: "/events/nectarpay-training-mckinney/rsvp", changefreq: "weekly", priority: "0.9" },
-          { path: "/markets", changefreq: "monthly", priority: "0.8" },
-          { path: "/dallas", changefreq: "weekly", priority: "0.8" },
-          { path: "/lax", changefreq: "monthly", priority: "0.6" },
-          { path: "/denver", changefreq: "monthly", priority: "0.6" },
-          { path: "/nashville", changefreq: "monthly", priority: "0.6" },
-          { path: "/slc", changefreq: "monthly", priority: "0.6" },
-          { path: "/singapore", changefreq: "monthly", priority: "0.6" },
 
         ];
 

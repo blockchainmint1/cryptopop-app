@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/cryptopop-logo.png";
@@ -34,14 +33,10 @@ function LoginPage() {
   const [verifying, setVerifying] = useState(false);
   const [sent, setSent] = useState(false);
   const { session, loading } = useAuth();
-  const getAdminStatus = useServerFn(getMyAdminStatus);
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
 
-  const routeAfterSignIn = async () => {
-    const { isAdmin } = await getAdminStatus();
-    return redirect ?? (isAdmin ? "/admin" : "/app");
-  };
+  const routeAfterSignIn = async () => redirect ?? "/";
 
   useEffect(() => {
     if (loading || !session) return;
