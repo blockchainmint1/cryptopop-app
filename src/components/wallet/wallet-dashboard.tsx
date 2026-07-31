@@ -361,11 +361,11 @@ export function WalletDashboard() {
             <p className="mt-2 font-display text-sm font-semibold uppercase">Events</p>
           </Link>
           <Link
-            to="/earn"
+            to="/my-pass"
             className="rounded-2xl border border-white/12 bg-white/5 p-4 text-center backdrop-blur-xl transition hover:bg-white/10"
           >
             <Sparkles className="mx-auto h-6 w-6 text-primary" />
-            <p className="mt-2 font-display text-sm font-semibold uppercase">Earn POP</p>
+            <p className="mt-2 font-display text-sm font-semibold uppercase">My pass</p>
           </Link>
         </div>
 

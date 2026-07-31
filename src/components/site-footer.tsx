@@ -21,7 +21,7 @@ export function SiteFooter() {
         </div>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:justify-end">
           <Link to="/events" className="hover:text-foreground transition">Events</Link>
-          <Link to="/earn" className="hover:text-foreground transition">Earn</Link>
+          
           <Link to="/terms" className="hover:text-foreground transition">Terms</Link>
           <Link to="/privacy" className="hover:text-foreground transition">Privacy</Link>
         </nav>
