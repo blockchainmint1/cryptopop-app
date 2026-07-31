@@ -13,6 +13,9 @@ import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import logo from "@/assets/cryptopop-logo.png";
 
 export const Route = createFileRoute("/_authenticated/scan")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    qr: typeof s.qr === "string" ? s.qr : undefined,
+  }),
   head: () => ({ meta: [{ title: "Scan to Earn — CryptoPOP" }] }),
   component: ScanPage,
 });
