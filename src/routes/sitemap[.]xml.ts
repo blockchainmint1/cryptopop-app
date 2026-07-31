@@ -19,6 +19,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/api", changefreq: "monthly", priority: "0.5" },
           { path: "/terms", changefreq: "yearly", priority: "0.3" },
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
+          { path: "/events", changefreq: "weekly", priority: "0.9" },
           { path: "/events/nectarpay-training-mckinney/rsvp", changefreq: "weekly", priority: "0.9" },
         ];
 
