@@ -737,6 +737,60 @@ export type Database = {
           },
         ]
       }
+      onramp_orders: {
+        Row: {
+          account_mask: string | null
+          amount_usd: number
+          asset: string
+          bank_name: string | null
+          created_at: string
+          failure_reason: string | null
+          id: string
+          plaid_account_id: string | null
+          plaid_item_id: string | null
+          provider: string
+          reference: string
+          status: string
+          txid: string | null
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          account_mask?: string | null
+          amount_usd: number
+          asset?: string
+          bank_name?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          plaid_account_id?: string | null
+          plaid_item_id?: string | null
+          provider?: string
+          reference?: string
+          status?: string
+          txid?: string | null
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          account_mask?: string | null
+          amount_usd?: number
+          asset?: string
+          bank_name?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          plaid_account_id?: string | null
+          plaid_item_id?: string | null
+          provider?: string
+          reference?: string
+          status?: string
+          txid?: string | null
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           created_at: string
