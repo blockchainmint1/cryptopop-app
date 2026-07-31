@@ -541,6 +541,7 @@ export type Database = {
           id: string
           lat: number
           lng: number
+          market_slug: string | null
           name: string
           org_id: string
           qr_active_minutes_before: number
@@ -563,6 +564,7 @@ export type Database = {
           id?: string
           lat: number
           lng: number
+          market_slug?: string | null
           name: string
           org_id?: string
           qr_active_minutes_before?: number
@@ -585,6 +587,7 @@ export type Database = {
           id?: string
           lat?: number
           lng?: number
+          market_slug?: string | null
           name?: string
           org_id?: string
           qr_active_minutes_before?: number
@@ -605,6 +608,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      market_news: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          market_slug: string
+          published_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          market_slug: string
+          published_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          market_slug?: string
+          published_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       market_requests: {
         Row: {
@@ -903,11 +939,17 @@ export type Database = {
           created_at: string
           hero_copy: string | null
           id: string
+          intro: string | null
           lat: number | null
           launched_at: string | null
           lng: number | null
+          manager_bio: string | null
+          manager_name: string | null
+          manager_photo_url: string | null
+          manager_title: string | null
           org_id: string | null
           region: string | null
+          short_slug: string | null
           slug: string
           sort_order: number
           status: string
@@ -919,11 +961,17 @@ export type Database = {
           created_at?: string
           hero_copy?: string | null
           id?: string
+          intro?: string | null
           lat?: number | null
           launched_at?: string | null
           lng?: number | null
+          manager_bio?: string | null
+          manager_name?: string | null
+          manager_photo_url?: string | null
+          manager_title?: string | null
           org_id?: string | null
           region?: string | null
+          short_slug?: string | null
           slug: string
           sort_order?: number
           status?: string
@@ -935,11 +983,17 @@ export type Database = {
           created_at?: string
           hero_copy?: string | null
           id?: string
+          intro?: string | null
           lat?: number | null
           launched_at?: string | null
           lng?: number | null
+          manager_bio?: string | null
+          manager_name?: string | null
+          manager_photo_url?: string | null
+          manager_title?: string | null
           org_id?: string | null
           region?: string | null
+          short_slug?: string | null
           slug?: string
           sort_order?: number
           status?: string
