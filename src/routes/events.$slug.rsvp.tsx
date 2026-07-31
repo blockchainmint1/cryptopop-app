@@ -17,6 +17,7 @@ type EventInfo = {
   name: string;
   date: string;
   location: string;
+  mapUrl?: string;
   blurb: string;
 };
 
@@ -27,9 +28,11 @@ const EVENT_HERO: Record<string, { src: string; alt: string }> = {
   },
 };
 
-const EVENT_STATIC: Record<string, { location: string }> = {
+const EVENT_STATIC: Record<string, { location: string; mapUrl: string }> = {
   "nectarpay-training-mckinney": {
     location: "Springhill Suites — McKinney, Texas",
+    mapUrl:
+      "https://www.google.com/maps/search/?api=1&query=SpringHill%20Suites%20McKinney%20TX",
   },
 };
 
@@ -39,10 +42,13 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
     name: "NectarPay Training with Tim Blake",
     date: "Wednesday, August 5, 2026 · 9am–5pm Central",
     location: "Springhill Suites — McKinney, Texas",
+    mapUrl:
+      "https://www.google.com/maps/search/?api=1&query=SpringHill%20Suites%20McKinney%20TX",
     blurb:
       "A full day of NectarPay training with Tim Blake. Only 40 spots available — earn 10 POP for registering and 25 POP when you show up.",
   },
 };
+
 
 
 // Always render in the event's configured tz so server (UTC) and client render
@@ -130,7 +136,9 @@ function SignupPage() {
         name: dbEvent.name,
         date: formatEventDate(dbEvent.start_at, dbEvent.end_at, dbEvent.time_zone),
         location: staticBits?.location ?? fallback?.location ?? "",
+        mapUrl: staticBits?.mapUrl ?? fallback?.mapUrl,
         blurb: dbEvent.description ?? fallback?.blurb ?? "",
+
       }
     : fallback;
 
@@ -261,9 +269,26 @@ function SignupPage() {
               {ev.date}
             </p>
             <p className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4 text-primary" />
-              {ev.location || "Location shared with confirmed guests"}
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              {ev.location ? (
+                ev.mapUrl ? (
+                  <a
+                    href={ev.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-primary/50 underline-offset-4 transition hover:text-foreground"
+                  >
+                    {ev.location}
+                    <span className="sr-only"> — open in Google Maps</span>
+                  </a>
+                ) : (
+                  ev.location
+                )
+              ) : (
+                "Location shared with confirmed guests"
+              )}
             </p>
+
             {capacity != null && (
               <p className="flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4 text-primary" />

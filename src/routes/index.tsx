@@ -253,10 +253,20 @@ function Landing() {
               <h2 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-5xl">
                 NectarPay Training with Tim Blake
               </h2>
-              <p className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              <p className="mt-3 flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                Wednesday, August 5, 2026 · 9am–5pm · Springhill Suites, McKinney TX
+                Wednesday, August 5, 2026 · 9am–5pm ·{" "}
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=SpringHill%20Suites%20McKinney%20TX"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-primary/50 underline-offset-4 transition hover:text-foreground"
+                >
+                  Springhill Suites, McKinney TX
+                  <span className="sr-only"> — open in Google Maps</span>
+                </a>
               </p>
+
               <p className="mt-5 text-lg text-muted-foreground">
                 A full day of NectarPay training with Tim Blake. Only 40 spots
                 available — earn 10 POP for registering and 25 POP when you show up.
