@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.event_signups_apply_defaults() FROM PUBLIC, anon, authenticated;
