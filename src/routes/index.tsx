@@ -271,10 +271,10 @@ function Landing() {
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </Link>
                 <Link
-                  to="/markets"
+                  to="/events"
                   className="group inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 font-display font-semibold text-foreground transition hover:bg-muted"
                 >
-                  Explore POP Markets
+                  All upcoming events
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </Link>
               </div>
