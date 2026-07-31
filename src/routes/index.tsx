@@ -1,16 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { WalletHome } from "@/components/wallet-home";
-import { WalletSignIn } from "@/components/wallet-signin";
-import { useAuth } from "@/hooks/use-auth";
+import { OnboardScreen } from "@/components/wallet/onboard-screen";
+import { UnlockScreen } from "@/components/wallet/unlock-screen";
+import { WalletDashboard } from "@/components/wallet/wallet-dashboard";
+import { useWallet } from "@/lib/wallet/wallet-context";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CryptoPOP Wallet — Your POP balance & event check-ins" },
-      { name: "description", content: "Your CryptoPOP wallet: POP balance, event check-ins, rewards and your on-chain TXC address." },
-      { property: "og:title", content: "CryptoPOP Wallet — Your POP balance & event check-ins" },
-      { property: "og:description", content: "Your CryptoPOP wallet: POP balance, event check-ins, rewards and your on-chain TXC address." },
+      { title: "CryptoPOP Wallet — Non-custodial POP wallet" },
+      {
+        name: "description",
+        content:
+          "The non-custodial CryptoPOP wallet. Scan a Cold Storage Coin or create a recovery phrase — your keys stay on your device.",
+      },
+      { property: "og:title", content: "CryptoPOP Wallet — Non-custodial POP wallet" },
+      {
+        property: "og:description",
+        content:
+          "Scan a Cold Storage Coin or create a recovery phrase. Your POP, your keys, your device.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -19,15 +28,16 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { session, loading } = useAuth();
+  const { status } = useWallet();
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
-
-  return session ? <WalletHome /> : <WalletSignIn />;
+  if (status === "none") return <OnboardScreen />;
+  if (status === "locked") return <UnlockScreen />;
+  return <WalletDashboard />;
 }
