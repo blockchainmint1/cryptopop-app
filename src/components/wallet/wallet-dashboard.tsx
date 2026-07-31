@@ -416,7 +416,13 @@ export function WalletDashboard() {
       {/* Sticky send / receive */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/90 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-md gap-3">
-          <Button className="h-12 flex-1 rounded-full" onClick={() => setSendOpen(true)}>
+          <Button
+            className="h-12 flex-1 rounded-full"
+            onClick={() => {
+              setSendPrefill(null);
+              setSendOpen(true);
+            }}
+          >
             <ArrowUpRight className="mr-1.5 h-4 w-4" /> Send
           </Button>
           <Button
@@ -464,12 +470,16 @@ export function WalletDashboard() {
 
       <SendSheet
         open={sendOpen}
-        onOpenChange={setSendOpen}
+        onOpenChange={(v) => {
+          setSendOpen(v);
+          if (!v) setSendPrefill(null);
+        }}
         address={address}
         mnemonic={mnemonic}
         popBalance={pop}
         tsdBalance={tsd}
         txcBalance={txc}
+        prefill={sendPrefill}
         onSent={() => void refresh()}
       />
     </div>
