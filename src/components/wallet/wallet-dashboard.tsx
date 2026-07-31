@@ -185,6 +185,11 @@ export function WalletDashboard() {
         toast.success("POP code — claiming");
         void navigate({ to: intent.path });
         return;
+      case "checkin":
+        toast.success("Event check-in — verifying your location");
+        void navigate({ to: "/scan", search: { qr: intent.raw } as never });
+        return;
+
       case "pass":
       case "link":
         void navigate({ to: intent.path });
