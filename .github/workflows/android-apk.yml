@@ -4,9 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       server_url:
-        description: "URL the app shell loads (leave blank for https://cryptopop.org)"
+        description: "URL the app shell loads (blank = https://app.cryptopop.org)"
         required: false
         default: ""
+      release:
+        description: "Build a signed release APK (requires keystore secrets)"
+        type: boolean
+        required: false
+        default: false
   push:
     tags:
       - "android-v*"
@@ -38,6 +43,10 @@ jobs:
           mkdir -p native/webdir
           bunx cap add android
           bunx cap sync android
+          node scripts/patch-native.mjs android
+
+      - name: Generate icons and splash
+        run: bunx capacitor-assets generate --android
 
       - name: Build debug APK
         working-directory: android
@@ -45,15 +54,36 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
 
+      - name: Build signed release APK + AAB
+        if: ${{ github.event.inputs.release == 'true' && secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.keystore
+          ./gradlew assembleRelease bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file=$PWD/release.keystore \
+            -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$ANDROID_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: cryptopop-wallet-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: cryptopop-wallet-apk
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
 
       - name: Attach APK to release
         if: startsWith(github.ref, 'refs/tags/android-v')
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/debug/*.apk
+          files: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
