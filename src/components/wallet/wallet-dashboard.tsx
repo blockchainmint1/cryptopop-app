@@ -7,6 +7,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   CalendarDays,
+  Camera,
   Check,
   ChevronDown,
   Copy,
@@ -49,6 +50,7 @@ import {
   type WalletTx,
 } from "@/lib/wallet-activity.functions";
 import { CloudBackupCard } from "./cloud-backup-card";
+import { SendSheet } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
@@ -80,7 +82,7 @@ function saveHidden(v: ChainId[]) {
 }
 
 export function WalletDashboard() {
-  const { address, origin, lock, forget } = useWallet();
+  const { address, origin, mnemonic, lock, forget } = useWallet();
   const navigate = useNavigate();
   const fetchSummary = useServerFn(getAddressChainSummary);
   const fetchActivity = useServerFn(getAddressActivity);
@@ -183,7 +185,7 @@ export function WalletDashboard() {
             <Settings2 className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setScanOpen(true)} aria-label="Scan a code">
-            <ScanLine className="h-5 w-5" />
+            <Camera className="h-5 w-5" />
           </Button>
         </div>
       </header>
@@ -432,26 +434,15 @@ export function WalletDashboard() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={sendOpen} onOpenChange={setSendOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl">
-          <SheetHeader className="text-left">
-            <SheetTitle className="font-display uppercase">Send</SheetTitle>
-            <SheetDescription>
-              On-device signing for POP and TXC transfers is coming next. Your keys stay on this
-              device, so sending will happen right here in the app.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="pb-6">
-            <Button
-              variant="secondary"
-              className="w-full rounded-full"
-              onClick={() => setSendOpen(false)}
-            >
-              Got it
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <SendSheet
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        address={address}
+        mnemonic={mnemonic}
+        popBalance={pop}
+        txcBalance={txc}
+        onSent={() => void refresh()}
+      />
     </div>
   );
 }
