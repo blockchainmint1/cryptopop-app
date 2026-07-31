@@ -17,6 +17,7 @@ type EventInfo = {
   name: string;
   date: string;
   location: string;
+  mapUrl?: string;
   blurb: string;
 };
 
@@ -27,9 +28,11 @@ const EVENT_HERO: Record<string, { src: string; alt: string }> = {
   },
 };
 
-const EVENT_STATIC: Record<string, { location: string }> = {
+const EVENT_STATIC: Record<string, { location: string; mapUrl: string }> = {
   "nectarpay-training-mckinney": {
     location: "Springhill Suites — McKinney, Texas",
+    mapUrl:
+      "https://www.google.com/maps/search/?api=1&query=SpringHill%20Suites%20McKinney%20TX",
   },
 };
 
@@ -39,10 +42,13 @@ const EVENT_FALLBACK: Record<string, EventInfo> = {
     name: "NectarPay Training with Tim Blake",
     date: "Wednesday, August 5, 2026 · 9am–5pm Central",
     location: "Springhill Suites — McKinney, Texas",
+    mapUrl:
+      "https://www.google.com/maps/search/?api=1&query=SpringHill%20Suites%20McKinney%20TX",
     blurb:
       "A full day of NectarPay training with Tim Blake. Only 40 spots available — earn 10 POP for registering and 25 POP when you show up.",
   },
 };
+
 
 
 // Always render in the event's configured tz so server (UTC) and client render
