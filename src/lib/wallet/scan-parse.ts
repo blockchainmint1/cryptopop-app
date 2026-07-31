@@ -75,6 +75,16 @@ function fromParams(
   };
 }
 
+/** Event check-in QR: cryptopop://claim?e=<uuid>&s=<hmac> */
+function checkinFrom(p: URLSearchParams, raw: string): ScanIntent | null {
+  const eventId = p.get("e") ?? p.get("event");
+  const sig = p.get("s") ?? p.get("sig");
+  if (!eventId || !sig || !/^[0-9a-f-]{36}$/i.test(eventId) || !/^[0-9a-f]{32,128}$/i.test(sig)) {
+    return null;
+  }
+  return { kind: "checkin", eventId, sig, raw };
+}
+
 export function parseScan(input: string): ScanIntent {
   const raw = (input ?? "").trim();
   if (!raw) return { kind: "unknown", raw };
