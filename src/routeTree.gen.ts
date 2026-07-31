@@ -11,17 +11,23 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SlcRouteImport } from './routes/slc'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SingaporeRouteImport } from './routes/singapore'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as NashvilleRouteImport } from './routes/nashville'
 import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LaxRouteImport } from './routes/lax'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as EarnRouteImport } from './routes/earn'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as DenverRouteImport } from './routes/denver'
+import { Route as DallasRouteImport } from './routes/dallas'
 import { Route as ChangeLogRouteImport } from './routes/change-log'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -75,14 +81,29 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlcRoute = SlcRouteImport.update({
+  id: '/slc',
+  path: '/slc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SingaporeRoute = SingaporeRouteImport.update({
+  id: '/singapore',
+  path: '/singapore',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NashvilleRoute = NashvilleRouteImport.update({
+  id: '/nashville',
+  path: '/nashville',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyPopRoute = MyPopRouteImport.update({
@@ -115,6 +136,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LaxRoute = LaxRouteImport.update({
+  id: '/lax',
+  path: '/lax',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
@@ -128,6 +154,16 @@ const EarnRoute = EarnRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DenverRoute = DenverRouteImport.update({
+  id: '/denver',
+  path: '/denver',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DallasRoute = DallasRouteImport.update({
+  id: '/dallas',
+  path: '/dallas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChangeLogRoute = ChangeLogRouteImport.update({
@@ -362,17 +398,23 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
+  '/dallas': typeof DallasRoute
+  '/denver': typeof DenverRoute
   '/docs': typeof DocsRouteWithChildren
   '/earn': typeof EarnRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/lax': typeof LaxRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
+  '/nashville': typeof NashvilleRoute
   '/privacy': typeof PrivacyRoute
+  '/singapore': typeof SingaporeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/slc': typeof SlcRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -418,16 +460,22 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
+  '/dallas': typeof DallasRoute
+  '/denver': typeof DenverRoute
   '/earn': typeof EarnRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/lax': typeof LaxRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
+  '/nashville': typeof NashvilleRoute
   '/privacy': typeof PrivacyRoute
+  '/singapore': typeof SingaporeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/slc': typeof SlcRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/app': typeof AuthenticatedAppRoute
@@ -473,17 +521,23 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
+  '/dallas': typeof DallasRoute
+  '/denver': typeof DenverRoute
   '/docs': typeof DocsRouteWithChildren
   '/earn': typeof EarnRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/lax': typeof LaxRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
+  '/nashville': typeof NashvilleRoute
   '/privacy': typeof PrivacyRoute
+  '/singapore': typeof SingaporeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/slc': typeof SlcRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -531,17 +585,23 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/change-log'
+    | '/dallas'
+    | '/denver'
     | '/docs'
     | '/earn'
     | '/how-it-works'
+    | '/lax'
     | '/login'
     | '/logout'
     | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
+    | '/nashville'
     | '/privacy'
+    | '/singapore'
     | '/sitemap.xml'
+    | '/slc'
     | '/terms'
     | '/unsubscribe'
     | '/admin'
@@ -587,16 +647,22 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/change-log'
+    | '/dallas'
+    | '/denver'
     | '/earn'
     | '/how-it-works'
+    | '/lax'
     | '/login'
     | '/logout'
     | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
+    | '/nashville'
     | '/privacy'
+    | '/singapore'
     | '/sitemap.xml'
+    | '/slc'
     | '/terms'
     | '/unsubscribe'
     | '/app'
@@ -641,17 +707,23 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/api'
     | '/change-log'
+    | '/dallas'
+    | '/denver'
     | '/docs'
     | '/earn'
     | '/how-it-works'
+    | '/lax'
     | '/login'
     | '/logout'
     | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
+    | '/nashville'
     | '/privacy'
+    | '/singapore'
     | '/sitemap.xml'
+    | '/slc'
     | '/terms'
     | '/unsubscribe'
     | '/_authenticated/admin'
@@ -699,17 +771,23 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiRoute: typeof ApiRouteWithChildren
   ChangeLogRoute: typeof ChangeLogRoute
+  DallasRoute: typeof DallasRoute
+  DenverRoute: typeof DenverRoute
   DocsRoute: typeof DocsRouteWithChildren
   EarnRoute: typeof EarnRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  LaxRoute: typeof LaxRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   MarketsRoute: typeof MarketsRouteWithChildren
   MissionRoute: typeof MissionRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
+  NashvilleRoute: typeof NashvilleRoute
   PrivacyRoute: typeof PrivacyRoute
+  SingaporeRoute: typeof SingaporeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SlcRoute: typeof SlcRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -741,6 +819,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/slc': {
+      id: '/slc'
+      path: '/slc'
+      fullPath: '/slc'
+      preLoaderRoute: typeof SlcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -748,11 +833,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/singapore': {
+      id: '/singapore'
+      path: '/singapore'
+      fullPath: '/singapore'
+      preLoaderRoute: typeof SingaporeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nashville': {
+      id: '/nashville'
+      path: '/nashville'
+      fullPath: '/nashville'
+      preLoaderRoute: typeof NashvilleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-pop': {
@@ -797,6 +896,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lax': {
+      id: '/lax'
+      path: '/lax'
+      fullPath: '/lax'
+      preLoaderRoute: typeof LaxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/how-it-works': {
       id: '/how-it-works'
       path: '/how-it-works'
@@ -816,6 +922,20 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/denver': {
+      id: '/denver'
+      path: '/denver'
+      fullPath: '/denver'
+      preLoaderRoute: typeof DenverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dallas': {
+      id: '/dallas'
+      path: '/dallas'
+      fullPath: '/dallas'
+      preLoaderRoute: typeof DallasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/change-log': {
@@ -1239,17 +1359,23 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiRoute: ApiRouteWithChildren,
   ChangeLogRoute: ChangeLogRoute,
+  DallasRoute: DallasRoute,
+  DenverRoute: DenverRoute,
   DocsRoute: DocsRouteWithChildren,
   EarnRoute: EarnRoute,
   HowItWorksRoute: HowItWorksRoute,
+  LaxRoute: LaxRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   MarketsRoute: MarketsRouteWithChildren,
   MissionRoute: MissionRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
+  NashvilleRoute: NashvilleRoute,
   PrivacyRoute: PrivacyRoute,
+  SingaporeRoute: SingaporeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SlcRoute: SlcRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
