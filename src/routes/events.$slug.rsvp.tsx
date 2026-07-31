@@ -136,7 +136,9 @@ function SignupPage() {
         name: dbEvent.name,
         date: formatEventDate(dbEvent.start_at, dbEvent.end_at, dbEvent.time_zone),
         location: staticBits?.location ?? fallback?.location ?? "",
+        mapUrl: staticBits?.mapUrl ?? fallback?.mapUrl,
         blurb: dbEvent.description ?? fallback?.blurb ?? "",
+
       }
     : fallback;
 
