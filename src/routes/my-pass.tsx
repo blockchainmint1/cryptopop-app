@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
-import { ArrowLeft, CheckCircle2, Sparkles, Coins, Calendar, MapPin } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles, Coins, Calendar } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 import { getSignupById } from "@/lib/signups.functions";
@@ -174,12 +174,8 @@ function PassCard({ signup }: { signup: Signup }) {
           />
         </div>
 
-        <div className="mt-3 rounded-2xl border border-border bg-background p-4 text-xs text-muted-foreground">
-          <p className="flex items-center gap-2">
-            <MapPin className="h-3.5 w-3.5 text-primary" />
-            The Lakehouse · Sat July 4, 2026 · 3pm–dark
-          </p>
-        </div>
+
+
 
         <Link
           to="/app"

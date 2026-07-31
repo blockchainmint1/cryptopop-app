@@ -26,7 +26,7 @@ export const getMyEventMemberships = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("event_signups")
-      .select("id, signed_up_at, status, checked_in_at")
+      .select("id, signed_up_at, status, checked_in_at, events(slug)")
       .eq("email", email.toLowerCase())
       .order("signed_up_at", { ascending: false })
       .limit(5);
@@ -38,11 +38,13 @@ export const getMyEventMemberships = createServerFn({ method: "GET" })
 
     const memberships: MyEventMembership[] = (data ?? []).map((row) => ({
       signup_id: row.id,
-      slug: "4th-at-bobbys",
+      slug:
+        (row as { events?: { slug: string | null } | null }).events?.slug ?? "",
       signed_up_at: row.signed_up_at,
       status: row.status,
       checked_in_at: row.checked_in_at,
     }));
+
 
     return { memberships };
   });
