@@ -4,6 +4,15 @@ import { MapPin, ArrowRight, Sparkles } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 import { getMarkets } from "@/lib/markets.functions";
+const MARKET_PATHS: Record<string, "/dallas" | "/lax" | "/denver" | "/nashville" | "/slc" | "/singapore" | undefined> = {
+  dallas: "/dallas",
+  "los-angeles": "/lax",
+  denver: "/denver",
+  nashville: "/nashville",
+  "salt-lake": "/slc",
+  singapore: "/singapore",
+};
+
 
 const marketsQuery = queryOptions({
   queryKey: ["markets"],
@@ -55,32 +64,50 @@ function MarketsPage() {
 
       <section className="mx-auto max-w-6xl px-6 py-14">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {data.markets.map((m) => (
-            <div key={m.slug} className="rounded-2xl border border-border bg-card p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                    {m.region ? `${m.region} · ${m.country}` : m.country}
-                  </p>
-                  <h2 className="mt-1 font-display text-3xl font-bold tracking-tight">{m.city}</h2>
+          {data.markets.map((m) => {
+            const path = MARKET_PATHS[m.slug];
+            const card = (
+              <>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                      {m.region ? `${m.region} · ${m.country}` : m.country}
+                    </p>
+                    <h2 className="mt-1 font-display text-3xl font-bold tracking-tight">{m.city}</h2>
+                  </div>
+                  {m.status === "live" ? (
+                    <span className="rounded-full bg-neon-lime/15 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-neon-lime">
+                      Live
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Coming soon
+                    </span>
+                  )}
                 </div>
-                {m.status === "live" ? (
-                  <span className="rounded-full bg-neon-lime/15 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-neon-lime">
-                    Live
-                  </span>
-                ) : (
-                  <span className="rounded-full border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Coming soon
-                  </span>
-                )}
+                {m.hero_copy && <p className="mt-3 text-sm text-muted-foreground">{m.hero_copy}</p>}
+                <div className="mt-5 flex items-center gap-2 font-mono text-xs text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5" /> {m.city}
+                  {path && <ArrowRight className="ml-auto h-3.5 w-3.5 text-primary" />}
+                </div>
+              </>
+            );
+            return path ? (
+              <Link
+                key={m.slug}
+                to={path}
+                className="rounded-2xl border border-border bg-card p-6 transition hover:border-primary/60"
+              >
+                {card}
+              </Link>
+            ) : (
+              <div key={m.slug} className="rounded-2xl border border-border bg-card p-6">
+                {card}
               </div>
-              {m.hero_copy && <p className="mt-3 text-sm text-muted-foreground">{m.hero_copy}</p>}
-              <div className="mt-5 flex items-center gap-2 font-mono text-xs text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" /> {m.city}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
 
         <div className="mt-12 rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">
           <Sparkles className="mx-auto h-6 w-6 text-primary" />
