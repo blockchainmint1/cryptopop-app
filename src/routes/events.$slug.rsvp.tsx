@@ -483,10 +483,10 @@ function SignupPage() {
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Link
-                  to="/markets"
+                  to="/events"
                   className="rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition hover:opacity-90"
                 >
-                  Explore POP Markets
+                  See upcoming events
                 </Link>
                 <Link
                   to="/how-it-works"

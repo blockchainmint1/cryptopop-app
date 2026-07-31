@@ -31,7 +31,6 @@ import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getPopChainBalance } from "@/lib/pop-chain.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
 import { getMyPopSummary } from "@/lib/pop-summary.functions";
-import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
 
 type RecentClaim = {
@@ -106,7 +105,6 @@ export function WalletHome() {
   const fetchPopChain = useServerFn(getPopChainBalance);
   const fetchMyEvents = useServerFn(getMyEventMemberships);
   const fetchPopSummary = useServerFn(getMyPopSummary);
-  const getAdminStatus = useServerFn(getMyAdminStatus);
 
   const [balance, setBalance] = useState<number>(0);
   const [eventsAttended, setEventsAttended] = useState<number>(0);
@@ -115,7 +113,6 @@ export function WalletHome() {
   const [showQr, setShowQr] = useState(false);
   const [claims, setClaims] = useState<RecentClaim[]>([]);
   const [awards, setAwards] = useState<PopAward[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [txc, setTxc] = useState<number | null>(null);
   const [txcTxs, setTxcTxs] = useState<TxcTx[]>([]);
   const [myEvents, setMyEvents] = useState<MyEventMembership[]>([]);
@@ -130,7 +127,7 @@ export function WalletHome() {
     if (!user) return;
     let cancelled = false;
     (async () => {
-      const [summary, { data: cl }, adminStatus] = await Promise.all([
+      const [summary, { data: cl }] = await Promise.all([
         fetchPopSummary({}).catch((e) => {
           console.error("[app] pop summary failed", e);
           return { balance: 0, eventsAttended: 0, awards: [] as PopAward[] };
@@ -141,19 +138,17 @@ export function WalletHome() {
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(20),
-        getAdminStatus().catch(() => ({ isAdmin: false })),
       ]);
       if (cancelled) return;
       setBalance(Number(summary.balance));
       setEventsAttended(summary.eventsAttended);
       setAwards(summary.awards as PopAward[]);
       if (cl) setClaims(cl as unknown as RecentClaim[]);
-      setIsAdmin(adminStatus.isAdmin);
     })();
     return () => {
       cancelled = true;
     };
-  }, [user, getAdminStatus, fetchPopSummary]);
+  }, [user, fetchPopSummary]);
 
   // Fetch TXC chain transactions once we have an address
   useEffect(() => {
@@ -278,14 +273,6 @@ export function WalletHome() {
             <Button asChild variant="ghost" size="sm">
               <Link to="/mission">Mission</Link>
             </Button>
-            {isAdmin && (
-              <Button asChild variant="ghost" size="sm" className="text-primary">
-                <Link to="/admin">
-                  <Shield className="h-4 w-4 mr-1" />
-                  Admin
-                </Link>
-              </Button>
-            )}
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4" />
             </Button>
@@ -636,30 +623,6 @@ export function WalletHome() {
         </Card>
 
 
-        {isAdmin && (
-          <Card className="border-primary/30 bg-primary/5 p-4 space-y-3">
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-primary" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold">Admin tools</p>
-                <p className="text-xs text-muted-foreground">Manage signups & event QR</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm">
-                <Link to="/admin">Signups & check-in</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link
-                  to="/admin/events/$id"
-                  params={{ id: "aaaaaaaa-0000-0000-0000-000000000001" }}
-                >
-                  Event QR poster
-                </Link>
-              </Button>
-            </div>
-          </Card>
-        )}
 
         <p className="pt-2 text-center text-xs text-muted-foreground">
           Signed in as {user?.email}

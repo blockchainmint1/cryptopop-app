@@ -1,9 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyAdminStatus } from "@/lib/admin-role.functions";
 import callbackBg from "@/assets/auth-callback-bg.jpg";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -24,7 +22,6 @@ function safeRedirect(value: string | undefined) {
 
 function CallbackPage() {
   const navigate = useNavigate();
-  const getAdminStatus = useServerFn(getMyAdminStatus);
   const { redirect } = Route.useSearch();
 
   useEffect(() => {
@@ -36,15 +33,7 @@ function CallbackPage() {
     };
 
     const routeForSession = async (): Promise<string> => {
-      if (redirect) return redirect;
-      try {
-        const { isAdmin } = await getAdminStatus();
-        console.info("Callback admin redirect decision", { isAdmin });
-        return isAdmin ? "/admin" : "/app";
-      } catch (error) {
-        console.error("Callback admin redirect check failed", error);
-        return "/app";
-      }
+      return redirect ?? "/";
     };
 
     const finishForSession = async () => finish(await routeForSession());
@@ -80,7 +69,7 @@ function CallbackPage() {
       subscription.unsubscribe();
       clearTimeout(t);
     };
-  }, [navigate, getAdminStatus, redirect]);
+  }, [navigate, redirect]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">

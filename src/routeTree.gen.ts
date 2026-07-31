@@ -13,57 +13,30 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as ApiRouteImport } from './routes/api'
 import { Route as ChangeLogRouteImport } from './routes/change-log'
-import { Route as DallasRouteImport } from './routes/dallas'
-import { Route as DenverRouteImport } from './routes/denver'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as EarnRouteImport } from './routes/earn'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
-import { Route as LaxRouteImport } from './routes/lax'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
-import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MyPopRouteImport } from './routes/my-pop'
-import { Route as NashvilleRouteImport } from './routes/nashville'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as SingaporeRouteImport } from './routes/singapore'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SlcRouteImport } from './routes/slc'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated.admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
-import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated.start'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
-import { Route as DocsAdminRouteImport } from './routes/docs.admin'
 import { Route as DocsUsersRouteImport } from './routes/docs.users'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
-import { Route as MarketsRequestRouteImport } from './routes/markets.request'
-import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated.admin.index'
-import { Route as AuthenticatedAdminAdminsRouteImport } from './routes/_authenticated.admin.admins'
-import { Route as AuthenticatedAdminBlastRouteImport } from './routes/_authenticated.admin.blast'
-import { Route as AuthenticatedAdminCheckinRouteImport } from './routes/_authenticated.admin.checkin'
-import { Route as AuthenticatedAdminCodesRouteImport } from './routes/_authenticated.admin.codes'
-import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated.admin.crm'
-import { Route as AuthenticatedAdminEmailTemplatesRouteImport } from './routes/_authenticated.admin.email-templates'
-import { Route as AuthenticatedAdminMintTokenRouteImport } from './routes/_authenticated.admin.mint-token'
-import { Route as AuthenticatedAdminPopAwardsRouteImport } from './routes/_authenticated.admin.pop-awards'
-import { Route as AuthenticatedAdminRewardsRouteImport } from './routes/_authenticated.admin.rewards'
-import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated.admin.signups'
-import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authenticated.admin.wallets'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
-import { Route as AuthenticatedAdminBlastIndexRouteImport } from './routes/_authenticated.admin.blast.index'
-import { Route as AuthenticatedAdminBlastHistoryRouteImport } from './routes/_authenticated.admin.blast.history'
-import { Route as AuthenticatedAdminEventsIndexRouteImport } from './routes/_authenticated.admin.events.index'
-import { Route as AuthenticatedAdminEventsIdRouteImport } from './routes/_authenticated.admin.events.$id'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -90,16 +63,6 @@ const ChangeLogRoute = ChangeLogRouteImport.update({
   path: '/change-log',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DallasRoute = DallasRouteImport.update({
-  id: '/dallas',
-  path: '/dallas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DenverRoute = DenverRouteImport.update({
-  id: '/denver',
-  path: '/denver',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -115,11 +78,6 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LaxRoute = LaxRouteImport.update({
-  id: '/lax',
-  path: '/lax',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -128,11 +86,6 @@ const LoginRoute = LoginRouteImport.update({
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MarketsRoute = MarketsRouteImport.update({
-  id: '/markets',
-  path: '/markets',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MissionRoute = MissionRouteImport.update({
@@ -150,29 +103,14 @@ const MyPopRoute = MyPopRouteImport.update({
   path: '/my-pop',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NashvilleRoute = NashvilleRouteImport.update({
-  id: '/nashville',
-  path: '/nashville',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SingaporeRoute = SingaporeRouteImport.update({
-  id: '/singapore',
-  path: '/singapore',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlcRoute = SlcRouteImport.update({
-  id: '/slc',
-  path: '/slc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -184,11 +122,6 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
@@ -206,11 +139,6 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedStartRoute = AuthenticatedStartRouteImport.update({
-  id: '/start',
-  path: '/start',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -224,11 +152,6 @@ const ClaimTokenRoute = ClaimTokenRouteImport.update({
 const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsAdminRoute = DocsAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
   getParentRoute: () => DocsRoute,
 } as any)
 const DocsUsersRoute = DocsUsersRouteImport.update({
@@ -246,79 +169,6 @@ const EventsIndexRoute = EventsIndexRouteImport.update({
   path: '/events/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketsRequestRoute = MarketsRequestRouteImport.update({
-  id: '/request',
-  path: '/request',
-  getParentRoute: () => MarketsRoute,
-} as any)
-const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminAdminsRoute =
-  AuthenticatedAdminAdminsRouteImport.update({
-    id: '/admins',
-    path: '/admins',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminBlastRoute = AuthenticatedAdminBlastRouteImport.update({
-  id: '/blast',
-  path: '/blast',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminCheckinRoute =
-  AuthenticatedAdminCheckinRouteImport.update({
-    id: '/checkin',
-    path: '/checkin',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminCodesRoute = AuthenticatedAdminCodesRouteImport.update({
-  id: '/codes',
-  path: '/codes',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminCrmRoute = AuthenticatedAdminCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminEmailTemplatesRoute =
-  AuthenticatedAdminEmailTemplatesRouteImport.update({
-    id: '/email-templates',
-    path: '/email-templates',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminMintTokenRoute =
-  AuthenticatedAdminMintTokenRouteImport.update({
-    id: '/mint-token',
-    path: '/mint-token',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminPopAwardsRoute =
-  AuthenticatedAdminPopAwardsRouteImport.update({
-    id: '/pop-awards',
-    path: '/pop-awards',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminRewardsRoute =
-  AuthenticatedAdminRewardsRouteImport.update({
-    id: '/rewards',
-    path: '/rewards',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminSignupsRoute =
-  AuthenticatedAdminSignupsRouteImport.update({
-    id: '/signups',
-    path: '/signups',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminWalletsRoute =
-  AuthenticatedAdminWalletsRouteImport.update({
-    id: '/wallets',
-    path: '/wallets',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
 const AuthenticatedScanSuccessRoute =
   AuthenticatedScanSuccessRouteImport.update({
     id: '/success',
@@ -335,30 +185,6 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminBlastIndexRoute =
-  AuthenticatedAdminBlastIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedAdminBlastRoute,
-  } as any)
-const AuthenticatedAdminBlastHistoryRoute =
-  AuthenticatedAdminBlastHistoryRouteImport.update({
-    id: '/history',
-    path: '/history',
-    getParentRoute: () => AuthenticatedAdminBlastRoute,
-  } as any)
-const AuthenticatedAdminEventsIndexRoute =
-  AuthenticatedAdminEventsIndexRouteImport.update({
-    id: '/events/',
-    path: '/events/',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminEventsIdRoute =
-  AuthenticatedAdminEventsIdRouteImport.update({
-    id: '/events/$id',
-    path: '/events/$id',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
 const ApiPublicHooksBlastDrainRoute =
   ApiPublicHooksBlastDrainRouteImport.update({
     id: '/public/hooks/blast-drain',
@@ -398,122 +224,70 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
-  '/dallas': typeof DallasRoute
-  '/denver': typeof DenverRoute
   '/docs': typeof DocsRouteWithChildren
   '/earn': typeof EarnRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/lax': typeof LaxRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
-  '/nashville': typeof NashvilleRoute
   '/privacy': typeof PrivacyRoute
-  '/singapore': typeof SingaporeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/slc': typeof SlcRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
-  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
-  '/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
-  '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/markets/request': typeof MarketsRequestRoute
   '/docs/': typeof DocsIndexRoute
   '/events/': typeof EventsIndexRoute
-  '/admin/admins': typeof AuthenticatedAdminAdminsRoute
-  '/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
-  '/admin/checkin': typeof AuthenticatedAdminCheckinRoute
-  '/admin/codes': typeof AuthenticatedAdminCodesRoute
-  '/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
-  '/admin/mint-token': typeof AuthenticatedAdminMintTokenRoute
-  '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
-  '/admin/rewards': typeof AuthenticatedAdminRewardsRoute
-  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
-  '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
-  '/admin/': typeof AuthenticatedAdminIndexRoute
-  '/admin/blast/history': typeof AuthenticatedAdminBlastHistoryRoute
-  '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
-  '/admin/blast/': typeof AuthenticatedAdminBlastIndexRoute
-  '/admin/events/': typeof AuthenticatedAdminEventsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
-  '/dallas': typeof DallasRoute
-  '/denver': typeof DenverRoute
   '/earn': typeof EarnRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/lax': typeof LaxRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
-  '/nashville': typeof NashvilleRoute
   '/privacy': typeof PrivacyRoute
-  '/singapore': typeof SingaporeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/slc': typeof SlcRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
-  '/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
-  '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/markets/request': typeof MarketsRequestRoute
   '/docs': typeof DocsIndexRoute
   '/events': typeof EventsIndexRoute
-  '/admin/admins': typeof AuthenticatedAdminAdminsRoute
-  '/admin/checkin': typeof AuthenticatedAdminCheckinRoute
-  '/admin/codes': typeof AuthenticatedAdminCodesRoute
-  '/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
-  '/admin/mint-token': typeof AuthenticatedAdminMintTokenRoute
-  '/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
-  '/admin/rewards': typeof AuthenticatedAdminRewardsRoute
-  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
-  '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
-  '/admin': typeof AuthenticatedAdminIndexRoute
-  '/admin/blast/history': typeof AuthenticatedAdminBlastHistoryRoute
-  '/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
-  '/admin/blast': typeof AuthenticatedAdminBlastIndexRoute
-  '/admin/events': typeof AuthenticatedAdminEventsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -521,63 +295,36 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/api': typeof ApiRouteWithChildren
   '/change-log': typeof ChangeLogRoute
-  '/dallas': typeof DallasRoute
-  '/denver': typeof DenverRoute
   '/docs': typeof DocsRouteWithChildren
   '/earn': typeof EarnRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/lax': typeof LaxRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/markets': typeof MarketsRouteWithChildren
   '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
-  '/nashville': typeof NashvilleRoute
   '/privacy': typeof PrivacyRoute
-  '/singapore': typeof SingaporeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/slc': typeof SlcRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
-  '/_authenticated/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
-  '/docs/admin': typeof DocsAdminRoute
   '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/markets/request': typeof MarketsRequestRoute
   '/docs/': typeof DocsIndexRoute
   '/events/': typeof EventsIndexRoute
-  '/_authenticated/admin/admins': typeof AuthenticatedAdminAdminsRoute
-  '/_authenticated/admin/blast': typeof AuthenticatedAdminBlastRouteWithChildren
-  '/_authenticated/admin/checkin': typeof AuthenticatedAdminCheckinRoute
-  '/_authenticated/admin/codes': typeof AuthenticatedAdminCodesRoute
-  '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/_authenticated/admin/email-templates': typeof AuthenticatedAdminEmailTemplatesRoute
-  '/_authenticated/admin/mint-token': typeof AuthenticatedAdminMintTokenRoute
-  '/_authenticated/admin/pop-awards': typeof AuthenticatedAdminPopAwardsRoute
-  '/_authenticated/admin/rewards': typeof AuthenticatedAdminRewardsRoute
-  '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
-  '/_authenticated/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
-  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
-  '/_authenticated/admin/blast/history': typeof AuthenticatedAdminBlastHistoryRoute
-  '/_authenticated/admin/events/$id': typeof AuthenticatedAdminEventsIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
-  '/_authenticated/admin/blast/': typeof AuthenticatedAdminBlastIndexRoute
-  '/_authenticated/admin/events/': typeof AuthenticatedAdminEventsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -585,185 +332,106 @@ export interface FileRouteTypes {
     | '/'
     | '/api'
     | '/change-log'
-    | '/dallas'
-    | '/denver'
     | '/docs'
     | '/earn'
     | '/how-it-works'
-    | '/lax'
     | '/login'
     | '/logout'
-    | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
-    | '/nashville'
     | '/privacy'
-    | '/singapore'
     | '/sitemap.xml'
-    | '/slc'
     | '/terms'
     | '/unsubscribe'
-    | '/admin'
     | '/app'
     | '/recover-wallet'
     | '/scan'
-    | '/start'
     | '/auth/callback'
     | '/claim/$token'
-    | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
-    | '/markets/request'
     | '/docs/'
     | '/events/'
-    | '/admin/admins'
-    | '/admin/blast'
-    | '/admin/checkin'
-    | '/admin/codes'
-    | '/admin/crm'
-    | '/admin/email-templates'
-    | '/admin/mint-token'
-    | '/admin/pop-awards'
-    | '/admin/rewards'
-    | '/admin/signups'
-    | '/admin/wallets'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
-    | '/admin/'
-    | '/admin/blast/history'
-    | '/admin/events/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
-    | '/admin/blast/'
-    | '/admin/events/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/api'
     | '/change-log'
-    | '/dallas'
-    | '/denver'
     | '/earn'
     | '/how-it-works'
-    | '/lax'
     | '/login'
     | '/logout'
-    | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
-    | '/nashville'
     | '/privacy'
-    | '/singapore'
     | '/sitemap.xml'
-    | '/slc'
     | '/terms'
     | '/unsubscribe'
     | '/app'
     | '/recover-wallet'
     | '/scan'
-    | '/start'
     | '/auth/callback'
     | '/claim/$token'
-    | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
-    | '/markets/request'
     | '/docs'
     | '/events'
-    | '/admin/admins'
-    | '/admin/checkin'
-    | '/admin/codes'
-    | '/admin/crm'
-    | '/admin/email-templates'
-    | '/admin/mint-token'
-    | '/admin/pop-awards'
-    | '/admin/rewards'
-    | '/admin/signups'
-    | '/admin/wallets'
     | '/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
-    | '/admin'
-    | '/admin/blast/history'
-    | '/admin/events/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
-    | '/admin/blast'
-    | '/admin/events'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/api'
     | '/change-log'
-    | '/dallas'
-    | '/denver'
     | '/docs'
     | '/earn'
     | '/how-it-works'
-    | '/lax'
     | '/login'
     | '/logout'
-    | '/markets'
     | '/mission'
     | '/my-pass'
     | '/my-pop'
-    | '/nashville'
     | '/privacy'
-    | '/singapore'
     | '/sitemap.xml'
-    | '/slc'
     | '/terms'
     | '/unsubscribe'
-    | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
-    | '/_authenticated/start'
     | '/auth/callback'
     | '/claim/$token'
-    | '/docs/admin'
     | '/docs/users'
     | '/email/unsubscribe'
-    | '/markets/request'
     | '/docs/'
     | '/events/'
-    | '/_authenticated/admin/admins'
-    | '/_authenticated/admin/blast'
-    | '/_authenticated/admin/checkin'
-    | '/_authenticated/admin/codes'
-    | '/_authenticated/admin/crm'
-    | '/_authenticated/admin/email-templates'
-    | '/_authenticated/admin/mint-token'
-    | '/_authenticated/admin/pop-awards'
-    | '/_authenticated/admin/rewards'
-    | '/_authenticated/admin/signups'
-    | '/_authenticated/admin/wallets'
     | '/_authenticated/scan/success'
     | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
-    | '/_authenticated/admin/'
-    | '/_authenticated/admin/blast/history'
-    | '/_authenticated/admin/events/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
-    | '/_authenticated/admin/blast/'
-    | '/_authenticated/admin/events/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -771,23 +439,16 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiRoute: typeof ApiRouteWithChildren
   ChangeLogRoute: typeof ChangeLogRoute
-  DallasRoute: typeof DallasRoute
-  DenverRoute: typeof DenverRoute
   DocsRoute: typeof DocsRouteWithChildren
   EarnRoute: typeof EarnRoute
   HowItWorksRoute: typeof HowItWorksRoute
-  LaxRoute: typeof LaxRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
-  MarketsRoute: typeof MarketsRouteWithChildren
   MissionRoute: typeof MissionRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
-  NashvilleRoute: typeof NashvilleRoute
   PrivacyRoute: typeof PrivacyRoute
-  SingaporeRoute: typeof SingaporeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  SlcRoute: typeof SlcRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -833,20 +494,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChangeLogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dallas': {
-      id: '/dallas'
-      path: '/dallas'
-      fullPath: '/dallas'
-      preLoaderRoute: typeof DallasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/denver': {
-      id: '/denver'
-      path: '/denver'
-      fullPath: '/denver'
-      preLoaderRoute: typeof DenverRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/docs': {
       id: '/docs'
       path: '/docs'
@@ -868,13 +515,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lax': {
-      id: '/lax'
-      path: '/lax'
-      fullPath: '/lax'
-      preLoaderRoute: typeof LaxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -887,13 +527,6 @@ declare module '@tanstack/react-router' {
       path: '/logout'
       fullPath: '/logout'
       preLoaderRoute: typeof LogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/markets': {
-      id: '/markets'
-      path: '/markets'
-      fullPath: '/markets'
-      preLoaderRoute: typeof MarketsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mission': {
@@ -917,13 +550,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyPopRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/nashville': {
-      id: '/nashville'
-      path: '/nashville'
-      fullPath: '/nashville'
-      preLoaderRoute: typeof NashvilleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -931,25 +557,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/singapore': {
-      id: '/singapore'
-      path: '/singapore'
-      fullPath: '/singapore'
-      preLoaderRoute: typeof SingaporeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/slc': {
-      id: '/slc'
-      path: '/slc'
-      fullPath: '/slc'
-      preLoaderRoute: typeof SlcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -965,13 +577,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/app': {
       id: '/_authenticated/app'
@@ -992,13 +597,6 @@ declare module '@tanstack/react-router' {
       path: '/scan'
       fullPath: '/scan'
       preLoaderRoute: typeof AuthenticatedScanRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/start': {
-      id: '/_authenticated/start'
-      path: '/start'
-      fullPath: '/start'
-      preLoaderRoute: typeof AuthenticatedStartRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/auth/callback': {
@@ -1022,13 +620,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsIndexRouteImport
       parentRoute: typeof DocsRoute
     }
-    '/docs/admin': {
-      id: '/docs/admin'
-      path: '/admin'
-      fullPath: '/docs/admin'
-      preLoaderRoute: typeof DocsAdminRouteImport
-      parentRoute: typeof DocsRoute
-    }
     '/docs/users': {
       id: '/docs/users'
       path: '/users'
@@ -1050,97 +641,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/markets/request': {
-      id: '/markets/request'
-      path: '/request'
-      fullPath: '/markets/request'
-      preLoaderRoute: typeof MarketsRequestRouteImport
-      parentRoute: typeof MarketsRoute
-    }
-    '/_authenticated/admin/': {
-      id: '/_authenticated/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/admins': {
-      id: '/_authenticated/admin/admins'
-      path: '/admins'
-      fullPath: '/admin/admins'
-      preLoaderRoute: typeof AuthenticatedAdminAdminsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/blast': {
-      id: '/_authenticated/admin/blast'
-      path: '/blast'
-      fullPath: '/admin/blast'
-      preLoaderRoute: typeof AuthenticatedAdminBlastRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/checkin': {
-      id: '/_authenticated/admin/checkin'
-      path: '/checkin'
-      fullPath: '/admin/checkin'
-      preLoaderRoute: typeof AuthenticatedAdminCheckinRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/codes': {
-      id: '/_authenticated/admin/codes'
-      path: '/codes'
-      fullPath: '/admin/codes'
-      preLoaderRoute: typeof AuthenticatedAdminCodesRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/crm': {
-      id: '/_authenticated/admin/crm'
-      path: '/crm'
-      fullPath: '/admin/crm'
-      preLoaderRoute: typeof AuthenticatedAdminCrmRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/email-templates': {
-      id: '/_authenticated/admin/email-templates'
-      path: '/email-templates'
-      fullPath: '/admin/email-templates'
-      preLoaderRoute: typeof AuthenticatedAdminEmailTemplatesRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/mint-token': {
-      id: '/_authenticated/admin/mint-token'
-      path: '/mint-token'
-      fullPath: '/admin/mint-token'
-      preLoaderRoute: typeof AuthenticatedAdminMintTokenRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/pop-awards': {
-      id: '/_authenticated/admin/pop-awards'
-      path: '/pop-awards'
-      fullPath: '/admin/pop-awards'
-      preLoaderRoute: typeof AuthenticatedAdminPopAwardsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/rewards': {
-      id: '/_authenticated/admin/rewards'
-      path: '/rewards'
-      fullPath: '/admin/rewards'
-      preLoaderRoute: typeof AuthenticatedAdminRewardsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/signups': {
-      id: '/_authenticated/admin/signups'
-      path: '/signups'
-      fullPath: '/admin/signups'
-      preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/wallets': {
-      id: '/_authenticated/admin/wallets'
-      path: '/wallets'
-      fullPath: '/admin/wallets'
-      preLoaderRoute: typeof AuthenticatedAdminWalletsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/scan/success': {
       id: '/_authenticated/scan/success'
       path: '/success'
@@ -1161,34 +661,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin/blast/': {
-      id: '/_authenticated/admin/blast/'
-      path: '/'
-      fullPath: '/admin/blast/'
-      preLoaderRoute: typeof AuthenticatedAdminBlastIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminBlastRoute
-    }
-    '/_authenticated/admin/blast/history': {
-      id: '/_authenticated/admin/blast/history'
-      path: '/history'
-      fullPath: '/admin/blast/history'
-      preLoaderRoute: typeof AuthenticatedAdminBlastHistoryRouteImport
-      parentRoute: typeof AuthenticatedAdminBlastRoute
-    }
-    '/_authenticated/admin/events/': {
-      id: '/_authenticated/admin/events/'
-      path: '/events'
-      fullPath: '/admin/events/'
-      preLoaderRoute: typeof AuthenticatedAdminEventsIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/events/$id': {
-      id: '/_authenticated/admin/events/$id'
-      path: '/events/$id'
-      fullPath: '/admin/events/$id'
-      preLoaderRoute: typeof AuthenticatedAdminEventsIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/api/public/hooks/blast-drain': {
       id: '/api/public/hooks/blast-drain'
@@ -1235,59 +707,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAdminBlastRouteChildren {
-  AuthenticatedAdminBlastHistoryRoute: typeof AuthenticatedAdminBlastHistoryRoute
-  AuthenticatedAdminBlastIndexRoute: typeof AuthenticatedAdminBlastIndexRoute
-}
-
-const AuthenticatedAdminBlastRouteChildren: AuthenticatedAdminBlastRouteChildren =
-  {
-    AuthenticatedAdminBlastHistoryRoute: AuthenticatedAdminBlastHistoryRoute,
-    AuthenticatedAdminBlastIndexRoute: AuthenticatedAdminBlastIndexRoute,
-  }
-
-const AuthenticatedAdminBlastRouteWithChildren =
-  AuthenticatedAdminBlastRoute._addFileChildren(
-    AuthenticatedAdminBlastRouteChildren,
-  )
-
-interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminAdminsRoute: typeof AuthenticatedAdminAdminsRoute
-  AuthenticatedAdminBlastRoute: typeof AuthenticatedAdminBlastRouteWithChildren
-  AuthenticatedAdminCheckinRoute: typeof AuthenticatedAdminCheckinRoute
-  AuthenticatedAdminCodesRoute: typeof AuthenticatedAdminCodesRoute
-  AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRoute
-  AuthenticatedAdminEmailTemplatesRoute: typeof AuthenticatedAdminEmailTemplatesRoute
-  AuthenticatedAdminMintTokenRoute: typeof AuthenticatedAdminMintTokenRoute
-  AuthenticatedAdminPopAwardsRoute: typeof AuthenticatedAdminPopAwardsRoute
-  AuthenticatedAdminRewardsRoute: typeof AuthenticatedAdminRewardsRoute
-  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
-  AuthenticatedAdminWalletsRoute: typeof AuthenticatedAdminWalletsRoute
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
-  AuthenticatedAdminEventsIdRoute: typeof AuthenticatedAdminEventsIdRoute
-  AuthenticatedAdminEventsIndexRoute: typeof AuthenticatedAdminEventsIndexRoute
-}
-
-const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminAdminsRoute: AuthenticatedAdminAdminsRoute,
-  AuthenticatedAdminBlastRoute: AuthenticatedAdminBlastRouteWithChildren,
-  AuthenticatedAdminCheckinRoute: AuthenticatedAdminCheckinRoute,
-  AuthenticatedAdminCodesRoute: AuthenticatedAdminCodesRoute,
-  AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRoute,
-  AuthenticatedAdminEmailTemplatesRoute: AuthenticatedAdminEmailTemplatesRoute,
-  AuthenticatedAdminMintTokenRoute: AuthenticatedAdminMintTokenRoute,
-  AuthenticatedAdminPopAwardsRoute: AuthenticatedAdminPopAwardsRoute,
-  AuthenticatedAdminRewardsRoute: AuthenticatedAdminRewardsRoute,
-  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
-  AuthenticatedAdminWalletsRoute: AuthenticatedAdminWalletsRoute,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
-  AuthenticatedAdminEventsIdRoute: AuthenticatedAdminEventsIdRoute,
-  AuthenticatedAdminEventsIndexRoute: AuthenticatedAdminEventsIndexRoute,
-}
-
-const AuthenticatedAdminRouteWithChildren =
-  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
-
 interface AuthenticatedScanRouteChildren {
   AuthenticatedScanSuccessRoute: typeof AuthenticatedScanSuccessRoute
 }
@@ -1300,19 +719,15 @@ const AuthenticatedScanRouteWithChildren =
   AuthenticatedScanRoute._addFileChildren(AuthenticatedScanRouteChildren)
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedRecoverWalletRoute: typeof AuthenticatedRecoverWalletRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
-  AuthenticatedStartRoute: typeof AuthenticatedStartRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedRecoverWalletRoute: AuthenticatedRecoverWalletRoute,
   AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
-  AuthenticatedStartRoute: AuthenticatedStartRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -1330,52 +745,32 @@ const ApiRouteChildren: ApiRouteChildren = {
 const ApiRouteWithChildren = ApiRoute._addFileChildren(ApiRouteChildren)
 
 interface DocsRouteChildren {
-  DocsAdminRoute: typeof DocsAdminRoute
   DocsUsersRoute: typeof DocsUsersRoute
   DocsIndexRoute: typeof DocsIndexRoute
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
-  DocsAdminRoute: DocsAdminRoute,
   DocsUsersRoute: DocsUsersRoute,
   DocsIndexRoute: DocsIndexRoute,
 }
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
-interface MarketsRouteChildren {
-  MarketsRequestRoute: typeof MarketsRequestRoute
-}
-
-const MarketsRouteChildren: MarketsRouteChildren = {
-  MarketsRequestRoute: MarketsRequestRoute,
-}
-
-const MarketsRouteWithChildren =
-  MarketsRoute._addFileChildren(MarketsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiRoute: ApiRouteWithChildren,
   ChangeLogRoute: ChangeLogRoute,
-  DallasRoute: DallasRoute,
-  DenverRoute: DenverRoute,
   DocsRoute: DocsRouteWithChildren,
   EarnRoute: EarnRoute,
   HowItWorksRoute: HowItWorksRoute,
-  LaxRoute: LaxRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
-  MarketsRoute: MarketsRouteWithChildren,
   MissionRoute: MissionRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
-  NashvilleRoute: NashvilleRoute,
   PrivacyRoute: PrivacyRoute,
-  SingaporeRoute: SingaporeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  SlcRoute: SlcRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AuthCallbackRoute: AuthCallbackRoute,

@@ -109,13 +109,6 @@ function UserDocs() {
         </ul>
       </Section>
 
-      <p className="mt-12 font-mono text-xs text-muted-foreground">
-        Running an event yourself? See the{" "}
-        <Link to="/docs/admin" className="text-primary underline">
-          admin guide
-        </Link>
-        .
-      </p>
     </main>
   );
 }
