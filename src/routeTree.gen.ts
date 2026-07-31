@@ -11,14 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as ApiRouteImport } from './routes/api'
-import { Route as ChangeLogRouteImport } from './routes/change-log'
-import { Route as DocsRouteImport } from './routes/docs'
 import { Route as EarnRouteImport } from './routes/earn'
-import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
-import { Route as MissionRouteImport } from './routes/mission'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -30,8 +25,6 @@ import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authen
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
-import { Route as DocsIndexRouteImport } from './routes/docs.index'
-import { Route as DocsUsersRouteImport } from './routes/docs.users'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
@@ -53,29 +46,9 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiRoute = ApiRouteImport.update({
-  id: '/api',
-  path: '/api',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangeLogRoute = ChangeLogRouteImport.update({
-  id: '/change-log',
-  path: '/change-log',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsRoute = DocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const EarnRoute = EarnRouteImport.update({
   id: '/earn',
   path: '/earn',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HowItWorksRoute = HowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -86,11 +59,6 @@ const LoginRoute = LoginRouteImport.update({
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MissionRoute = MissionRouteImport.update({
-  id: '/mission',
-  path: '/mission',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyPassRoute = MyPassRouteImport.update({
@@ -149,16 +117,6 @@ const ClaimTokenRoute = ClaimTokenRouteImport.update({
   path: '/claim/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocsIndexRoute = DocsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsUsersRoute = DocsUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => DocsRoute,
-} as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
@@ -187,9 +145,9 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
 } as any)
 const ApiPublicHooksBlastDrainRoute =
   ApiPublicHooksBlastDrainRouteImport.update({
-    id: '/public/hooks/blast-drain',
-    path: '/public/hooks/blast-drain',
-    getParentRoute: () => ApiRoute,
+    id: '/api/public/hooks/blast-drain',
+    path: '/api/public/hooks/blast-drain',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
@@ -222,14 +180,9 @@ const LovableEmailTransactionalSendRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api': typeof ApiRouteWithChildren
-  '/change-log': typeof ChangeLogRoute
-  '/docs': typeof DocsRouteWithChildren
   '/earn': typeof EarnRoute
-  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
@@ -241,9 +194,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
-  '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/docs/': typeof DocsIndexRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
@@ -257,13 +208,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api': typeof ApiRouteWithChildren
-  '/change-log': typeof ChangeLogRoute
   '/earn': typeof EarnRoute
-  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
@@ -275,9 +222,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
-  '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/docs': typeof DocsIndexRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
@@ -293,14 +238,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/api': typeof ApiRouteWithChildren
-  '/change-log': typeof ChangeLogRoute
-  '/docs': typeof DocsRouteWithChildren
   '/earn': typeof EarnRoute
-  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/mission': typeof MissionRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
@@ -312,9 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
-  '/docs/users': typeof DocsUsersRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/docs/': typeof DocsIndexRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
@@ -330,14 +268,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/api'
-    | '/change-log'
-    | '/docs'
     | '/earn'
-    | '/how-it-works'
     | '/login'
     | '/logout'
-    | '/mission'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
@@ -349,9 +282,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/auth/callback'
     | '/claim/$token'
-    | '/docs/users'
     | '/email/unsubscribe'
-    | '/docs/'
     | '/events/'
     | '/scan/success'
     | '/events/$slug/rsvp'
@@ -365,13 +296,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/api'
-    | '/change-log'
     | '/earn'
-    | '/how-it-works'
     | '/login'
     | '/logout'
-    | '/mission'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
@@ -383,9 +310,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/auth/callback'
     | '/claim/$token'
-    | '/docs/users'
     | '/email/unsubscribe'
-    | '/docs'
     | '/events'
     | '/scan/success'
     | '/events/$slug/rsvp'
@@ -400,14 +325,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/api'
-    | '/change-log'
-    | '/docs'
     | '/earn'
-    | '/how-it-works'
     | '/login'
     | '/logout'
-    | '/mission'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
@@ -419,9 +339,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scan'
     | '/auth/callback'
     | '/claim/$token'
-    | '/docs/users'
     | '/email/unsubscribe'
-    | '/docs/'
     | '/events/'
     | '/_authenticated/scan/success'
     | '/events/$slug/rsvp'
@@ -437,14 +355,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  ApiRoute: typeof ApiRouteWithChildren
-  ChangeLogRoute: typeof ChangeLogRoute
-  DocsRoute: typeof DocsRouteWithChildren
   EarnRoute: typeof EarnRoute
-  HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
-  MissionRoute: typeof MissionRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -457,6 +370,7 @@ export interface RootRouteChildren {
   EventsIndexRoute: typeof EventsIndexRoute
   EventsSlugRsvpRoute: typeof EventsSlugRsvpRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -480,39 +394,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api': {
-      id: '/api'
-      path: '/api'
-      fullPath: '/api'
-      preLoaderRoute: typeof ApiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/change-log': {
-      id: '/change-log'
-      path: '/change-log'
-      fullPath: '/change-log'
-      preLoaderRoute: typeof ChangeLogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs': {
-      id: '/docs'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/earn': {
       id: '/earn'
       path: '/earn'
       fullPath: '/earn'
       preLoaderRoute: typeof EarnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/how-it-works': {
-      id: '/how-it-works'
-      path: '/how-it-works'
-      fullPath: '/how-it-works'
-      preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -527,13 +413,6 @@ declare module '@tanstack/react-router' {
       path: '/logout'
       fullPath: '/logout'
       preLoaderRoute: typeof LogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mission': {
-      id: '/mission'
-      path: '/mission'
-      fullPath: '/mission'
-      preLoaderRoute: typeof MissionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-pass': {
@@ -613,20 +492,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClaimTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/docs/': {
-      id: '/docs/'
-      path: '/'
-      fullPath: '/docs/'
-      preLoaderRoute: typeof DocsIndexRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/users': {
-      id: '/docs/users'
-      path: '/users'
-      fullPath: '/docs/users'
-      preLoaderRoute: typeof DocsUsersRouteImport
-      parentRoute: typeof DocsRoute
-    }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
       path: '/email/unsubscribe'
@@ -664,10 +529,10 @@ declare module '@tanstack/react-router' {
     }
     '/api/public/hooks/blast-drain': {
       id: '/api/public/hooks/blast-drain'
-      path: '/public/hooks/blast-drain'
+      path: '/api/public/hooks/blast-drain'
       fullPath: '/api/public/hooks/blast-drain'
       preLoaderRoute: typeof ApiPublicHooksBlastDrainRouteImport
-      parentRoute: typeof ApiRoute
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
@@ -734,39 +599,12 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
-interface ApiRouteChildren {
-  ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
-}
-
-const ApiRouteChildren: ApiRouteChildren = {
-  ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
-}
-
-const ApiRouteWithChildren = ApiRoute._addFileChildren(ApiRouteChildren)
-
-interface DocsRouteChildren {
-  DocsUsersRoute: typeof DocsUsersRoute
-  DocsIndexRoute: typeof DocsIndexRoute
-}
-
-const DocsRouteChildren: DocsRouteChildren = {
-  DocsUsersRoute: DocsUsersRoute,
-  DocsIndexRoute: DocsIndexRoute,
-}
-
-const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  ApiRoute: ApiRouteWithChildren,
-  ChangeLogRoute: ChangeLogRoute,
-  DocsRoute: DocsRouteWithChildren,
   EarnRoute: EarnRoute,
-  HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
-  MissionRoute: MissionRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
   PrivacyRoute: PrivacyRoute,
@@ -779,6 +617,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsIndexRoute: EventsIndexRoute,
   EventsSlugRsvpRoute: EventsSlugRsvpRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

@@ -107,7 +107,7 @@ function EarnPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link to="/"><img src={logo} alt="CryptoPOP" className="h-8 w-auto" /></Link>
           <nav className="flex items-center gap-4 font-mono text-xs text-muted-foreground">
-            <Link to="/how-it-works" className="hover:text-foreground">How it works</Link>
+            <Link to="/events" className="hover:text-foreground">Events</Link>
           </nav>
         </div>
       </header>

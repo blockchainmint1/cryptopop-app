@@ -34,8 +34,8 @@ function TermsPage() {
             <Link to="/privacy" className="hover:text-foreground transition">
               Privacy
             </Link>
-            <Link to="/api" className="hover:text-foreground transition">
-              API
+            <Link to="/events" className="hover:text-foreground transition">
+              Events
             </Link>
           </nav>
         </div>
