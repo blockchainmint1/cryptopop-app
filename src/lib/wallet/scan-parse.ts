@@ -32,11 +32,13 @@ export type ScanIntent =
       raw: string;
     }
   | { kind: "award"; token: string; path: string; raw: string }
+  | { kind: "checkin"; eventId: string; sig: string; raw: string }
   | { kind: "pass"; path: string; raw: string }
   | { kind: "address"; address: string; raw: string }
   | { kind: "words"; phrase: string; raw: string }
   | { kind: "link"; path: string; raw: string }
   | { kind: "unknown"; raw: string };
+
 
 const PAY_SCHEMES = ["txc", "texitcoin", "tsd", "pop", "cryptopop", "bitcoin"];
 
@@ -71,6 +73,16 @@ function fromParams(
     memo: p.get("memo") ?? p.get("message") ?? p.get("note"),
     raw,
   };
+}
+
+/** Event check-in QR: cryptopop://claim?e=<uuid>&s=<hmac> */
+function checkinFrom(p: URLSearchParams, raw: string): ScanIntent | null {
+  const eventId = p.get("e") ?? p.get("event");
+  const sig = p.get("s") ?? p.get("sig");
+  if (!eventId || !sig || !/^[0-9a-f-]{36}$/i.test(eventId) || !/^[0-9a-f]{32,128}$/i.test(sig)) {
+    return null;
+  }
+  return { kind: "checkin", eventId, sig, raw };
 }
 
 export function parseScan(input: string): ScanIntent {
@@ -109,6 +121,8 @@ export function parseScan(input: string): ScanIntent {
     try {
       const url = new URL(raw);
       const path = url.pathname + url.search;
+      const ci = checkinFrom(url.searchParams, raw);
+      if (ci) return ci;
       const claim = url.pathname.match(/\/claim\/([^/?#]+)/i);
       if (claim) return { kind: "award", token: decodeURIComponent(claim[1]), path, raw };
       const scanToken = url.searchParams.get("t") ?? url.searchParams.get("token");
@@ -132,6 +146,11 @@ export function parseScan(input: string): ScanIntent {
     const s = scheme[1].toLowerCase();
     const body = scheme[2];
     const params = new URLSearchParams(scheme[3] ?? "");
+    // cryptopop://claim?e=<eventId>&s=<sig>  (geofenced event check-in)
+    if (s === "cryptopop") {
+      const ci = checkinFrom(params, raw);
+      if (ci) return ci;
+    }
     // cryptopop:award?token=…
     if (s === "cryptopop" && /award|claim|pop/i.test(body)) {
       const token = params.get("token") ?? params.get("t") ?? "";
