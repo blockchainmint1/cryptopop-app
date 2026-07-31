@@ -47,7 +47,6 @@ function fireConfetti() {
 
 function ScanPage() {
   const { address, settingUp: walletSettingUp, error: walletError, retry: retryWallet } = useEnsureWallet();
-  const { address, settingUp: walletSettingUp, error: walletError, retry: retryWallet } = useEnsureWallet();
   const [busy, setBusy] = useState(false);
   const [manual, setManual] = useState("");
   const [showManual, setShowManual] = useState(false);
