@@ -17,6 +17,7 @@ import {
   Gift,
   Lock,
   RefreshCw,
+  Plus,
   ScanLine,
   Settings2,
   ShieldCheck,
