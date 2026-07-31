@@ -16,12 +16,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { QrScanDialog } from "./qr-scan-dialog";
+import { CloudRestorePanel } from "./cloud-restore-panel";
+import { RESTORE_INTENT_KEY } from "@/lib/wallet/cloud-account";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { createMnemonic, isValidMnemonic, normalizeMnemonic, type VaultOrigin } from "@/lib/wallet/vault";
 import { enableBiometric, isBiometricAvailable } from "@/lib/native/biometric";
 import logo from "@/assets/cryptopop-logo.png";
 
-type Step = "choose" | "coin-rules" | "seed-show" | "seed-confirm" | "import" | "password";
+type Step =
+  | "choose"
+  | "coin-rules"
+  | "seed-show"
+  | "seed-confirm"
+  | "import"
+  | "cloud"
+  | "password";
 
 const COIN_RULES = [
   "My Cold Storage Coin is my only backup. If I lose it, this wallet is gone forever.",
