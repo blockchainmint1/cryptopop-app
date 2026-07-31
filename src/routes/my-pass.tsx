@@ -12,6 +12,7 @@ const searchSchema = z.object({ id: z.string().uuid().optional() }).partial();
 
 export const Route = createFileRoute("/my-pass")({
   validateSearch: (s) => searchSchema.parse(s),
+  beforeLoad: ({ location }) => maybeRedirectToWalletApp(location),
   head: () => ({
     meta: [
       { title: "My Pass — CryptoPOP" },

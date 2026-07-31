@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { lookupQrCode, redeemQrCode } from "@/lib/qr-codes.functions";
 
 export const Route = createFileRoute("/claim/$token")({
+  beforeLoad: ({ location }) => maybeRedirectToWalletApp(location),
   head: () => ({
     meta: [
       { title: "Claim POP — CryptoPOP" },
