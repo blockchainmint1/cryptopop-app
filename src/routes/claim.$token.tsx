@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { lookupQrCode, redeemQrCode } from "@/lib/qr-codes.functions";
+import { maybeRedirectToWalletApp } from "@/lib/wallet-app";
 
 export const Route = createFileRoute("/claim/$token")({
   beforeLoad: ({ location }) => maybeRedirectToWalletApp(location),
