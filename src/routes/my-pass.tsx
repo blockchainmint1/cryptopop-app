@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
-import { ArrowLeft, CheckCircle2, Sparkles, Coins, Calendar, MapPin } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles, Coins, Calendar } from "lucide-react";
 import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 import { getSignupById } from "@/lib/signups.functions";
