@@ -496,7 +496,15 @@ export function WalletDashboard() {
         prefill={sendPrefill}
         onSent={() => void refresh()}
       />
+
+      <AddValueSheet
+        open={addValueOpen}
+        onOpenChange={setAddValueOpen}
+        address={address}
+        onFunded={() => void refresh()}
+      />
     </div>
+
   );
 }
 
