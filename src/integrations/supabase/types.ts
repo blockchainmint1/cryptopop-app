@@ -1439,6 +1439,14 @@ export type Database = {
         }
         Returns: number
       }
+      pop_address_rank: {
+        Args: { _address: string }
+        Returns: {
+          balance: number
+          rank: number
+          total: number
+        }[]
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
