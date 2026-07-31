@@ -1339,6 +1339,36 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_vault_backups: {
+        Row: {
+          blob: Json
+          created_at: string
+          device_label: string | null
+          id: string
+          origin: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blob: Json
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          origin?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blob?: Json
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          origin?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

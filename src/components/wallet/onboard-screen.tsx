@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
   Check,
+  CloudDownload,
   Copy,
   Eye,
   Fingerprint,
@@ -16,12 +17,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { QrScanDialog } from "./qr-scan-dialog";
+import { CloudRestorePanel } from "./cloud-restore-panel";
+import { RESTORE_INTENT_KEY } from "@/lib/wallet/cloud-account";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { createMnemonic, isValidMnemonic, normalizeMnemonic, type VaultOrigin } from "@/lib/wallet/vault";
 import { enableBiometric, isBiometricAvailable } from "@/lib/native/biometric";
 import logo from "@/assets/cryptopop-logo.png";
 
-type Step = "choose" | "coin-rules" | "seed-show" | "seed-confirm" | "import" | "password";
+type Step =
+  | "choose"
+  | "coin-rules"
+  | "seed-show"
+  | "seed-confirm"
+  | "import"
+  | "cloud"
+  | "password";
 
 const COIN_RULES = [
   "My Cold Storage Coin is my only backup. If I lose it, this wallet is gone forever.",
@@ -33,6 +43,18 @@ const COIN_RULES = [
 export function OnboardScreen() {
   const { create } = useWallet();
   const [step, setStep] = useState<Step>("choose");
+
+  // Coming back from a Google/Apple redirect started on the restore panel.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(RESTORE_INTENT_KEY)) {
+        sessionStorage.removeItem(RESTORE_INTENT_KEY);
+        setStep("cloud");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
   const [origin, setOrigin] = useState<VaultOrigin>("coin");
   const [mnemonic, setMnemonic] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
@@ -168,8 +190,24 @@ export function OnboardScreen() {
                   Already have a 12 or 24-word recovery phrase? Bring it here.
                 </p>
               </button>
+
+              <button
+                onClick={() => setStep("cloud")}
+                className="w-full rounded-2xl border border-white/12 bg-white/5 p-5 text-left transition hover:bg-white/10"
+              >
+                <div className="flex items-center gap-2 font-display text-lg font-semibold uppercase">
+                  <CloudDownload className="h-5 w-5" /> Restore from backup
+                </div>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Backed up to Google or Apple before? Sign in and unlock it with your wallet
+                  password.
+                </p>
+              </button>
             </div>
           )}
+
+          {step === "cloud" && <CloudRestorePanel onBack={() => setStep("choose")} />}
+
 
           {step === "coin-rules" && (
             <div className="space-y-3">
