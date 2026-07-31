@@ -8,7 +8,7 @@ import { z } from "zod";
 const Addr = z.string().min(20).max(64).regex(/^[A-Za-z0-9]+$/);
 
 const PrepareInput = z.object({
-  asset: z.enum(["pop", "txc"]),
+  asset: z.enum(["pop", "tsd", "txc"]),
   from: Addr,
   to: Addr,
   amount: z.number().positive().finite(),

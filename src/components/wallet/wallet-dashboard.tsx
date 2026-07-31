@@ -50,17 +50,16 @@ import {
   type WalletTx,
 } from "@/lib/wallet-activity.functions";
 import { CloudBackupCard } from "./cloud-backup-card";
-import { SendSheet } from "./send-sheet";
+import { ASSETS, type AssetId } from "@/lib/wallet/assets";
+import { parseScan } from "@/lib/wallet/scan-parse";
+import { SendSheet, type SendPrefill } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
 
-const CHAINS = [
-  { id: "pop", name: "POP", network: "TEXITcoin · Omni", decimals: 0 },
-  { id: "txc", name: "TXC", network: "TEXITcoin", decimals: 8 },
-] as const;
+const CHAINS = ASSETS;
 
-type ChainId = (typeof CHAINS)[number]["id"];
+type ChainId = AssetId;
 const HIDDEN_KEY = "cryptopop.wallet.hiddenChains";
 
 function loadHidden(): ChainId[] {
@@ -89,6 +88,7 @@ export function WalletDashboard() {
   const fetchRewards = useServerFn(getAddressRewards);
 
   const [pop, setPop] = useState<number | null>(null);
+  const [tsd, setTsd] = useState<number | null>(null);
   const [txc, setTxc] = useState<number | null>(null);
   const [txs, setTxs] = useState<WalletTx[]>([]);
   const [rewards, setRewards] = useState<WalletReward[]>([]);
@@ -103,6 +103,7 @@ export function WalletDashboard() {
   const [scanOpen, setScanOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [sendPrefill, setSendPrefill] = useState<SendPrefill | null>(null);
 
   useEffect(() => setHidden(loadHidden()), []);
 
@@ -116,6 +117,7 @@ export function WalletDashboard() {
         fetchRewards({ data: { address } }),
       ]);
       setPop(summary.pop);
+      setTsd(summary.tsd);
       setTxc(summary.txc);
       setTxs(activity.txs);
       setRewards(rewardsRes.rewards);
@@ -132,12 +134,14 @@ export function WalletDashboard() {
   }, [refresh]);
 
   const balances: Record<ChainId, number | null> = useMemo(
-    () => ({ pop, txc }),
-    [pop, txc],
+    () => ({ pop, tsd, txc }),
+    [pop, tsd, txc],
   );
 
   const visibleChains = CHAINS.filter((c) => !hidden.includes(c.id));
-  const totalPop = visibleChains.includes(CHAINS[0]) ? (pop ?? 0) : 0;
+  const tsdVisible = !hidden.includes("tsd");
+  const headline = tsdVisible ? (tsd ?? 0).toFixed(2) : (pop ?? 0).toLocaleString();
+  const headlineLabel = tsdVisible ? "TSD · Texas Stable Dollar" : "POP";
 
   function toggleChain(id: ChainId) {
     const next = hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id];
@@ -154,18 +158,41 @@ export function WalletDashboard() {
 
   function onScan(text: string) {
     setScanOpen(false);
-    const t = text.trim();
-    if (/^https?:\/\//i.test(t)) {
-      try {
-        const url = new URL(t);
-        void navigate({ to: url.pathname + url.search });
+    const intent = parseScan(text);
+
+    switch (intent.kind) {
+      case "payment":
+        setSendPrefill({
+          to: intent.to,
+          amount: intent.amount,
+          asset: intent.asset,
+          merchant: intent.merchant,
+          memo: intent.memo,
+        });
+        setSendOpen(true);
+        toast.success(
+          intent.merchant ? `Paying ${intent.merchant}` : "Payment request loaded",
+        );
         return;
-      } catch {
-        /* fall through */
-      }
+      case "address":
+        setSendPrefill({ to: intent.address, asset: "tsd" });
+        setSendOpen(true);
+        return;
+      case "award":
+        toast.success("POP code — claiming");
+        void navigate({ to: intent.path });
+        return;
+      case "pass":
+      case "link":
+        void navigate({ to: intent.path });
+        return;
+      case "words":
+        toast.info("That's a recovery phrase — use Settings → restore to import it");
+        return;
+      default:
+        void navigator.clipboard.writeText(intent.raw).catch(() => undefined);
+        toast.message("Scanned code copied", { description: intent.raw.slice(0, 80) });
     }
-    void navigator.clipboard.writeText(t).catch(() => undefined);
-    toast.success("Scanned code copied");
   }
 
   const shownTx = showAllTx ? txs : txs.slice(0, 5);
@@ -198,10 +225,11 @@ export function WalletDashboard() {
             Total balance
           </p>
           <p className="font-display text-6xl font-bold leading-none">
-            {loading && pop === null ? "—" : totalPop.toLocaleString()}
+            {loading && pop === null && tsd === null ? "—" : headline}
           </p>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            POP · {visibleChains.length} {visibleChains.length === 1 ? "asset" : "assets"}
+            {headlineLabel} · {visibleChains.length}{" "}
+            {visibleChains.length === 1 ? "asset" : "assets"}
           </p>
 
           <button
@@ -388,7 +416,13 @@ export function WalletDashboard() {
       {/* Sticky send / receive */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/90 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-md gap-3">
-          <Button className="h-12 flex-1 rounded-full" onClick={() => setSendOpen(true)}>
+          <Button
+            className="h-12 flex-1 rounded-full"
+            onClick={() => {
+              setSendPrefill(null);
+              setSendOpen(true);
+            }}
+          >
             <ArrowUpRight className="mr-1.5 h-4 w-4" /> Send
           </Button>
           <Button
@@ -436,11 +470,16 @@ export function WalletDashboard() {
 
       <SendSheet
         open={sendOpen}
-        onOpenChange={setSendOpen}
+        onOpenChange={(v) => {
+          setSendOpen(v);
+          if (!v) setSendPrefill(null);
+        }}
         address={address}
         mnemonic={mnemonic}
         popBalance={pop}
+        tsdBalance={tsd}
         txcBalance={txc}
+        prefill={sendPrefill}
         onSent={() => void refresh()}
       />
     </div>
