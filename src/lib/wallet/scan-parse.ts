@@ -32,11 +32,13 @@ export type ScanIntent =
       raw: string;
     }
   | { kind: "award"; token: string; path: string; raw: string }
+  | { kind: "checkin"; eventId: string; sig: string; raw: string }
   | { kind: "pass"; path: string; raw: string }
   | { kind: "address"; address: string; raw: string }
   | { kind: "words"; phrase: string; raw: string }
   | { kind: "link"; path: string; raw: string }
   | { kind: "unknown"; raw: string };
+
 
 const PAY_SCHEMES = ["txc", "texitcoin", "tsd", "pop", "cryptopop", "bitcoin"];
 
