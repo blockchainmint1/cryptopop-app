@@ -42,6 +42,18 @@ const COIN_RULES = [
 export function OnboardScreen() {
   const { create } = useWallet();
   const [step, setStep] = useState<Step>("choose");
+
+  // Coming back from a Google/Apple redirect started on the restore panel.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(RESTORE_INTENT_KEY)) {
+        sessionStorage.removeItem(RESTORE_INTENT_KEY);
+        setStep("cloud");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
   const [origin, setOrigin] = useState<VaultOrigin>("coin");
   const [mnemonic, setMnemonic] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
@@ -177,8 +189,24 @@ export function OnboardScreen() {
                   Already have a 12 or 24-word recovery phrase? Bring it here.
                 </p>
               </button>
+
+              <button
+                onClick={() => setStep("cloud")}
+                className="w-full rounded-2xl border border-white/12 bg-white/5 p-5 text-left transition hover:bg-white/10"
+              >
+                <div className="flex items-center gap-2 font-display text-lg font-semibold uppercase">
+                  <CloudDownload className="h-5 w-5" /> Restore from backup
+                </div>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Backed up to Google or Apple before? Sign in and unlock it with your wallet
+                  password.
+                </p>
+              </button>
             </div>
           )}
+
+          {step === "cloud" && <CloudRestorePanel onBack={() => setStep("choose")} />}
+
 
           {step === "coin-rules" && (
             <div className="space-y-3">
