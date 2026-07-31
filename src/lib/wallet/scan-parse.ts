@@ -111,6 +111,8 @@ export function parseScan(input: string): ScanIntent {
     try {
       const url = new URL(raw);
       const path = url.pathname + url.search;
+      const ci = checkinFrom(url.searchParams, raw);
+      if (ci) return ci;
       const claim = url.pathname.match(/\/claim\/([^/?#]+)/i);
       if (claim) return { kind: "award", token: decodeURIComponent(claim[1]), path, raw };
       const scanToken = url.searchParams.get("t") ?? url.searchParams.get("token");
