@@ -7,13 +7,11 @@ import { ArrowLeft, CheckCircle2, Sparkles, Coins, Calendar } from "lucide-react
 import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 import { getSignupById } from "@/lib/signups.functions";
-import { maybeRedirectToWalletApp } from "@/lib/wallet-app";
 
 const searchSchema = z.object({ id: z.string().uuid().optional() }).partial();
 
 export const Route = createFileRoute("/my-pass")({
   validateSearch: (s) => searchSchema.parse(s),
-  beforeLoad: ({ location }) => maybeRedirectToWalletApp(location),
   head: () => ({
     meta: [
       { title: "My Pass — CryptoPOP" },
