@@ -55,6 +55,7 @@ import { ASSETS, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { SendSheet, type SendPrefill } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
+import { AddValueSheet } from "./add-value-sheet";
 import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
 
