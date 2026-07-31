@@ -46,7 +46,7 @@ function fireConfetti() {
 }
 
 function ScanPage() {
-  const claim = useServerFn(claimPop);
+  const { address, settingUp: walletSettingUp, error: walletError, retry: retryWallet } = useEnsureWallet();
   const { address, settingUp: walletSettingUp, error: walletError, retry: retryWallet } = useEnsureWallet();
   const [busy, setBusy] = useState(false);
   const [manual, setManual] = useState("");
