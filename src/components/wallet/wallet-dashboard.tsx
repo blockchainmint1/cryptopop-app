@@ -106,6 +106,7 @@ export function WalletDashboard() {
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendPrefill, setSendPrefill] = useState<SendPrefill | null>(null);
+  const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHidden()), []);
 
