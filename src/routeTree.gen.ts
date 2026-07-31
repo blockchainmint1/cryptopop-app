@@ -28,7 +28,6 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
-import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated.start'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
@@ -140,11 +139,6 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedStartRoute = AuthenticatedStartRouteImport.update({
-  id: '/start',
-  path: '/start',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -245,7 +239,6 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
-  '/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/docs/users': typeof DocsUsersRoute
@@ -280,7 +273,6 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
-  '/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/docs/users': typeof DocsUsersRoute
@@ -318,7 +310,6 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
-  '/_authenticated/start': typeof AuthenticatedStartRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/docs/users': typeof DocsUsersRoute
@@ -356,7 +347,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
-    | '/start'
     | '/auth/callback'
     | '/claim/$token'
     | '/docs/users'
@@ -391,7 +381,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
-    | '/start'
     | '/auth/callback'
     | '/claim/$token'
     | '/docs/users'
@@ -428,7 +417,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
-    | '/_authenticated/start'
     | '/auth/callback'
     | '/claim/$token'
     | '/docs/users'
@@ -611,13 +599,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/start': {
-      id: '/_authenticated/start'
-      path: '/start'
-      fullPath: '/start'
-      preLoaderRoute: typeof AuthenticatedStartRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -741,14 +722,12 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedRecoverWalletRoute: typeof AuthenticatedRecoverWalletRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRouteWithChildren
-  AuthenticatedStartRoute: typeof AuthenticatedStartRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedRecoverWalletRoute: AuthenticatedRecoverWalletRoute,
   AuthenticatedScanRoute: AuthenticatedScanRouteWithChildren,
-  AuthenticatedStartRoute: AuthenticatedStartRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
