@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Sparkles } from "lucide-react";
+import { QrCode, MapPin, Coins, Users, ArrowRight, CalendarDays, Sparkles, Loader2 } from "lucide-react";
+import { WalletHome } from "@/components/wallet-home";
 import logo from "@/assets/cryptopop-logo.png";
 import bbqHero from "@/assets/usa-250-bbq.png";
 import nectarpayHero from "@/assets/nectarpay-training.jpg";
@@ -8,8 +9,32 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export const Route = createFileRoute("/")({
-  component: Landing,
+  head: () => ({
+    meta: [
+      { title: "CryptoPOP Wallet — Your POP balance & event check-ins" },
+      { name: "description", content: "Your CryptoPOP wallet: POP balance, event check-ins, rewards and your on-chain TXC address." },
+      { property: "og:title", content: "CryptoPOP Wallet — Your POP balance & event check-ins" },
+      { property: "og:description", content: "Your CryptoPOP wallet: POP balance, event check-ins, rewards and your on-chain TXC address." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Home,
 });
+
+function Home() {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return session ? <WalletHome /> : <Landing />;
+}
 
 function Landing() {
   const { session } = useAuth();
