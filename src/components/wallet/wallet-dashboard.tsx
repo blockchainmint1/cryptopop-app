@@ -284,6 +284,17 @@ export function WalletDashboard() {
           )}
         </Card>
 
+        {/* Add value (ACH onramp) */}
+        <Button
+          variant="secondary"
+          className="h-12 w-full rounded-full"
+          onClick={() => setAddValueOpen(true)}
+        >
+          <Plus className="mr-1.5 h-4 w-4" /> Add value
+        </Button>
+
+
+
         {/* Recent activity */}
         <Card className="space-y-3 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
