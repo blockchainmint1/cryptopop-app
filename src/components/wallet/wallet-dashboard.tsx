@@ -17,6 +17,7 @@ import {
   Gift,
   Lock,
   RefreshCw,
+  Plus,
   ScanLine,
   Settings2,
   ShieldCheck,
@@ -54,6 +55,7 @@ import { ASSETS, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { SendSheet, type SendPrefill } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
+import { AddValueSheet } from "./add-value-sheet";
 import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
 
@@ -104,6 +106,7 @@ export function WalletDashboard() {
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendPrefill, setSendPrefill] = useState<SendPrefill | null>(null);
+  const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHidden()), []);
 
@@ -280,6 +283,17 @@ export function WalletDashboard() {
             </div>
           )}
         </Card>
+
+        {/* Add value (ACH onramp) */}
+        <Button
+          variant="secondary"
+          className="h-12 w-full rounded-full"
+          onClick={() => setAddValueOpen(true)}
+        >
+          <Plus className="mr-1.5 h-4 w-4" /> Add value
+        </Button>
+
+
 
         {/* Recent activity */}
         <Card className="space-y-3 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
@@ -482,7 +496,15 @@ export function WalletDashboard() {
         prefill={sendPrefill}
         onSent={() => void refresh()}
       />
+
+      <AddValueSheet
+        open={addValueOpen}
+        onOpenChange={setAddValueOpen}
+        address={address}
+        onFunded={() => void refresh()}
+      />
     </div>
+
   );
 }
 
