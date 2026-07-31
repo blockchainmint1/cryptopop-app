@@ -51,13 +51,13 @@ function LoginPage() {
       .catch((error) => {
         if (cancelled) return;
         console.error("Admin redirect check failed", error);
-        navigate({ to: "/app", replace: true });
+        navigate({ to: "/", replace: true });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [loading, session, navigate, getAdminStatus, redirect]);
+  }, [loading, session, navigate, redirect]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

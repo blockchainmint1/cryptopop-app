@@ -70,7 +70,7 @@ function CallbackPage() {
       subscription.unsubscribe();
       clearTimeout(t);
     };
-  }, [navigate, getAdminStatus, redirect]);
+  }, [navigate, redirect]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
