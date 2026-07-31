@@ -103,13 +103,12 @@ function ScanPage() {
     }
 
     try {
-      const result = await claim({
-        data: {
-          qr,
-          lat: coords.coords.latitude,
-          lng: coords.coords.longitude,
-          accuracy: coords.coords.accuracy,
-        },
+      const result = await claimAtHub({
+        qr,
+        address,
+        lat: coords.coords.latitude,
+        lng: coords.coords.longitude,
+        accuracy: coords.coords.accuracy,
       });
 
       if (result.ok) {
@@ -119,6 +118,7 @@ function ScanPage() {
         setBusy(false);
       } else {
         toast.error(ERROR_COPY[result.reason] ?? "Claim failed");
+
         setBusy(false);
         setTimeout(() => {
           handledRef.current = false;
