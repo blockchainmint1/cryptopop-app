@@ -1,9 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { maybeRedirectToWalletApp, WALLET_APP_REDIRECT_ENABLED } from "@/lib/wallet-app";
 
-// /my-pop was merged into /app. Keep the URL as a permanent redirect so
-// older shared links still land in the right place.
+// /my-pop was merged into /app, which now lives on the wallet app subdomain.
 export const Route = createFileRoute("/my-pop")({
-  beforeLoad: () => {
-    throw redirect({ to: "/app" });
+  beforeLoad: ({ location }) => {
+    maybeRedirectToWalletApp(location);
+    if (!WALLET_APP_REDIRECT_ENABLED) throw redirect({ to: "/app" });
   },
 });
