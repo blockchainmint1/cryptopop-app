@@ -52,6 +52,17 @@ function ScanPage() {
   const [showManual, setShowManual] = useState(false);
   const [success, setSuccess] = useState<Success | null>(null);
   const handledRef = useRef(false);
+  const { qr: qrFromUrl } = Route.useSearch();
+
+  // Deep-linked / routed-in QR (e.g. scanned from the wallet camera):
+  // claim it as soon as the wallet is ready.
+  useEffect(() => {
+    if (!qrFromUrl || !address || handledRef.current) return;
+    void submit(qrFromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrFromUrl, address]);
+
+
 
   async function submit(qr: string) {
     if (handledRef.current || busy || success) return;
