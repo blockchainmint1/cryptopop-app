@@ -269,9 +269,26 @@ function SignupPage() {
               {ev.date}
             </p>
             <p className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4 text-primary" />
-              {ev.location || "Location shared with confirmed guests"}
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              {ev.location ? (
+                ev.mapUrl ? (
+                  <a
+                    href={ev.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-primary/50 underline-offset-4 transition hover:text-foreground"
+                  >
+                    {ev.location}
+                    <span className="sr-only"> — open in Google Maps</span>
+                  </a>
+                ) : (
+                  ev.location
+                )
+              ) : (
+                "Location shared with confirmed guests"
+              )}
             </p>
+
             {capacity != null && (
               <p className="flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4 text-primary" />
