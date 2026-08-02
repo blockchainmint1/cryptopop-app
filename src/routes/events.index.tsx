@@ -9,7 +9,7 @@ import {
   Globe,
   MapPin,
   Search,
-  Sparkles,
+  
   Users,
   X,
 } from "lucide-react";
