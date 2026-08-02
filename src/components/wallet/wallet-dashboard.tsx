@@ -261,10 +261,14 @@ export function WalletDashboard() {
       <header className="flex items-center gap-2 px-4 pt-6">
         <img src={logo} alt="CryptoPOP" className="h-8 w-auto shrink-0" />
         <div className="flex flex-1 justify-center">
-          <span className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          <Link
+            to="/leaderboard"
+            aria-label="View the POP leaderboard"
+            className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition hover:text-foreground"
+          >
             <Trophy className="h-3.5 w-3.5 text-primary" />
             {rank ? `POP Rank #${rank}` : "Unranked"}
-          </span>
+          </Link>
         </div>
         <div className="flex shrink-0 items-center">
           <Button variant="ghost" size="icon" onClick={() => setShowSettings((v) => !v)} aria-label="Settings">
