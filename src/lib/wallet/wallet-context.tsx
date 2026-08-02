@@ -34,7 +34,11 @@ interface WalletContextValue {
   status: WalletStatus;
   /** Plaintext mnemonic — only present while unlocked. */
   mnemonic: string | null;
+  /** Canonical receive address (m/44'/696969'/0'/0/0). */
   address: string | null;
+  /** Pre-SLIP-44 address (m/44'/0'/0'/0/0) — still holds funds for older seeds. */
+  legacyAddress: string | null;
+
   origin: VaultOrigin | null;
   unlock: (password: string) => Promise<boolean>;
   create: (mnemonic: string, password: string, origin: VaultOrigin) => Promise<void>;
