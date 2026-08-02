@@ -24,6 +24,7 @@ import {
   Sparkles,
   Trash2,
   Trophy,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
