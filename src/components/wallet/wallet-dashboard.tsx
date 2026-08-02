@@ -52,6 +52,7 @@ import {
   type WalletReward,
   type WalletTx,
 } from "@/lib/wallet-activity.functions";
+import { checkForUpdate, applyUpdate, appVersionLabel } from "@/lib/native/updates";
 import { CloudBackupCard } from "./cloud-backup-card";
 import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
