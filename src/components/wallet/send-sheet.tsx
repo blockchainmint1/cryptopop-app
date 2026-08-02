@@ -52,6 +52,9 @@ export function SendSheet({
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
 
+  // POP is a scoreboard token for now — not spendable/tradeable.
+  const SENDABLE_ASSETS = ASSETS.filter((a) => a.id !== "pop");
+
   const [asset, setAsset] = useState<AssetId>("tsd");
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
