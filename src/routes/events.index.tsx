@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, MapPin, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Sparkles, Users } from "lucide-react";
 import { listPublicEvents } from "@/lib/public-events.functions";
 import { PUBLIC_EVENTS } from "@/lib/public-events";
 import { SiteFooter } from "@/components/site-footer";
