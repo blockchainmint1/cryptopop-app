@@ -123,18 +123,15 @@ export const geocodeZip = createServerFn({ method: "GET" })
     return { zip };
   })
   .handler(async ({ data }): Promise<{ lat: number; lng: number; label: string }> => {
-    const connectionKey = process.env["GOOGLE_MAPS_API_KEY"];
-    const lovableKey = process.env["LOVABLE_API_KEY"];
-    if (!connectionKey || !lovableKey) throw new Error("Location lookup is unavailable right now");
+    const serverKey = process.env["GOOGLE_MAPS_SERVER_KEY"];
+    if (!serverKey) throw new Error("Location lookup is unavailable right now");
     const url =
-      "https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?" +
-      new URLSearchParams({ components: `postal_code:${data.zip}|country:US` }).toString();
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": connectionKey,
-      },
-    });
+      "https://maps.googleapis.com/maps/api/geocode/json?" +
+      new URLSearchParams({
+        components: `postal_code:${data.zip}|country:US`,
+        key: serverKey,
+      }).toString();
+    const res = await fetch(url);
     if (!res.ok) {
       const body = await res.text();
       console.error(`Geocode failed [${res.status}]: ${body}`);
@@ -150,9 +147,10 @@ export const geocodeZip = createServerFn({ method: "GET" })
     }
     if (json.status === "REQUEST_DENIED") {
       throw new Error(
-        "ZIP search is misconfigured: the Google Maps key is referrer-restricted. Set the server key's application restrictions to \"None\" or \"IP addresses\" in Google Cloud Console.",
+        "ZIP search is misconfigured: the Google Maps server key was denied. Check that it has no referrer restrictions and that the Geocoding API is enabled.",
       );
     }
+
     const hit = json.results?.[0];
     if (!hit) throw new Error("We couldn't find that ZIP code");
 
