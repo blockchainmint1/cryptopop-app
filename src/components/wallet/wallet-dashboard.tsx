@@ -572,6 +572,7 @@ export function WalletDashboard() {
           if (!v) setSendPrefill(null);
         }}
         address={address}
+        sources={sources}
         mnemonic={mnemonic}
         popBalance={pop}
         tsdBalance={tsd}
