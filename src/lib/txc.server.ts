@@ -232,12 +232,13 @@ function loadKey(wif: string): {
 
 /**
  * Generate a fresh TXC P2PKH keypair. Used by the org-minter wallet wizard.
- * WIF version byte mirrors P2PKH (0x42 + 0x80 = 0xC2), matching the TXC
- * convention used by all existing wallets in the system.
+ * WIF version byte is 0xC1 per TEXITcoin Core's SECRET_KEY prefix (V…) — it is
+ * NOT pubKeyHash + 0x80. Keys emitted with 0xC2 are rejected by texitcoind.
  */
 export function generateMinterKeypair(): { address: string; wif: string } {
-  const network: bitcoin.Network = { ...TXC_NETWORK, wif: 0xc2 };
+  const network: bitcoin.Network = { ...TXC_NETWORK, wif: 0xc1 };
   const keyPair = ECPair.makeRandom({ network });
+
   const wif = keyPair.toWIF();
   const { address } = bitcoin.payments.p2pkh({
     pubkey: Buffer.from(keyPair.publicKey),
