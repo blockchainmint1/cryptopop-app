@@ -23,6 +23,8 @@ export type HubClaimError =
   | "low_gps_accuracy"
   | "already_claimed"
   | "no_wallet"
+  | "invalid_address"
+  | "server_error"
   | "hub_unreachable";
 
 export type HubClaimResult =
@@ -55,6 +57,8 @@ const VALID_REASONS = new Set<string>([
   "low_gps_accuracy",
   "already_claimed",
   "no_wallet",
+  "invalid_address",
+  "server_error",
 ]);
 
 export async function claimAtHub(input: HubClaimInput): Promise<HubClaimResult> {
