@@ -123,17 +123,31 @@ export const geocodeZip = createServerFn({ method: "GET" })
     return { zip };
   })
   .handler(async ({ data }): Promise<{ lat: number; lng: number; label: string }> => {
-    const key = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!key) throw new Error("Location lookup is unavailable right now");
-    const url = new URL("https://maps.googleapis.com/maps/api/geocode/json");
-    url.searchParams.set("components", `postal_code:${data.zip}|country:US`);
-    url.searchParams.set("key", key);
-    const res = await fetch(url.toString());
-    if (!res.ok) throw new Error(`Location lookup failed (${res.status})`);
+    const connectionKey = process.env["GOOGLE_MAPS_API_KEY"];
+    const lovableKey = process.env["LOVABLE_API_KEY"];
+    if (!connectionKey || !lovableKey) throw new Error("Location lookup is unavailable right now");
+    const url =
+      "https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?" +
+      new URLSearchParams({ components: `postal_code:${data.zip}|country:US` }).toString();
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": connectionKey,
+      },
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`Geocode failed [${res.status}]: ${body}`);
+      throw new Error(`Location lookup failed (${res.status})`);
+    }
     const json = (await res.json()) as {
       status: string;
+      error_message?: string;
       results?: { formatted_address: string; geometry: { location: { lat: number; lng: number } } }[];
     };
+    if (json.status !== "OK") {
+      console.error(`Geocode status ${json.status}: ${json.error_message ?? ""}`);
+    }
     const hit = json.results?.[0];
     if (!hit) throw new Error("We couldn't find that ZIP code");
     return {
@@ -142,3 +156,4 @@ export const geocodeZip = createServerFn({ method: "GET" })
       label: hit.formatted_address,
     };
   });
+
