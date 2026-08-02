@@ -17,6 +17,7 @@ import { signPsbt } from "@/lib/wallet/sign";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { ASSETS, assetMeta, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
+import { saveTxLabel } from "@/lib/wallet/tx-labels";
 import { QrScanDialog } from "./qr-scan-dialog";
 
 export type SendPrefill = {
@@ -120,6 +121,12 @@ export function SendSheet({
       const built = await prepare({ data: { asset, from: address, to: dest, amount: value } });
       const rawHex = signPsbt(built.psbtBase64, mnemonic);
       const res = await broadcast({ data: { rawHex } });
+      // Vendor name stays on this device only — never sent to the chain.
+      saveTxLabel(res.txid, {
+        merchant: request?.merchant ?? null,
+        memo: request?.memo ?? null,
+        address: dest,
+      });
       setTxid(res.txid);
       toast.success("Sent — waiting for confirmation");
       onSent();

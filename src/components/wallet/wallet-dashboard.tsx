@@ -53,6 +53,7 @@ import {
 import { CloudBackupCard } from "./cloud-backup-card";
 import { ASSETS, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
+import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { AddValueSheet } from "./add-value-sheet";
@@ -94,6 +95,8 @@ export function WalletDashboard() {
   const [txc, setTxc] = useState<number | null>(null);
   const [txs, setTxs] = useState<WalletTx[]>([]);
   const [rewards, setRewards] = useState<WalletReward[]>([]);
+  const [txLabels, setTxLabels] = useState<Record<string, TxLabel>>({});
+
   const [rank, setRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -109,6 +112,7 @@ export function WalletDashboard() {
   const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHidden()), []);
+  useEffect(() => setTxLabels(loadTxLabels()), []);
 
   const refresh = useCallback(async () => {
     if (!address) return;
@@ -123,6 +127,7 @@ export function WalletDashboard() {
       setTsd(summary.tsd);
       setTxc(summary.txc);
       setTxs(activity.txs);
+      setTxLabels(loadTxLabels());
       setRewards(rewardsRes.rewards);
       setRank(rewardsRes.rank.rank);
     } catch (e) {
@@ -326,16 +331,23 @@ export function WalletDashboard() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">
-                      {t.direction === "in" ? "Received" : "Sent"}
+                      {txLabels[t.txid]?.merchant ??
+                        (t.direction === "in" ? "Received" : "Sent")}
                       {!t.confirmed && (
                         <span className="ml-1 text-xs text-muted-foreground">· pending</span>
                       )}
                     </p>
+                    {txLabels[t.txid]?.memo && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {txLabels[t.txid]!.memo}
+                      </p>
+                    )}
                     <p className="truncate font-mono text-[10px] text-muted-foreground">
                       {t.time ? new Date(t.time * 1000).toLocaleDateString() : "—"} ·{" "}
                       {t.txid.slice(0, 10)}…
                     </p>
                   </div>
+
                   <p className="shrink-0 font-mono text-xs">
                     {t.direction === "in" ? "+" : "−"}
                     {t.txc.toFixed(8)} TXC
