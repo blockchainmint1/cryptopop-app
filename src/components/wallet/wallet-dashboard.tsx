@@ -331,16 +331,23 @@ export function WalletDashboard() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">
-                      {t.direction === "in" ? "Received" : "Sent"}
+                      {txLabels[t.txid]?.merchant ??
+                        (t.direction === "in" ? "Received" : "Sent")}
                       {!t.confirmed && (
                         <span className="ml-1 text-xs text-muted-foreground">· pending</span>
                       )}
                     </p>
+                    {txLabels[t.txid]?.memo && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {txLabels[t.txid]!.memo}
+                      </p>
+                    )}
                     <p className="truncate font-mono text-[10px] text-muted-foreground">
                       {t.time ? new Date(t.time * 1000).toLocaleDateString() : "—"} ·{" "}
                       {t.txid.slice(0, 10)}…
                     </p>
                   </div>
+
                   <p className="shrink-0 font-mono text-xs">
                     {t.direction === "in" ? "+" : "−"}
                     {t.txc.toFixed(8)} TXC
