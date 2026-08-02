@@ -264,7 +264,61 @@ function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="12. Contact">
+          <Section title="12. POP Wallet mobile app">
+            <p>
+              The POP Wallet app for iOS and Android is a self-custody wallet. Your
+              recovery phrase and private keys are generated on your phone, encrypted
+              with your password, and stored in the device's secure enclave (iOS
+              Keychain / Android Keystore). We never receive them unless you
+              deliberately turn on encrypted cloud backup — and that backup is
+              encrypted with your password before it leaves the device.
+            </p>
+            <ul className="ml-5 list-disc space-y-2">
+              <li>
+                <strong className="text-white">Camera</strong> — used only to scan QR
+                codes (Cold Storage Coins, merchant payment codes, event check-ins).
+                Images are never stored or uploaded.
+              </li>
+              <li>
+                <strong className="text-white">Location</strong> — read only at the
+                moment you scan an event QR, to confirm you're inside the geofence.
+                It is not tracked in the background.
+              </li>
+              <li>
+                <strong className="text-white">Biometrics</strong> — Face ID /
+                fingerprint is handled by the operating system; we only receive a
+                success or failure result.
+              </li>
+              <li>
+                <strong className="text-white">Notifications</strong> — if you opt in,
+                we store a device push token to send event reminders and POP award
+                alerts. You can turn this off at any time in wallet settings.
+              </li>
+              <li>
+                <strong className="text-white">Payments</strong> — ACH bank transfers
+                for buying TSD are processed by VectorPay LLC with Plaid. Your bank
+                credentials go directly to Plaid and are never seen by CryptoPOP.
+              </li>
+            </ul>
+            <p>We do not use third-party analytics SDKs or advertising identifiers.</p>
+          </Section>
+
+          <Section title="13. Deleting your account">
+            <p>
+              You can delete your account from inside the app at any time: open{" "}
+              <strong className="text-white">Wallet settings → Delete my account</strong>.
+              This immediately removes your sign-in, your encrypted cloud backup, and
+              any push devices. Removing the wallet from a device is separate — use{" "}
+              <strong className="text-white">Remove wallet from this device</strong>,
+              and keep your recovery phrase if you ever want it back.
+            </p>
+            <p>
+              On-chain POP and TSD history lives on the public TXC blockchain and
+              cannot be deleted by anyone, including us.
+            </p>
+          </Section>
+
+          <Section title="14. Contact">
             <p>
               Data Protection Officer · CryptoPOP ·{" "}
               <BrandLink href="mailto:dpo@cryptopop.org">
