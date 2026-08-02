@@ -42,6 +42,7 @@ function LeaderboardPage() {
   const [rank, setRank] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [loadingMine, setLoadingMine] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -109,7 +110,7 @@ function LeaderboardPage() {
                 No POP awarded yet. Be the first.
               </p>
             ) : (
-              leaders.map((l, i) => {
+              (showAll ? leaders : leaders.slice(0, 3)).map((l, i) => {
                 const me = address && l.address.toLowerCase() === address.toLowerCase();
                 return (
                   <div
@@ -126,6 +127,15 @@ function LeaderboardPage() {
               })
             )}
           </div>
+          {leaders && leaders.length > 3 ? (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-2 w-full rounded-xl border border-white/12 bg-white/5 py-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition hover:text-foreground"
+            >
+              {showAll ? "Show less" : `See more (${leaders.length - 3})`}
+            </button>
+          ) : null}
         </section>
 
         <section>
