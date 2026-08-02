@@ -81,8 +81,15 @@ function EventsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <p className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+        <div className="mx-auto max-w-6xl px-6 py-12 md:py-20">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to wallet
+          </Link>
+          <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
             <Sparkles className="h-3.5 w-3.5" />
             Events
           </p>
