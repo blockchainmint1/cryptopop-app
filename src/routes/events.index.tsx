@@ -228,31 +228,37 @@ function EventsPage() {
             </div>
           </div>
 
-          <form onSubmit={applyZip} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-            <Input
-              value={zipInput}
-              onChange={(e) => setZipInput(e.target.value.replace(/\D/g, "").slice(0, 5))}
-              inputMode="numeric"
-              placeholder="ZIP code"
-              aria-label="ZIP code"
-              className="h-11"
-            />
-            <Select value={String(radius)} onValueChange={(v) => setRadius(Number(v))}>
-              <SelectTrigger className="h-11 w-full sm:w-36" aria-label="Search radius">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {RADIUS_OPTIONS.map((r) => (
-                  <SelectItem key={r} value={String(r)}>
-                    Within {r} mi
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button type="submit" className="h-11 rounded-xl" disabled={locating || zipInput.length !== 5}>
-              <Search className="mr-1.5 h-4 w-4" />
-              {locating ? "Finding…" : "Near me"}
-            </Button>
+          <form onSubmit={applyZip} className="space-y-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+              <Input
+                value={zipInput}
+                onChange={(e) => setZipInput(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                inputMode="numeric"
+                placeholder="ZIP code"
+                aria-label="ZIP code"
+                className="h-11"
+              />
+              <Select value={String(radius)} onValueChange={(v) => setRadius(Number(v))}>
+                <SelectTrigger className="h-11 w-full sm:w-36" aria-label="Search radius">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RADIUS_OPTIONS.map((r) => (
+                    <SelectItem key={r} value={String(r)}>
+                      Within {r} mi
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="submit"
+                className="col-span-2 h-11 rounded-xl sm:col-span-1"
+                disabled={locating || zipInput.length !== 5}
+              >
+                <Search className="mr-1.5 h-4 w-4" />
+                {locating ? "Finding…" : "Near me"}
+              </Button>
+            </div>
           </form>
 
           {(origin || filtersActive) && (
