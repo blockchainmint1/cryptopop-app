@@ -60,7 +60,7 @@ import { pushAvailable, pushPreference, registerPush, setPushPreference } from "
 import { ASSETS, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
-import { SendSheet, type SendPrefill } from "./send-sheet";
+import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { AddValueSheet } from "./add-value-sheet";
 import logo from "@/assets/cryptopop-logo.png";
