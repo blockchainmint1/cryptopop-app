@@ -80,19 +80,17 @@ function MyPassPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="CryptoPOP" className="h-8 w-auto" />
-          </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Home
-          </Link>
-        </div>
+      <header className="flex items-center gap-2 border-b border-border px-4 py-4">
+        <Link
+          to="/"
+          aria-label="Back to wallet"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <h1 className="font-display text-2xl font-bold tracking-tight">My Pass</h1>
       </header>
+
 
       <main className="mx-auto max-w-xl px-6 py-10">
         {loading ? (
