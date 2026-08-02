@@ -51,6 +51,12 @@ jobs:
       - name: Generate icons and splash
         run: bunx capacitor-assets generate --ios --assetPath resources
 
+      - name: Set build number
+        working-directory: ios/App
+        run: |
+          agvtool new-version -all ${{ github.run_number }} || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.${{ github.run_number }}" App/Info.plist || true
+
       - name: Install CocoaPods
         working-directory: ios/App
         run: pod install
@@ -70,13 +76,13 @@ jobs:
       - name: Zip simulator app
         run: |
           cd ios/App/build/Build/Products/Release-iphonesimulator
-          zip -r "$GITHUB_WORKSPACE/CryptoPOPWallet-simulator.zip" App.app
+          zip -r "$GITHUB_WORKSPACE/POPWallet-simulator.zip" App.app
 
       - name: Upload simulator build
         uses: actions/upload-artifact@v4
         with:
-          name: cryptopop-wallet-ios-simulator
-          path: CryptoPOPWallet-simulator.zip
+          name: popwallet-ios-simulator
+          path: POPWallet-simulator.zip
           if-no-files-found: error
 
       - name: Signed archive + IPA
@@ -111,5 +117,5 @@ jobs:
         if: ${{ hashFiles('ios/App/build/ipa/*.ipa') != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: cryptopop-wallet-ios-ipa
+          name: popwallet-ios-ipa
           path: ios/App/build/ipa/*.ipa
