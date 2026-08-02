@@ -114,6 +114,7 @@ export function WalletDashboard() {
 
   useEffect(() => setHidden(loadHidden()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
+  useEffect(() => setBackupDismissed(isBackedUp()), []);
 
   const refresh = useCallback(async () => {
     if (!address) return;
