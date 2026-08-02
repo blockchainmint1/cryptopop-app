@@ -2,9 +2,12 @@
 // BIP39 mnemonic → BIP32 HD seed → secp256k1 pubkey → HASH160 → base58check
 // with TXC's P2PKH version byte (0x42, "T" prefix).
 //
-// Path: m/44'/0'/0'/0/0  (TXC has no registered SLIP-44 coin type that we
-// could verify; using 0' until we have confirmation. The mnemonic remains
-// authoritative — we can re-derive on any path later.)
+// Path: m/44'/696969'/0'/0/0 — TEXITcoin's registered SLIP-0044 coin type
+// (see texitcoin.org/build → Chain Params). Wallets built before the
+// registration landed derived on Bitcoin's 0' slot, so we keep that as a
+// read-only legacy path: balances there still show and stay spendable, but new
+// receive addresses always come from 696969'.
+
 
 import { HDKey } from "@scure/bip32";
 import { createBase58check } from "@scure/base";
