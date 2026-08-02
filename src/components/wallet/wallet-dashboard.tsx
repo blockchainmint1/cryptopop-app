@@ -154,10 +154,13 @@ export function WalletDashboard() {
   useEffect(() => {
     if (!address || !pushAvailable() || !pushPreference()) return;
     void registerPush({
-      onToken: (token, platform) =>
-        savePushToken({ data: { token, platform, walletAddress: address, enabled: true } }).catch(
-          (e) => console.error("push token save failed", e),
-        ),
+      onToken: async (token, platform) => {
+        try {
+          await savePushToken({ data: { token, platform, walletAddress: address, enabled: true } });
+        } catch (e) {
+          console.error("push token save failed", e);
+        }
+      },
       onTap: (url) => {
         if (url.startsWith("/")) void navigate({ to: url });
       },
@@ -601,8 +604,13 @@ function WalletSettings({
     }
     if (on) {
       const ok = await registerPush({
-        onToken: (token, platform) =>
-          savePushToken({ data: { token, platform, enabled: true } }).catch(() => undefined),
+        onToken: async (token, platform) => {
+          try {
+            await savePushToken({ data: { token, platform, enabled: true } });
+          } catch {
+            /* ignore */
+          }
+        },
       });
       if (!ok) {
         setNotifs(false);
