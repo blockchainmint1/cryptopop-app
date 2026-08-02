@@ -614,12 +614,32 @@ function WalletSettings({
   const [bio, setBio] = useState({ available: false, enabled: false });
   const [notifs, setNotifs] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [updateReady, setUpdateReady] = useState(false);
+  const [versionLabel, setVersionLabel] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const removeAccount = useServerFn(deleteMyAccount);
   const savePushToken = useServerFn(registerPushDevice);
   const togglePushRow = useServerFn(setPushEnabled);
 
   useEffect(() => setNotifs(pushPreference()), []);
+  useEffect(() => {
+    void appVersionLabel().then(setVersionLabel);
+  }, []);
+
+  async function onCheckUpdates() {
+    setChecking(true);
+    try {
+      const { updateAvailable } = await checkForUpdate();
+      setUpdateReady(updateAvailable);
+      if (updateAvailable) toast.success("Update available");
+      else toast.info("You're on the latest version");
+    } catch {
+      toast.error("Couldn't check for updates — check your connection");
+    } finally {
+      setChecking(false);
+    }
+  }
 
   async function toggleNotifications(on: boolean) {
     setNotifs(on);
@@ -791,6 +811,27 @@ function WalletSettings({
       </div>
 
       <CloudBackupCard />
+
+      <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-sm font-semibold uppercase">App version</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {versionLabel ?? "Web app"}
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="rounded-full"
+            disabled={checking}
+            onClick={updateReady ? () => void applyUpdate() : onCheckUpdates}
+          >
+            <RefreshCw className={`mr-1.5 h-4 w-4 ${checking ? "animate-spin" : ""}`} />
+            {checking ? "Checking…" : updateReady ? "Update now" : "Check for updates"}
+          </Button>
+        </div>
+      </div>
 
       <Button variant="ghost" className="w-full justify-start" onClick={onLock}>
         <Lock className="mr-1.5 h-4 w-4" /> Lock wallet
