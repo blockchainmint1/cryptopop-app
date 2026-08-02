@@ -1,5 +1,6 @@
-// Public, read-only listing of events for the /events page.
+// Public, read-only listing of events, sourced from the main CryptoPOP website.
 import { createServerFn } from "@tanstack/react-start";
+import { MAIN_SITE_EVENTS_API } from "@/lib/public-events";
 
 export type PublicEventListItem = {
   slug: string;
@@ -26,80 +27,90 @@ export type EventMarketOption = { slug: string; label: string };
 
 export const listPublicEvents = createServerFn({ method: "GET" }).handler(
   async (): Promise<PublicEventListItem[]> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
-      .from("events")
-      .select("id, slug, name, description, start_at, end_at, time_zone, cover_url, capacity, visibility, market_slug, lat, lng")
-      .eq("visibility", "public")
-      .not("slug", "is", null)
-      .order("start_at", { ascending: true });
-    if (error || !rows) return [];
-
-    const ids = rows.map((r) => r.id);
-    const counts = new Map<string, number>();
-    if (ids.length) {
-      const { data: signups } = await supabaseAdmin
-        .from("event_signups")
-        .select("event_id, guest_count")
-        .in("event_id", ids)
-        .neq("status", "cancelled");
-      for (const s of signups ?? []) {
-        if (!s.event_id) continue;
-        counts.set(
-          s.event_id,
-          (counts.get(s.event_id) ?? 0) + 1 + Math.max(0, Number(s.guest_count ?? 0)),
-        );
-      }
+    // Events live on the main CryptoPOP website; the wallet is read-only here.
+    let payload: unknown;
+    try {
+      const res = await fetch(MAIN_SITE_EVENTS_API, {
+        headers: { accept: "application/json" },
+      });
+      if (!res.ok) return [];
+      payload = await res.json();
+    } catch {
+      return [];
     }
 
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray((payload as { events?: unknown })?.events)
+        ? ((payload as { events: unknown[] }).events)
+        : Array.isArray((payload as { data?: unknown })?.data)
+          ? ((payload as { data: unknown[] }).data)
+          : [];
+
     const now = Date.now();
-    return rows.map((row) => {
-      const capacity =
-        typeof (row as { capacity?: number | null }).capacity === "number"
-          ? (row as { capacity: number }).capacity
-          : null;
-      const taken = counts.get(row.id) ?? 0;
-      const spotsLeft = capacity == null ? null : Math.max(0, capacity - taken);
-      const past = new Date(row.end_at).getTime() < now;
-      const rawLat = typeof row.lat === "number" ? row.lat : null;
-      const rawLng = typeof row.lng === "number" ? row.lng : null;
-      // Events without real coordinates are treated as online / anywhere.
-      const online = rawLat == null || rawLng == null || (rawLat === 0 && rawLng === 0);
-      const round = (n: number) => Math.round(n * 100) / 100;
-      return {
-        slug: row.slug as string,
-        name: row.name,
-        description: row.description,
-        start_at: row.start_at,
-        end_at: row.end_at,
-        time_zone: row.time_zone ?? "America/Chicago",
-        cover_url: row.cover_url ?? null,
-        capacity,
-        taken,
-        spotsLeft,
-        rsvpOpen: !past && (spotsLeft == null || spotsLeft > 0),
-        past,
-        market_slug: (row as { market_slug?: string | null }).market_slug ?? null,
-        lat: online || rawLat == null ? null : round(rawLat),
-        lng: online || rawLng == null ? null : round(rawLng),
-        online,
-      };
-    });
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+    const round = (n: number) => Math.round(n * 100) / 100;
+
+    return rows
+      .map((raw) => {
+        const row = raw as Record<string, unknown>;
+        const slug = typeof row["slug"] === "string" ? row["slug"] : null;
+        const name = typeof row["name"] === "string" ? row["name"] : null;
+        const start_at = typeof row["start_at"] === "string" ? row["start_at"] : null;
+        if (!slug || !name || !start_at) return null;
+        const end_at = typeof row["end_at"] === "string" ? row["end_at"] : start_at;
+        const capacity = num(row["capacity"]);
+        const taken = num(row["taken"]) ?? 0;
+        const spotsLeft =
+          num(row["spotsLeft"]) ?? (capacity == null ? null : Math.max(0, capacity - taken));
+        const past =
+          typeof row["past"] === "boolean" ? row["past"] : new Date(end_at).getTime() < now;
+        const rawLat = num(row["lat"]);
+        const rawLng = num(row["lng"]);
+        const online =
+          typeof row["online"] === "boolean"
+            ? row["online"]
+            : rawLat == null || rawLng == null || (rawLat === 0 && rawLng === 0);
+        return {
+          slug,
+          name,
+          description: typeof row["description"] === "string" ? row["description"] : null,
+          start_at,
+          end_at,
+          time_zone: typeof row["time_zone"] === "string" ? row["time_zone"] : "America/Chicago",
+          cover_url: typeof row["cover_url"] === "string" ? row["cover_url"] : null,
+          capacity,
+          taken,
+          spotsLeft,
+          rsvpOpen:
+            typeof row["rsvpOpen"] === "boolean"
+              ? row["rsvpOpen"]
+              : !past && (spotsLeft == null || spotsLeft > 0),
+          past,
+          market_slug: typeof row["market_slug"] === "string" ? row["market_slug"] : null,
+          lat: online || rawLat == null ? null : round(rawLat),
+          lng: online || rawLng == null ? null : round(rawLng),
+          online,
+        } satisfies PublicEventListItem;
+      })
+      .filter((e): e is PublicEventListItem => e !== null)
+      .sort((a, b) => +new Date(a.start_at) - +new Date(b.start_at));
   },
 );
 
-/** Markets available for filtering the public events list. */
+/** Markets available for filtering the public events list (derived from the feed). */
 export const listEventMarkets = createServerFn({ method: "GET" }).handler(
   async (): Promise<EventMarketOption[]> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("pop_markets")
-      .select("slug, city, region")
-      .order("sort_order", { ascending: true });
-    if (error || !data) return [];
-    return data.map((m) => ({
-      slug: m.slug,
-      label: m.region ? `${m.city}, ${m.region}` : m.city,
+    const events = await listPublicEvents();
+    const slugs = Array.from(
+      new Set(events.map((e) => e.market_slug).filter((s): s is string => !!s)),
+    ).sort();
+    return slugs.map((slug) => ({
+      slug,
+      label: slug
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" "),
     }));
   },
 );

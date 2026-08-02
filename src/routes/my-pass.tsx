@@ -1,3 +1,4 @@
+import { mainSiteEventsUrl } from "@/lib/public-events";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -213,13 +214,14 @@ function EmptyPass({ title, message }: { title: string; message: string }) {
     <div className="rounded-3xl border border-border bg-card p-8 text-center">
       <h1 className="font-display text-2xl font-bold">{title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
-      <Link
-        to="/events/$slug/rsvp"
-        params={{ slug: "july4-marina-bbq" }}
+      <a
+        href={mainSiteEventsUrl()}
+        target="_blank"
+        rel="noreferrer"
         className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground"
       >
         Sign up
-      </Link>
+      </a>
     </div>
   );
 }
