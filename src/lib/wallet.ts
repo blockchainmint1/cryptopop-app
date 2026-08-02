@@ -43,10 +43,17 @@ export function setMnemonic(m: string): void {
   localStorage.setItem(MNEMONIC_KEY, m);
 }
 
-export function deriveTxcAddress(mnemonic: string): string {
+/** TEXITcoin's registered SLIP-0044 coin type. */
+export const TXC_COIN_TYPE = 696969;
+/** Canonical account path for new TXC keys. */
+export const TXC_PATH = `m/44'/${TXC_COIN_TYPE}'/0'/0/0`;
+/** Pre-registration path (Bitcoin's slot). Read/spend only — never for new receives. */
+export const TXC_LEGACY_PATH = "m/44'/0'/0'/0/0";
+
+export function deriveTxcAddressAtPath(mnemonic: string, path: string): string {
   const seed = mnemonicToSeedSync(mnemonic);
   const root = HDKey.fromMasterSeed(seed);
-  const child = root.derive("m/44'/0'/0'/0/0");
+  const child = root.derive(path);
   const pubkey = child.publicKey;
   if (!pubkey) throw new Error("failed to derive public key");
   const h160 = hash160(pubkey);
@@ -55,6 +62,15 @@ export function deriveTxcAddress(mnemonic: string): string {
   payload.set(h160, 1);
   return base58check.encode(payload);
 }
+
+export function deriveTxcAddress(mnemonic: string): string {
+  return deriveTxcAddressAtPath(mnemonic, TXC_PATH);
+}
+
+export function deriveLegacyTxcAddress(mnemonic: string): string {
+  return deriveTxcAddressAtPath(mnemonic, TXC_LEGACY_PATH);
+}
+
 
 // True iff `addr` decodes to a valid P2PKH address with TXC's version byte.
 export function isValidTxcAddress(addr: string): boolean {
