@@ -5,7 +5,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { ArrowLeft, CheckCircle2, Sparkles, Coins, Calendar } from "lucide-react";
-import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 import { getSignupById } from "@/lib/signups.functions";
 
@@ -80,21 +79,19 @@ function MyPassPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="CryptoPOP" className="h-8 w-auto" />
-          </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Home
-          </Link>
-        </div>
+      <header className="flex items-center gap-2 border-b border-border px-4 py-4">
+        <Link
+          to="/"
+          aria-label="Back to wallet"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <h1 className="font-display text-2xl font-bold tracking-tight">My Pass</h1>
       </header>
 
-      <main className="mx-auto max-w-xl px-6 py-10">
+
+      <main className="mx-auto w-full max-w-md space-y-6 px-4 py-6">
         {loading ? (
           <p className="text-center font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Loading your pass…
@@ -122,7 +119,7 @@ function PassCard({ signup }: { signup: Signup }) {
     <div className="space-y-6">
       <div className="text-center">
         <Sparkles className="mx-auto h-10 w-10 text-primary" />
-        <h1 className="mt-3 font-display text-3xl font-bold">You're in!</h1>
+        <h2 className="mt-3 font-display text-3xl font-bold">You're in!</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           You've earned your first <span className="font-semibold text-foreground">10 POP</span>.
           Show this QR at the party to check in.
@@ -212,7 +209,7 @@ function Stat({
 function EmptyPass({ title, message }: { title: string; message: string }) {
   return (
     <div className="rounded-3xl border border-border bg-card p-8 text-center">
-      <h1 className="font-display text-2xl font-bold">{title}</h1>
+      <h2 className="font-display text-2xl font-bold">{title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       <a
         href={mainSiteEventsUrl()}
