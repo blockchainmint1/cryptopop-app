@@ -121,6 +121,12 @@ export function SendSheet({
       const built = await prepare({ data: { asset, from: address, to: dest, amount: value } });
       const rawHex = signPsbt(built.psbtBase64, mnemonic);
       const res = await broadcast({ data: { rawHex } });
+      // Vendor name stays on this device only — never sent to the chain.
+      saveTxLabel(res.txid, {
+        merchant: request?.merchant ?? null,
+        memo: request?.memo ?? null,
+        address: dest,
+      });
       setTxid(res.txid);
       toast.success("Sent — waiting for confirmation");
       onSent();
