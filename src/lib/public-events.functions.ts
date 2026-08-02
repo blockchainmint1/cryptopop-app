@@ -148,8 +148,14 @@ export const geocodeZip = createServerFn({ method: "GET" })
     if (json.status !== "OK") {
       console.error(`Geocode status ${json.status}: ${json.error_message ?? ""}`);
     }
+    if (json.status === "REQUEST_DENIED") {
+      throw new Error(
+        "ZIP search is misconfigured: the Google Maps key is referrer-restricted. Set the server key's application restrictions to \"None\" or \"IP addresses\" in Google Cloud Console.",
+      );
+    }
     const hit = json.results?.[0];
     if (!hit) throw new Error("We couldn't find that ZIP code");
+
     return {
       lat: hit.geometry.location.lat,
       lng: hit.geometry.location.lng,
