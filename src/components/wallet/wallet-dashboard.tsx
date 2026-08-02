@@ -24,6 +24,7 @@ import {
   Sparkles,
   Trash2,
   Trophy,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -96,6 +97,7 @@ export function WalletDashboard() {
   const [txs, setTxs] = useState<WalletTx[]>([]);
   const [rewards, setRewards] = useState<WalletReward[]>([]);
   const [txLabels, setTxLabels] = useState<Record<string, TxLabel>>({});
+  const [backupDismissed, setBackupDismissed] = useState(true);
 
   const [rank, setRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,6 +115,7 @@ export function WalletDashboard() {
 
   useEffect(() => setHidden(loadHidden()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
+  useEffect(() => setBackupDismissed(isBackedUp()), []);
 
   const refresh = useCallback(async () => {
     if (!address) return;
@@ -418,15 +421,35 @@ export function WalletDashboard() {
           )}
         </Card>
 
-        {origin !== "coin" && !isBackedUp() && (
-          <Card className="border-amber-400/40 bg-amber-400/10 p-4 text-sm">
-            <p className="flex items-center gap-2 font-semibold">
+        {origin !== "coin" && !backupDismissed && (
+          <Card className="relative border-amber-400/40 bg-amber-400/10 p-4 text-sm">
+            <button
+              type="button"
+              aria-label="Hide backup reminder"
+              onClick={() => setBackupDismissed(true)}
+              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="flex items-center gap-2 pr-8 font-semibold">
               <ShieldCheck className="h-4 w-4" /> Back up your phrase
             </p>
             <p className="mt-1 text-muted-foreground">
               Write down your 12 words, or scan a Cold Storage Coin next time for an instant offline
               backup.
             </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-3 w-full"
+              onClick={() => {
+                markBackedUp();
+                setBackupDismissed(true);
+                toast.success("Marked as backed up");
+              }}
+            >
+              <Check className="mr-1 h-4 w-4" /> I've backed it up
+            </Button>
           </Card>
         )}
 
