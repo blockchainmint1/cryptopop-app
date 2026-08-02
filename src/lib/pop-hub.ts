@@ -23,6 +23,8 @@ export type HubClaimError =
   | "low_gps_accuracy"
   | "already_claimed"
   | "no_wallet"
+  | "invalid_address"
+  | "server_error"
   | "hub_unreachable";
 
 export type HubClaimResult =
