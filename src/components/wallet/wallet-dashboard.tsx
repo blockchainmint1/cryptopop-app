@@ -112,6 +112,7 @@ export function WalletDashboard() {
   const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHidden()), []);
+  useEffect(() => setTxLabels(loadTxLabels()), []);
 
   const refresh = useCallback(async () => {
     if (!address) return;
