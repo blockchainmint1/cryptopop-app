@@ -18,15 +18,16 @@ bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
 // ---------- TXC network params ----------
-// P2PKH version byte 0x42 (decoded from issuer addr `ToeT...`).
+// Confirmed against texitcoin.org/build → Chain Params.
 export const TXC_NETWORK: bitcoin.Network = {
-  messagePrefix: "\x18Texitcoin Signed Message:\n",
-  bech32: "tx",
+  messagePrefix: "\x19Texitcoin Signed Message:\n",
+  bech32: "txc",
   bip32: { public: 0x0488b21e, private: 0x0488ade4 },
   pubKeyHash: 0x42,
-  scriptHash: 0x05,
-  wif: 0x80, // overridden per-WIF in loadKey()
+  scriptHash: 0x32,
+  wif: 0xc1, // NOT pubKeyHash + 0x80; overridden per-WIF in loadKey()
 };
+
 
 const DUST_SATS = 10_000;
 const FEE_SATS_PER_VBYTE = 5;
