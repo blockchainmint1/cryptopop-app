@@ -17,6 +17,7 @@ import { signPsbt } from "@/lib/wallet/sign";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { ASSETS, assetMeta, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
+import { saveTxLabel } from "@/lib/wallet/tx-labels";
 import { QrScanDialog } from "./qr-scan-dialog";
 
 export type SendPrefill = {
