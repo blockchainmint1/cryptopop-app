@@ -27,7 +27,6 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
-import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -127,11 +126,6 @@ const AuthenticatedScanSuccessRoute =
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
-const EventsSlugRsvpRoute = EventsSlugRsvpRouteImport.update({
-  id: '/events/$slug/rsvp',
-  path: '/events/$slug/rsvp',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -190,7 +184,6 @@ export interface FileRoutesByFullPath {
   '/claim/$token': typeof ClaimTokenRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
-  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -217,7 +210,6 @@ export interface FileRoutesByTo {
   '/claim/$token': typeof ClaimTokenRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
-  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -246,7 +238,6 @@ export interface FileRoutesById {
   '/claim/$token': typeof ClaimTokenRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
-  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -275,7 +266,6 @@ export interface FileRouteTypes {
     | '/claim/$token'
     | '/events/'
     | '/scan/success'
-    | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
@@ -302,7 +292,6 @@ export interface FileRouteTypes {
     | '/claim/$token'
     | '/events'
     | '/scan/success'
-    | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
@@ -330,7 +319,6 @@ export interface FileRouteTypes {
     | '/claim/$token'
     | '/events/'
     | '/_authenticated/scan/success'
-    | '/events/$slug/rsvp'
     | '/lovable/email/suppression'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
@@ -355,7 +343,6 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsIndexRoute: typeof EventsIndexRoute
-  EventsSlugRsvpRoute: typeof EventsSlugRsvpRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -493,13 +480,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
-    '/events/$slug/rsvp': {
-      id: '/events/$slug/rsvp'
-      path: '/events/$slug/rsvp'
-      fullPath: '/events/$slug/rsvp'
-      preLoaderRoute: typeof EventsSlugRsvpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -594,7 +574,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
   EventsIndexRoute: EventsIndexRoute,
-  EventsSlugRsvpRoute: EventsSlugRsvpRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
