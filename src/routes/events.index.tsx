@@ -9,7 +9,7 @@ import {
   Globe,
   MapPin,
   Search,
-  Sparkles,
+  
   Users,
   X,
 } from "lucide-react";
@@ -168,28 +168,26 @@ function EventsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <header className="flex items-center gap-2 border-b border-border px-4 py-4">
+        <Link
+          to="/"
+          aria-label="Back to wallet"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Events</h1>
+      </header>
+
       <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-16">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to wallet
-          </Link>
-          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            Events
-          </p>
-          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Upcoming events
-          </h1>
-          <p className="mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg">
+        <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
+          <p className="max-w-2xl text-sm text-muted-foreground">
             Show up, scan your pass, earn POP. RSVP to reserve your spot — most events pay POP for
             registering and more for walking through the door.
           </p>
         </div>
       </section>
+
 
       {/* Filters */}
       <section className="border-b border-border bg-card/40">
