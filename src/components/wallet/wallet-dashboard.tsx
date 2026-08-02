@@ -96,6 +96,7 @@ export function WalletDashboard() {
   const [txs, setTxs] = useState<WalletTx[]>([]);
   const [rewards, setRewards] = useState<WalletReward[]>([]);
   const [txLabels, setTxLabels] = useState<Record<string, TxLabel>>({});
+  const [backupDismissed, setBackupDismissed] = useState(true);
 
   const [rank, setRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
