@@ -5,7 +5,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { ArrowLeft, CheckCircle2, Sparkles, Coins, Calendar } from "lucide-react";
-import logo from "@/assets/cryptopop-logo.png";
 import { SiteFooter } from "@/components/site-footer";
 import { getSignupById } from "@/lib/signups.functions";
 
@@ -92,7 +91,7 @@ function MyPassPage() {
       </header>
 
 
-      <main className="mx-auto max-w-xl px-6 py-10">
+      <main className="mx-auto w-full max-w-md space-y-6 px-4 py-6">
         {loading ? (
           <p className="text-center font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Loading your pass…
@@ -120,7 +119,7 @@ function PassCard({ signup }: { signup: Signup }) {
     <div className="space-y-6">
       <div className="text-center">
         <Sparkles className="mx-auto h-10 w-10 text-primary" />
-        <h1 className="mt-3 font-display text-3xl font-bold">You're in!</h1>
+        <h2 className="mt-3 font-display text-3xl font-bold">You're in!</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           You've earned your first <span className="font-semibold text-foreground">10 POP</span>.
           Show this QR at the party to check in.
@@ -210,7 +209,7 @@ function Stat({
 function EmptyPass({ title, message }: { title: string; message: string }) {
   return (
     <div className="rounded-3xl border border-border bg-card p-8 text-center">
-      <h1 className="font-display text-2xl font-bold">{title}</h1>
+      <h2 className="font-display text-2xl font-bold">{title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       <a
         href={mainSiteEventsUrl()}
