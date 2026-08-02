@@ -28,10 +28,17 @@ export type SendPrefill = {
   memo?: string | null;
 };
 
+/** A spendable address plus its per-asset balance (canonical + legacy paths). */
+export type SendSource = {
+  address: string;
+  balances: Record<AssetId, number | null>;
+};
+
 export function SendSheet({
   open,
   onOpenChange,
   address,
+  sources,
   mnemonic,
   popBalance,
   tsdBalance,
@@ -42,6 +49,7 @@ export function SendSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   address: string | null;
+  sources?: SendSource[];
   mnemonic: string | null;
   popBalance: number | null;
   tsdBalance: number | null;
@@ -49,6 +57,7 @@ export function SendSheet({
   prefill?: SendPrefill | null;
   onSent: () => void;
 }) {
+
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
 
