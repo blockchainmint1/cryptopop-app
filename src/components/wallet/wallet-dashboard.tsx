@@ -53,6 +53,7 @@ import {
 import { CloudBackupCard } from "./cloud-backup-card";
 import { ASSETS, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
+import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { AddValueSheet } from "./add-value-sheet";
