@@ -127,6 +127,7 @@ export function WalletDashboard() {
       setTsd(summary.tsd);
       setTxc(summary.txc);
       setTxs(activity.txs);
+      setTxLabels(loadTxLabels());
       setRewards(rewardsRes.rewards);
       setRank(rewardsRes.rank.rank);
     } catch (e) {
