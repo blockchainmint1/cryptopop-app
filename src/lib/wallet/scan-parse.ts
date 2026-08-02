@@ -66,6 +66,8 @@ function fromParams(
     to,
     amount: num(p.get("amount") ?? p.get("value") ?? p.get("a")),
     asset:
+      // Omni property id is authoritative when the POS supplies it.
+      assetFromOmniId(p.get("omni") ?? p.get("propertyid") ?? p.get("property")) ??
       normalizeAsset(p.get("asset") ?? p.get("token") ?? p.get("currency")) ??
       schemeAsset ??
       "tsd",
