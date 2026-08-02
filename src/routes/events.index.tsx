@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { geocodeZip, listEventMarkets, listPublicEvents } from "@/lib/public-events.functions";
-import { PUBLIC_EVENTS } from "@/lib/public-events";
+import { mainSiteRsvpUrl } from "@/lib/public-events";
 import { SiteFooter } from "@/components/site-footer";
 
 const eventsQuery = queryOptions({
@@ -87,10 +87,6 @@ export const Route = createFileRoute("/events/")({
   ),
   component: EventsPage,
 });
-
-const HERO_BY_SLUG = new Map(
-  PUBLIC_EVENTS.filter((e) => e.heroUrl).map((e) => [e.slug, e.heroUrl as string]),
-);
 
 function formatWhen(startAt: string, endAt: string, timeZone: string) {
   try {
@@ -299,7 +295,7 @@ function EventsPage() {
         ) : (
           <div className="grid gap-5 sm:gap-8 md:grid-cols-2">
             {upcoming.map((ev) => {
-              const hero = ev.cover_url ?? HERO_BY_SLUG.get(ev.slug);
+              const hero = ev.cover_url;
               const distance =
                 origin && ev.lat != null && ev.lng != null
                   ? Math.round(milesBetween(origin.lat, origin.lng, ev.lat, ev.lng))
@@ -356,14 +352,15 @@ function EventsPage() {
                       </p>
                     ) : null}
                     <div className="mt-auto pt-5 sm:pt-7">
-                      <Link
-                        to="/events/$slug/rsvp"
-                        params={{ slug: ev.slug }}
+                      <a
+                        href={mainSiteRsvpUrl(ev.slug)}
+                        target="_blank"
+                        rel="noreferrer"
                         className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition hover:opacity-90 sm:w-auto"
                       >
                         {ev.rsvpOpen ? "RSVP & get POP" : "View details"}
                         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                      </Link>
+                      </a>
                     </div>
                   </div>
                 </article>
@@ -392,13 +389,14 @@ function EventsPage() {
                       {formatWhen(ev.start_at, ev.end_at, ev.time_zone)}
                     </p>
                   </div>
-                  <Link
-                    to="/events/$slug/rsvp"
-                    params={{ slug: ev.slug }}
+                  <a
+                    href={mainSiteRsvpUrl(ev.slug)}
+                    target="_blank"
+                    rel="noreferrer"
                     className="shrink-0 font-mono text-xs uppercase tracking-widest text-primary hover:underline"
                   >
                     Recap →
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
