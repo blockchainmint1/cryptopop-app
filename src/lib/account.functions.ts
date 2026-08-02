@@ -17,9 +17,9 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Best-effort cleanup of user-owned rows before removing the auth user.
-    const tables = ["wallet_cloud_backups", "push_devices", "user_roles"] as const;
+    const tables = ["wallet_vault_backups", "push_devices", "user_roles"];
     for (const table of tables) {
-      const { error } = await supabaseAdmin.from(table).delete().eq("user_id", userId);
+      const { error } = await (supabaseAdmin as any).from(table).delete().eq("user_id", userId);
       if (error) console.error(`account delete: ${table}: ${error.message}`);
     }
 
