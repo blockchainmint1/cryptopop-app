@@ -31,7 +31,12 @@ import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getPopChainBalance } from "@/lib/pop-chain.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
 import { getMyPopSummary } from "@/lib/pop-summary.functions";
-import { PUBLIC_EVENTS, upcomingPublicEvents } from "@/lib/public-events";
+import { mainSiteRsvpUrl } from "@/lib/public-events";
+import {
+  listPublicEvents,
+  type PublicEventListItem,
+} from "@/lib/public-events.functions";
+import { useQuery } from "@tanstack/react-query";
 
 type RecentClaim = {
   id: string;
@@ -258,8 +263,13 @@ export function WalletHome() {
     })),
   ].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
 
-  // Upcoming-events tabs: derive from PUBLIC_EVENTS + the user's memberships.
-  const upcoming = upcomingPublicEvents();
+  // Upcoming events come from the main CryptoPOP website's public feed.
+  const { data: publicEvents = [] } = useQuery({
+    queryKey: ["public-events"],
+    queryFn: () => listPublicEvents(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const upcoming = publicEvents.filter((e) => !e.past);
   const mySlugs = new Set(myEvents.map((m) => m.slug));
   const mineEvents = upcoming.filter((e) => mySlugs.has(e.slug));
   const findEvents = upcoming.filter((e) => !mySlugs.has(e.slug));
@@ -632,6 +642,26 @@ export function WalletHome() {
   );
 }
 
+function formatEventWhen(startAt: string, endAt: string, timeZone: string) {
+  try {
+    const day = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      timeZone,
+    }).format(new Date(startAt));
+    const time = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone,
+      timeZoneName: "short",
+    }).format(new Date(endAt));
+    return `${day} · ${time}`;
+  } catch {
+    return new Date(startAt).toLocaleString();
+  }
+}
+
 function EventCard({
   ev,
   ctaLabel,
@@ -639,7 +669,7 @@ function EventCard({
   badge,
   passSignupId,
 }: {
-  ev: (typeof PUBLIC_EVENTS)[number];
+  ev: PublicEventListItem;
   ctaLabel: string;
   ctaDisabled?: boolean;
   badge?: string;
@@ -647,9 +677,9 @@ function EventCard({
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/40">
-      {ev.heroUrl && (
+      {ev.cover_url && (
         <div className="relative aspect-[16/7] w-full overflow-hidden">
-          <img src={ev.heroUrl} alt="" className="h-full w-full object-cover" />
+          <img src={ev.cover_url} alt="" className="h-full w-full object-cover" />
           {badge && (
             <span className="absolute right-2 top-2 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow">
               {badge}
@@ -661,12 +691,14 @@ function EventCard({
         <p className="font-display text-sm font-semibold leading-snug">{ev.name}</p>
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>{ev.dateLabel}</span>
+          <span>{formatEventWhen(ev.start_at, ev.end_at, ev.time_zone)}</span>
         </p>
-        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>{ev.location}</span>
-        </p>
+        {ev.online ? (
+          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>Online</span>
+          </p>
+        ) : null}
         <div className="mt-2 flex flex-col gap-2">
           {passSignupId && (
             <Button asChild size="sm" className="w-full">
@@ -691,9 +723,9 @@ function EventCard({
               variant={passSignupId ? "outline" : "default"}
               className="w-full"
             >
-              <Link to="/events/$slug/rsvp" params={{ slug: ev.slug }}>
+              <a href={mainSiteRsvpUrl(ev.slug)} target="_blank" rel="noreferrer">
                 {ctaLabel}
-              </Link>
+              </a>
             </Button>
           )}
         </div>
