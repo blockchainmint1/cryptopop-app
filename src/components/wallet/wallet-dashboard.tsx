@@ -217,6 +217,10 @@ export function WalletDashboard() {
 
     switch (intent.kind) {
       case "payment":
+        if (intent.asset === "pop") {
+          toast.info("POP is a scoreboard token — it can't be sent or spent.");
+          return;
+        }
         setSendPrefill({
           to: intent.to,
           amount: intent.amount,
