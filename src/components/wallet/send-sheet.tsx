@@ -52,6 +52,9 @@ export function SendSheet({
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
 
+  // POP is a scoreboard token for now — not spendable/tradeable.
+  const SENDABLE_ASSETS = ASSETS.filter((a) => a.id !== "pop");
+
   const [asset, setAsset] = useState<AssetId>("tsd");
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
@@ -72,7 +75,7 @@ export function SendSheet({
   useEffect(() => {
     if (!open || !prefill) return;
     if (prefill.to) setTo(prefill.to);
-    if (prefill.asset) setAsset(prefill.asset);
+    if (prefill.asset && prefill.asset !== "pop") setAsset(prefill.asset);
     if (prefill.amount != null) setAmount(String(prefill.amount));
     setRequest(prefill.merchant || prefill.memo || prefill.amount != null ? prefill : null);
   }, [open, prefill]);
@@ -89,7 +92,7 @@ export function SendSheet({
     setScanOpen(false);
     if (intent.kind === "payment") {
       setTo(intent.to);
-      setAsset(intent.asset);
+      if (intent.asset !== "pop") setAsset(intent.asset);
       if (intent.amount != null) setAmount(String(intent.amount));
       setRequest(intent);
       toast.success(intent.merchant ? `Payment request from ${intent.merchant}` : "Payment request loaded");
@@ -179,8 +182,8 @@ export function SendSheet({
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2">
-              {ASSETS.map((a) => (
+            <div className="grid grid-cols-2 gap-2">
+              {SENDABLE_ASSETS.map((a) => (
                 <button
                   key={a.id}
                   type="button"
