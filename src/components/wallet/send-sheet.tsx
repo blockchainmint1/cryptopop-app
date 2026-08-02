@@ -179,8 +179,8 @@ export function SendSheet({
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2">
-              {ASSETS.map((a) => (
+            <div className="grid grid-cols-2 gap-2">
+              {SENDABLE_ASSETS.map((a) => (
                 <button
                   key={a.id}
                   type="button"
