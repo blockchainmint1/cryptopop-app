@@ -1,7 +1,29 @@
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Sparkles, Users } from "lucide-react";
-import { listPublicEvents } from "@/lib/public-events.functions";
+import { toast } from "sonner";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Globe,
+  MapPin,
+  Search,
+  Sparkles,
+  Users,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { geocodeZip, listEventMarkets, listPublicEvents } from "@/lib/public-events.functions";
 import { PUBLIC_EVENTS } from "@/lib/public-events";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -10,8 +32,31 @@ const eventsQuery = queryOptions({
   queryFn: () => listPublicEvents(),
 });
 
+const marketsQuery = queryOptions({
+  queryKey: ["event-markets"],
+  queryFn: () => listEventMarkets(),
+});
+
+const RADIUS_OPTIONS = [10, 25, 50, 100, 250] as const;
+
+/** Great-circle distance in miles. */
+function milesBetween(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 3958.8;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 export const Route = createFileRoute("/events/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(eventsQuery),
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(eventsQuery),
+      context.queryClient.ensureQueryData(marketsQuery),
+    ]),
   head: () => ({
     meta: [
       { title: "Upcoming CryptoPOP Events — RSVP & Earn POP" },
