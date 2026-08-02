@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
+  Bell,
   Trophy,
   X,
 } from "lucide-react";
@@ -52,6 +53,10 @@ import {
   type WalletTx,
 } from "@/lib/wallet-activity.functions";
 import { CloudBackupCard } from "./cloud-backup-card";
+import { useAuth } from "@/hooks/use-auth";
+import { deleteMyAccount } from "@/lib/account.functions";
+import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
+import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
 import { ASSETS, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
@@ -143,6 +148,24 @@ export function WalletDashboard() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // Native push: register this device once the wallet address is known.
+  const savePushToken = useServerFn(registerPushDevice);
+  useEffect(() => {
+    if (!address || !pushAvailable() || !pushPreference()) return;
+    void registerPush({
+      onToken: async (token, platform) => {
+        try {
+          await savePushToken({ data: { token, platform, walletAddress: address, enabled: true } });
+        } catch (e) {
+          console.error("push token save failed", e);
+        }
+      },
+      onTap: (url) => {
+        if (url.startsWith("/")) void navigate({ to: url });
+      },
+    });
+  }, [address, savePushToken, navigate]);
 
   const balances: Record<ChainId, number | null> = useMemo(
     () => ({ pop, tsd, txc }),
@@ -563,6 +586,70 @@ function WalletSettings({
   const [phrase, setPhrase] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [bio, setBio] = useState({ available: false, enabled: false });
+  const [notifs, setNotifs] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { user, signOut } = useAuth();
+  const removeAccount = useServerFn(deleteMyAccount);
+  const savePushToken = useServerFn(registerPushDevice);
+  const togglePushRow = useServerFn(setPushEnabled);
+
+  useEffect(() => setNotifs(pushPreference()), []);
+
+  async function toggleNotifications(on: boolean) {
+    setNotifs(on);
+    setPushPreference(on);
+    if (!pushAvailable()) {
+      toast.info("Notifications turn on inside the POP Wallet app.");
+      return;
+    }
+    if (on) {
+      const ok = await registerPush({
+        onToken: async (token, platform) => {
+          try {
+            await savePushToken({ data: { token, platform, enabled: true } });
+          } catch {
+            /* ignore */
+          }
+        },
+      });
+      if (!ok) {
+        setNotifs(false);
+        setPushPreference(false);
+        toast.error("Notifications are blocked in your phone settings.");
+      } else {
+        toast.success("Notifications on");
+      }
+    } else {
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+      try {
+        const list = await PushNotifications.removeAllDeliveredNotifications();
+        void list;
+      } catch {
+        /* ignore */
+      }
+      void togglePushRow;
+      toast.success("Notifications off");
+    }
+  }
+
+  async function onDeleteAccount() {
+    if (
+      !window.confirm(
+        "Delete your CryptoPOP account? This removes your cloud backup and sign-in. Your wallet stays on this device only if you have your recovery phrase.",
+      )
+    )
+      return;
+    setDeleting(true);
+    try {
+      await removeAccount({ data: {} } as never);
+      await signOut();
+      toast.success("Account deleted");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     getBiometricStatus()
@@ -664,6 +751,19 @@ function WalletSettings({
         </div>
       )}
 
+      <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="font-display text-sm font-semibold uppercase">Notifications</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Event reminders & POP awards
+            </p>
+          </div>
+        </div>
+        <Switch checked={notifs} onCheckedChange={toggleNotifications} aria-label="Notifications" />
+      </div>
+
       <CloudBackupCard />
 
       <Button variant="ghost" className="w-full justify-start" onClick={onLock}>
@@ -686,6 +786,18 @@ function WalletSettings({
       >
         <Trash2 className="mr-1.5 h-4 w-4" /> Remove wallet from this device
       </Button>
+
+      {user && (
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-destructive hover:text-destructive"
+          disabled={deleting}
+          onClick={onDeleteAccount}
+        >
+          <Trash2 className="mr-1.5 h-4 w-4" />
+          {deleting ? "Deleting account…" : "Delete my account"}
+        </Button>
+      )}
 
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
         <ScanLine className="mt-0.5 h-3.5 w-3.5 shrink-0" />

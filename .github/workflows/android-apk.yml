@@ -50,6 +50,14 @@ jobs:
           bunx cap sync android
           node scripts/patch-native.mjs android
 
+      - name: Set version code / name
+        run: |
+          VERSION_CODE=$(( 1000 + ${{ github.run_number }} ))
+          VERSION_NAME="1.0.${{ github.run_number }}"
+          sed -i "s/versionCode .*/versionCode $VERSION_CODE/" android/app/build.gradle
+          sed -i "s/versionName .*/versionName \"$VERSION_NAME\"/" android/app/build.gradle
+          echo "versionCode=$VERSION_CODE versionName=$VERSION_NAME"
+
       - name: Generate icons and splash
         run: bunx capacitor-assets generate --android --assetPath resources
 
@@ -73,7 +81,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: cryptopop-wallet-apk
+          name: popwallet-apk
           path: |
             android/app/build/outputs/apk/debug/*.apk
             android/app/build/outputs/apk/release/*.apk

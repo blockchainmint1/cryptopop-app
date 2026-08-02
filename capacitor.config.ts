@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
- * CryptoPOP Wallet — native shell (Android + iOS).
+ * POP Wallet — native shell (Android + iOS).
  *
  * The web app is server-rendered (TanStack Start on Cloudflare), so the native
  * shell does NOT bundle a static build. It loads the live site, which means
@@ -14,7 +14,7 @@ const serverUrl = process.env.CAP_SERVER_URL || "https://app.cryptopop.org";
 
 const config: CapacitorConfig = {
   appId: "org.cryptopop.wallet",
-  appName: "CryptoPOP Wallet",
+  appName: "POP Wallet",
   // Unused (remote server mode) but required by the CLI.
   webDir: "native/webdir",
   server: {
@@ -47,6 +47,9 @@ const config: CapacitorConfig = {
       style: "DARK", // dark UI => light content
       backgroundColor: "#0B0710",
       overlaysWebView: false,
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
     },
   },
 };

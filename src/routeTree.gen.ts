@@ -21,6 +21,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
+import { Route as AdminPushRouteImport } from './routes/admin.push'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
@@ -93,6 +94,11 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   id: '/scan',
   path: '/scan',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AdminPushRoute = AdminPushRouteImport.update({
+  id: '/admin/push',
+  path: '/admin/push',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/': typeof EventsIndexRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events': typeof EventsIndexRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/': typeof EventsIndexRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
     | '/events'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
+    | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/'
@@ -326,6 +338,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  AdminPushRoute: typeof AdminPushRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsIndexRoute: typeof EventsIndexRoute
@@ -424,6 +437,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/scan'
       preLoaderRoute: typeof AuthenticatedScanRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/admin/push': {
+      id: '/admin/push'
+      path: '/admin/push'
+      fullPath: '/admin/push'
+      preLoaderRoute: typeof AdminPushRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -549,6 +569,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  AdminPushRoute: AdminPushRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
   EventsIndexRoute: EventsIndexRoute,

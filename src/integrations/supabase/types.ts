@@ -1120,6 +1120,81 @@ export type Database = {
         }
         Relationships: []
       }
+      push_campaigns: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string | null
+          failed_count: number
+          id: string
+          sent_at: string | null
+          sent_count: number
+          status: string
+          title: string
+          url: string | null
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          title: string
+          url?: string | null
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      push_devices: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_seen_at?: string
+          platform: string
+          token: string
+          user_id?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_id?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       qr_codes: {
         Row: {
           active: boolean
