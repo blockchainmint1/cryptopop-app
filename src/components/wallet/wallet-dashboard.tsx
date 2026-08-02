@@ -60,7 +60,7 @@ import { pushAvailable, pushPreference, registerPush, setPushPreference } from "
 import { ASSETS, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
-import { SendSheet, type SendPrefill } from "./send-sheet";
+import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { AddValueSheet } from "./add-value-sheet";
 import logo from "@/assets/cryptopop-logo.png";
@@ -90,7 +90,7 @@ function saveHidden(v: ChainId[]) {
 }
 
 export function WalletDashboard() {
-  const { address, origin, mnemonic, lock, forget } = useWallet();
+  const { address, legacyAddress, origin, mnemonic, lock, forget } = useWallet();
   const navigate = useNavigate();
   const fetchSummary = useServerFn(getAddressChainSummary);
   const fetchActivity = useServerFn(getAddressActivity);
@@ -99,6 +99,7 @@ export function WalletDashboard() {
   const [pop, setPop] = useState<number | null>(null);
   const [tsd, setTsd] = useState<number | null>(null);
   const [txc, setTxc] = useState<number | null>(null);
+  const [sources, setSources] = useState<SendSource[]>([]);
   const [txs, setTxs] = useState<WalletTx[]>([]);
   const [rewards, setRewards] = useState<WalletReward[]>([]);
   const [txLabels, setTxLabels] = useState<Record<string, TxLabel>>({});
@@ -125,16 +126,34 @@ export function WalletDashboard() {
   const refresh = useCallback(async () => {
     if (!address) return;
     setLoading(true);
+    // Older seeds hold funds on the pre-SLIP-44 path, so read both addresses
+    // and show one combined balance.
+    const addresses = legacyAddress ? [address, legacyAddress] : [address];
     try {
-      const [summary, activity, rewardsRes] = await Promise.all([
-        fetchSummary({ data: { address } }),
-        fetchActivity({ data: { address } }),
+      const [summaries, activities, rewardsRes] = await Promise.all([
+        Promise.all(addresses.map((a) => fetchSummary({ data: { address: a } }))),
+        Promise.all(addresses.map((a) => fetchActivity({ data: { address: a } }))),
         fetchRewards({ data: { address } }),
       ]);
-      setPop(summary.pop);
-      setTsd(summary.tsd);
-      setTxc(summary.txc);
-      setTxs(activity.txs);
+      const sum = (pick: (s: (typeof summaries)[number]) => number | null) =>
+        summaries.reduce<number | null>(
+          (acc, s) => (pick(s) == null ? acc : (acc ?? 0) + (pick(s) as number)),
+          null,
+        );
+      setPop(sum((s) => s.pop));
+      setTsd(sum((s) => s.tsd));
+      setTxc(sum((s) => s.txc));
+      setSources(
+        addresses.map((a, i) => ({
+          address: a,
+          balances: {
+            pop: summaries[i]?.pop ?? null,
+            tsd: summaries[i]?.tsd ?? null,
+            txc: summaries[i]?.txc ?? null,
+          },
+        })),
+      );
+      setTxs(activities.flatMap((a) => a.txs).sort((a, b) => (b.time ?? 0) - (a.time ?? 0)));
       setTxLabels(loadTxLabels());
       setRewards(rewardsRes.rewards);
       setRank(rewardsRes.rank.rank);
@@ -143,7 +162,8 @@ export function WalletDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [address, fetchSummary, fetchActivity, fetchRewards]);
+  }, [address, legacyAddress, fetchSummary, fetchActivity, fetchRewards]);
+
 
   useEffect(() => {
     void refresh();
@@ -552,6 +572,7 @@ export function WalletDashboard() {
           if (!v) setSendPrefill(null);
         }}
         address={address}
+        sources={sources}
         mnemonic={mnemonic}
         popBalance={pop}
         tsdBalance={tsd}

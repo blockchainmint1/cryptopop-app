@@ -18,15 +18,16 @@ bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
 // ---------- TXC network params ----------
-// P2PKH version byte 0x42 (decoded from issuer addr `ToeT...`).
+// Confirmed against texitcoin.org/build → Chain Params.
 export const TXC_NETWORK: bitcoin.Network = {
-  messagePrefix: "\x18Texitcoin Signed Message:\n",
-  bech32: "tx",
+  messagePrefix: "\x19Texitcoin Signed Message:\n",
+  bech32: "txc",
   bip32: { public: 0x0488b21e, private: 0x0488ade4 },
   pubKeyHash: 0x42,
-  scriptHash: 0x05,
-  wif: 0x80, // overridden per-WIF in loadKey()
+  scriptHash: 0x32,
+  wif: 0xc1, // NOT pubKeyHash + 0x80; overridden per-WIF in loadKey()
 };
+
 
 const DUST_SATS = 10_000;
 const FEE_SATS_PER_VBYTE = 5;
@@ -231,12 +232,13 @@ function loadKey(wif: string): {
 
 /**
  * Generate a fresh TXC P2PKH keypair. Used by the org-minter wallet wizard.
- * WIF version byte mirrors P2PKH (0x42 + 0x80 = 0xC2), matching the TXC
- * convention used by all existing wallets in the system.
+ * WIF version byte is 0xC1 per TEXITcoin Core's SECRET_KEY prefix (V…) — it is
+ * NOT pubKeyHash + 0x80. Keys emitted with 0xC2 are rejected by texitcoind.
  */
 export function generateMinterKeypair(): { address: string; wif: string } {
-  const network: bitcoin.Network = { ...TXC_NETWORK, wif: 0xc2 };
+  const network: bitcoin.Network = { ...TXC_NETWORK, wif: 0xc1 };
   const keyPair = ECPair.makeRandom({ network });
+
   const wif = keyPair.toWIF();
   const { address } = bitcoin.payments.p2pkh({
     pubkey: Buffer.from(keyPair.publicKey),

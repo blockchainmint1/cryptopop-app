@@ -28,10 +28,17 @@ export type SendPrefill = {
   memo?: string | null;
 };
 
+/** A spendable address plus its per-asset balance (canonical + legacy paths). */
+export type SendSource = {
+  address: string;
+  balances: Record<AssetId, number | null>;
+};
+
 export function SendSheet({
   open,
   onOpenChange,
   address,
+  sources,
   mnemonic,
   popBalance,
   tsdBalance,
@@ -42,6 +49,7 @@ export function SendSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   address: string | null;
+  sources?: SendSource[];
   mnemonic: string | null;
   popBalance: number | null;
   tsdBalance: number | null;
@@ -49,6 +57,7 @@ export function SendSheet({
   prefill?: SendPrefill | null;
   onSent: () => void;
 }) {
+
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
 
@@ -109,7 +118,9 @@ export function SendSheet({
     if (!address || !mnemonic) return toast.error("Wallet is locked");
     const dest = to.trim();
     if (!isValidTxcAddress(dest)) return toast.error("That doesn't look like a TXC address");
-    if (dest === address) return toast.error("That's your own address");
+    if (dest === address || sources?.some((s) => s.address === dest)) {
+      return toast.error("That's your own address");
+    }
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) return toast.error("Enter an amount");
     if (asset === "pop" && !Number.isInteger(value)) {
@@ -119,9 +130,15 @@ export function SendSheet({
       return toast.error(`You only have ${available} ${asset.toUpperCase()}`);
     }
 
+    // Funds may sit on the canonical path or an older legacy-path address —
+    // spend from whichever one covers the amount.
+    const from =
+      sources?.find((s) => (s.balances[asset] ?? 0) >= value)?.address ?? address;
+
     setBusy(true);
     try {
-      const built = await prepare({ data: { asset, from: address, to: dest, amount: value } });
+      const built = await prepare({ data: { asset, from, to: dest, amount: value } });
+
       const rawHex = signPsbt(built.psbtBase64, mnemonic);
       const res = await broadcast({ data: { rawHex } });
       // Vendor name stays on this device only — never sent to the chain.

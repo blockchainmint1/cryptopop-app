@@ -13,7 +13,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { deriveTxcAddress } from "@/lib/wallet";
+import { deriveLegacyTxcAddress, deriveTxcAddress } from "@/lib/wallet";
 import {
   AUTO_LOCK_MS,
   clearSession,
@@ -34,7 +34,11 @@ interface WalletContextValue {
   status: WalletStatus;
   /** Plaintext mnemonic — only present while unlocked. */
   mnemonic: string | null;
+  /** Canonical receive address (m/44'/696969'/0'/0/0). */
   address: string | null;
+  /** Pre-SLIP-44 address (m/44'/0'/0'/0/0) — still holds funds for older seeds. */
+  legacyAddress: string | null;
+
   origin: VaultOrigin | null;
   unlock: (password: string) => Promise<boolean>;
   create: (mnemonic: string, password: string, origin: VaultOrigin) => Promise<void>;
@@ -171,11 +175,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, [payload]);
 
+  const legacyAddress = useMemo(() => {
+    if (!payload) return null;
+    try {
+      const legacy = deriveLegacyTxcAddress(payload.mnemonic);
+      return legacy === address ? null : legacy;
+    } catch {
+      return null;
+    }
+  }, [payload, address]);
+
   const value = useMemo<WalletContextValue>(
     () => ({
       status,
       mnemonic: payload?.mnemonic ?? null,
       address,
+      legacyAddress,
       origin: payload?.origin ?? vaultMeta()?.origin ?? null,
       unlock,
       create,
@@ -183,8 +198,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       forget,
       refresh,
     }),
-    [status, payload, address, unlock, create, lock, forget, refresh],
+    [status, payload, address, legacyAddress, unlock, create, lock, forget, refresh],
   );
+
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
