@@ -19,7 +19,7 @@
  *   {"cryptopop":"pay","to":"T…","amount":12.5,"asset":"tsd","merchant":"…"}
  */
 import { isValidTxcAddress } from "@/lib/wallet";
-import { normalizeAsset, type AssetId } from "./assets";
+import { assetFromOmniId, normalizeAsset, type AssetId } from "./assets";
 
 export type ScanIntent =
   | {
