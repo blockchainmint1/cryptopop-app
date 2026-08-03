@@ -874,6 +874,26 @@ function WalletSettings({
         <ScanLine className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         Scanning a Cold Storage Coin during setup gives you an instant offline backup.
       </p>
+
+      <div className="space-y-2 border-t border-white/10 pt-3">
+        <nav className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <Link to="/privacy" className="transition hover:text-foreground">Privacy policy</Link>
+          <Link to="/terms" className="transition hover:text-foreground">Terms</Link>
+          <Link to="/manifesto" className="transition hover:text-foreground">Manifesto</Link>
+        </nav>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          Part of the{" "}
+          <a
+            href="https://honest.money"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            honest.money
+          </a>{" "}
+          ecosystem
+        </p>
+      </div>
     </Card>
   );
 }
