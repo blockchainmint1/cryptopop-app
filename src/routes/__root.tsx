@@ -130,12 +130,14 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <WalletProvider>
-          <Outlet />
+          <div className="native-scroll">
+            <Outlet />
+          </div>
           <OfflineGate />
           <Toaster richColors position="top-center" />
         </WalletProvider>
       </AuthProvider>
     </QueryClientProvider>
-
   );
 }
+
