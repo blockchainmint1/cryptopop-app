@@ -250,19 +250,43 @@
 }
 
 /* ---- Native shell (Capacitor) ------------------------------------------
-   `html.native` is set at runtime by src/lib/native/shell.ts. Safe-area
-   padding keeps content clear of the notch / home indicator, and native
-   text selection + overscroll are disabled so it feels like an app. */
+   `html.native` is set at runtime by src/lib/native/shell.ts.
+
+   The webview itself must NOT scroll — otherwise iOS rubber-band drags the
+   whole page and you see the "jumping" gap at the top/bottom. Instead we lock
+   html/body to the viewport and scroll one inner container (.native-scroll),
+   which also lets the fixed bottom bar stay pinned. Safe-area padding is
+   applied inside that container, never on body (body padding does not affect
+   position:fixed children, which caused the double/blank inset). */
+html.native,
 html.native body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-  overscroll-behavior-y: none;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--background);
+}
+
+html.native body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
 }
+
+.native-scroll {
+  height: 100%;
+}
+
+html.native .native-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 
 html.native input,
 html.native textarea,
