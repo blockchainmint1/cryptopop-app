@@ -18,6 +18,7 @@ import { Route as ManifestoRouteImport } from './routes/manifesto'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
@@ -78,6 +79,11 @@ const MyPopRoute = MyPopRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/app'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/app'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/app'
@@ -350,6 +362,7 @@ export interface RootRouteChildren {
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
   PrivacyRoute: typeof PrivacyRoute
+  SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   AdminPushRoute: typeof AdminPushRoute
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -589,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
   PrivacyRoute: PrivacyRoute,
+  SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   AdminPushRoute: AdminPushRoute,
