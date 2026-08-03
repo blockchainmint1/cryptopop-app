@@ -264,7 +264,7 @@ html.native body {
   max-height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background-color: hsl(var(--background));
+  background-color: var(--background);
 }
 
 html.native body {
