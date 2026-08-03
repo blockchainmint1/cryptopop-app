@@ -59,7 +59,7 @@ import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
 import { ASSETS, type AssetId } from "@/lib/wallet/assets";
-import { loadHiddenChains, toggleHiddenChain } from "@/lib/wallet/hidden-chains";
+import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
@@ -72,7 +72,7 @@ const CHAINS = ASSETS;
 
 type ChainId = AssetId;
 export function WalletDashboard() {
-  const { address, legacyAddress, origin, mnemonic, lock, forget } = useWallet();
+  const { address, legacyAddress, origin, mnemonic } = useWallet();
   const navigate = useNavigate();
   const fetchSummary = useServerFn(getAddressChainSummary);
   const fetchActivity = useServerFn(getAddressActivity);
@@ -177,12 +177,6 @@ export function WalletDashboard() {
   const tsdVisible = !hidden.includes("tsd");
   const headline = tsdVisible ? (tsd ?? 0).toFixed(2) : (pop ?? 0).toLocaleString();
   const headlineLabel = tsdVisible ? "TSD · Texas Stable Dollar" : "POP";
-
-  function toggleChain(id: ChainId) {
-    const next = hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id];
-    setHidden(next);
-    saveHidden(next);
-  }
 
   async function copyAddress() {
     if (!address) return;
