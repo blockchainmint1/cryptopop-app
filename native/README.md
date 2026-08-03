@@ -102,3 +102,42 @@ Android needs JDK 21 + Android SDK. iOS needs macOS + Xcode + CocoaPods.
   Manage and send notifications at `/admin/push`.
 - **Account deletion** is in-app: Wallet settings → Delete my account (store requirement).
 - **Offline screen** renders whenever the device drops its connection.
+
+## Ship to the App Store from your Mac
+
+Prereqs: macOS + Xcode 15+, `brew install cocoapods`, Bun, and an Apple Developer
+account with the bundle ID `org.cryptopop.wallet` registered.
+
+```bash
+git clone <this-repo> popwallet && cd popwallet
+bun run ios:setup     # installs deps, creates ios/, syncs, hardens plist, icons, pods
+bun run ios:open      # opens ios/App/App.xcworkspace in Xcode
+```
+
+If the shell ever looks stale or Xcode runs an old product:
+
+```bash
+bun run ios:reset     # nukes ios/ and rebuilds it from capacitor.config.ts
+```
+
+In Xcode:
+
+1. Target **App** → Signing & Capabilities → check *Automatically manage signing*,
+   pick your Team. Bundle identifier must read `org.cryptopop.wallet`.
+2. Add capability **Associated Domains** → `applinks:app.cryptopop.org`.
+3. Add capability **Push Notifications** (already declared in Info.plist background modes).
+4. Set **Version** `1.0.0` and **Build** `1` (bump Build on every upload).
+5. Device target: *Any iOS Device (arm64)* → **Product → Archive** →
+   **Distribute App → App Store Connect → Upload**.
+
+Answers for App Store Connect:
+
+- Encryption: "Yes, uses encryption" → "exempt — standard iOS APIs / open-source
+  algorithms" (already declared via `ITSAppUsesNonExemptEncryption=false`).
+- Privacy policy URL: `https://cryptopop.org/privacy`
+- Account deletion: in-app at Wallet settings → Delete my account.
+- Demo account: reviewers can create a wallet with no signup; note that in review notes.
+
+Remaining placeholder: `public/.well-known/apple-app-site-association` still has
+`TEAMID` — replace with your 10-character Apple Team ID and republish the web app,
+or universal links won't verify.
