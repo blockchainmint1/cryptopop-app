@@ -93,6 +93,22 @@ if (target === "android") {
         "\t<key>CFBundleURLTypes</key>\n\t<array>\n\t\t<dict>\n\t\t\t<key>CFBundleURLName</key>\n\t\t\t<string>org.cryptopop.wallet</string>\n\t\t\t<key>CFBundleURLSchemes</key>\n\t\t\t<array>\n\t\t\t\t<string>cryptopop</string>\n\t\t\t</array>\n\t\t</dict>\n\t</array>\n</dict>\n</plist>",
       );
     }
+
+    // App Store review requirements: encryption declaration, display name,
+    // portrait-only phone layout, associated-domain-friendly status bar.
+    const simple = [
+      ["CFBundleDisplayName", "<string>POP Wallet</string>"],
+      ["ITSAppUsesNonExemptEncryption", "<false/>"],
+      ["UIViewControllerBasedStatusBarAppearance", "<true/>"],
+      [
+        "UISupportedInterfaceOrientations",
+        "<array>\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t</array>",
+      ],
+    ];
+    for (const [key, value] of simple) {
+      if (out.includes(`<key>${key}</key>`)) continue;
+      out = out.replace("</dict>\n</plist>", `\t<key>${key}</key>\n\t${value}\n</dict>\n</plist>`);
+    }
     return out;
   });
 
@@ -101,6 +117,11 @@ if (target === "android") {
     copyFileSync("resources/PrivacyInfo.xcprivacy", "ios/App/App/PrivacyInfo.xcprivacy");
     console.log("[patch-native] copied PrivacyInfo.xcprivacy");
   }
+
+  // iPhone-only (no iPad screenshots required at submission).
+  patch("ios/App/App.xcodeproj/project.pbxproj", (pbx) =>
+    pbx.replace(/TARGETED_DEVICE_FAMILY = "1,2";/g, 'TARGETED_DEVICE_FAMILY = "1";'),
+  );
 } else {
   console.error("Usage: node scripts/patch-native.mjs <android|ios>");
   process.exit(1);

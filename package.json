@@ -9,7 +9,12 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "cap:assets": "capacitor-assets generate --ios --assetPath resources",
+    "ios:harden": "node scripts/patch-native.mjs ios",
+    "ios:setup": "bun install && mkdir -p native/webdir && (test -d ios || bunx cap add ios) && bunx cap sync ios && bun run ios:harden && bun run cap:assets && cd ios/App && pod install",
+    "ios:open": "bunx cap open ios",
+    "ios:reset": "rm -rf ios && bun run ios:setup"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
