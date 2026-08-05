@@ -117,13 +117,11 @@ const divisibleCache = new Map<number, boolean>([
 async function isDivisible(id: number): Promise<boolean> {
   const hit = divisibleCache.get(id);
   if (hit !== undefined) return hit;
-  try {
-    const prop = await rpc<{ divisible?: boolean }>("omni_getproperty", [id]);
-    const d = prop.divisible !== false;
-    divisibleCache.set(id, d);
-    return d;
-  } catch {
-    return true; // Omni's default
+  const prop = await rpc<{ divisible?: boolean }>("omni_getproperty", [id]);
+  const d = prop.divisible !== false;
+  divisibleCache.set(id, d);
+  return d;
+
   }
 }
 
