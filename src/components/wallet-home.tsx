@@ -305,7 +305,7 @@ export function WalletHome() {
           </p>
           {address ? (
             <Button asChild size="lg" className="mt-6 w-full">
-              <Link to="/scan">
+              <Link to="/scan" search={{ qr: undefined }}>
                 <ScanLine className="h-5 w-5 mr-2" />
                 Scan to Earn
               </Link>

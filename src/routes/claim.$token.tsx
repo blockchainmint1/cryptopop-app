@@ -65,6 +65,8 @@ function ClaimPage() {
       navigate({
         to: "/scan/success",
         search: {
+          qr: undefined,
+
           event: info.found ? (info.eventName || info.label) : "Reward",
           reward: res.popReward,
           balance: res.balance ?? 0,
