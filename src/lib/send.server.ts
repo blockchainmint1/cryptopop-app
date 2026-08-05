@@ -207,14 +207,19 @@ export async function buildUnsignedSend(opts: {
   const vsizeFor = (n: number) =>
     10 + 148 * n + 34 * 2 + (opReturnScript ? 10 + opReturnLen : 0);
 
+  // Pick coins first (no network), then fetch every prev-tx hex in parallel.
   for (const u of utxos) {
-    const hex = await getTxHex(u.txid);
-    psbt.addInput({ hash: u.txid, index: u.vout, nonWitnessUtxo: Buffer.from(hex, "hex") });
     used.push(u);
     inputSats += u.value;
     const estFee = vsizeFor(used.length) * FEE_SATS_PER_VBYTE;
     if (inputSats >= recipientSats + estFee + DUST_SATS) break;
   }
+
+  const hexes = await Promise.all(used.map((u) => getTxHex(u.txid)));
+  used.forEach((u, i) => {
+    psbt.addInput({ hash: u.txid, index: u.vout, nonWitnessUtxo: Buffer.from(hexes[i]!, "hex") });
+  });
+
 
   const fee = vsizeFor(used.length) * FEE_SATS_PER_VBYTE;
   const change = inputSats - recipientSats - fee;
