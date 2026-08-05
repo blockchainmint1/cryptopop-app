@@ -109,7 +109,9 @@ function tsdPropertyId(): number {
 // on a cold worker; the chain is still authoritative and refreshes the cache.
 const divisibleCache = new Map<number, boolean>([
   [37, false], // POP — indivisible
-  [39, true], // TSD — divisible (8dp on-chain)
+  // TSD is looked up from the chain on first use, then cached — divisibility
+  // is fixed at issuance, and guessing it wrong misprices every send by 1e8.
+
 ]);
 
 async function isDivisible(id: number): Promise<boolean> {
