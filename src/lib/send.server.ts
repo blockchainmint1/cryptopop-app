@@ -121,9 +121,8 @@ async function isDivisible(id: number): Promise<boolean> {
   const d = prop.divisible !== false;
   divisibleCache.set(id, d);
   return d;
-
-  }
 }
+
 
 /**
  * Omni Simple Send payload (20 bytes), built locally — no RPC round trip:
