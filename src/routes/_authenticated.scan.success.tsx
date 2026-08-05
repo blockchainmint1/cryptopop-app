@@ -160,7 +160,7 @@ function ScanSuccess() {
         {/* CTAs */}
         <div className="mt-10 grid w-full grid-cols-2 gap-3">
           <Button asChild variant="secondary" size="lg" onClick={cancel}>
-            <Link to="/scan">
+            <Link to="/scan" search={{ qr: undefined }}>
               <ScanLine className="mr-2 h-4 w-4" /> Scan another
             </Link>
           </Button>
