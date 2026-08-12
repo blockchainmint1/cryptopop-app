@@ -28,6 +28,7 @@ import { Route as AdminPushRouteImport } from './routes/admin.push'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
@@ -132,6 +133,11 @@ const EventsIndexRoute = EventsIndexRouteImport.update({
   path: '/events/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsSlugRoute = EventsSlugRouteImport.update({
+  id: '/events/$slug',
+  path: '/events/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedScanSuccessRoute =
   AuthenticatedScanSuccessRouteImport.update({
     id: '/success',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
+    | '/events/$slug'
     | '/events/'
     | '/scan/success'
     | '/lovable/email/suppression'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
+    | '/events/$slug'
     | '/events'
     | '/scan/success'
     | '/lovable/email/suppression'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
+    | '/events/$slug'
     | '/events/'
     | '/_authenticated/scan/success'
     | '/lovable/email/suppression'
@@ -368,6 +380,7 @@ export interface RootRouteChildren {
   AdminPushRoute: typeof AdminPushRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
+  EventsSlugRoute: typeof EventsSlugRoute
   EventsIndexRoute: typeof EventsIndexRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
@@ -513,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$slug': {
+      id: '/events/$slug'
+      path: '/events/$slug'
+      fullPath: '/events/$slug'
+      preLoaderRoute: typeof EventsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/scan/success': {
       id: '/_authenticated/scan/success'
       path: '/success'
@@ -615,6 +635,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPushRoute: AdminPushRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
+  EventsSlugRoute: EventsSlugRoute,
   EventsIndexRoute: EventsIndexRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,

@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { geocodeZip, listEventMarkets, listPublicEvents } from "@/lib/public-events.functions";
-import { mainSiteRsvpUrl } from "@/lib/public-events";
 import { SiteFooter } from "@/components/site-footer";
 
 const eventsQuery = queryOptions({
@@ -350,15 +349,14 @@ function EventsPage() {
                       </p>
                     ) : null}
                     <div className="mt-auto pt-5 sm:pt-7">
-                      <a
-                        href={mainSiteRsvpUrl(ev.slug)}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        to="/events/$slug"
+                        params={{ slug: ev.slug }}
                         className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition hover:opacity-90 sm:w-auto"
                       >
                         {ev.rsvpOpen ? "RSVP & get POP" : "View details"}
                         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </article>
@@ -387,14 +385,13 @@ function EventsPage() {
                       {formatWhen(ev.start_at, ev.end_at, ev.time_zone)}
                     </p>
                   </div>
-                  <a
-                    href={mainSiteRsvpUrl(ev.slug)}
-                    target="_blank"
-                    rel="noreferrer"
+                  <Link
+                    to="/events/$slug"
+                    params={{ slug: ev.slug }}
                     className="shrink-0 font-mono text-xs uppercase tracking-widest text-primary hover:underline"
                   >
-                    Recap →
-                  </a>
+                    Details →
+                  </Link>
                 </li>
               ))}
             </ul>

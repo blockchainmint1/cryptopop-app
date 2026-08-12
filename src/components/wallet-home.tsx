@@ -31,7 +31,6 @@ import { getTxcBalance, getTxcTxs, type TxcTx } from "@/lib/wallet.functions";
 import { getPopChainBalance } from "@/lib/pop-chain.functions";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
 import { getMyPopSummary } from "@/lib/pop-summary.functions";
-import { mainSiteRsvpUrl } from "@/lib/public-events";
 import {
   listPublicEvents,
   type PublicEventListItem,
@@ -723,9 +722,9 @@ function EventCard({
               variant={passSignupId ? "outline" : "default"}
               className="w-full"
             >
-              <a href={mainSiteRsvpUrl(ev.slug)} target="_blank" rel="noreferrer">
+              <Link to="/events/$slug" params={{ slug: ev.slug }}>
                 {ctaLabel}
-              </a>
+              </Link>
             </Button>
           )}
         </div>
