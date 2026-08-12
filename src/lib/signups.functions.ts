@@ -152,7 +152,8 @@ export const createEventSignup = createServerFn({ method: "POST" })
         walletAddress,
       },
     }).catch((e) => console.error("[createEventSignup] email enqueue", e));
-    return { id: inserted.id, walletAddress };
+    return { id: inserted.id, walletAddress, popAwarded: signupReward, firstEvent: isFirstEvent };
+
   });
 
 // Public: fetch a signup by its id (the id IS the pass — possession of the
