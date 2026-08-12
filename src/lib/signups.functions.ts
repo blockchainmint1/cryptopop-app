@@ -144,7 +144,25 @@ export const getSignupById = createServerFn({ method: "POST" })
       console.error("[getSignupById]", error);
       throw new Error("lookup_failed");
     }
-    if (!row) return { signup: null };
+    if (!row) {
+      // Pass was created on the hub (or the local mirror never landed) —
+      // fall back to the hub's non-PII pass endpoint.
+      const { hubGetPass } = await import("./pop-hub-signup.server");
+      const pass = await hubGetPass(data.id);
+      if (!pass) return { signup: null };
+      return {
+        signup: {
+          id: pass.id,
+          full_name: pass.full_name,
+          pop_credits: pass.pop_credits,
+          completed_activities: ["signup"],
+          status: pass.status,
+          signed_up_at: null,
+          checked_in_at: pass.checked_in_at,
+        },
+      };
+    }
+
     const r = row as unknown as Record<string, unknown> & { email: string };
 
     // Reconcile displayed POP with the ledger (source of truth for on-chain awards).
