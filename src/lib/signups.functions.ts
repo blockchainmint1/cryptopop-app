@@ -110,20 +110,23 @@ export const createEventSignup = createServerFn({ method: "POST" })
         console.error("[createEventSignup] ensureEmailWallet", e);
       }
     }
-    try {
-      await awardPop({
-        email: lcEmail,
-        amount: signupReward,
-        source: "event_signup",
-        sourceId: inserted.id,
-        memo: "CryptoPOP signup",
-        walletOverride: externalWallet,
-      });
-    } catch (e) {
-      // awardPop catches mint failures internally; this only catches insert
-      // failures (e.g. RLS/constraint). Don't break the signup.
-      console.error("[createEventSignup] awardPop", e);
+    if (signupReward > 0) {
+      try {
+        await awardPop({
+          email: lcEmail,
+          amount: signupReward,
+          source: "event_signup",
+          sourceId: inserted.id,
+          memo: "CryptoPOP signup",
+          walletOverride: externalWallet,
+        });
+      } catch (e) {
+        // awardPop catches mint failures internally; this only catches insert
+        // failures (e.g. RLS/constraint). Don't break the signup.
+        console.error("[createEventSignup] awardPop", e);
+      }
     }
+
 
 
     // Telegram notification (awaited so it lands before Worker terminates)
