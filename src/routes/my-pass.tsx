@@ -68,7 +68,7 @@ function MyPassPage() {
       .then((res) => {
         if (cancelled) return;
         if (!res.signup) setError("We couldn't find that pass.");
-        else setSignup(res.signup as Signup);
+        else setSignup(res.signup as unknown as Signup);
       })
       .catch(() => !cancelled && setError("Something went wrong loading your pass."))
       .finally(() => !cancelled && setLoading(false));
