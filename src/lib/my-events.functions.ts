@@ -76,11 +76,17 @@ export const getMyEventMemberships = createServerFn({ method: "GET" })
       };
     });
 
-    // Chronological order: soonest event first, then past events at the bottom.
+    // Chronological order: soonest upcoming event first, then past events at the bottom.
+    const now = Date.now();
     memberships.sort((a, b) => {
       const aStart = a.event?.start_at ? new Date(a.event.start_at).getTime() : Infinity;
       const bStart = b.event?.start_at ? new Date(b.event.start_at).getTime() : Infinity;
-      return aStart - bStart;
+      const aUpcoming = aStart >= now;
+      const bUpcoming = bStart >= now;
+      if (aUpcoming && !bUpcoming) return -1;
+      if (!aUpcoming && bUpcoming) return 1;
+      if (aUpcoming && bUpcoming) return aStart - bStart;
+      return bStart - aStart;
     });
 
     return { memberships };
