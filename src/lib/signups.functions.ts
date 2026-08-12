@@ -36,7 +36,19 @@ export const createEventSignup = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const instagram = data.instagram_handle?.replace(/^@/, "").trim() || null;
     const telegram = data.telegram_handle?.replace(/^@/, "").trim() || null;
-    const signupReward = await getRewardAmount("event_signup", 10);
+    const lcEmail = data.email.toLowerCase();
+
+    // POP for *registering* is a one-time, first-event-only reward. Registering
+    // for extra events pays nothing — showing up (check-in) is what pays after
+    // that. Guards against RSVP farming.
+    const { count: priorSignups } = await supabaseAdmin
+      .from("event_signups")
+      .select("id", { count: "exact", head: true })
+      .eq("email", lcEmail)
+      .neq("status", "cancelled");
+    const isFirstEvent = (priorSignups ?? 0) === 0;
+    const signupReward = isFirstEvent ? await getRewardAmount("event_signup", 10) : 0;
+
 
     // Resolve event_id from slug so the signup is linked to its event.
     let eventId: string | null = null;
