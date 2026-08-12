@@ -190,8 +190,8 @@ function EventsPage() {
 
       {/* Filters */}
       <section className="border-b border-border bg-card/40">
-        <div className="mx-auto max-w-6xl space-y-3 px-4 py-4 sm:px-6">
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+          <div className="grid grid-cols-2 gap-2">
             <Select value={market} onValueChange={setMarket}>
               <SelectTrigger className="h-11 w-full" aria-label="Filter by market">
                 <SelectValue placeholder="All markets" />
@@ -206,11 +206,11 @@ function EventsPage() {
               </SelectContent>
             </Select>
 
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 py-2 sm:justify-start">
+            <div className="flex h-11 items-center justify-between gap-2 rounded-xl border border-border bg-background px-3">
               <div className="flex min-w-0 items-center gap-2">
                 <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="truncate font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                  Show online events
+                <span className="truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Online
                 </span>
               </div>
               <Switch
@@ -219,43 +219,46 @@ function EventsPage() {
                 aria-label="Show online events"
               />
             </div>
-          </div>
 
-          <form onSubmit={applyZip} className="space-y-2">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-              <Input
-                value={zipInput}
-                onChange={(e) => setZipInput(e.target.value.replace(/\D/g, "").slice(0, 5))}
-                inputMode="numeric"
-                placeholder="ZIP code"
-                aria-label="ZIP code"
-                className="h-11"
-              />
-              <Select value={String(radius)} onValueChange={(v) => setRadius(Number(v))}>
-                <SelectTrigger className="h-11 w-full sm:w-36" aria-label="Search radius">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RADIUS_OPTIONS.map((r) => (
-                    <SelectItem key={r} value={String(r)}>
-                      Within {r} mi
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <form onSubmit={applyZip} className="contents">
+              <div className="relative">
+                <Input
+                  value={zipInput}
+                  onChange={(e) => setZipInput(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                  inputMode="numeric"
+                  placeholder="ZIP code"
+                  aria-label="ZIP code"
+                  className="h-11 pr-20"
+                />
+                <Select value={String(radius)} onValueChange={(v) => setRadius(Number(v))}>
+                  <SelectTrigger
+                    className="absolute right-0 top-0 h-11 w-20 border-0 border-l border-border bg-transparent pl-2 text-[10px]"
+                    aria-label="Search radius"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RADIUS_OPTIONS.map((r) => (
+                      <SelectItem key={r} value={String(r)}>
+                        {r} mi
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button
                 type="submit"
-                className="col-span-2 h-11 rounded-xl sm:col-span-1"
+                className="h-11 rounded-xl"
                 disabled={locating || zipInput.length !== 5}
               >
                 <Search className="mr-1.5 h-4 w-4" />
                 {locating ? "Finding…" : "Near me"}
               </Button>
-            </div>
-          </form>
+            </form>
+          </div>
 
           {(origin || filtersActive) && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               {origin ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">
                   <MapPin className="h-3 w-3" />
