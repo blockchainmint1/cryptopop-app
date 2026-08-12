@@ -21,7 +21,7 @@ const passColumns =
 const eventSignupSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(254),
-  mobile_number: z.string().trim().min(3).max(32),
+  mobile_number: z.string().trim().max(32).optional().nullable(),
   instagram_handle: z.string().trim().max(64).optional().nullable(),
   telegram_handle: z.string().trim().max(64).optional().nullable(),
   is_friend: z.boolean(),
@@ -30,78 +30,21 @@ const eventSignupSchema = z.object({
   external_wallet: z.string().trim().min(26).max(48).optional().nullable(),
 });
 
-// Public: create a signup without exposing the private signups table to public reads.
+// Public: RSVP happens in-app, but the CryptoPOP hub owns the signup record.
+// We relay the form server-to-server (no CORS, partner key stays server-side);
+// the hub enforces capacity, the RSVP window, first-event-only POP, minting to
+// the user's wallet, the confirmation email and the Telegram alert.
+// We keep a local mirror row so the pass + door check-in work offline of the hub.
 export const createEventSignup = createServerFn({ method: "POST" })
   .inputValidator((input) => eventSignupSchema.parse(input))
   .handler(async ({ data }) => {
-    const instagram = data.instagram_handle?.replace(/^@/, "").trim() || null;
-    const telegram = data.telegram_handle?.replace(/^@/, "").trim() || null;
     const lcEmail = data.email.toLowerCase();
+    const mobile = data.mobile_number?.trim() || null;
+    const guestCount = data.is_friend ? data.guest_count : 0;
 
-    // POP for *registering* is a one-time, first-event-only reward. Registering
-    // for extra events pays nothing — showing up (check-in) is what pays after
-    // that. Guards against RSVP farming.
-    const { count: priorSignups } = await supabaseAdmin
-      .from("event_signups")
-      .select("id", { count: "exact", head: true })
-      .eq("email", lcEmail)
-      .neq("status", "cancelled");
-    const isFirstEvent = (priorSignups ?? 0) === 0;
-    const signupReward = isFirstEvent ? await getRewardAmount("event_signup", 10) : 0;
+    if (!data.event_slug) throw new Error("event_not_found");
 
-
-    // Resolve event_id from slug so the signup is linked to its event.
-    let eventId: string | null = null;
-    if (data.event_slug) {
-      const { data: ev } = await supabaseAdmin
-        .from("events")
-        .select("id")
-        .eq("slug", data.event_slug)
-        .maybeSingle();
-      eventId = ev?.id ?? null;
-
-      // Event lives on the main CryptoPOP feed only — mirror it locally so the
-      // RSVP, pass and door check-in all work without leaving the app.
-      if (!eventId) {
-        try {
-          const { listPublicEvents } = await import("@/lib/public-events.functions");
-          const remote = (await listPublicEvents()).find((e) => e.slug === data.event_slug);
-          if (remote) {
-            const { data: created } = await supabaseAdmin
-              .from("events")
-              .insert({
-                slug: remote.slug,
-                name: remote.name,
-                description: remote.description,
-                start_at: remote.start_at,
-                end_at: remote.end_at,
-                time_zone: remote.time_zone,
-                lat: remote.lat ?? 0,
-                lng: remote.lng ?? 0,
-                capacity: remote.capacity,
-                cover_url: remote.cover_url,
-                market_slug: remote.market_slug,
-              })
-              .select("id")
-              .single();
-            eventId = created?.id ?? null;
-            if (!eventId) {
-              const { data: again } = await supabaseAdmin
-                .from("events")
-                .select("id")
-                .eq("slug", data.event_slug)
-                .maybeSingle();
-              eventId = again?.id ?? null;
-            }
-          }
-        } catch (e) {
-          console.error("[createEventSignup] mirror remote event", e);
-        }
-      }
-    }
-
-    // Optional: user-supplied external TXC wallet. If provided & valid we mint
-    // POP directly to it and skip creating a custodial wallet for their email.
+    // Validate the wallet locally so we fail fast with a friendly message.
     let externalWallet: string | null = null;
     const rawExternal = data.external_wallet?.trim();
     if (rawExternal) {
@@ -112,88 +55,79 @@ export const createEventSignup = createServerFn({ method: "POST" })
       }
     }
 
-    const { data: inserted, error } = await supabaseAdmin
-      .from("event_signups")
-      .insert({
-        full_name: data.full_name,
-        email: data.email.toLowerCase(),
-        mobile_number: data.mobile_number,
-        instagram_handle: instagram,
-        telegram_handle: telegram,
-        is_friend: data.is_friend,
-        guest_count: data.is_friend ? data.guest_count : 0,
-        pop_credits: signupReward,
-        completed_activities: ["signup"],
-        signup_source: "website",
-        status: "confirmed",
-        event_id: eventId,
-        external_wallet: externalWallet,
-      })
-      .select("id")
-      .single();
-    if (error) {
-      console.error("[createEventSignup]", error);
-      if (error.code === "23505") throw new Error("duplicate_signup");
-      throw new Error("signup_failed");
-    }
-
-    // Resolve the wallet shown in the confirmation email + POP mint target.
-    // If the user gave us their own TXC address, use it and do NOT spin up a
-    // custodial email wallet. Otherwise ensure their custodial one exists.
-    let walletAddress: string | null = externalWallet;
-    if (!externalWallet) {
-      try {
-        const w = await ensureEmailWallet(lcEmail);
-        walletAddress = w.walletAddress;
-      } catch (e) {
-        console.error("[createEventSignup] ensureEmailWallet", e);
-      }
-    }
-    if (signupReward > 0) {
-      try {
-        await awardPop({
-          email: lcEmail,
-          amount: signupReward,
-          source: "event_signup",
-          sourceId: inserted.id,
-          memo: "CryptoPOP signup",
-          walletOverride: externalWallet,
-        });
-      } catch (e) {
-        // awardPop catches mint failures internally; this only catches insert
-        // failures (e.g. RLS/constraint). Don't break the signup.
-        console.error("[createEventSignup] awardPop", e);
-      }
-    }
-
-
-
-    // Telegram notification (awaited so it lands before Worker terminates)
-    await notifyEventSignup({
-      fullName: data.full_name,
+    const { hubCreateSignup } = await import("./pop-hub-signup.server");
+    const hub = await hubCreateSignup({
+      event_slug: data.event_slug,
+      full_name: data.full_name,
       email: lcEmail,
-      mobile: data.mobile_number,
-      instagram,
-      telegram,
-      isFriend: data.is_friend,
-      guestCount: data.is_friend ? data.guest_count : 0,
-      signupId: inserted.id,
+      mobile_number: mobile,
+      is_friend: data.is_friend,
+      guest_count: guestCount,
+      external_wallet: externalWallet,
     });
 
-    // Fire-and-forget confirmation email (failures don't break signup)
-    enqueueTransactionalEmail({
-      templateName: "event-confirmation",
-      recipientEmail: lcEmail,
-      idempotencyKey: `event-confirm-${inserted.id}`,
-      templateData: {
-        name: data.full_name,
-        passId: inserted.id,
-        walletAddress,
-      },
-    }).catch((e) => console.error("[createEventSignup] email enqueue", e));
-    return { id: inserted.id, walletAddress, popAwarded: signupReward, firstEvent: isFirstEvent };
+    // Local mirror (best-effort). Never awards POP or sends mail — the hub did.
+    try {
+      let eventId: string | null = null;
+      const { data: ev } = await supabaseAdmin
+        .from("events")
+        .select("id")
+        .eq("slug", data.event_slug)
+        .maybeSingle();
+      eventId = ev?.id ?? null;
+      if (!eventId) {
+        const { listPublicEvents } = await import("@/lib/public-events.functions");
+        const remote = (await listPublicEvents()).find((e) => e.slug === data.event_slug);
+        if (remote) {
+          const { data: created } = await supabaseAdmin
+            .from("events")
+            .insert({
+              slug: remote.slug,
+              name: remote.name,
+              description: remote.description,
+              start_at: remote.start_at,
+              end_at: remote.end_at,
+              time_zone: remote.time_zone,
+              lat: remote.lat ?? 0,
+              lng: remote.lng ?? 0,
+              capacity: remote.capacity,
+              cover_url: remote.cover_url,
+              market_slug: remote.market_slug,
+            })
+            .select("id")
+            .single();
+          eventId = created?.id ?? null;
+        }
+      }
+      await supabaseAdmin.from("event_signups").upsert(
+        {
+          id: hub.id,
+          full_name: data.full_name,
+          email: lcEmail,
+          mobile_number: mobile,
+          is_friend: data.is_friend,
+          guest_count: guestCount,
+          pop_credits: hub.pop_awarded,
+          completed_activities: ["signup"],
+          signup_source: "pop-wallet",
+          status: "confirmed",
+          event_id: eventId,
+          external_wallet: externalWallet,
+        },
+        { onConflict: "id" },
+      );
+    } catch (e) {
+      console.error("[createEventSignup] local mirror", e);
+    }
 
+    return {
+      id: hub.id,
+      walletAddress: hub.wallet_address ?? externalWallet,
+      popAwarded: hub.pop_awarded,
+      firstEvent: hub.first_event,
+    };
   });
+
 
 // Public: fetch a signup by its id (the id IS the pass — possession of the
 // UUID is the access token). Returns only non-PII pass fields. Returns null
