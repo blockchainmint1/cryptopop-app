@@ -97,7 +97,6 @@ export const createEventSignup = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("duplicate_signup");
       throw new Error("signup_failed");
     }
-    const lcEmail = data.email.toLowerCase();
 
     // Resolve the wallet shown in the confirmation email + POP mint target.
     // If the user gave us their own TXC address, use it and do NOT spin up a
