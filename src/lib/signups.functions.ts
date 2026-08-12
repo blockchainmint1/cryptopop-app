@@ -59,6 +59,45 @@ export const createEventSignup = createServerFn({ method: "POST" })
         .eq("slug", data.event_slug)
         .maybeSingle();
       eventId = ev?.id ?? null;
+
+      // Event lives on the main CryptoPOP feed only — mirror it locally so the
+      // RSVP, pass and door check-in all work without leaving the app.
+      if (!eventId) {
+        try {
+          const { listPublicEvents } = await import("@/lib/public-events.functions");
+          const remote = (await listPublicEvents()).find((e) => e.slug === data.event_slug);
+          if (remote) {
+            const { data: created } = await supabaseAdmin
+              .from("events")
+              .insert({
+                slug: remote.slug,
+                name: remote.name,
+                description: remote.description,
+                start_at: remote.start_at,
+                end_at: remote.end_at,
+                time_zone: remote.time_zone,
+                lat: remote.lat ?? 0,
+                lng: remote.lng ?? 0,
+                capacity: remote.capacity,
+                cover_url: remote.cover_url,
+                market_slug: remote.market_slug,
+              })
+              .select("id")
+              .single();
+            eventId = created?.id ?? null;
+            if (!eventId) {
+              const { data: again } = await supabaseAdmin
+                .from("events")
+                .select("id")
+                .eq("slug", data.event_slug)
+                .maybeSingle();
+              eventId = again?.id ?? null;
+            }
+          }
+        } catch (e) {
+          console.error("[createEventSignup] mirror remote event", e);
+        }
+      }
     }
 
     // Optional: user-supplied external TXC wallet. If provided & valid we mint
