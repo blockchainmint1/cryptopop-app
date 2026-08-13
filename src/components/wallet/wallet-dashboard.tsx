@@ -69,7 +69,7 @@ import { AddValueSheet } from "./add-value-sheet";
 import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
 
-const CHAINS = ASSETS;
+
 
 type ChainId = AssetId;
 export function WalletDashboard() {
