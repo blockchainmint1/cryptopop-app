@@ -48,13 +48,35 @@ async function rpc<T>(method: string, params: unknown[]): Promise<T> {
   return json.result;
 }
 
-export type ChainSummary = { pop: number | null; tsd: number | null; txc: number | null };
+export type ChainSummary = {
+  pop: number | null;
+  phpop: number | null;
+  tsd: number | null;
+  txc: number | null;
+};
 
-/** POP (Omni token) + native TXC balance for any address. Public explorer data. */
+async function omniBalance(address: string, prop: number | null): Promise<number | null> {
+  if (!prop) return null;
+  try {
+    const result = await rpc<{ balance: string }>("omni_getbalance", [address, prop]);
+    const bal = Number(result?.balance ?? 0);
+    return Number.isFinite(bal) ? bal : null;
+  } catch (e) {
+    console.error("[getAddressChainSummary] omni", prop, e);
+    return null;
+  }
+}
+
+/** POP / phPOP / TSD (Omni tokens) + native TXC balance for any address. */
 export const getAddressChainSummary = createServerFn({ method: "POST" })
   .inputValidator((input) => Input.parse(input))
   .handler(async ({ data }): Promise<ChainSummary> => {
-    const [pop, tsd, txc] = await Promise.all([
+    const [pop, phpop, tsd, txc] = await Promise.all([
+      omniBalance(data.address, getPropertyId()),
+      omniBalance(data.address, getPhPopPropertyId()),
+      omniBalance(data.address, getTsdPropertyId()),
+      (async () => {
+
       (async () => {
         try {
           const result = await rpc<{ balance: string }>("omni_getbalance", [
