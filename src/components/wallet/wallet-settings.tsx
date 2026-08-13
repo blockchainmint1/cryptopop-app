@@ -171,26 +171,52 @@ export function WalletSettings({
 
   return (
     <Card className="space-y-4 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
+      {/* POP region */}
+      <div className="space-y-2">
+        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          POP region
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {REGIONS.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => {
+                setRegion(r.id);
+                saveRegion(r.id);
+              }}
+              className={`rounded-xl border px-3 py-2 font-display text-sm uppercase transition ${
+                region === r.id
+                  ? "border-primary bg-primary/15 text-foreground"
+                  : "border-white/10 bg-black/20 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {r.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Visible chains */}
       <div className="space-y-2">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Visible assets
         </p>
-        {ASSETS.map((c) => (
+        {regionAssets(region).map((c) => (
           <div
             key={c.id}
             className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2"
           >
             <div>
-              <p className="font-display text-sm font-semibold uppercase">{c.name}</p>
+              <p className="font-display text-sm font-semibold uppercase">{c.label}</p>
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {c.network}
+                {c.chain}
               </p>
             </div>
             <Switch
               checked={!hidden.includes(c.id)}
               onCheckedChange={() => onToggleChain(c.id)}
-              aria-label={`Show ${c.name}`}
+              aria-label={`Show ${c.label}`}
             />
           </div>
         ))}
