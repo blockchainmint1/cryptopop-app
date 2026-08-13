@@ -58,8 +58,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
-import { ASSETS, type AssetId } from "@/lib/wallet/assets";
+import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
 import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
+import { loadRegion } from "@/lib/wallet/region";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
@@ -68,7 +69,7 @@ import { AddValueSheet } from "./add-value-sheet";
 import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
 
-const CHAINS = ASSETS;
+
 
 type ChainId = AssetId;
 export function WalletDashboard() {
@@ -79,6 +80,7 @@ export function WalletDashboard() {
   const fetchRewards = useServerFn(getAddressRewards);
 
   const [pop, setPop] = useState<number | null>(null);
+  const [phpop, setPhpop] = useState<number | null>(null);
   const [tsd, setTsd] = useState<number | null>(null);
   const [txc, setTxc] = useState<number | null>(null);
   const [sources, setSources] = useState<SendSource[]>([]);
@@ -92,6 +94,7 @@ export function WalletDashboard() {
   const [copied, setCopied] = useState(false);
 
   const [hidden, setHidden] = useState<ChainId[]>([]);
+  const [region, setRegion] = useState<RegionId>("tx");
   const [expanded, setExpanded] = useState(false);
   const [showAllTx, setShowAllTx] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
@@ -101,6 +104,7 @@ export function WalletDashboard() {
   const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHiddenChains()), []);
+  useEffect(() => setRegion(loadRegion()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
   useEffect(() => setBackupDismissed(isBackedUp()), []);
 
@@ -122,6 +126,7 @@ export function WalletDashboard() {
           null,
         );
       setPop(sum((s) => s.pop));
+      setPhpop(sum((s) => s.phpop));
       setTsd(sum((s) => s.tsd));
       setTxc(sum((s) => s.txc));
       setSources(
@@ -129,6 +134,7 @@ export function WalletDashboard() {
           address: a,
           balances: {
             pop: summaries[i]?.pop ?? null,
+            phpop: summaries[i]?.phpop ?? null,
             tsd: summaries[i]?.tsd ?? null,
             txc: summaries[i]?.txc ?? null,
           },
@@ -169,11 +175,11 @@ export function WalletDashboard() {
   }, [address, savePushToken, navigate]);
 
   const balances: Record<ChainId, number | null> = useMemo(
-    () => ({ pop, tsd, txc }),
-    [pop, tsd, txc],
+    () => ({ pop, phpop, tsd, txc }),
+    [pop, phpop, tsd, txc],
   );
 
-  const visibleChains = CHAINS.filter((c) => !hidden.includes(c.id));
+  const visibleChains = regionAssets(region).filter((c) => !hidden.includes(c.id));
   const tsdVisible = !hidden.includes("tsd");
   const headline = tsdVisible ? (tsd ?? 0).toFixed(2) : (pop ?? 0).toLocaleString();
   const headlineLabel = tsdVisible ? "TSD · Texas Stable Dollar" : "POP";
@@ -191,7 +197,7 @@ export function WalletDashboard() {
 
     switch (intent.kind) {
       case "payment":
-        if (intent.asset === "pop") {
+        if (intent.asset === "pop" || intent.asset === "phpop") {
           toast.info("POP is a scoreboard token — it can't be sent or spent.");
           return;
         }
@@ -300,9 +306,9 @@ export function WalletDashboard() {
                     className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2"
                   >
                     <div>
-                      <p className="font-display text-sm font-semibold uppercase">{c.name}</p>
+                      <p className="font-display text-sm font-semibold uppercase">{c.label}</p>
                       <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {c.network}
+                        {c.chain}
                       </p>
                     </div>
                     <p className="font-mono text-sm">
