@@ -126,6 +126,7 @@ export function WalletDashboard() {
           null,
         );
       setPop(sum((s) => s.pop));
+      setPhpop(sum((s) => s.phpop));
       setTsd(sum((s) => s.tsd));
       setTxc(sum((s) => s.txc));
       setSources(
@@ -133,6 +134,7 @@ export function WalletDashboard() {
           address: a,
           balances: {
             pop: summaries[i]?.pop ?? null,
+            phpop: summaries[i]?.phpop ?? null,
             tsd: summaries[i]?.tsd ?? null,
             txc: summaries[i]?.txc ?? null,
           },
