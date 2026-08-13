@@ -175,10 +175,10 @@ export function WalletSettings({
 
   return (
     <Card className="space-y-4 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
-      {/* POP region */}
+      {/* POP market */}
       <div className="space-y-2">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          POP region
+          POP market
         </p>
         <div className="grid grid-cols-2 gap-2">
           {REGIONS.map((r) => (
@@ -188,6 +188,7 @@ export function WalletSettings({
               onClick={() => {
                 setRegion(r.id);
                 saveRegion(r.id);
+                setAutoRegion(false);
               }}
               className={`rounded-xl border px-3 py-2 font-display text-sm uppercase transition ${
                 region === r.id
