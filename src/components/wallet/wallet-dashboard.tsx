@@ -80,6 +80,7 @@ export function WalletDashboard() {
   const fetchRewards = useServerFn(getAddressRewards);
 
   const [pop, setPop] = useState<number | null>(null);
+  const [phpop, setPhpop] = useState<number | null>(null);
   const [tsd, setTsd] = useState<number | null>(null);
   const [txc, setTxc] = useState<number | null>(null);
   const [sources, setSources] = useState<SendSource[]>([]);
@@ -93,6 +94,7 @@ export function WalletDashboard() {
   const [copied, setCopied] = useState(false);
 
   const [hidden, setHidden] = useState<ChainId[]>([]);
+  const [region, setRegion] = useState<RegionId>("tx");
   const [expanded, setExpanded] = useState(false);
   const [showAllTx, setShowAllTx] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
@@ -102,6 +104,7 @@ export function WalletDashboard() {
   const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHiddenChains()), []);
+  useEffect(() => setRegion(loadRegion()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
   useEffect(() => setBackupDismissed(isBackedUp()), []);
 
