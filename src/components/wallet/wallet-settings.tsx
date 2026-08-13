@@ -29,7 +29,7 @@ import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
 import { REGIONS, regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
-import { loadRegion, saveRegion } from "@/lib/wallet/region";
+import { hasStoredRegion, loadRegion, saveRegion } from "@/lib/wallet/region";
 
 export function WalletSettings({
   onForget,
@@ -43,7 +43,11 @@ export function WalletSettings({
   onToggleChain: (id: AssetId) => void;
 }) {
   const [region, setRegion] = useState<RegionId>("tx");
-  useEffect(() => setRegion(loadRegion()), []);
+  const [autoRegion, setAutoRegion] = useState(false);
+  useEffect(() => {
+    setRegion(loadRegion());
+    setAutoRegion(!hasStoredRegion());
+  }, []);
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -171,10 +175,10 @@ export function WalletSettings({
 
   return (
     <Card className="space-y-4 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
-      {/* POP region */}
+      {/* POP market */}
       <div className="space-y-2">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          POP region
+          POP market
         </p>
         <div className="grid grid-cols-2 gap-2">
           {REGIONS.map((r) => (
@@ -184,6 +188,7 @@ export function WalletSettings({
               onClick={() => {
                 setRegion(r.id);
                 saveRegion(r.id);
+                setAutoRegion(false);
               }}
               className={`rounded-xl border px-3 py-2 font-display text-sm uppercase transition ${
                 region === r.id
@@ -195,6 +200,11 @@ export function WalletSettings({
             </button>
           ))}
         </div>
+        {autoRegion && (
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Auto-detected from your location — tap to change
+          </p>
+        )}
       </div>
 
       {/* Visible chains */}
