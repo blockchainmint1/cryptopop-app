@@ -306,9 +306,9 @@ export function WalletDashboard() {
                     className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2"
                   >
                     <div>
-                      <p className="font-display text-sm font-semibold uppercase">{c.name}</p>
+                      <p className="font-display text-sm font-semibold uppercase">{c.label}</p>
                       <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {c.network}
+                        {c.chain}
                       </p>
                     </div>
                     <p className="font-mono text-sm">
