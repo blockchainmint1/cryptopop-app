@@ -85,7 +85,8 @@ export function SendSheet({
   useEffect(() => {
     if (!open || !prefill) return;
     if (prefill.to) setTo(prefill.to);
-    if (prefill.asset && prefill.asset !== "pop") setAsset(prefill.asset);
+    if (prefill.asset && prefill.asset !== "pop" && prefill.asset !== "phpop")
+      setAsset(prefill.asset);
     if (prefill.amount != null) setAmount(String(prefill.amount));
     setRequest(prefill.merchant || prefill.memo || prefill.amount != null ? prefill : null);
   }, [open, prefill]);
