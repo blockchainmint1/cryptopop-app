@@ -200,6 +200,11 @@ export function WalletSettings({
             </button>
           ))}
         </div>
+        {autoRegion && (
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Auto-detected from your location — tap to change
+          </p>
+        )}
       </div>
 
       {/* Visible chains */}
