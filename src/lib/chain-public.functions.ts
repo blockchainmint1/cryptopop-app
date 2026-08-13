@@ -22,6 +22,14 @@ function getTsdPropertyId(): number | null {
   return raw && Number.isInteger(n) && n > 0 ? n : null;
 }
 
+/** phPOP (Philippines POP Points) Omni property id. */
+function getPhPopPropertyId(): number {
+  const raw = process.env.TXC_PHPOP_TOKEN_ID ?? "40";
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : 40;
+}
+
+
 async function rpc<T>(method: string, params: unknown[]): Promise<T> {
   const url = process.env.TXC_RPC_URL ?? process.env.TXC_RPC_ADDRESS;
   const user = process.env.TXC_RPC_USER;
