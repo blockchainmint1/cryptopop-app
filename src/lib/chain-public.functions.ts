@@ -77,32 +77,6 @@ export const getAddressChainSummary = createServerFn({ method: "POST" })
       omniBalance(data.address, getTsdPropertyId()),
       (async () => {
 
-      (async () => {
-        try {
-          const result = await rpc<{ balance: string }>("omni_getbalance", [
-            data.address,
-            getPropertyId(),
-          ]);
-          const bal = Number(result?.balance ?? 0);
-          return Number.isFinite(bal) ? bal : null;
-        } catch (e) {
-          console.error("[getAddressChainSummary] omni", e);
-          return null;
-        }
-      })(),
-      (async () => {
-        const prop = getTsdPropertyId();
-        if (!prop) return null;
-        try {
-          const result = await rpc<{ balance: string }>("omni_getbalance", [data.address, prop]);
-          const bal = Number(result?.balance ?? 0);
-          return Number.isFinite(bal) ? bal : null;
-        } catch (e) {
-          console.error("[getAddressChainSummary] tsd", e);
-          return null;
-        }
-      })(),
-      (async () => {
         try {
           const res = await fetch(`${MEMPOOL_BASE}/address/${data.address}`);
           if (!res.ok) return null;
