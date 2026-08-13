@@ -98,5 +98,5 @@ export const getAddressChainSummary = createServerFn({ method: "POST" })
         }
       })(),
     ]);
-    return { pop, tsd, txc };
+    return { pop, phpop, tsd, txc };
   });

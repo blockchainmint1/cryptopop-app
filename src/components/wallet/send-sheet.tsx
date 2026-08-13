@@ -74,6 +74,7 @@ export function SendSheet({
 
   const balances: Record<AssetId, number | null> = {
     pop: popBalance,
+    phpop: null,
     tsd: tsdBalance,
     txc: txcBalance,
   };
