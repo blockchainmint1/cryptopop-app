@@ -43,7 +43,11 @@ export function WalletSettings({
   onToggleChain: (id: AssetId) => void;
 }) {
   const [region, setRegion] = useState<RegionId>("tx");
-  useEffect(() => setRegion(loadRegion()), []);
+  const [autoRegion, setAutoRegion] = useState(false);
+  useEffect(() => {
+    setRegion(loadRegion());
+    setAutoRegion(!hasStoredRegion());
+  }, []);
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
