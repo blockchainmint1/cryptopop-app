@@ -28,7 +28,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
-import { ASSETS, type AssetId } from "@/lib/wallet/assets";
+import { REGIONS, regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
+import { loadRegion, saveRegion } from "@/lib/wallet/region";
 
 export function WalletSettings({
   onForget,
@@ -41,6 +42,8 @@ export function WalletSettings({
   hidden: AssetId[];
   onToggleChain: (id: AssetId) => void;
 }) {
+  const [region, setRegion] = useState<RegionId>("tx");
+  useEffect(() => setRegion(loadRegion()), []);
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
