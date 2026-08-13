@@ -197,7 +197,7 @@ export function WalletDashboard() {
 
     switch (intent.kind) {
       case "payment":
-        if (intent.asset === "pop") {
+        if (intent.asset === "pop" || intent.asset === "phpop") {
           toast.info("POP is a scoreboard token — it can't be sent or spent.");
           return;
         }
