@@ -175,11 +175,11 @@ export function WalletDashboard() {
   }, [address, savePushToken, navigate]);
 
   const balances: Record<ChainId, number | null> = useMemo(
-    () => ({ pop, tsd, txc }),
-    [pop, tsd, txc],
+    () => ({ pop, phpop, tsd, txc }),
+    [pop, phpop, tsd, txc],
   );
 
-  const visibleChains = CHAINS.filter((c) => !hidden.includes(c.id));
+  const visibleChains = regionAssets(region).filter((c) => !hidden.includes(c.id));
   const tsdVisible = !hidden.includes("tsd");
   const headline = tsdVisible ? (tsd ?? 0).toFixed(2) : (pop ?? 0).toLocaleString();
   const headlineLabel = tsdVisible ? "TSD · Texas Stable Dollar" : "POP";
