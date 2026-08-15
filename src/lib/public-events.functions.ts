@@ -131,6 +131,8 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
     const now = Date.now();
     const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
     const round = (n: number) => Math.round(n * 100) / 100;
+    const catalog = await getMarketCatalog();
+    const knownSlugs = new Set(catalog.map((m) => m.slug));
 
     return rows
       .map((raw) => {
@@ -152,6 +154,12 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
           typeof row["online"] === "boolean"
             ? row["online"]
             : rawLat == null || rawLng == null || (rawLat === 0 && rawLng === 0);
+        // The hub feed can carry a stale/default market tag, so trust the
+        // event's own coordinates first and fall back to the feed value.
+        const feedMarket = typeof row["market_slug"] === "string" ? row["market_slug"] : null;
+        const geoMarket = online ? null : nearestMarket(catalog, rawLat, rawLng);
+        const market_slug =
+          geoMarket ?? (feedMarket && knownSlugs.has(feedMarket) ? feedMarket : feedMarket);
         return {
           slug,
           name,
@@ -168,7 +176,7 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
               ? row["rsvpOpen"]
               : !past && (spotsLeft == null || spotsLeft > 0),
           past,
-          market_slug: typeof row["market_slug"] === "string" ? row["market_slug"] : null,
+          market_slug,
           lat: online || rawLat == null ? null : round(rawLat),
           lng: online || rawLng == null ? null : round(rawLng),
           online,
@@ -179,22 +187,26 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
   },
 );
 
-/** Markets available for filtering the public events list (derived from the feed). */
+/** Markets available for filtering the public events list. */
 export const listEventMarkets = createServerFn({ method: "GET" }).handler(
   async (): Promise<EventMarketOption[]> => {
-    const events = await listPublicEvents();
-    const slugs = Array.from(
-      new Set(events.map((e) => e.market_slug).filter((s): s is string => !!s)),
-    ).sort();
-    return slugs.map((slug) => ({
-      slug,
-      label: slug
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
-    }));
+    const [events, catalog] = await Promise.all([listPublicEvents(), getMarketCatalog()]);
+    const used = new Set(events.map((e) => e.market_slug).filter((s): s is string => !!s));
+    const bySlug = new Map(catalog.map((m) => [m.slug, m.label]));
+    return Array.from(used)
+      .sort()
+      .map((slug) => ({
+        slug,
+        label:
+          bySlug.get(slug) ??
+          slug
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" "),
+      }));
   },
 );
+
 
 /** Resolves a US ZIP code to coordinates so the list can filter by radius. */
 export const geocodeZip = createServerFn({ method: "GET" })
