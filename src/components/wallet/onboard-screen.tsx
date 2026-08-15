@@ -24,6 +24,7 @@ import { RESTORE_INTENT_KEY } from "@/lib/wallet/cloud-account";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { createMnemonic, isValidMnemonic, normalizeMnemonic, type VaultOrigin } from "@/lib/wallet/vault";
 import { enableBiometric, isBiometricAvailable } from "@/lib/native/biometric";
+import { nativePlatform } from "@/lib/native/platform";
 import { useServerFn } from "@tanstack/react-start";
 import { listMarkets, type MarketOption } from "@/lib/public-events.functions";
 import { claimWelcomePop, WELCOME_POP } from "@/lib/welcome.functions";
