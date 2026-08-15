@@ -60,14 +60,14 @@ import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
 import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
 import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
-import { loadRegion } from "@/lib/wallet/region";
+import { loadRegion, loadMarketSlug, marketCode } from "@/lib/wallet/region";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { AddValueSheet } from "./add-value-sheet";
-import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
+
 
 
 
@@ -95,7 +95,9 @@ export function WalletDashboard() {
 
   const [hidden, setHidden] = useState<ChainId[]>([]);
   const [region, setRegion] = useState<RegionId>("tx");
+  const [marketSlug, setMarketSlug] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+
   const [showAllTx, setShowAllTx] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
@@ -105,7 +107,9 @@ export function WalletDashboard() {
 
   useEffect(() => setHidden(loadHiddenChains()), []);
   useEffect(() => setRegion(loadRegion()), []);
+  useEffect(() => setMarketSlug(loadMarketSlug()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
+
   useEffect(() => setBackupDismissed(isBackedUp()), []);
 
   const refresh = useCallback(async () => {
@@ -244,7 +248,13 @@ export function WalletDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex items-center gap-2 px-4 pt-6">
-        <img src={logo} alt="CryptoPOP" className="h-8 w-auto shrink-0" />
+        <Link
+          to="/settings"
+          aria-label="POP market"
+          className="flex h-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 px-3 font-display text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10"
+        >
+          {marketCode(marketSlug)}
+        </Link>
         <div className="flex flex-1 justify-center">
           <Link
             to="/leaderboard"
@@ -261,6 +271,7 @@ export function WalletDashboard() {
               <Settings2 className="h-5 w-5" />
             </Link>
           </Button>
+
           <Button variant="ghost" size="icon" onClick={() => setScanOpen(true)} aria-label="Scan a code">
             <Camera className="h-5 w-5" />
           </Button>

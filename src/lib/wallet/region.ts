@@ -90,3 +90,22 @@ export function regionForMarket(country: string | null | undefined, slug: string
   if (/manila|cebu|davao|philippines/i.test(slug)) return "ph";
   return "tx";
 }
+
+/** Short market code/badge shown in the wallet header. */
+const MARKET_CODES: Record<string, string> = {
+  dallas: "DAL",
+  "los-angeles": "LA",
+  denver: "DEN",
+  "salt-lake-city": "SLC",
+  nashville: "NSH",
+  philippines: "PH",
+  singapore: "SG",
+  phoenix: "PHX",
+};
+
+export function marketCode(slug: string | null | undefined): string {
+  if (!slug) return loadRegion().toUpperCase();
+  const normalized = slug.toLowerCase();
+  return MARKET_CODES[normalized] ?? normalized.slice(0, 3).toUpperCase();
+}
+
