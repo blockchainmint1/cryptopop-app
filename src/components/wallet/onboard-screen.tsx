@@ -168,18 +168,25 @@ export function OnboardScreen() {
         saveRegion(regionForMarket(picked.country, picked.slug));
       }
 
+      // Register the wallet with the hub (CRM + welcome grant). Runs with or
+      // without an email — no email means an anonymous activation, no grant.
       const cleanEmail = email.trim().toLowerCase();
-      if (cleanEmail) {
-        try {
-          const address = deriveTxcAddress(mnemonic);
-          const res = await claimWelcome({
-            data: { address, email: cleanEmail, market: picked?.slug ?? null },
-          });
-          if (res.awarded) toast.success(`Welcome — ${res.amount} POP is on its way`);
-          else if (res.reason === "duplicate") toast.message("That email already claimed its welcome POP");
-        } catch {
-          toast.message("Wallet created — we'll retry your welcome POP later.");
-        }
+      try {
+        const address = deriveTxcAddress(mnemonic);
+        const plat = nativePlatform();
+        const res = await claimWelcome({
+          data: {
+            address,
+            email: cleanEmail || null,
+            market: picked?.slug ?? null,
+            client: `wallet-${plat}`,
+          },
+        });
+        if (res.awarded) toast.success(`Welcome — ${res.amount} POP is on its way`);
+        else if (res.reason === "duplicate")
+          toast.message("This wallet or email already claimed its welcome POP");
+      } catch {
+        /* activation is best-effort — never block wallet creation */
       }
 
       setMnemonic("");
