@@ -9,6 +9,7 @@ import {
   Fingerprint,
   KeyRound,
   Loader2,
+  Mail,
   MapPin,
   ScanLine,
   ShieldCheck,
