@@ -107,7 +107,9 @@ export function WalletDashboard() {
 
   useEffect(() => setHidden(loadHiddenChains()), []);
   useEffect(() => setRegion(loadRegion()), []);
+  useEffect(() => setMarketSlug(loadMarketSlug()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
+
   useEffect(() => setBackupDismissed(isBackedUp()), []);
 
   const refresh = useCallback(async () => {
