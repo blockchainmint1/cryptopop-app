@@ -132,7 +132,6 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
     const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
     const round = (n: number) => Math.round(n * 100) / 100;
     const catalog = await getMarketCatalog();
-    const knownSlugs = new Set(catalog.map((m) => m.slug));
 
     return rows
       .map((raw) => {
@@ -158,8 +157,7 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
         // event's own coordinates first and fall back to the feed value.
         const feedMarket = typeof row["market_slug"] === "string" ? row["market_slug"] : null;
         const geoMarket = online ? null : nearestMarket(catalog, rawLat, rawLng);
-        const market_slug =
-          geoMarket ?? (feedMarket && knownSlugs.has(feedMarket) ? feedMarket : feedMarket);
+        const market_slug = geoMarket ?? feedMarket;
         return {
           slug,
           name,
