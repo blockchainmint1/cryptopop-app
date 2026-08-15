@@ -25,7 +25,14 @@ export type PublicEventListItem = {
 
 export type EventMarketOption = { slug: string; label: string };
 
-type MarketRow = { slug: string; label: string; lat: number | null; lng: number | null };
+type MarketRow = {
+  slug: string;
+  label: string;
+  lat: number | null;
+  lng: number | null;
+  country: string | null;
+};
+
 
 /**
  * Market catalog. Prefers the main site's public markets API (so locations stay
