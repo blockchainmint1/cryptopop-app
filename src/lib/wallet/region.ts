@@ -62,3 +62,31 @@ export function saveRegion(id: RegionId) {
     /* ignore */
   }
 }
+
+const MARKET_KEY = "cryptopop.wallet.market";
+
+/** Slug of the POP market the user picked during onboarding (or later). */
+export function loadMarketSlug(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(MARKET_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveMarketSlug(slug: string) {
+  try {
+    window.localStorage.setItem(MARKET_KEY, slug);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Which points token a market uses: PH markets get phPOP, everyone else POP. */
+export function regionForMarket(country: string | null | undefined, slug: string): RegionId {
+  const c = (country ?? "").trim().toLowerCase();
+  if (c === "ph" || c === "philippines") return "ph";
+  if (/manila|cebu|davao|philippines/i.test(slug)) return "ph";
+  return "tx";
+}
