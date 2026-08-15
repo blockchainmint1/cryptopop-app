@@ -1,34 +1,35 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-/** POP granted once, the first time someone finishes wallet setup. */
+/** Default POP granted on wallet activation (hub is authoritative). */
 export const WELCOME_POP = 10;
 
 const schema = z.object({
   address: z.string().trim().min(26).max(48),
-  email: z.string().trim().email().max(254),
+  email: z.string().trim().email().max(254).optional().nullable(),
   market: z.string().trim().max(64).optional().nullable(),
+  client: z.string().trim().max(32).optional().nullable(),
 });
 
 export type WelcomeClaimResult = {
   awarded: boolean;
   amount: number;
-  reason?: "duplicate" | "failed";
+  reason?: "duplicate" | "no_email" | "failed";
 };
 
 /**
- * Welcome grant for a brand-new non-custodial wallet.
+ * Wallet activation.
  *
- * Identity anchor is the email the user optionally supplies at the end of
- * setup: the ledger row is unique on (source, source_id) = ('wallet_signup',
- * email), and we additionally refuse a second grant to the same wallet
- * address. POP is minted straight to the on-device wallet — we never hold it.
+ * The hub (cryptopop.org) owns the welcome grant: it holds the minting keys,
+ * picks the right token for the market (Philippines → phPOP, else POP),
+ * dedupes by wallet address and email, and stores the activation for CRM.
+ * We relay server-to-server so the partner key never reaches the browser.
  */
 export const claimWelcomePop = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => schema.parse(d))
   .handler(async ({ data }): Promise<WelcomeClaimResult> => {
-    const { validateTxcAddress, awardPop } = await import("./email-wallet.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { hubActivateWallet } = await import("./pop-hub-signup.server");
+    const { validateTxcAddress } = await import("./email-wallet.server");
 
     let address: string;
     try {
@@ -36,30 +37,21 @@ export const claimWelcomePop = createServerFn({ method: "POST" })
     } catch {
       throw new Error("invalid_wallet_address");
     }
-    const email = data.email.toLowerCase();
 
-    // One welcome grant per wallet address, too — stops one email from
-    // seeding an endless stream of fresh phrases.
-    const { data: prior } = await supabaseAdmin
-      .from("pop_awards")
-      .select("id")
-      .eq("source", "wallet_signup")
-      .eq("wallet_address", address)
-      .limit(1);
-    if (prior && prior.length > 0) {
+    const email = data.email?.trim().toLowerCase() || null;
+
+    try {
+      const res = await hubActivateWallet({
+        address,
+        market_slug: data.market ?? null,
+        email,
+        client: data.client ?? "wallet-web",
+      });
+      if (res.welcome_pop > 0) return { awarded: true, amount: res.welcome_pop };
+      if (!email) return { awarded: false, amount: 0, reason: "no_email" };
       return { awarded: false, amount: 0, reason: "duplicate" };
+    } catch (e) {
+      console.error("[claimWelcomePop]", e);
+      return { awarded: false, amount: 0, reason: "failed" };
     }
-
-    const res = await awardPop({
-      email,
-      amount: WELCOME_POP,
-      source: "wallet_signup",
-      sourceId: email,
-      memo: data.market ? `welcome ${data.market}` : "welcome",
-      walletOverride: address,
-    });
-
-    if (res.status === "duplicate") return { awarded: false, amount: 0, reason: "duplicate" };
-    if (res.status === "failed") return { awarded: false, amount: 0, reason: "failed" };
-    return { awarded: true, amount: WELCOME_POP };
   });
