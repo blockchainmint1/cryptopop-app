@@ -35,8 +35,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
-import { REGIONS, regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
-import { hasStoredRegion, loadRegion, saveRegion } from "@/lib/wallet/region";
+import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
+import {
+  hasStoredRegion,
+  loadRegion,
+  saveRegion,
+  loadMarketSlug,
+  saveMarketSlug,
+  regionForMarket,
+} from "@/lib/wallet/region";
+import { listMarkets, type MarketOption } from "@/lib/public-events.functions";
 
 export function WalletSettings({
   onForget,
@@ -51,10 +59,19 @@ export function WalletSettings({
 }) {
   const [region, setRegion] = useState<RegionId>("tx");
   const [autoRegion, setAutoRegion] = useState(false);
+  const [markets, setMarkets] = useState<MarketOption[]>([]);
+  const [marketSlug, setMarketSlug] = useState("");
+  const fetchMarkets = useServerFn(listMarkets);
   useEffect(() => {
     setRegion(loadRegion());
     setAutoRegion(!hasStoredRegion());
+    setMarketSlug(loadMarketSlug() ?? "");
   }, []);
+  useEffect(() => {
+    void fetchMarkets()
+      .then((rows) => setMarkets(rows))
+      .catch(() => undefined);
+  }, [fetchMarkets]);
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -188,20 +205,24 @@ export function WalletSettings({
           POP market
         </p>
         <Select
-          value={region}
-          onValueChange={(v) => {
-            setRegion(v as RegionId);
-            saveRegion(v as RegionId);
+          value={marketSlug}
+          onValueChange={(slug) => {
+            const picked = markets.find((m) => m.slug === slug);
+            const next = regionForMarket(picked?.country, slug);
+            setMarketSlug(slug);
+            saveMarketSlug(slug);
+            setRegion(next);
+            saveRegion(next);
             setAutoRegion(false);
           }}
         >
           <SelectTrigger className="h-11 rounded-xl border-white/10 bg-black/20 font-display text-sm uppercase">
-            <SelectValue placeholder="Select market" />
+            <SelectValue placeholder={markets.length ? "Select market" : "Loading markets…"} />
           </SelectTrigger>
           <SelectContent>
-            {REGIONS.map((r) => (
-              <SelectItem key={r.id} value={r.id} className="font-display text-sm uppercase">
-                {r.name}
+            {markets.map((m) => (
+              <SelectItem key={m.slug} value={m.slug} className="font-display text-sm uppercase">
+                {m.label}
               </SelectItem>
             ))}
           </SelectContent>
