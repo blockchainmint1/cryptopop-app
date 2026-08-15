@@ -59,10 +59,19 @@ export function WalletSettings({
 }) {
   const [region, setRegion] = useState<RegionId>("tx");
   const [autoRegion, setAutoRegion] = useState(false);
+  const [markets, setMarkets] = useState<MarketOption[]>([]);
+  const [marketSlug, setMarketSlug] = useState("");
+  const fetchMarkets = useServerFn(listMarkets);
   useEffect(() => {
     setRegion(loadRegion());
     setAutoRegion(!hasStoredRegion());
+    setMarketSlug(loadMarketSlug() ?? "");
   }, []);
+  useEffect(() => {
+    void fetchMarkets()
+      .then((rows) => setMarkets(rows))
+      .catch(() => undefined);
+  }, [fetchMarkets]);
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
