@@ -25,7 +25,88 @@ export type PublicEventListItem = {
 
 export type EventMarketOption = { slug: string; label: string };
 
+type MarketRow = { slug: string; label: string; lat: number | null; lng: number | null };
+
+/**
+ * Market catalog. Prefers the main site's public markets API (so locations stay
+ * in sync with the hub); falls back to the local pop_markets table.
+ */
+async function getMarketCatalog(): Promise<MarketRow[]> {
+  const { MAIN_SITE_ORIGIN } = await import("@/lib/public-events");
+  try {
+    const res = await fetch(`${MAIN_SITE_ORIGIN}/api/public/markets`, {
+      headers: { accept: "application/json" },
+    });
+    if (res.ok) {
+      const json: unknown = await res.json();
+      const rows = Array.isArray(json)
+        ? json
+        : Array.isArray((json as { markets?: unknown })?.markets)
+          ? (json as { markets: unknown[] }).markets
+          : [];
+      const parsed = rows
+        .map((raw) => {
+          const r = raw as Record<string, unknown>;
+          const slug = typeof r["slug"] === "string" ? r["slug"] : null;
+          if (!slug) return null;
+          const city = typeof r["city"] === "string" ? r["city"] : slug;
+          const region = typeof r["region"] === "string" ? r["region"] : null;
+          return {
+            slug,
+            label: region ? `${city}, ${region}` : city,
+            lat: typeof r["lat"] === "number" ? r["lat"] : null,
+            lng: typeof r["lng"] === "number" ? r["lng"] : null,
+          } satisfies MarketRow;
+        })
+        .filter((m): m is MarketRow => m !== null);
+      if (parsed.length) return parsed;
+    }
+  } catch {
+    // fall through to local catalog
+  }
+
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("pop_markets")
+      .select("slug, city, region, lat, lng, sort_order")
+      .order("sort_order", { ascending: true });
+    return (data ?? []).map((m) => ({
+      slug: m.slug as string,
+      label: m.region ? `${m.city}, ${m.region}` : (m.city as string),
+      lat: m.lat == null ? null : Number(m.lat),
+      lng: m.lng == null ? null : Number(m.lng),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Great-circle distance in km. */
+function kmBetween(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+/** Nearest market within 300km of the event's coordinates. */
+function nearestMarket(catalog: MarketRow[], lat: number | null, lng: number | null) {
+  if (lat == null || lng == null) return null;
+  let best: { slug: string; km: number } | null = null;
+  for (const m of catalog) {
+    if (m.lat == null || m.lng == null) continue;
+    const km = kmBetween(lat, lng, m.lat, m.lng);
+    if (!best || km < best.km) best = { slug: m.slug, km };
+  }
+  return best && best.km <= 300 ? best.slug : null;
+}
+
 export const listPublicEvents = createServerFn({ method: "GET" }).handler(
+
   async (): Promise<PublicEventListItem[]> => {
     // Events live on the main CryptoPOP website; the wallet is read-only here.
     let payload: unknown;
@@ -50,6 +131,7 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
     const now = Date.now();
     const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
     const round = (n: number) => Math.round(n * 100) / 100;
+    const catalog = await getMarketCatalog();
 
     return rows
       .map((raw) => {
@@ -71,6 +153,11 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
           typeof row["online"] === "boolean"
             ? row["online"]
             : rawLat == null || rawLng == null || (rawLat === 0 && rawLng === 0);
+        // The hub feed can carry a stale/default market tag, so trust the
+        // event's own coordinates first and fall back to the feed value.
+        const feedMarket = typeof row["market_slug"] === "string" ? row["market_slug"] : null;
+        const geoMarket = online ? null : nearestMarket(catalog, rawLat, rawLng);
+        const market_slug = geoMarket ?? feedMarket;
         return {
           slug,
           name,
@@ -87,7 +174,7 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
               ? row["rsvpOpen"]
               : !past && (spotsLeft == null || spotsLeft > 0),
           past,
-          market_slug: typeof row["market_slug"] === "string" ? row["market_slug"] : null,
+          market_slug,
           lat: online || rawLat == null ? null : round(rawLat),
           lng: online || rawLng == null ? null : round(rawLng),
           online,
@@ -98,22 +185,26 @@ export const listPublicEvents = createServerFn({ method: "GET" }).handler(
   },
 );
 
-/** Markets available for filtering the public events list (derived from the feed). */
+/** Markets available for filtering the public events list. */
 export const listEventMarkets = createServerFn({ method: "GET" }).handler(
   async (): Promise<EventMarketOption[]> => {
-    const events = await listPublicEvents();
-    const slugs = Array.from(
-      new Set(events.map((e) => e.market_slug).filter((s): s is string => !!s)),
-    ).sort();
-    return slugs.map((slug) => ({
-      slug,
-      label: slug
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
-    }));
+    const [events, catalog] = await Promise.all([listPublicEvents(), getMarketCatalog()]);
+    const used = new Set(events.map((e) => e.market_slug).filter((s): s is string => !!s));
+    const bySlug = new Map(catalog.map((m) => [m.slug, m.label]));
+    return Array.from(used)
+      .sort()
+      .map((slug) => ({
+        slug,
+        label:
+          bySlug.get(slug) ??
+          slug
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" "),
+      }));
   },
 );
+
 
 /** Resolves a US ZIP code to coordinates so the list can filter by radius. */
 export const geocodeZip = createServerFn({ method: "GET" })
