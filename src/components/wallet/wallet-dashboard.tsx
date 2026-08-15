@@ -60,14 +60,14 @@ import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
 import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
 import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
-import { loadRegion } from "@/lib/wallet/region";
+import { loadRegion, loadMarketSlug, marketCode } from "@/lib/wallet/region";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { AddValueSheet } from "./add-value-sheet";
-import logo from "@/assets/cryptopop-logo.png";
 import coin from "@/assets/cryptopop-coin.png";
+
 
 
 
