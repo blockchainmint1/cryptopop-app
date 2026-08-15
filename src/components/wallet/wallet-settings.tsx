@@ -35,8 +35,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
-import { REGIONS, regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
-import { hasStoredRegion, loadRegion, saveRegion } from "@/lib/wallet/region";
+import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
+import {
+  hasStoredRegion,
+  loadRegion,
+  saveRegion,
+  loadMarketSlug,
+  saveMarketSlug,
+  regionForMarket,
+} from "@/lib/wallet/region";
+import { listMarkets, type MarketOption } from "@/lib/public-events.functions";
 
 export function WalletSettings({
   onForget,
