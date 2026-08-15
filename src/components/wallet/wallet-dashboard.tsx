@@ -248,7 +248,13 @@ export function WalletDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex items-center gap-2 px-4 pt-6">
-        <img src={logo} alt="CryptoPOP" className="h-8 w-auto shrink-0" />
+        <Link
+          to="/settings"
+          aria-label="POP market"
+          className="flex h-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 px-3 font-display text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10"
+        >
+          {marketCode(marketSlug)}
+        </Link>
         <div className="flex flex-1 justify-center">
           <Link
             to="/leaderboard"
@@ -265,6 +271,7 @@ export function WalletDashboard() {
               <Settings2 className="h-5 w-5" />
             </Link>
           </Button>
+
           <Button variant="ghost" size="icon" onClick={() => setScanOpen(true)} aria-label="Scan a code">
             <Camera className="h-5 w-5" />
           </Button>
