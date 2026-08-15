@@ -99,3 +99,67 @@ export async function hubGetPass(id: string): Promise<HubPass | null> {
     return null;
   }
 }
+
+export type HubActivateInput = {
+  address: string;
+  market_slug?: string | null;
+  email?: string | null;
+  client?: string | null;
+};
+
+export type HubActivateResult = {
+  address: string;
+  market_slug: string | null;
+  email: string | null;
+  welcome_pop: number;
+  already_activated: boolean;
+  status: string;
+};
+
+/**
+ * Register a freshly created (or restored) wallet with the hub.
+ * The hub owns the welcome grant, dedupe and CRM record. Idempotent.
+ */
+export async function hubActivateWallet(input: HubActivateInput): Promise<HubActivateResult> {
+  let res: Response;
+  try {
+    res = await fetch(`${POP_HUB_URL}/api/public/wallet-activate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-cryptopop-key": hubKey(),
+      },
+      body: JSON.stringify({
+        address: input.address,
+        market_slug: input.market_slug ?? null,
+        email: input.email ?? null,
+        client: input.client ?? "wallet-web",
+      }),
+    });
+  } catch (e) {
+    console.error("[hubActivateWallet] unreachable", e);
+    throw new Error("hub_unreachable");
+  }
+
+  let body: unknown = null;
+  try {
+    body = await res.json();
+  } catch {
+    /* ignore */
+  }
+
+  if (!res.ok) {
+    const err = (body as { error?: string } | null)?.error;
+    throw new Error(err || `hub_error_${res.status}`);
+  }
+
+  const r = (body ?? {}) as Partial<HubActivateResult>;
+  return {
+    address: r.address ?? input.address,
+    market_slug: r.market_slug ?? input.market_slug ?? null,
+    email: r.email ?? input.email ?? null,
+    welcome_pop: Number(r.welcome_pop ?? 0),
+    already_activated: Boolean(r.already_activated),
+    status: r.status ?? "pending",
+  };
+}
