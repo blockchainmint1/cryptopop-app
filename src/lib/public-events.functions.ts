@@ -25,7 +25,14 @@ export type PublicEventListItem = {
 
 export type EventMarketOption = { slug: string; label: string };
 
-type MarketRow = { slug: string; label: string; lat: number | null; lng: number | null };
+type MarketRow = {
+  slug: string;
+  label: string;
+  lat: number | null;
+  lng: number | null;
+  country: string | null;
+};
+
 
 /**
  * Market catalog. Prefers the main site's public markets API (so locations stay
@@ -56,6 +63,7 @@ async function getMarketCatalog(): Promise<MarketRow[]> {
             label: region ? `${city}, ${region}` : city,
             lat: typeof r["lat"] === "number" ? r["lat"] : null,
             lng: typeof r["lng"] === "number" ? r["lng"] : null,
+            country: typeof r["country"] === "string" ? r["country"] : null,
           } satisfies MarketRow;
         })
         .filter((m): m is MarketRow => m !== null);
@@ -69,14 +77,16 @@ async function getMarketCatalog(): Promise<MarketRow[]> {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("pop_markets")
-      .select("slug, city, region, lat, lng, sort_order")
+      .select("slug, city, region, country, lat, lng, sort_order")
       .order("sort_order", { ascending: true });
     return (data ?? []).map((m) => ({
       slug: m.slug as string,
       label: m.region ? `${m.city}, ${m.region}` : (m.city as string),
       lat: m.lat == null ? null : Number(m.lat),
       lng: m.lng == null ? null : Number(m.lng),
+      country: (m.country as string | null) ?? null,
     }));
+
   } catch {
     return [];
   }
@@ -252,3 +262,16 @@ export const geocodeZip = createServerFn({ method: "GET" })
     };
   });
 
+
+export type MarketOption = { slug: string; label: string; country: string | null };
+
+/**
+ * Full market catalog (hub-first, local fallback). Used by wallet onboarding
+ * so people pick the market they actually POP in.
+ */
+export const listMarkets = createServerFn({ method: "GET" }).handler(
+  async (): Promise<MarketOption[]> => {
+    const catalog = await getMarketCatalog();
+    return catalog.map((m) => ({ slug: m.slug, label: m.label, country: m.country }));
+  },
+);
