@@ -262,3 +262,16 @@ export const geocodeZip = createServerFn({ method: "GET" })
     };
   });
 
+
+export type MarketOption = { slug: string; label: string; country: string | null };
+
+/**
+ * Full market catalog (hub-first, local fallback). Used by wallet onboarding
+ * so people pick the market they actually POP in.
+ */
+export const listMarkets = createServerFn({ method: "GET" }).handler(
+  async (): Promise<MarketOption[]> => {
+    const catalog = await getMarketCatalog();
+    return catalog.map((m) => ({ slug: m.slug, label: m.label, country: m.country }));
+  },
+);
