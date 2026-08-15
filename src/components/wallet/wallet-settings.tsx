@@ -16,6 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { unlockVault, markBackedUp } from "@/lib/wallet/vault";
 import {
   disableBiometric,
@@ -180,26 +187,25 @@ export function WalletSettings({
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           POP market
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          {REGIONS.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => {
-                setRegion(r.id);
-                saveRegion(r.id);
-                setAutoRegion(false);
-              }}
-              className={`rounded-xl border px-3 py-2 font-display text-sm uppercase transition ${
-                region === r.id
-                  ? "border-primary bg-primary/15 text-foreground"
-                  : "border-white/10 bg-black/20 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {r.name}
-            </button>
-          ))}
-        </div>
+        <Select
+          value={region}
+          onValueChange={(v) => {
+            setRegion(v as RegionId);
+            saveRegion(v as RegionId);
+            setAutoRegion(false);
+          }}
+        >
+          <SelectTrigger className="h-11 rounded-xl border-white/10 bg-black/20 font-display text-sm uppercase">
+            <SelectValue placeholder="Select market" />
+          </SelectTrigger>
+          <SelectContent>
+            {REGIONS.map((r) => (
+              <SelectItem key={r.id} value={r.id} className="font-display text-sm uppercase">
+                {r.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {autoRegion && (
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Auto-detected from your location — tap to change
