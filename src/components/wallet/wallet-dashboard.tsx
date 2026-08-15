@@ -95,7 +95,9 @@ export function WalletDashboard() {
 
   const [hidden, setHidden] = useState<ChainId[]>([]);
   const [region, setRegion] = useState<RegionId>("tx");
+  const [marketSlug, setMarketSlug] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+
   const [showAllTx, setShowAllTx] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
