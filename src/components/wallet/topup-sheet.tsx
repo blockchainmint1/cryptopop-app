@@ -209,23 +209,11 @@ export function TopUpSheet({
                 />
               </div>
 
-              <div className="flex gap-2">
-                {HANDOFF_ASSETS.map((a, i) => (
-                  <button
-                    key={a.asset}
-                    type="button"
-                    onClick={() => setAssetIdx(i)}
-                    className={`flex-1 rounded-2xl border px-3 py-3 text-left text-sm transition ${
-                      i === assetIdx
-                        ? "border-primary bg-primary/15"
-                        : "border-white/15 text-muted-foreground"
-                    }`}
-                  >
-                    <span className="block font-display uppercase">{a.asset}</span>
-                    <span className="text-[11px]">{a.label}</span>
-                  </button>
-                ))}
+              <div className="rounded-2xl border border-primary/40 bg-primary/10 px-3 py-3 text-sm">
+                <span className="block font-display uppercase">{picked.asset}</span>
+                <span className="text-[11px] text-muted-foreground">{picked.label}</span>
               </div>
+
 
               <Breakdown side={side} quote={quote} asset={picked.asset} />
 
