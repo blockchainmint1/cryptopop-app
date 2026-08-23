@@ -10,7 +10,6 @@ export type OrderSide = "buy" | "sell";
 
 export const HANDOFF_ASSETS = [
   { asset: "TSD", chain: "txc", label: "TSD on TEXITcoin" },
-  { asset: "USDC", chain: "base", label: "USDC on Base" },
 ] as const;
 
 export type HandoffAsset = (typeof HANDOFF_ASSETS)[number];
