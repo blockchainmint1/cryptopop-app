@@ -106,3 +106,20 @@ export function saveOrder(order: LocalOrder) {
 export function findOrder(reference: string): LocalOrder | null {
   return readOrders().find((o) => o.reference === reference) ?? null;
 }
+
+export function orderStatusLabel(status: string): { label: string; tone: "ok" | "warn" | "bad" } {
+  switch (status) {
+    case "completed":
+    case "settled":
+    case "delivered":
+      return { label: "Completed", tone: "ok" };
+    case "failed":
+    case "cancelled":
+    case "canceled":
+      return { label: status === "failed" ? "Failed" : "Cancelled", tone: "bad" };
+    case "not_registered":
+      return { label: "Not started", tone: "warn" };
+    default:
+      return { label: "Processing", tone: "warn" };
+  }
+}
