@@ -14,9 +14,11 @@ function env(name: string): string | undefined {
 }
 
 export function handoffConfig(): { url: string; secret: string } | null {
-  const secret = env("VECTORPAY_WEBHOOK_SECRET");
+  // Accept either naming convention for the shared HMAC key / order endpoint.
+  const secret = env("VECTORPAY_WEBHOOK_SECRET") || env("VECTORPAY_WEBHOOK");
   if (!secret) return null;
-  const url = env("VECTORPAY_ORDER_WEBHOOK_URL") || DEFAULT_ORDER_URL;
+  const url =
+    env("VECTORPAY_ORDER_WEBHOOK_URL") || env("VECTORPAY_WEBHOOK_URL") || DEFAULT_ORDER_URL;
   return { url, secret };
 }
 
