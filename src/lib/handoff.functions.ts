@@ -104,3 +104,20 @@ export const startHandoffOrder = createServerFn({ method: "POST" })
       handoffUrl: relay.checkoutUrl,
     };
   });
+
+const statusSchema = z.object({ references: z.array(z.string().max(64)).max(25) });
+
+/** Live status for a set of order references (device passes its own refs). */
+export const getOrderStatuses = createServerFn({ method: "POST" })
+  .inputValidator((input) => statusSchema.parse(input))
+  .handler(async ({ data }) => {
+    if (data.references.length === 0) return { statuses: {} as Record<string, string> };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("onramp_orders")
+      .select("reference,status")
+      .in("reference", data.references);
+    const statuses: Record<string, string> = {};
+    for (const r of rows ?? []) statuses[r.reference] = r.status;
+    return { statuses };
+  });
