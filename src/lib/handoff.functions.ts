@@ -81,6 +81,21 @@ export const startHandoffOrder = createServerFn({ method: "POST" })
       accepted_disclaimers: data.acceptedDisclaimers,
     });
 
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("onramp_orders").insert({
+        wallet_address: destination ?? "",
+        asset: data.asset.toLowerCase(),
+        amount_usd: chargedUsd,
+        status: relay.ok ? "submitted" : "failed",
+        provider: "vectorpay",
+        reference: orderId,
+        failure_reason: relay.detail,
+      });
+    } catch (e) {
+      console.error("[handoff] order record failed", e);
+    }
+
     return {
       orderId,
       feeUsd,

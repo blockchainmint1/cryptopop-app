@@ -30,6 +30,7 @@ import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
+import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/public/vectorpay-status'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -144,6 +145,12 @@ const AuthenticatedScanSuccessRoute =
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
+const ApiPublicVectorpayStatusRoute =
+  ApiPublicVectorpayStatusRouteImport.update({
+    id: '/api/public/vectorpay-status',
+    path: '/api/public/vectorpay-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -205,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -234,6 +242,7 @@ export interface FileRoutesByTo {
   '/events/$slug': typeof EventsSlugRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -265,6 +274,7 @@ export interface FileRoutesById {
   '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/events/'
     | '/scan/success'
+    | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/events'
     | '/scan/success'
+    | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
@@ -355,6 +367,7 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/events/'
     | '/_authenticated/scan/success'
+    | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
@@ -382,6 +395,7 @@ export interface RootRouteChildren {
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsSlugRoute: typeof EventsSlugRoute
   EventsIndexRoute: typeof EventsIndexRoute
+  ApiPublicVectorpayStatusRoute: typeof ApiPublicVectorpayStatusRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -540,6 +554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
+    '/api/public/vectorpay-status': {
+      id: '/api/public/vectorpay-status'
+      path: '/api/public/vectorpay-status'
+      fullPath: '/api/public/vectorpay-status'
+      preLoaderRoute: typeof ApiPublicVectorpayStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -637,6 +658,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClaimTokenRoute: ClaimTokenRoute,
   EventsSlugRoute: EventsSlugRoute,
   EventsIndexRoute: EventsIndexRoute,
+  ApiPublicVectorpayStatusRoute: ApiPublicVectorpayStatusRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
