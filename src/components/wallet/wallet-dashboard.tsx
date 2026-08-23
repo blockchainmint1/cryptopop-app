@@ -65,7 +65,7 @@ import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
-import { AddValueSheet } from "./add-value-sheet";
+import { TopUpSheet } from "./topup-sheet";
 import coin from "@/assets/cryptopop-coin.png";
 
 
@@ -342,13 +342,13 @@ export function WalletDashboard() {
           )}
         </Card>
 
-        {/* Add value (ACH onramp) */}
+        {/* Top up (VectorPay handoff) */}
         <Button
           variant="secondary"
           className="h-12 w-full rounded-full"
           onClick={() => setAddValueOpen(true)}
         >
-          <Plus className="mr-1.5 h-4 w-4" /> Add value
+          <Plus className="mr-1.5 h-4 w-4" /> Top up
         </Button>
 
 
@@ -574,12 +574,7 @@ export function WalletDashboard() {
         onSent={() => void refresh()}
       />
 
-      <AddValueSheet
-        open={addValueOpen}
-        onOpenChange={setAddValueOpen}
-        address={address}
-        onFunded={() => void refresh()}
-      />
+      <TopUpSheet open={addValueOpen} onOpenChange={setAddValueOpen} address={address} side="buy" />
     </div>
 
   );
