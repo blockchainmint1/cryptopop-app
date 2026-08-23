@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { findOrder, type LocalOrder } from "@/lib/handoff";
@@ -70,16 +70,17 @@ function OrderPage() {
                 <p className="break-all font-mono text-xs">{order.address}</p>
               </div>
             )}
-            <p className="pt-2 text-xs text-muted-foreground">
-              Bank settlement takes 1–3 business days. Your {order.asset} arrives once funds clear.
-            </p>
-            {order.checkoutUrl && (
-              <Button asChild className="mt-2 h-11 w-full rounded-full">
-                <a href={order.checkoutUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink className="mr-1.5 h-4 w-4" /> Continue at VectorPay
-                </a>
-              </Button>
-            )}
+            <div className="mt-2 flex items-start gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 p-4">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div className="space-y-1">
+                <p className="font-display uppercase tracking-wide">Order processing</p>
+                <p className="text-xs text-muted-foreground">
+                  Thanks, your order is processing — we'll let you know as soon as it's done!
+                  Bank settlement takes 1–3 business days and your {order.asset} arrives once funds
+                  clear.
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
