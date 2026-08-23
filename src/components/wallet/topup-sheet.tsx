@@ -192,8 +192,51 @@ export function TopUpSheet({
               >
                 Get started
               </Button>
+
+              {history.length > 0 && (
+                <div className="space-y-2">
+                  <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                    Recent {side === "buy" ? "top ups" : "cash outs"}
+                  </p>
+                  <div className="space-y-2">
+                    {history.map((o) => {
+                      const s = orderStatusLabel(liveStatus[o.reference] ?? o.status);
+                      return (
+                        <Link
+                          key={o.reference}
+                          to="/wallet/order/$id"
+                          params={{ id: o.reference }}
+                          onClick={() => onOpenChange(false)}
+                          className="flex items-center justify-between gap-3 rounded-2xl border border-white/12 bg-white/5 px-4 py-3"
+                        >
+                          <span className="min-w-0">
+                            <span className="block font-display text-base">
+                              ${o.usd.toFixed(2)} {o.asset}
+                            </span>
+                            <span className="block truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                              {new Date(o.createdAt).toLocaleDateString()} · {o.reference}
+                            </span>
+                          </span>
+                          <span
+                            className={`shrink-0 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest ${
+                              s.tone === "ok"
+                                ? "border-primary/40 bg-primary/10 text-primary"
+                                : s.tone === "bad"
+                                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                  : "border-amber-400/40 bg-amber-400/10 text-amber-300"
+                            }`}
+                          >
+                            {s.label}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
+
 
           {step === "amount" && (
             <div className="space-y-4">
