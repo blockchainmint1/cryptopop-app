@@ -32,6 +32,7 @@ import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/public/vectorpay-status'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as WalletOrderIdRouteImport } from './routes/wallet.order.$id'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -156,6 +157,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletOrderIdRoute = WalletOrderIdRouteImport.update({
+  id: '/wallet/order/$id',
+  path: '/wallet/order/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksBlastDrainRoute =
   ApiPublicHooksBlastDrainRouteImport.update({
     id: '/api/public/hooks/blast-drain',
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -244,6 +251,7 @@ export interface FileRoutesByTo {
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -276,6 +284,7 @@ export interface FileRoutesById {
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -308,6 +317,7 @@ export interface FileRouteTypes {
     | '/scan/success'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
+    | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/scan/success'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
+    | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scan/success'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
+    | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -397,6 +409,7 @@ export interface RootRouteChildren {
   EventsIndexRoute: typeof EventsIndexRoute
   ApiPublicVectorpayStatusRoute: typeof ApiPublicVectorpayStatusRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  WalletOrderIdRoute: typeof WalletOrderIdRoute
   ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -568,6 +581,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet/order/$id': {
+      id: '/wallet/order/$id'
+      path: '/wallet/order/$id'
+      fullPath: '/wallet/order/$id'
+      preLoaderRoute: typeof WalletOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/blast-drain': {
       id: '/api/public/hooks/blast-drain'
       path: '/api/public/hooks/blast-drain'
@@ -660,6 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsIndexRoute: EventsIndexRoute,
   ApiPublicVectorpayStatusRoute: ApiPublicVectorpayStatusRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  WalletOrderIdRoute: WalletOrderIdRoute,
   ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
