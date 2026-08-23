@@ -44,6 +44,7 @@ export function TopUpSheet({
 }) {
   const status = useServerFn(getHandoffStatus);
   const startOrder = useServerFn(startHandoffOrder);
+  const fetchStatuses = useServerFn(getOrderStatuses);
 
   const [ready, setReady] = useState<boolean | null>(null);
   const [step, setStep] = useState<Step>("intro");
@@ -54,6 +55,8 @@ export function TopUpSheet({
   const [accepted, setAccepted] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [history, setHistory] = useState<LocalOrder[]>([]);
+  const [liveStatus, setLiveStatus] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{
     orderId: string;
     feeUsd: number;
@@ -72,7 +75,18 @@ export function TopUpSheet({
     status()
       .then((s) => setReady(s.ready))
       .catch(() => setReady(false));
-  }, [open, status]);
+
+    const mine = readOrders()
+      .filter((o) => o.side === side)
+      .slice(0, 5);
+    setHistory(mine);
+    if (mine.length > 0) {
+      fetchStatuses({ data: { references: mine.map((o) => o.reference) } })
+        .then((r) => setLiveStatus(r.statuses))
+        .catch(() => undefined);
+    }
+  }, [open, side, status, fetchStatuses]);
+
 
   const usd = Number(amount);
   const valid = Number.isFinite(usd) && usd >= ORDER_MIN_USD && usd <= ORDER_MAX_USD;
