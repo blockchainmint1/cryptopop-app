@@ -44,7 +44,7 @@ export function TopUpSheet({
   const [ready, setReady] = useState<boolean | null>(null);
   const [step, setStep] = useState<Step>("intro");
   const [amount, setAmount] = useState("100");
-  const [assetIdx, setAssetIdx] = useState(0);
+  const assetIdx = 0;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [accepted, setAccepted] = useState<string[]>([]);
