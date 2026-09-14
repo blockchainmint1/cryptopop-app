@@ -1,0 +1,18 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAMID.org.cryptopop.wallet"],
+        "components": [
+          { "/": "/claim/*", "comment": "POP claim links open the wallet" },
+          { "/": "/events/*", "comment": "Event pages open the wallet" },
+          { "/": "/my-pass", "comment": "Event pass" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TEAMID.org.cryptopop.wallet"]
+  }
+}

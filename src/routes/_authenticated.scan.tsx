@@ -29,6 +29,8 @@ const ERROR_COPY: Record<HubClaimError, string> = {
   low_gps_accuracy: "GPS signal too weak. Move outdoors and retry.",
   already_claimed: "This wallet already claimed POP for this event.",
   no_wallet: "Wallet setup interrupted. Open your wallet, then try again.",
+  invalid_address: "Wallet address wasn't accepted. Reopen your wallet and retry.",
+  server_error: "CryptoPOP had a hiccup. Try again in a moment.",
   hub_unreachable: "Couldn't reach CryptoPOP. Check your connection and retry.",
 };
 

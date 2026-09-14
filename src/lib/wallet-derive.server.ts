@@ -23,10 +23,15 @@ export function isValidMnemonic(m: string): boolean {
   return validateMnemonic(m, wordlist);
 }
 
-export function deriveTxcAddressServer(mnemonic: string): string {
+/** TEXITcoin's registered SLIP-0044 coin type (texitcoin.org/build). */
+export const TXC_PATH = "m/44'/696969'/0'/0/0";
+/** Pre-registration path (Bitcoin's slot) — legacy compatibility only. */
+export const TXC_LEGACY_PATH = "m/44'/0'/0'/0/0";
+
+export function deriveTxcAddressAtPathServer(mnemonic: string, path: string): string {
   const seed = mnemonicToSeedSync(mnemonic);
   const root = HDKey.fromMasterSeed(seed);
-  const child = root.derive("m/44'/0'/0'/0/0");
+  const child = root.derive(path);
   if (!child.publicKey) throw new Error("failed to derive public key");
   const h160 = hash160(child.publicKey);
   const payload = new Uint8Array(21);
@@ -34,3 +39,12 @@ export function deriveTxcAddressServer(mnemonic: string): string {
   payload.set(h160, 1);
   return base58check.encode(payload);
 }
+
+export function deriveTxcAddressServer(mnemonic: string): string {
+  return deriveTxcAddressAtPathServer(mnemonic, TXC_PATH);
+}
+
+export function deriveLegacyTxcAddressServer(mnemonic: string): string {
+  return deriveTxcAddressAtPathServer(mnemonic, TXC_LEGACY_PATH);
+}
+

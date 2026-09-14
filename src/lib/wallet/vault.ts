@@ -70,9 +70,33 @@ export function legacyMnemonic(): string | null {
   return m && isValidMnemonic(m) ? m : null;
 }
 
+/**
+ * Generate a BIP39 phrase from the platform CSPRNG.
+ *
+ * Entropy chain: crypto.getRandomValues (OS CSPRNG — /dev/urandom, SecRandom,
+ * BCryptGenRandom) → @noble/hashes randomBytes → @scure/bip39. No Math.random,
+ * no user-supplied or time-based seeding anywhere. 128 bits = 12 words,
+ * 256 bits = 24 words.
+ */
 export function createMnemonic(strength: 128 | 256 = 128): string {
-  return generateMnemonic(wordlist, strength);
+  // Fail loudly rather than fall back to a weak RNG in a degraded webview.
+  const c = typeof globalThis !== "undefined" ? globalThis.crypto : undefined;
+  if (!c || typeof c.getRandomValues !== "function") {
+    throw new Error(
+      "This device has no secure random number generator, so a wallet can't be created here safely.",
+    );
+  }
+  // Sanity check: a CSPRNG must not hand back an all-zero buffer.
+  const probe = c.getRandomValues(new Uint8Array(32));
+  if (probe.every((b) => b === 0)) {
+    throw new Error("Secure random number generator failed a self-check. Wallet not created.");
+  }
+  const m = generateMnemonic(wordlist, strength);
+  // Never emit a phrase that fails its own checksum.
+  if (!validateMnemonic(m, wordlist)) throw new Error("Generated phrase failed validation.");
+  return m;
 }
+
 
 export function normalizeMnemonic(m: string): string {
   return m.trim().toLowerCase().replace(/\s+/g, " ");

@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { WalletProvider } from "@/lib/wallet/wallet-context";
 import { initNativeShell } from "@/lib/native/shell";
+import { OfflineGate } from "@/components/offline-gate";
 
 
 import appCss from "../styles.css?url";
@@ -129,11 +130,14 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <WalletProvider>
-          <Outlet />
+          <div className="native-scroll">
+            <Outlet />
+          </div>
+          <OfflineGate />
           <Toaster richColors position="top-center" />
         </WalletProvider>
       </AuthProvider>
     </QueryClientProvider>
-
   );
 }
+

@@ -17,6 +17,7 @@ import { signPsbt } from "@/lib/wallet/sign";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { ASSETS, assetMeta, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
+import { saveTxLabel } from "@/lib/wallet/tx-labels";
 import { QrScanDialog } from "./qr-scan-dialog";
 
 export type SendPrefill = {
@@ -27,10 +28,17 @@ export type SendPrefill = {
   memo?: string | null;
 };
 
+/** A spendable address plus its per-asset balance (canonical + legacy paths). */
+export type SendSource = {
+  address: string;
+  balances: Record<AssetId, number | null>;
+};
+
 export function SendSheet({
   open,
   onOpenChange,
   address,
+  sources,
   mnemonic,
   popBalance,
   tsdBalance,
@@ -41,6 +49,7 @@ export function SendSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   address: string | null;
+  sources?: SendSource[];
   mnemonic: string | null;
   popBalance: number | null;
   tsdBalance: number | null;
@@ -48,8 +57,12 @@ export function SendSheet({
   prefill?: SendPrefill | null;
   onSent: () => void;
 }) {
+
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
+
+  // POP / phPOP are scoreboard points for now — not spendable/tradeable.
+  const SENDABLE_ASSETS = ASSETS.filter((a) => a.id !== "pop" && a.id !== "phpop");
 
   const [asset, setAsset] = useState<AssetId>("tsd");
   const [to, setTo] = useState("");
@@ -61,6 +74,7 @@ export function SendSheet({
 
   const balances: Record<AssetId, number | null> = {
     pop: popBalance,
+    phpop: null,
     tsd: tsdBalance,
     txc: txcBalance,
   };
@@ -71,7 +85,8 @@ export function SendSheet({
   useEffect(() => {
     if (!open || !prefill) return;
     if (prefill.to) setTo(prefill.to);
-    if (prefill.asset) setAsset(prefill.asset);
+    if (prefill.asset && prefill.asset !== "pop" && prefill.asset !== "phpop")
+      setAsset(prefill.asset);
     if (prefill.amount != null) setAmount(String(prefill.amount));
     setRequest(prefill.merchant || prefill.memo || prefill.amount != null ? prefill : null);
   }, [open, prefill]);
@@ -88,7 +103,7 @@ export function SendSheet({
     setScanOpen(false);
     if (intent.kind === "payment") {
       setTo(intent.to);
-      setAsset(intent.asset);
+      if (intent.asset !== "pop") setAsset(intent.asset);
       if (intent.amount != null) setAmount(String(intent.amount));
       setRequest(intent);
       toast.success(intent.merchant ? `Payment request from ${intent.merchant}` : "Payment request loaded");
@@ -105,7 +120,9 @@ export function SendSheet({
     if (!address || !mnemonic) return toast.error("Wallet is locked");
     const dest = to.trim();
     if (!isValidTxcAddress(dest)) return toast.error("That doesn't look like a TXC address");
-    if (dest === address) return toast.error("That's your own address");
+    if (dest === address || sources?.some((s) => s.address === dest)) {
+      return toast.error("That's your own address");
+    }
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) return toast.error("Enter an amount");
     if (asset === "pop" && !Number.isInteger(value)) {
@@ -115,11 +132,23 @@ export function SendSheet({
       return toast.error(`You only have ${available} ${asset.toUpperCase()}`);
     }
 
+    // Funds may sit on the canonical path or an older legacy-path address —
+    // spend from whichever one covers the amount.
+    const from =
+      sources?.find((s) => (s.balances[asset] ?? 0) >= value)?.address ?? address;
+
     setBusy(true);
     try {
-      const built = await prepare({ data: { asset, from: address, to: dest, amount: value } });
+      const built = await prepare({ data: { asset, from, to: dest, amount: value } });
+
       const rawHex = signPsbt(built.psbtBase64, mnemonic);
       const res = await broadcast({ data: { rawHex } });
+      // Vendor name stays on this device only — never sent to the chain.
+      saveTxLabel(res.txid, {
+        merchant: request?.merchant ?? null,
+        memo: request?.memo ?? null,
+        address: dest,
+      });
       setTxid(res.txid);
       toast.success("Sent — waiting for confirmation");
       onSent();
@@ -172,8 +201,8 @@ export function SendSheet({
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2">
-              {ASSETS.map((a) => (
+            <div className="grid grid-cols-2 gap-2">
+              {SENDABLE_ASSETS.map((a) => (
                 <button
                   key={a.id}
                   type="button"

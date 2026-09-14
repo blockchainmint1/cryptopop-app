@@ -10,6 +10,19 @@ export type MyEventMembership = {
   signed_up_at: string;
   status: string;
   checked_in_at: string | null;
+  full_name: string;
+  pop_credits: number;
+  guest_count: number;
+  event: {
+    name: string;
+    description: string | null;
+    start_at: string;
+    end_at: string;
+    time_zone: string;
+    lat: number;
+    lng: number;
+    cover_url: string | null;
+  } | null;
 };
 
 /**
@@ -26,25 +39,55 @@ export const getMyEventMemberships = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("event_signups")
-      .select("id, signed_up_at, status, checked_in_at, events(slug)")
+      .select(
+        "id, signed_up_at, status, checked_in_at, full_name, pop_credits, guest_count, events(slug, name, description, start_at, end_at, time_zone, lat, lng, cover_url)",
+      )
       .eq("email", email.toLowerCase())
-      .order("signed_up_at", { ascending: false })
-      .limit(5);
+      .neq("status", "cancelled");
 
     if (error) {
       console.error("[getMyEventMemberships]", error);
       return { memberships: [] };
     }
 
-    const memberships: MyEventMembership[] = (data ?? []).map((row) => ({
-      signup_id: row.id,
-      slug:
-        (row as { events?: { slug: string | null } | null }).events?.slug ?? "",
-      signed_up_at: row.signed_up_at,
-      status: row.status,
-      checked_in_at: row.checked_in_at,
-    }));
+    const memberships: MyEventMembership[] = (data ?? []).map((row) => {
+      const ev = (row as { events?: Record<string, unknown> | null }).events ?? null;
+      return {
+        signup_id: row.id,
+        slug: (ev?.slug as string) ?? "",
+        signed_up_at: row.signed_up_at,
+        status: row.status,
+        checked_in_at: row.checked_in_at,
+        full_name: row.full_name,
+        pop_credits: Number(row.pop_credits ?? 0),
+        guest_count: Number(row.guest_count ?? 0),
+        event: ev
+          ? {
+              name: (ev.name as string) ?? "",
+              description: (ev.description as string | null) ?? null,
+              start_at: (ev.start_at as string) ?? "",
+              end_at: (ev.end_at as string) ?? "",
+              time_zone: (ev.time_zone as string) ?? "America/Los_Angeles",
+              lat: Number(ev.lat ?? 0),
+              lng: Number(ev.lng ?? 0),
+              cover_url: (ev.cover_url as string | null) ?? null,
+            }
+          : null,
+      };
+    });
 
+    // Chronological order: soonest upcoming event first, then past events at the bottom.
+    const now = Date.now();
+    memberships.sort((a, b) => {
+      const aStart = a.event?.start_at ? new Date(a.event.start_at).getTime() : Infinity;
+      const bStart = b.event?.start_at ? new Date(b.event.start_at).getTime() : Infinity;
+      const aUpcoming = aStart >= now;
+      const bUpcoming = bStart >= now;
+      if (aUpcoming && !bUpcoming) return -1;
+      if (!aUpcoming && bUpcoming) return 1;
+      if (aUpcoming && bUpcoming) return aStart - bStart;
+      return bStart - aStart;
+    });
 
     return { memberships };
   });

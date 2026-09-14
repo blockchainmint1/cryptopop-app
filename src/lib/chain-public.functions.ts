@@ -22,6 +22,14 @@ function getTsdPropertyId(): number | null {
   return raw && Number.isInteger(n) && n > 0 ? n : null;
 }
 
+/** phPOP (Philippines POP Points) Omni property id. */
+function getPhPopPropertyId(): number {
+  const raw = process.env.TXC_PHPOP_TOKEN_ID ?? "40";
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : 40;
+}
+
+
 async function rpc<T>(method: string, params: unknown[]): Promise<T> {
   const url = process.env.TXC_RPC_URL ?? process.env.TXC_RPC_ADDRESS;
   const user = process.env.TXC_RPC_USER;
@@ -40,39 +48,35 @@ async function rpc<T>(method: string, params: unknown[]): Promise<T> {
   return json.result;
 }
 
-export type ChainSummary = { pop: number | null; tsd: number | null; txc: number | null };
+export type ChainSummary = {
+  pop: number | null;
+  phpop: number | null;
+  tsd: number | null;
+  txc: number | null;
+};
 
-/** POP (Omni token) + native TXC balance for any address. Public explorer data. */
+async function omniBalance(address: string, prop: number | null): Promise<number | null> {
+  if (!prop) return null;
+  try {
+    const result = await rpc<{ balance: string }>("omni_getbalance", [address, prop]);
+    const bal = Number(result?.balance ?? 0);
+    return Number.isFinite(bal) ? bal : null;
+  } catch (e) {
+    console.error("[getAddressChainSummary] omni", prop, e);
+    return null;
+  }
+}
+
+/** POP / phPOP / TSD (Omni tokens) + native TXC balance for any address. */
 export const getAddressChainSummary = createServerFn({ method: "POST" })
   .inputValidator((input) => Input.parse(input))
   .handler(async ({ data }): Promise<ChainSummary> => {
-    const [pop, tsd, txc] = await Promise.all([
+    const [pop, phpop, tsd, txc] = await Promise.all([
+      omniBalance(data.address, getPropertyId()),
+      omniBalance(data.address, getPhPopPropertyId()),
+      omniBalance(data.address, getTsdPropertyId()),
       (async () => {
-        try {
-          const result = await rpc<{ balance: string }>("omni_getbalance", [
-            data.address,
-            getPropertyId(),
-          ]);
-          const bal = Number(result?.balance ?? 0);
-          return Number.isFinite(bal) ? bal : null;
-        } catch (e) {
-          console.error("[getAddressChainSummary] omni", e);
-          return null;
-        }
-      })(),
-      (async () => {
-        const prop = getTsdPropertyId();
-        if (!prop) return null;
-        try {
-          const result = await rpc<{ balance: string }>("omni_getbalance", [data.address, prop]);
-          const bal = Number(result?.balance ?? 0);
-          return Number.isFinite(bal) ? bal : null;
-        } catch (e) {
-          console.error("[getAddressChainSummary] tsd", e);
-          return null;
-        }
-      })(),
-      (async () => {
+
         try {
           const res = await fetch(`${MEMPOOL_BASE}/address/${data.address}`);
           if (!res.ok) return null;
@@ -94,5 +98,5 @@ export const getAddressChainSummary = createServerFn({ method: "POST" })
         }
       })(),
     ]);
-    return { pop, tsd, txc };
+    return { pop, phpop, tsd, txc };
   });

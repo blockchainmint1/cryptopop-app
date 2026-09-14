@@ -11,22 +11,28 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
+import { Route as ManifestoRouteImport } from './routes/manifesto'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
+import { Route as AdminPushRouteImport } from './routes/admin.push'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
-import { Route as EventsSlugRsvpRouteImport } from './routes/events.$slug.rsvp'
+import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/public/vectorpay-status'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as WalletOrderIdRouteImport } from './routes/wallet.order.$id'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -43,6 +49,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -51,6 +62,11 @@ const LoginRoute = LoginRouteImport.update({
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestoRoute = ManifestoRouteImport.update({
+  id: '/manifesto',
+  path: '/manifesto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyPassRoute = MyPassRouteImport.update({
@@ -66,6 +82,11 @@ const MyPopRoute = MyPopRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -94,6 +115,11 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AdminPushRoute = AdminPushRouteImport.update({
+  id: '/admin/push',
+  path: '/admin/push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -109,20 +135,31 @@ const EventsIndexRoute = EventsIndexRouteImport.update({
   path: '/events/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsSlugRoute = EventsSlugRouteImport.update({
+  id: '/events/$slug',
+  path: '/events/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedScanSuccessRoute =
   AuthenticatedScanSuccessRouteImport.update({
     id: '/success',
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
-const EventsSlugRsvpRoute = EventsSlugRsvpRouteImport.update({
-  id: '/events/$slug/rsvp',
-  path: '/events/$slug/rsvp',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ApiPublicVectorpayStatusRoute =
+  ApiPublicVectorpayStatusRouteImport.update({
+    id: '/api/public/vectorpay-status',
+    path: '/api/public/vectorpay-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletOrderIdRoute = WalletOrderIdRouteImport.update({
+  id: '/wallet/order/$id',
+  path: '/wallet/order/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksBlastDrainRoute =
@@ -162,22 +199,28 @@ const LovableEmailTransactionalSendRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/manifesto': typeof ManifestoRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
-  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
+  '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -187,22 +230,28 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/manifesto': typeof ManifestoRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
-  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
+  '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -214,22 +263,28 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/manifesto': typeof ManifestoRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/push': typeof AdminPushRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
-  '/events/$slug/rsvp': typeof EventsSlugRsvpRoute
+  '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -241,22 +296,28 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/leaderboard'
     | '/login'
     | '/logout'
+    | '/manifesto'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
+    | '/events/$slug'
     | '/events/'
     | '/scan/success'
-    | '/events/$slug/rsvp'
+    | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
+    | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -266,22 +327,28 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/leaderboard'
     | '/login'
     | '/logout'
+    | '/manifesto'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
+    | '/events/$slug'
     | '/events'
     | '/scan/success'
-    | '/events/$slug/rsvp'
+    | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
+    | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -292,22 +359,28 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/leaderboard'
     | '/login'
     | '/logout'
+    | '/manifesto'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
+    | '/admin/push'
     | '/auth/callback'
     | '/claim/$token'
+    | '/events/$slug'
     | '/events/'
     | '/_authenticated/scan/success'
-    | '/events/$slug/rsvp'
+    | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
+    | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -319,18 +392,24 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  ManifestoRoute: typeof ManifestoRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
   PrivacyRoute: typeof PrivacyRoute
+  SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  AdminPushRoute: typeof AdminPushRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
+  EventsSlugRoute: typeof EventsSlugRoute
   EventsIndexRoute: typeof EventsIndexRoute
-  EventsSlugRsvpRoute: typeof EventsSlugRsvpRoute
+  ApiPublicVectorpayStatusRoute: typeof ApiPublicVectorpayStatusRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  WalletOrderIdRoute: typeof WalletOrderIdRoute
   ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -355,6 +434,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -367,6 +453,13 @@ declare module '@tanstack/react-router' {
       path: '/logout'
       fullPath: '/logout'
       preLoaderRoute: typeof LogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifesto': {
+      id: '/manifesto'
+      path: '/manifesto'
+      fullPath: '/manifesto'
+      preLoaderRoute: typeof ManifestoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-pass': {
@@ -388,6 +481,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -425,6 +525,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/admin/push': {
+      id: '/admin/push'
+      path: '/admin/push'
+      fullPath: '/admin/push'
+      preLoaderRoute: typeof AdminPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -446,6 +553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$slug': {
+      id: '/events/$slug'
+      path: '/events/$slug'
+      fullPath: '/events/$slug'
+      preLoaderRoute: typeof EventsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/scan/success': {
       id: '/_authenticated/scan/success'
       path: '/success'
@@ -453,11 +567,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
-    '/events/$slug/rsvp': {
-      id: '/events/$slug/rsvp'
-      path: '/events/$slug/rsvp'
-      fullPath: '/events/$slug/rsvp'
-      preLoaderRoute: typeof EventsSlugRsvpRouteImport
+    '/api/public/vectorpay-status': {
+      id: '/api/public/vectorpay-status'
+      path: '/api/public/vectorpay-status'
+      fullPath: '/api/public/vectorpay-status'
+      preLoaderRoute: typeof ApiPublicVectorpayStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/suppression': {
@@ -465,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/suppression'
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet/order/$id': {
+      id: '/wallet/order/$id'
+      path: '/wallet/order/$id'
+      fullPath: '/wallet/order/$id'
+      preLoaderRoute: typeof WalletOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/blast-drain': {
@@ -542,18 +663,24 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  ManifestoRoute: ManifestoRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
   PrivacyRoute: PrivacyRoute,
+  SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  AdminPushRoute: AdminPushRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
+  EventsSlugRoute: EventsSlugRoute,
   EventsIndexRoute: EventsIndexRoute,
-  EventsSlugRsvpRoute: EventsSlugRsvpRoute,
+  ApiPublicVectorpayStatusRoute: ApiPublicVectorpayStatusRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  WalletOrderIdRoute: WalletOrderIdRoute,
   ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
@@ -564,3 +691,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

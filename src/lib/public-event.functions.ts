@@ -32,7 +32,29 @@ export const getPublicEventBySlug = createServerFn({ method: "GET" })
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) return null;
-    if (!row || !row.slug) return null;
+    if (!row || !row.slug) {
+      // Not in this app's DB — fall back to the main site's public feed so
+      // events created on cryptopop.org still open here.
+      const { listPublicEvents } = await import("@/lib/public-events.functions");
+      const all = await listPublicEvents();
+      const remote = all.find((e) => e.slug === data.slug);
+      if (!remote) return null;
+      return {
+        slug: remote.slug,
+        name: remote.name,
+        description: remote.description,
+        start_at: remote.start_at,
+        end_at: remote.end_at,
+        time_zone: remote.time_zone,
+        lat: remote.lat ?? 0,
+        lng: remote.lng ?? 0,
+        capacity: remote.capacity,
+        taken: remote.taken,
+        spotsLeft: remote.spotsLeft,
+        rsvpOpen: remote.rsvpOpen,
+      };
+    }
+
 
     const capacity =
       typeof (row as { capacity?: number | null }).capacity === "number"

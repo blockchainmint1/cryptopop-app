@@ -23,7 +23,9 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
+  Bell,
   Trophy,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -50,79 +52,100 @@ import {
   type WalletReward,
   type WalletTx,
 } from "@/lib/wallet-activity.functions";
+import { checkForUpdate, applyUpdate, appVersionLabel } from "@/lib/native/updates";
 import { CloudBackupCard } from "./cloud-backup-card";
-import { ASSETS, type AssetId } from "@/lib/wallet/assets";
+import { useAuth } from "@/hooks/use-auth";
+import { deleteMyAccount } from "@/lib/account.functions";
+import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
+import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
+import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
+import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
+import { loadRegion, loadMarketSlug, marketCode } from "@/lib/wallet/region";
 import { parseScan } from "@/lib/wallet/scan-parse";
-import { SendSheet, type SendPrefill } from "./send-sheet";
+import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
+import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
-import { AddValueSheet } from "./add-value-sheet";
-import logo from "@/assets/cryptopop-logo.png";
+import { TopUpSheet } from "./topup-sheet";
 import coin from "@/assets/cryptopop-coin.png";
 
-const CHAINS = ASSETS;
+
+
 
 type ChainId = AssetId;
-const HIDDEN_KEY = "cryptopop.wallet.hiddenChains";
-
-function loadHidden(): ChainId[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(HIDDEN_KEY);
-    return raw ? (JSON.parse(raw) as ChainId[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveHidden(v: ChainId[]) {
-  try {
-    window.localStorage.setItem(HIDDEN_KEY, JSON.stringify(v));
-  } catch {
-    /* ignore */
-  }
-}
-
 export function WalletDashboard() {
-  const { address, origin, mnemonic, lock, forget } = useWallet();
+  const { address, legacyAddress, origin, mnemonic } = useWallet();
   const navigate = useNavigate();
   const fetchSummary = useServerFn(getAddressChainSummary);
   const fetchActivity = useServerFn(getAddressActivity);
   const fetchRewards = useServerFn(getAddressRewards);
 
   const [pop, setPop] = useState<number | null>(null);
+  const [phpop, setPhpop] = useState<number | null>(null);
   const [tsd, setTsd] = useState<number | null>(null);
   const [txc, setTxc] = useState<number | null>(null);
+  const [sources, setSources] = useState<SendSource[]>([]);
   const [txs, setTxs] = useState<WalletTx[]>([]);
   const [rewards, setRewards] = useState<WalletReward[]>([]);
+  const [txLabels, setTxLabels] = useState<Record<string, TxLabel>>({});
+  const [backupDismissed, setBackupDismissed] = useState(true);
+
   const [rank, setRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const [hidden, setHidden] = useState<ChainId[]>([]);
+  const [region, setRegion] = useState<RegionId>("tx");
+  const [marketSlug, setMarketSlug] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+
   const [showAllTx, setShowAllTx] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendPrefill, setSendPrefill] = useState<SendPrefill | null>(null);
   const [addValueOpen, setAddValueOpen] = useState(false);
 
-  useEffect(() => setHidden(loadHidden()), []);
+  useEffect(() => setHidden(loadHiddenChains()), []);
+  useEffect(() => setRegion(loadRegion()), []);
+  useEffect(() => setMarketSlug(loadMarketSlug()), []);
+  useEffect(() => setTxLabels(loadTxLabels()), []);
+
+  useEffect(() => setBackupDismissed(isBackedUp()), []);
 
   const refresh = useCallback(async () => {
     if (!address) return;
     setLoading(true);
+    // Older seeds hold funds on the pre-SLIP-44 path, so read both addresses
+    // and show one combined balance.
+    const addresses = legacyAddress ? [address, legacyAddress] : [address];
     try {
-      const [summary, activity, rewardsRes] = await Promise.all([
-        fetchSummary({ data: { address } }),
-        fetchActivity({ data: { address } }),
+      const [summaries, activities, rewardsRes] = await Promise.all([
+        Promise.all(addresses.map((a) => fetchSummary({ data: { address: a } }))),
+        Promise.all(addresses.map((a) => fetchActivity({ data: { address: a } }))),
         fetchRewards({ data: { address } }),
       ]);
-      setPop(summary.pop);
-      setTsd(summary.tsd);
-      setTxc(summary.txc);
-      setTxs(activity.txs);
+      const sum = (pick: (s: (typeof summaries)[number]) => number | null) =>
+        summaries.reduce<number | null>(
+          (acc, s) => (pick(s) == null ? acc : (acc ?? 0) + (pick(s) as number)),
+          null,
+        );
+      setPop(sum((s) => s.pop));
+      setPhpop(sum((s) => s.phpop));
+      setTsd(sum((s) => s.tsd));
+      setTxc(sum((s) => s.txc));
+      setSources(
+        addresses.map((a, i) => ({
+          address: a,
+          balances: {
+            pop: summaries[i]?.pop ?? null,
+            phpop: summaries[i]?.phpop ?? null,
+            tsd: summaries[i]?.tsd ?? null,
+            txc: summaries[i]?.txc ?? null,
+          },
+        })),
+      );
+      setTxs(activities.flatMap((a) => a.txs).sort((a, b) => (b.time ?? 0) - (a.time ?? 0)));
+      setTxLabels(loadTxLabels());
       setRewards(rewardsRes.rewards);
       setRank(rewardsRes.rank.rank);
     } catch (e) {
@@ -130,27 +153,40 @@ export function WalletDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [address, fetchSummary, fetchActivity, fetchRewards]);
+  }, [address, legacyAddress, fetchSummary, fetchActivity, fetchRewards]);
+
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
+  // Native push: register this device once the wallet address is known.
+  const savePushToken = useServerFn(registerPushDevice);
+  useEffect(() => {
+    if (!address || !pushAvailable() || !pushPreference()) return;
+    void registerPush({
+      onToken: async (token, platform) => {
+        try {
+          await savePushToken({ data: { token, platform, walletAddress: address, enabled: true } });
+        } catch (e) {
+          console.error("push token save failed", e);
+        }
+      },
+      onTap: (url) => {
+        if (url.startsWith("/")) void navigate({ to: url });
+      },
+    });
+  }, [address, savePushToken, navigate]);
+
   const balances: Record<ChainId, number | null> = useMemo(
-    () => ({ pop, tsd, txc }),
-    [pop, tsd, txc],
+    () => ({ pop, phpop, tsd, txc }),
+    [pop, phpop, tsd, txc],
   );
 
-  const visibleChains = CHAINS.filter((c) => !hidden.includes(c.id));
+  const visibleChains = regionAssets(region).filter((c) => !hidden.includes(c.id));
   const tsdVisible = !hidden.includes("tsd");
   const headline = tsdVisible ? (tsd ?? 0).toFixed(2) : (pop ?? 0).toLocaleString();
   const headlineLabel = tsdVisible ? "TSD · Texas Stable Dollar" : "POP";
-
-  function toggleChain(id: ChainId) {
-    const next = hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id];
-    setHidden(next);
-    saveHidden(next);
-  }
 
   async function copyAddress() {
     if (!address) return;
@@ -165,6 +201,10 @@ export function WalletDashboard() {
 
     switch (intent.kind) {
       case "payment":
+        if (intent.asset === "pop" || intent.asset === "phpop") {
+          toast.info("POP is a scoreboard token — it can't be sent or spent.");
+          return;
+        }
         setSendPrefill({
           to: intent.to,
           amount: intent.amount,
@@ -208,17 +248,30 @@ export function WalletDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex items-center gap-2 px-4 pt-6">
-        <img src={logo} alt="CryptoPOP" className="h-8 w-auto shrink-0" />
+        <Link
+          to="/settings"
+          aria-label="POP market"
+          className="flex h-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 px-3 font-display text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10"
+        >
+          {marketCode(marketSlug)}
+        </Link>
         <div className="flex flex-1 justify-center">
-          <span className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          <Link
+            to="/leaderboard"
+            aria-label="View the POP leaderboard"
+            className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition hover:text-foreground"
+          >
             <Trophy className="h-3.5 w-3.5 text-primary" />
             {rank ? `POP Rank #${rank}` : "Unranked"}
-          </span>
+          </Link>
         </div>
         <div className="flex shrink-0 items-center">
-          <Button variant="ghost" size="icon" onClick={() => setShowSettings((v) => !v)} aria-label="Settings">
-            <Settings2 className="h-5 w-5" />
+          <Button variant="ghost" size="icon" asChild aria-label="Settings">
+            <Link to="/settings">
+              <Settings2 className="h-5 w-5" />
+            </Link>
           </Button>
+
           <Button variant="ghost" size="icon" onClick={() => setScanOpen(true)} aria-label="Scan a code">
             <Camera className="h-5 w-5" />
           </Button>
@@ -264,9 +317,9 @@ export function WalletDashboard() {
                     className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2"
                   >
                     <div>
-                      <p className="font-display text-sm font-semibold uppercase">{c.name}</p>
+                      <p className="font-display text-sm font-semibold uppercase">{c.label}</p>
                       <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {c.network}
+                        {c.chain}
                       </p>
                     </div>
                     <p className="font-mono text-sm">
@@ -289,13 +342,13 @@ export function WalletDashboard() {
           )}
         </Card>
 
-        {/* Add value (ACH onramp) */}
+        {/* Top up (VectorPay handoff) */}
         <Button
           variant="secondary"
           className="h-12 w-full rounded-full"
           onClick={() => setAddValueOpen(true)}
         >
-          <Plus className="mr-1.5 h-4 w-4" /> Add value
+          <Plus className="mr-1.5 h-4 w-4" /> Top up
         </Button>
 
 
@@ -326,16 +379,23 @@ export function WalletDashboard() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">
-                      {t.direction === "in" ? "Received" : "Sent"}
+                      {txLabels[t.txid]?.merchant ??
+                        (t.direction === "in" ? "Received" : "Sent")}
                       {!t.confirmed && (
                         <span className="ml-1 text-xs text-muted-foreground">· pending</span>
                       )}
                     </p>
+                    {txLabels[t.txid]?.memo && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {txLabels[t.txid]!.memo}
+                      </p>
+                    )}
                     <p className="truncate font-mono text-[10px] text-muted-foreground">
                       {t.time ? new Date(t.time * 1000).toLocaleDateString() : "—"} ·{" "}
                       {t.txid.slice(0, 10)}…
                     </p>
                   </div>
+
                   <p className="shrink-0 font-mono text-xs">
                     {t.direction === "in" ? "+" : "−"}
                     {t.txc.toFixed(8)} TXC
@@ -406,25 +466,36 @@ export function WalletDashboard() {
           )}
         </Card>
 
-        {origin !== "coin" && !isBackedUp() && (
-          <Card className="border-amber-400/40 bg-amber-400/10 p-4 text-sm">
-            <p className="flex items-center gap-2 font-semibold">
+        {origin !== "coin" && !backupDismissed && (
+          <Card className="relative border-amber-400/40 bg-amber-400/10 p-4 text-sm">
+            <button
+              type="button"
+              aria-label="Hide backup reminder"
+              onClick={() => setBackupDismissed(true)}
+              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="flex items-center gap-2 pr-8 font-semibold">
               <ShieldCheck className="h-4 w-4" /> Back up your phrase
             </p>
             <p className="mt-1 text-muted-foreground">
               Write down your 12 words, or scan a Cold Storage Coin next time for an instant offline
               backup.
             </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-3 w-full"
+              onClick={() => {
+                markBackedUp();
+                setBackupDismissed(true);
+                toast.success("Marked as backed up");
+              }}
+            >
+              <Check className="mr-1 h-4 w-4" /> I've backed it up
+            </Button>
           </Card>
-        )}
-
-        {showSettings && (
-          <WalletSettings
-            onForget={forget}
-            onLock={lock}
-            hidden={hidden}
-            onToggleChain={toggleChain}
-          />
         )}
 
         <p className="pt-2 text-center text-xs text-muted-foreground">
@@ -494,6 +565,7 @@ export function WalletDashboard() {
           if (!v) setSendPrefill(null);
         }}
         address={address}
+        sources={sources}
         mnemonic={mnemonic}
         popBalance={pop}
         tsdBalance={tsd}
@@ -502,160 +574,8 @@ export function WalletDashboard() {
         onSent={() => void refresh()}
       />
 
-      <AddValueSheet
-        open={addValueOpen}
-        onOpenChange={setAddValueOpen}
-        address={address}
-        onFunded={() => void refresh()}
-      />
+      <TopUpSheet open={addValueOpen} onOpenChange={setAddValueOpen} address={address} side="buy" />
     </div>
 
-  );
-}
-
-function WalletSettings({
-  onForget,
-  onLock,
-  hidden,
-  onToggleChain,
-}: {
-  onForget: () => void;
-  onLock: () => void;
-  hidden: ChainId[];
-  onToggleChain: (id: ChainId) => void;
-}) {
-  const [password, setPassword] = useState("");
-  const [phrase, setPhrase] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [bio, setBio] = useState({ available: false, enabled: false });
-
-  useEffect(() => {
-    getBiometricStatus()
-      .then(setBio)
-      .catch(() => undefined);
-  }, []);
-
-  async function reveal() {
-    setBusy(true);
-    const payload = await unlockVault(password);
-    setBusy(false);
-    if (!payload) return toast.error("Wrong password");
-    setPhrase(payload.mnemonic);
-    markBackedUp();
-    setPassword("");
-  }
-
-  async function toggleBiometric() {
-    if (bio.enabled) {
-      await disableBiometric();
-      setBio({ ...bio, enabled: false });
-      toast.success("Biometric unlock turned off");
-      return;
-    }
-    if (!password) return toast.error("Enter your password first");
-    const payload = await unlockVault(password);
-    if (!payload) return toast.error("Wrong password");
-    try {
-      await enableBiometric(password);
-      setBio({ ...bio, enabled: true });
-      setPassword("");
-      toast.success("Biometric unlock enabled");
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  }
-
-  return (
-    <Card className="space-y-4 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
-      <p className="font-display text-lg font-semibold uppercase">Wallet settings</p>
-
-      {/* Visible chains */}
-      <div className="space-y-2">
-        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          Visible assets
-        </p>
-        {CHAINS.map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2"
-          >
-            <div>
-              <p className="font-display text-sm font-semibold uppercase">{c.name}</p>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {c.network}
-              </p>
-            </div>
-            <Switch
-              checked={!hidden.includes(c.id)}
-              onCheckedChange={() => onToggleChain(c.id)}
-              aria-label={`Show ${c.name}`}
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-2">
-        <Input
-          type="password"
-          placeholder="Wallet password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="h-11"
-          autoComplete="current-password"
-        />
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            className="flex-1 rounded-full"
-            disabled={!password || busy}
-            onClick={reveal}
-          >
-            <Eye className="mr-1.5 h-4 w-4" /> Reveal phrase
-          </Button>
-          {bio.available && (
-            <Button variant="secondary" className="flex-1 rounded-full" onClick={toggleBiometric}>
-              <Fingerprint className="mr-1.5 h-4 w-4" /> {bio.enabled ? "Turn off" : "Enable"}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {phrase && (
-        <div className="space-y-2 rounded-2xl border border-white/12 bg-black/40 p-4">
-          <p className="font-mono text-sm leading-relaxed">{phrase}</p>
-          <Button variant="ghost" size="sm" onClick={() => setPhrase(null)}>
-            <EyeOff className="mr-1.5 h-4 w-4" /> Hide
-          </Button>
-        </div>
-      )}
-
-      <CloudBackupCard />
-
-      <Button variant="ghost" className="w-full justify-start" onClick={onLock}>
-        <Lock className="mr-1.5 h-4 w-4" /> Lock wallet
-      </Button>
-
-      <Button
-        variant="ghost"
-        className="w-full justify-start text-destructive hover:text-destructive"
-        onClick={() => {
-          if (
-            window.confirm(
-              "Remove this wallet from this device? Only your coin or recovery phrase can restore it.",
-            )
-          ) {
-            onForget();
-            toast.success("Wallet removed from this device");
-          }
-        }}
-      >
-        <Trash2 className="mr-1.5 h-4 w-4" /> Remove wallet from this device
-      </Button>
-
-      <p className="flex items-start gap-2 text-xs text-muted-foreground">
-        <ScanLine className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Scanning a Cold Storage Coin during setup gives you an instant offline backup.
-      </p>
-    </Card>
   );
 }
