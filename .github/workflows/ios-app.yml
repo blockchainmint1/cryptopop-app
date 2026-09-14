@@ -49,7 +49,10 @@ jobs:
           node scripts/patch-native.mjs ios
 
       - name: Generate icons and splash
-        run: bunx capacitor-assets generate --ios --assetPath resources
+        continue-on-error: true
+        run: |
+          npm install --no-save sharp@0.33.5
+          npx --yes @capacitor/assets@3 generate --ios --assetPath resources
 
       - name: Set build number
         working-directory: ios/App
