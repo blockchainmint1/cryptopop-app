@@ -45,7 +45,7 @@ let wired = false;
 
 /** Ask for permission, register with APNs/FCM, and report the device token. */
 export async function registerPush({ onToken, onTap }: RegisterOpts): Promise<boolean> {
-  if (!isNative()) return false;
+  if (!pushAvailable()) return false;
   const platform = nativePlatform();
   if (platform === "web") return false;
 
@@ -81,7 +81,7 @@ export async function registerPush({ onToken, onTap }: RegisterOpts): Promise<bo
 }
 
 export async function unregisterPush() {
-  if (!isNative()) return;
+  if (!pushAvailable()) return;
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
     await PushNotifications.removeAllListeners();

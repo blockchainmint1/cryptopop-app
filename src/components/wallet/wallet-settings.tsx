@@ -87,12 +87,14 @@ export function WalletSettings({
 
 
   async function toggleNotifications(on: boolean) {
-    setNotifs(on);
-    setPushPreference(on);
     if (!pushAvailable()) {
-      toast.info("Notifications turn on inside the POP Wallet app.");
+      setNotifs(false);
+      setPushPreference(false);
+      toast.info("Notifications aren't available in this version yet.");
       return;
     }
+    setNotifs(on);
+    setPushPreference(on);
     if (on) {
       const ok = await registerPush({
         onToken: async (token, platform) => {
