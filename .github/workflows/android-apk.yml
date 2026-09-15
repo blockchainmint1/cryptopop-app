@@ -49,9 +49,19 @@ jobs:
       - name: Add Android platform
         env:
           CAP_SERVER_URL: ${{ github.event.inputs.server_url }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           mkdir -p native/webdir
+          # Push notifications need a Firebase config. Without it the plugin
+          # crashes the app the moment it registers, so leave it out entirely.
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "No GOOGLE_SERVICES_JSON secret -- building without push notifications"
+            bun remove @capacitor/push-notifications || true
+          fi
           bunx cap add android
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          fi
           bunx cap sync android
           node scripts/patch-native.mjs android
 

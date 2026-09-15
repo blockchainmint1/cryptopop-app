@@ -83,16 +83,18 @@ export function WalletSettings({
   const savePushToken = useServerFn(registerPushDevice);
   const togglePushRow = useServerFn(setPushEnabled);
 
-  useEffect(() => setNotifs(pushPreference()), []);
+  useEffect(() => setNotifs(pushAvailable() && pushPreference()), []);
 
 
   async function toggleNotifications(on: boolean) {
-    setNotifs(on);
-    setPushPreference(on);
     if (!pushAvailable()) {
-      toast.info("Notifications turn on inside the POP Wallet app.");
+      setNotifs(false);
+      setPushPreference(false);
+      toast.info("Notifications aren't available in this version yet.");
       return;
     }
+    setNotifs(on);
+    setPushPreference(on);
     if (on) {
       const ok = await registerPush({
         onToken: async (token, platform) => {
@@ -111,10 +113,9 @@ export function WalletSettings({
         toast.success("Notifications on");
       }
     } else {
-      const { PushNotifications } = await import("@capacitor/push-notifications");
       try {
-        const list = await PushNotifications.removeAllDeliveredNotifications();
-        void list;
+        const { PushNotifications } = await import("@capacitor/push-notifications");
+        await PushNotifications.removeAllDeliveredNotifications();
       } catch {
         /* ignore */
       }

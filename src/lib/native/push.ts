@@ -4,6 +4,7 @@
  * Everything here is a no-op in the browser / Lovable preview — `isNative()`
  * is false, so the web build never touches the Capacitor plugin.
  */
+import { Capacitor } from "@capacitor/core";
 import { isNative, nativePlatform } from "./platform";
 
 const PREF_KEY = "cryptopop.push.enabled.v1";
@@ -21,8 +22,18 @@ export function setPushPreference(on: boolean) {
   }
 }
 
+/**
+ * True only when the native build actually shipped the push plugin.
+ * Builds without a Firebase config (google-services.json) omit the plugin —
+ * calling register() there crashes the app, so we must never try.
+ */
 export function pushAvailable(): boolean {
-  return isNative();
+  if (!isNative()) return false;
+  try {
+    return Capacitor.isPluginAvailable("PushNotifications");
+  } catch {
+    return false;
+  }
 }
 
 type RegisterOpts = {
@@ -34,7 +45,7 @@ let wired = false;
 
 /** Ask for permission, register with APNs/FCM, and report the device token. */
 export async function registerPush({ onToken, onTap }: RegisterOpts): Promise<boolean> {
-  if (!isNative()) return false;
+  if (!pushAvailable()) return false;
   const platform = nativePlatform();
   if (platform === "web") return false;
 
@@ -70,7 +81,7 @@ export async function registerPush({ onToken, onTap }: RegisterOpts): Promise<bo
 }
 
 export async function unregisterPush() {
-  if (!isNative()) return;
+  if (!pushAvailable()) return;
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
     await PushNotifications.removeAllListeners();
