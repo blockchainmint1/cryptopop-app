@@ -17,8 +17,8 @@ import { IPFS_GATEWAY } from "@/lib/app-release";
 
 /** Used when the release feed is unreachable. */
 const FALLBACK_URL =
-  "https://app.cryptopop.org/__l5e/assets-v1/efef1d8f-38ae-4b02-afe0-bb30c48647df/popwallet-1.0.5-release.apk";
-const FALLBACK_FILENAME = "popwallet-1.0.5-release.apk";
+  "https://txc.mypinata.cloud/ipfs/bafybeid5fs6vhm733vmkdikqtl2h6rrgj2ghp3rlorvvxmhnuafwqz5x6a?filename=popwallet-1.0.6-release.apk&download=true";
+const FALLBACK_FILENAME = "popwallet-1.0.6-release.apk";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

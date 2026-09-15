@@ -7,7 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export const APP_VERSION = "1.0.5";
+export const APP_VERSION = "1.0.6";
 
 /** Public IPFS gateway used for pinned builds. */
 export const IPFS_GATEWAY = "https://txc.mypinata.cloud/ipfs/";
