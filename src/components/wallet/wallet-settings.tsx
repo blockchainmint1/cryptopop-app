@@ -29,8 +29,8 @@ import {
   enableBiometric,
   getBiometricStatus,
 } from "@/lib/native/biometric";
-import { checkForUpdate, applyUpdate, appVersionLabel } from "@/lib/native/updates";
 import { CloudBackupCard } from "./cloud-backup-card";
+import { UpdateCheckCard } from "./update-check-card";
 import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
