@@ -8,7 +8,7 @@ import {
   EyeOff,
   Fingerprint,
   Lock,
-  RefreshCw,
+  
   ScanLine,
   Trash2,
 } from "lucide-react";
@@ -78,32 +78,13 @@ export function WalletSettings({
   const [bio, setBio] = useState({ available: false, enabled: false });
   const [notifs, setNotifs] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [updateReady, setUpdateReady] = useState(false);
-  const [versionLabel, setVersionLabel] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const removeAccount = useServerFn(deleteMyAccount);
   const savePushToken = useServerFn(registerPushDevice);
   const togglePushRow = useServerFn(setPushEnabled);
 
   useEffect(() => setNotifs(pushPreference()), []);
-  useEffect(() => {
-    void appVersionLabel().then(setVersionLabel);
-  }, []);
 
-  async function onCheckUpdates() {
-    setChecking(true);
-    try {
-      const { updateAvailable } = await checkForUpdate();
-      setUpdateReady(updateAvailable);
-      if (updateAvailable) toast.success("Update available");
-      else toast.info("You're on the latest version");
-    } catch {
-      toast.error("Couldn't check for updates — check your connection");
-    } finally {
-      setChecking(false);
-    }
-  }
 
   async function toggleNotifications(on: boolean) {
     setNotifs(on);
