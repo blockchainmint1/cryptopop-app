@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { status } = useWallet();
 
-  let body: React.ReactNode;
+  let body: ReactNode;
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
