@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
+import { SiteFooter } from "@/components/site-footer";
 import { OnboardScreen } from "@/components/wallet/onboard-screen";
 import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { WalletDashboard } from "@/components/wallet/wallet-dashboard";
@@ -30,14 +32,25 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { status } = useWallet();
 
+  let body: ReactNode;
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
+  } else if (status === "none") {
+    body = <OnboardScreen />;
+  } else if (status === "locked") {
+    body = <UnlockScreen />;
+  } else {
+    body = <WalletDashboard />;
   }
-  if (status === "none") return <OnboardScreen />;
-  if (status === "locked") return <UnlockScreen />;
-  return <WalletDashboard />;
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <div className="flex-1">{body}</div>
+      <SiteFooter />
+    </div>
+  );
 }
