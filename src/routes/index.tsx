@@ -30,14 +30,25 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { status } = useWallet();
 
+  let body: React.ReactNode;
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
+  } else if (status === "none") {
+    body = <OnboardScreen />;
+  } else if (status === "locked") {
+    body = <UnlockScreen />;
+  } else {
+    body = <WalletDashboard />;
   }
-  if (status === "none") return <OnboardScreen />;
-  if (status === "locked") return <UnlockScreen />;
-  return <WalletDashboard />;
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <div className="flex-1">{body}</div>
+      <SiteFooter />
+    </div>
+  );
 }
