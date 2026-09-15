@@ -55,7 +55,7 @@ async function resolveSource(): Promise<{ url: string; filename: string }> {
       const filename = `popwallet-${data.version}-release.apk`;
       if (data.ipfs_cid) {
         return {
-          url: `${IPFS_GATEWAY}${data.ipfs_cid}?filename=${filename}&download=true`,
+          url: `${gatewayBase()}${data.ipfs_cid}?filename=${filename}&download=true`,
           filename,
         };
       }
