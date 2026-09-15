@@ -83,7 +83,7 @@ export function WalletSettings({
   const savePushToken = useServerFn(registerPushDevice);
   const togglePushRow = useServerFn(setPushEnabled);
 
-  useEffect(() => setNotifs(pushPreference()), []);
+  useEffect(() => setNotifs(pushAvailable() && pushPreference()), []);
 
 
   async function toggleNotifications(on: boolean) {
