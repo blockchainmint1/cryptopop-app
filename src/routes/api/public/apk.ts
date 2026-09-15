@@ -27,6 +27,15 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400",
 } as const;
 
+/** Dedicated Pinata gateway when configured, else the shared public one. */
+function gatewayBase(): string {
+  const gw = process.env["PINATA_GW"]?.trim();
+  if (!gw) return IPFS_GATEWAY;
+  const host = gw.replace(/\/+$/, "");
+  const withScheme = host.startsWith("http") ? host : `https://${host}`;
+  return withScheme.endsWith("/ipfs") ? `${withScheme}/` : `${withScheme}/ipfs/`;
+}
+
 async function resolveSource(): Promise<{ url: string; filename: string }> {
   try {
     const supabase = createClient(
