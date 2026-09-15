@@ -30,6 +30,9 @@ import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
+import { Route as ApiPublicApkRouteImport } from './routes/api/public/apk'
+import { Route as ApiPublicBuildIdRouteImport } from './routes/api/public/build-id'
+import { Route as ApiPublicLatestReleaseRouteImport } from './routes/api/public/latest-release'
 import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/public/vectorpay-status'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as WalletOrderIdRouteImport } from './routes/wallet.order.$id'
@@ -146,6 +149,21 @@ const AuthenticatedScanSuccessRoute =
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
+const ApiPublicApkRoute = ApiPublicApkRouteImport.update({
+  id: '/api/public/apk',
+  path: '/api/public/apk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBuildIdRoute = ApiPublicBuildIdRouteImport.update({
+  id: '/api/public/build-id',
+  path: '/api/public/build-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLatestReleaseRoute = ApiPublicLatestReleaseRouteImport.update({
+  id: '/api/public/latest-release',
+  path: '/api/public/latest-release',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVectorpayStatusRoute =
   ApiPublicVectorpayStatusRouteImport.update({
     id: '/api/public/vectorpay-status',
@@ -218,6 +236,9 @@ export interface FileRoutesByFullPath {
   '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/public/apk': typeof ApiPublicApkRoute
+  '/api/public/build-id': typeof ApiPublicBuildIdRoute
+  '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -249,6 +270,9 @@ export interface FileRoutesByTo {
   '/events/$slug': typeof EventsSlugRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/public/apk': typeof ApiPublicApkRoute
+  '/api/public/build-id': typeof ApiPublicBuildIdRoute
+  '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -282,6 +306,9 @@ export interface FileRoutesById {
   '/events/$slug': typeof EventsSlugRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/public/apk': typeof ApiPublicApkRoute
+  '/api/public/build-id': typeof ApiPublicBuildIdRoute
+  '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -315,6 +342,9 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/events/'
     | '/scan/success'
+    | '/api/public/apk'
+    | '/api/public/build-id'
+    | '/api/public/latest-release'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -346,6 +376,9 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/events'
     | '/scan/success'
+    | '/api/public/apk'
+    | '/api/public/build-id'
+    | '/api/public/latest-release'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -378,6 +411,9 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/events/'
     | '/_authenticated/scan/success'
+    | '/api/public/apk'
+    | '/api/public/build-id'
+    | '/api/public/latest-release'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -407,6 +443,9 @@ export interface RootRouteChildren {
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsSlugRoute: typeof EventsSlugRoute
   EventsIndexRoute: typeof EventsIndexRoute
+  ApiPublicApkRoute: typeof ApiPublicApkRoute
+  ApiPublicBuildIdRoute: typeof ApiPublicBuildIdRoute
+  ApiPublicLatestReleaseRoute: typeof ApiPublicLatestReleaseRoute
   ApiPublicVectorpayStatusRoute: typeof ApiPublicVectorpayStatusRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   WalletOrderIdRoute: typeof WalletOrderIdRoute
@@ -567,6 +606,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
+    '/api/public/apk': {
+      id: '/api/public/apk'
+      path: '/api/public/apk'
+      fullPath: '/api/public/apk'
+      preLoaderRoute: typeof ApiPublicApkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/build-id': {
+      id: '/api/public/build-id'
+      path: '/api/public/build-id'
+      fullPath: '/api/public/build-id'
+      preLoaderRoute: typeof ApiPublicBuildIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/latest-release': {
+      id: '/api/public/latest-release'
+      path: '/api/public/latest-release'
+      fullPath: '/api/public/latest-release'
+      preLoaderRoute: typeof ApiPublicLatestReleaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/vectorpay-status': {
       id: '/api/public/vectorpay-status'
       path: '/api/public/vectorpay-status'
@@ -678,6 +738,9 @@ const rootRouteChildren: RootRouteChildren = {
   ClaimTokenRoute: ClaimTokenRoute,
   EventsSlugRoute: EventsSlugRoute,
   EventsIndexRoute: EventsIndexRoute,
+  ApiPublicApkRoute: ApiPublicApkRoute,
+  ApiPublicBuildIdRoute: ApiPublicBuildIdRoute,
+  ApiPublicLatestReleaseRoute: ApiPublicLatestReleaseRoute,
   ApiPublicVectorpayStatusRoute: ApiPublicVectorpayStatusRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   WalletOrderIdRoute: WalletOrderIdRoute,
