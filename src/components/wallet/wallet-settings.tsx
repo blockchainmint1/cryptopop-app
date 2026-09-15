@@ -113,10 +113,9 @@ export function WalletSettings({
         toast.success("Notifications on");
       }
     } else {
-      const { PushNotifications } = await import("@capacitor/push-notifications");
       try {
-        const list = await PushNotifications.removeAllDeliveredNotifications();
-        void list;
+        const { PushNotifications } = await import("@capacitor/push-notifications");
+        await PushNotifications.removeAllDeliveredNotifications();
       } catch {
         /* ignore */
       }
