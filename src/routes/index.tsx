@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
+import { SiteFooter } from "@/components/site-footer";
 import { OnboardScreen } from "@/components/wallet/onboard-screen";
 import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { WalletDashboard } from "@/components/wallet/wallet-dashboard";
