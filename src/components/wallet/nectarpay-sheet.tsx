@@ -22,6 +22,8 @@ import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { derivePrivateKey, signPsbt } from "@/lib/wallet/sign";
 import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { saveTxLabel, updateReceipt } from "@/lib/wallet/tx-labels";
+import { getCheckoutRewards, payWithRewards } from "@/lib/store-rewards.functions";
+import { redeemMessage, type InvoiceRewardOptions, type RewardKind } from "@/lib/store-rewards";
 import type { SendSource } from "./send-sheet";
 
 type Stage = "loading" | "review" | "paying" | "waiting" | "paid" | "error";
@@ -57,6 +59,11 @@ export function NectarPaySheet({
   const claim = useServerFn(claimNectarReward);
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
+  const fetchRewardOpts = useServerFn(getCheckoutRewards);
+  const redeem = useServerFn(payWithRewards);
+  const [rewardOpts, setRewardOpts] = useState<InvoiceRewardOptions | null>(null);
+  const [earned, setEarned] = useState<{ amount: number; storeName: string } | null>(null);
+  const [paidWithRewards, setPaidWithRewards] = useState<number | null>(null);
 
   const [stage, setStage] = useState<Stage>("loading");
   const [inv, setInv] = useState<NectarInvoice | null>(null);
@@ -73,6 +80,9 @@ export function NectarPaySheet({
     setError(null);
     setTxid(null);
     setPop(0);
+    setRewardOpts(null);
+    setEarned(null);
+    setPaidWithRewards(null);
     (async () => {
       const r = await fetchInvoice({ data: { id: request.invoiceId, nonce: request.nonce } });
       if (cancelled) return;
@@ -94,11 +104,16 @@ export function NectarPaySheet({
       }
       setInv(r.invoice);
       setStage("review");
+      if (r.invoice.storeId) {
+        fetchRewardOpts({ data: { storeId: r.invoice.storeId, address } })
+          .then((o) => !cancelled && setRewardOpts(o.options))
+          .catch(() => undefined);
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [request, fetchInvoice]);
+  }, [request, fetchInvoice, fetchRewardOpts, address]);
 
   useEffect(() => () => stopPoll(), []);
 
@@ -116,6 +131,7 @@ export function NectarPaySheet({
         setPop(r.awarded);
         updateReceipt(tx, { popEarned: r.awarded });
       }
+      if (r.rewards) setEarned({ amount: r.rewards.amount, storeName: r.rewards.storeName });
     } catch (e) {
       console.warn("[nectarpay] reward", e);
     }
@@ -179,6 +195,30 @@ export function NectarPaySheet({
     }
   }
 
+  async function payRewards(kind: RewardKind) {
+    if (!request || !inv) return;
+    if (!address || !mnemonic) return toast.error("Unlock your wallet first");
+    setStage("paying");
+    try {
+      const signature = signTxcMessage(
+        derivePrivateKey(mnemonic),
+        redeemMessage(inv.id, kind, inv.fiatAmount),
+      );
+      const r = await redeem({ data: { invoiceId: inv.id, address, kind, signature } });
+      setPaidWithRewards(r.spent);
+      setStage("paid");
+      onPaid();
+    } catch (e) {
+      toast.error((e as Error).message || "Couldn't pay with rewards");
+      setStage("review");
+    }
+  }
+
+  const usdBill = inv?.currency?.toUpperCase() === "USD" ? inv.fiatAmount : 0;
+  const canStore = !!rewardOpts && usdBill > 0 && rewardOpts.storeBalance + 1e-6 >= usdBill;
+  const canCommunity =
+    !!rewardOpts && usdBill > 0 && rewardOpts.acceptsCommunity && rewardOpts.communityBalance + 1e-6 >= usdBill;
+
   const name = inv?.merchant?.name ?? "NectarPay store";
 
   return (
@@ -240,7 +280,37 @@ export function NectarPaySheet({
               </p>
               <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <img src={coin} alt="" className="h-4 w-4" /> Earn POP on every NectarPay purchase
+                {rewardOpts && rewardOpts.ratePct > 0 && ` + ${rewardOpts.ratePct}% back`}
               </p>
+              {(canStore || canCommunity) && (
+                <div className="space-y-2">
+                  {canStore && (
+                    <Button
+                      variant="secondary"
+                      className="h-12 w-full rounded-full"
+                      disabled={stage === "paying"}
+                      onClick={() => void payRewards("store")}
+                    >
+                      Pay with store rewards (${rewardOpts!.storeBalance.toFixed(2)})
+                    </Button>
+                  )}
+                  {canCommunity && (
+                    <Button
+                      variant="secondary"
+                      className="h-12 w-full rounded-full"
+                      disabled={stage === "paying"}
+                      onClick={() => void payRewards("community")}
+                    >
+                      Pay with community rewards (${rewardOpts!.communityBalance.toFixed(2)})
+                    </Button>
+                  )}
+                </div>
+              )}
+              {rewardOpts && !canStore && !canCommunity && rewardOpts.storeBalance + rewardOpts.communityBalance > 0 && (
+                <p className="text-center text-[11px] text-muted-foreground">
+                  Rewards must cover the whole bill to use them.
+                </p>
+              )}
               <Button
                 className="h-12 w-full rounded-full"
                 disabled={stage === "paying"}
@@ -274,6 +344,12 @@ export function NectarPaySheet({
             <div className="rounded-2xl border border-primary/40 bg-primary/10 p-5 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
               <p className="mt-3 font-display text-2xl font-bold uppercase">Paid at {name}</p>
+              {paidWithRewards !== null && (
+                <p className="mt-2 text-sm">Paid ${paidWithRewards.toFixed(2)} with rewards</p>
+              )}
+              {earned && (
+                <p className="mt-2 text-sm">+${earned.amount.toFixed(2)} rewards at {earned.storeName}</p>
+              )}
               {pop > 0 && (
                 <p className="mt-2 flex items-center justify-center gap-2 text-sm">
                   <img src={coin} alt="" className="h-5 w-5" /> +{pop} POP earned

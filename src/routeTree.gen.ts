@@ -26,6 +26,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.ap
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AdminPushRouteImport } from './routes/admin.push'
+import { Route as AdminRewardsRouteImport } from './routes/admin.rewards'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
@@ -128,6 +129,11 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
 const AdminPushRoute = AdminPushRouteImport.update({
   id: '/admin/push',
   path: '/admin/push',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRewardsRoute = AdminRewardsRouteImport.update({
+  id: '/admin/rewards',
+  path: '/admin/rewards',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/admin/push': typeof AdminPushRoute
+  '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -280,6 +287,7 @@ export interface FileRoutesByTo {
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/admin/push': typeof AdminPushRoute
+  '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/admin/push': typeof AdminPushRoute
+  '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -356,6 +365,7 @@ export interface FileRouteTypes {
     | '/recover-wallet'
     | '/scan'
     | '/admin/push'
+    | '/admin/rewards'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/recover-wallet'
     | '/scan'
     | '/admin/push'
+    | '/admin/rewards'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
     | '/admin/push'
+    | '/admin/rewards'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   AdminPushRoute: typeof AdminPushRoute
+  AdminRewardsRoute: typeof AdminRewardsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsSlugRoute: typeof EventsSlugRoute
@@ -602,6 +615,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/push'
       fullPath: '/admin/push'
       preLoaderRoute: typeof AdminPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/rewards': {
+      id: '/admin/rewards'
+      path: '/admin/rewards'
+      fullPath: '/admin/rewards'
+      preLoaderRoute: typeof AdminRewardsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -775,6 +795,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   AdminPushRoute: AdminPushRoute,
+  AdminRewardsRoute: AdminRewardsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
   EventsSlugRoute: EventsSlugRoute,

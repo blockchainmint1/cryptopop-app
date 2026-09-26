@@ -69,6 +69,7 @@ import { NectarPaySheet } from "./nectarpay-sheet";
 import { WalletLoginSheet, type WalletLoginRequest } from "./wallet-login-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { TopUpSheet } from "./topup-sheet";
+import { StoreRewardsCard } from "./store-rewards-card";
 import coin from "@/assets/cryptopop-coin.png";
 
 
@@ -452,6 +453,13 @@ export function WalletDashboard() {
             <p className="text-xs text-muted-foreground">NectarPay stores · earn POP</p>
           </Link>
         </div>
+
+        {address && (
+          <StoreRewardsCard
+            addresses={legacyAddress ? [address, legacyAddress] : [address]}
+            refreshKey={txs.length + (tsd ?? 0)}
+          />
+        )}
 
         {/* Rewards */}
         <Card className="space-y-3 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
