@@ -26,6 +26,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.ap
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
 import { Route as AdminPushRouteImport } from './routes/admin.push'
+import { Route as AdminRewardsRouteImport } from './routes/admin.rewards'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
@@ -38,6 +39,7 @@ import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/publi
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as WalletOrderIdRouteImport } from './routes/wallet.order.$id'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
+import { Route as ApiPublicRewardsProgramRouteImport } from './routes/api/public/rewards/program'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -129,6 +131,11 @@ const AdminPushRoute = AdminPushRouteImport.update({
   path: '/admin/push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRewardsRoute = AdminRewardsRouteImport.update({
+  id: '/admin/rewards',
+  path: '/admin/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -192,6 +199,11 @@ const ApiPublicHooksBlastDrainRoute =
     path: '/api/public/hooks/blast-drain',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicRewardsProgramRoute = ApiPublicRewardsProgramRouteImport.update({
+  id: '/api/public/rewards/program',
+  path: '/api/public/rewards/program',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -238,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/admin/push': typeof AdminPushRoute
+  '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -250,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
+  '/api/public/rewards/program': typeof ApiPublicRewardsProgramRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -273,6 +287,7 @@ export interface FileRoutesByTo {
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
   '/admin/push': typeof AdminPushRoute
+  '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -285,6 +300,7 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
+  '/api/public/rewards/program': typeof ApiPublicRewardsProgramRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -310,6 +326,7 @@ export interface FileRoutesById {
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
   '/admin/push': typeof AdminPushRoute
+  '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -322,6 +339,7 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
+  '/api/public/rewards/program': typeof ApiPublicRewardsProgramRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -347,6 +365,7 @@ export interface FileRouteTypes {
     | '/recover-wallet'
     | '/scan'
     | '/admin/push'
+    | '/admin/rewards'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
@@ -359,6 +378,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
+    | '/api/public/rewards/program'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -382,6 +402,7 @@ export interface FileRouteTypes {
     | '/recover-wallet'
     | '/scan'
     | '/admin/push'
+    | '/admin/rewards'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
@@ -394,6 +415,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
+    | '/api/public/rewards/program'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -418,6 +440,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
     | '/admin/push'
+    | '/admin/rewards'
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
@@ -430,6 +453,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
     | '/api/public/hooks/blast-drain'
+    | '/api/public/rewards/program'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -452,6 +476,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   AdminPushRoute: typeof AdminPushRoute
+  AdminRewardsRoute: typeof AdminRewardsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsSlugRoute: typeof EventsSlugRoute
@@ -463,6 +488,7 @@ export interface RootRouteChildren {
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   WalletOrderIdRoute: typeof WalletOrderIdRoute
   ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
+  ApiPublicRewardsProgramRoute: typeof ApiPublicRewardsProgramRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -591,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/rewards': {
+      id: '/admin/rewards'
+      path: '/admin/rewards'
+      fullPath: '/admin/rewards'
+      preLoaderRoute: typeof AdminRewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -675,6 +708,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksBlastDrainRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/rewards/program': {
+      id: '/api/public/rewards/program'
+      path: '/api/public/rewards/program'
+      fullPath: '/api/public/rewards/program'
+      preLoaderRoute: typeof ApiPublicRewardsProgramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -755,6 +795,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   AdminPushRoute: AdminPushRoute,
+  AdminRewardsRoute: AdminRewardsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
   EventsSlugRoute: EventsSlugRoute,
@@ -766,6 +807,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   WalletOrderIdRoute: WalletOrderIdRoute,
   ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
+  ApiPublicRewardsProgramRoute: ApiPublicRewardsProgramRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

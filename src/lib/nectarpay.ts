@@ -25,6 +25,8 @@ export type NectarInvoice = {
   address: string | null;
   tsdAmount: number | null;
   acceptsTsd: boolean;
+  /** NectarPay store id — links to the store's rewards program. */
+  storeId: string | null;
 };
 
 export type NectarMerchant = {

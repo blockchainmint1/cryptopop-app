@@ -1385,6 +1385,104 @@ export type Database = {
           },
         ]
       }
+      reward_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          kind: string
+          market_slug: string | null
+          program_id: string
+          reason: string
+          txid: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          kind: string
+          market_slug?: string | null
+          program_id: string
+          reason: string
+          txid?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          kind?: string
+          market_slug?: string | null
+          program_id?: string
+          reason?: string
+          txid?: string | null
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_ledger_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "reward_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reward_programs: {
+        Row: {
+          community_balance: number
+          community_credit_limit: number
+          community_status: string
+          created_at: string
+          enabled: boolean
+          id: string
+          issue_type: string
+          logo_url: string | null
+          market_slug: string | null
+          nectar_store_id: string
+          omni_property_id: number | null
+          rate_bps: number
+          store_name: string
+          updated_at: string
+        }
+        Insert: {
+          community_balance?: number
+          community_credit_limit?: number
+          community_status?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          issue_type?: string
+          logo_url?: string | null
+          market_slug?: string | null
+          nectar_store_id: string
+          omni_property_id?: number | null
+          rate_bps?: number
+          store_name: string
+          updated_at?: string
+        }
+        Update: {
+          community_balance?: number
+          community_credit_limit?: number
+          community_status?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          issue_type?: string
+          logo_url?: string | null
+          market_slug?: string | null
+          nectar_store_id?: string
+          omni_property_id?: number | null
+          rate_bps?: number
+          store_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reward_rules: {
         Row: {
           action_key: string
