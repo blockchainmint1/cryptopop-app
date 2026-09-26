@@ -37,6 +37,12 @@ async function fetchJson(url: string, init?: RequestInit): Promise<RawInvoice> {
   return body;
 }
 
+function storeIdOf(raw: RawInvoice): string | null {
+  const m = (raw.merchant ?? raw.store ?? null) as Record<string, unknown> | null;
+  const id = raw.store_id ?? raw.storeId ?? m?.id ?? m?.store_id;
+  return id ? String(id) : null;
+}
+
 function normalize(raw: RawInvoice, fallback?: NectarInvoice | null): NectarInvoice {
   const options = (raw.options ?? raw.availableOptions ?? []) as Array<Record<string, unknown>>;
   const acceptsTsd =
@@ -65,6 +71,7 @@ function normalize(raw: RawInvoice, fallback?: NectarInvoice | null): NectarInvo
     address: pinnedTsd ? ((raw.address as string | null) ?? null) : null,
     tsdAmount: pinnedTsd && crypto != null ? Number(crypto) : null,
     acceptsTsd: acceptsTsd || !!fallback?.acceptsTsd,
+    storeId: storeIdOf(raw) ?? fallback?.storeId ?? null,
   };
 }
 
@@ -169,7 +176,11 @@ export const claimNectarReward = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }): Promise<{ awarded: number; status: string }> => {
+  .handler(async ({ data }): Promise<{
+    awarded: number;
+    status: string;
+    rewards?: { amount: number; kind: "store" | "community"; storeName: string } | null;
+  }> => {
     const { verifyTxcMessage } = await import("./wallet/txc-message");
     if (!verifyTxcMessage(data.address, rewardMessage(data.invoiceId, data.txid), data.signature)) {
       throw new Error("bad_signature");
@@ -201,5 +212,14 @@ export const claimNectarReward = createServerFn({ method: "POST" })
       memo: "NectarPay purchase",
       walletOverride: data.address,
     });
-    return { awarded: res.status === "sent" ? amount : 0, status: res.status };
+    const storeId = storeIdOf(raw);
+    let rewards: { amount: number; kind: "store" | "community"; storeName: string } | null = null;
+    if (storeId && usd > 0) {
+      const { issueRewards } = await import("./store-rewards.server");
+      rewards = await issueRewards({ storeId, address: data.address, usd, invoiceId: data.invoiceId, txid: data.txid }).catch((e) => {
+        console.error("[rewards] issue", e);
+        return null;
+      });
+    }
+    return { awarded: res.status === "sent" ? amount : 0, status: res.status, rewards };
   });
