@@ -15,6 +15,7 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as ManifestoRouteImport } from './routes/manifesto'
+import { Route as MerchantsRouteImport } from './routes/merchants'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MyPopRouteImport } from './routes/my-pop'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -70,6 +71,11 @@ const LogoutRoute = LogoutRouteImport.update({
 const ManifestoRoute = ManifestoRouteImport.update({
   id: '/manifesto',
   path: '/manifesto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MerchantsRoute = MerchantsRouteImport.update({
+  id: '/merchants',
+  path: '/merchants',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyPassRoute = MyPassRouteImport.update({
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/manifesto': typeof ManifestoRoute
+  '/merchants': typeof MerchantsRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
@@ -255,6 +262,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/manifesto': typeof ManifestoRoute
+  '/merchants': typeof MerchantsRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/manifesto': typeof ManifestoRoute
+  '/merchants': typeof MerchantsRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
   '/privacy': typeof PrivacyRoute
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/manifesto'
+    | '/merchants'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/manifesto'
+    | '/merchants'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/manifesto'
+    | '/merchants'
     | '/my-pass'
     | '/my-pop'
     | '/privacy'
@@ -432,6 +444,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   ManifestoRoute: typeof ManifestoRoute
+  MerchantsRoute: typeof MerchantsRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       path: '/manifesto'
       fullPath: '/manifesto'
       preLoaderRoute: typeof ManifestoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/merchants': {
+      id: '/merchants'
+      path: '/merchants'
+      fullPath: '/merchants'
+      preLoaderRoute: typeof MerchantsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-pass': {
@@ -727,6 +747,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   ManifestoRoute: ManifestoRoute,
+  MerchantsRoute: MerchantsRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
   PrivacyRoute: PrivacyRoute,
