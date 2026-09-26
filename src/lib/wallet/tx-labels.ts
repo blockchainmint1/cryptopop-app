@@ -17,6 +17,15 @@ export type TxLabel = {
   memo: string | null;
   address?: string | null;
   at: number;
+  /** NectarPay receipt details (only for store purchases). */
+  receipt?: {
+    invoiceId: string;
+    fiatAmount: number;
+    currency: string;
+    url: string;
+    logoUrl?: string | null;
+    popEarned?: number;
+  } | null;
 };
 
 type Store = {
@@ -51,15 +60,35 @@ function write(store: Store) {
 /** Remember the vendor behind a transaction (and its counterparty address). */
 export function saveTxLabel(
   txid: string,
-  info: { merchant?: string | null; memo?: string | null; address?: string | null },
+  info: {
+    merchant?: string | null;
+    memo?: string | null;
+    address?: string | null;
+    receipt?: TxLabel["receipt"];
+  },
 ) {
   const merchant = info.merchant?.trim() || null;
   const memo = info.memo?.trim() || null;
-  if (!merchant && !memo) return;
+  if (!merchant && !memo && !info.receipt) return;
   const store = read();
-  const label: TxLabel = { merchant, memo, address: info.address ?? null, at: Date.now() };
+  const label: TxLabel = {
+    merchant,
+    memo,
+    address: info.address ?? null,
+    at: Date.now(),
+    receipt: info.receipt ?? store.byTxid[txid]?.receipt ?? null,
+  };
   store.byTxid[txid] = label;
   if (info.address && merchant) store.byAddress[info.address] = label;
+  write(store);
+}
+
+/** Update the receipt on an existing label (e.g. POP earned after confirm). */
+export function updateReceipt(txid: string, patch: Partial<NonNullable<TxLabel["receipt"]>>) {
+  const store = read();
+  const cur = store.byTxid[txid];
+  if (!cur?.receipt) return;
+  store.byTxid[txid] = { ...cur, receipt: { ...cur.receipt, ...patch } };
   write(store);
 }
 

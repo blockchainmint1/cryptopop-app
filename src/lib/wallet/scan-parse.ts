@@ -37,6 +37,19 @@ export type ScanIntent =
   | { kind: "address"; address: string; raw: string }
   | { kind: "words"; phrase: string; raw: string }
   | { kind: "link"; path: string; raw: string }
+  | { kind: "nectarpay"; invoiceId: string; nonce: string | null; raw: string }
+  | {
+      kind: "wallet_login";
+      host: string;
+      nonce: string;
+      callback: string;
+      /** Challenge id (deep-link flow) — null for the QR envelope flow. */
+      id: string | null;
+      /** Exact message to sign when the site supplies one. */
+      message: string | null;
+      expiresAt: number | null;
+      raw: string;
+    }
   | { kind: "unknown"; raw: string };
 
 
@@ -87,9 +100,105 @@ function checkinFrom(p: URLSearchParams, raw: string): ScanIntent | null {
   return { kind: "checkin", eventId, sig, raw };
 }
 
+const NECTAR_HOSTS = /(^|\.)(nectar-pay\.com|honest\.money)$/i;
+const INVOICE_ID = /^[A-Za-z0-9_-]{6,80}$/;
+
+function b64urlDecode(s: string): string | null {
+  try {
+    const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+    const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
+    return decodeURIComponent(
+      Array.from(bin, (c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")).join(""),
+    );
+  } catch {
+    return null;
+  }
+}
+
+function hostOf(u: string): string | null {
+  try {
+    return new URL(u).hostname;
+  } catch {
+    return null;
+  }
+}
+
+/** NectarPay checkout links + "Sign in with wallet" requests. */
+function nectarFrom(raw: string): ScanIntent | null {
+  // nectar://pay?inv=<id>&t=<nonce>
+  let m = raw.match(/^nectar:\/\/pay\?(.*)$/i);
+  if (m) {
+    const p = new URLSearchParams(m[1]);
+    const inv = p.get("inv") ?? p.get("invoice") ?? "";
+    if (INVOICE_ID.test(inv)) return { kind: "nectarpay", invoiceId: inv, nonce: p.get("t"), raw };
+  }
+  // payhme://login?id=&nonce=&cb=&msg=&from=
+  m = raw.match(/^payhme:\/\/login\?(.*)$/i);
+  if (m) {
+    const p = new URLSearchParams(m[1]);
+    const nonce = p.get("nonce") ?? "";
+    const cb = p.get("cb") ?? "";
+    const host = hostOf(cb);
+    if (nonce && host && cb.startsWith("https://")) {
+      const msg = p.get("msg");
+      return {
+        kind: "wallet_login",
+        host: p.get("from") ?? host,
+        nonce,
+        callback: cb,
+        id: p.get("id"),
+        message: msg ? b64urlDecode(msg) : null,
+        expiresAt: null,
+        raw,
+      };
+    }
+  }
+  // {"type":"hm-login", ...}
+  if (raw.startsWith("{")) {
+    try {
+      const j = JSON.parse(raw) as Record<string, unknown>;
+      if (j.type === "hm-login" && typeof j.nonce === "string" && typeof j.callback === "string") {
+        const host = hostOf(j.callback);
+        if (host && j.callback.startsWith("https://")) {
+          return {
+            kind: "wallet_login",
+            host: typeof j.origin === "string" ? j.origin : host,
+            nonce: j.nonce,
+            callback: j.callback,
+            id: null,
+            message: null,
+            expiresAt: typeof j.expiresAt === "number" ? j.expiresAt : null,
+            raw,
+          };
+        }
+      }
+    } catch {
+      /* not JSON */
+    }
+  }
+  // https://app.nectar-pay.com/pay/<id>?t=…  or  …/i/<id>
+  if (/^https:\/\//i.test(raw)) {
+    try {
+      const url = new URL(raw);
+      if (NECTAR_HOSTS.test(url.hostname)) {
+        const pm = url.pathname.match(/^\/(?:pay|i)\/([^/?#]+)\/?$/);
+        if (pm && INVOICE_ID.test(pm[1])) {
+          return { kind: "nectarpay", invoiceId: pm[1], nonce: url.searchParams.get("t"), raw };
+        }
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  return null;
+}
+
 export function parseScan(input: string): ScanIntent {
   const raw = (input ?? "").trim();
   if (!raw) return { kind: "unknown", raw };
+
+  const nectar = nectarFrom(raw);
+  if (nectar) return nectar;
 
   // 1. JSON payloads
   if (raw.startsWith("{")) {

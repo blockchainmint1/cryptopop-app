@@ -26,6 +26,7 @@ import {
   Bell,
   Trophy,
   X,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -64,6 +65,8 @@ import { loadRegion, loadMarketSlug, marketCode } from "@/lib/wallet/region";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
+import { NectarPaySheet } from "./nectarpay-sheet";
+import { WalletLoginSheet, type WalletLoginRequest } from "./wallet-login-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { TopUpSheet } from "./topup-sheet";
 import coin from "@/assets/cryptopop-coin.png";
@@ -103,6 +106,8 @@ export function WalletDashboard() {
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendPrefill, setSendPrefill] = useState<SendPrefill | null>(null);
+  const [nectarReq, setNectarReq] = useState<{ invoiceId: string; nonce: string | null } | null>(null);
+  const [loginReq, setLoginReq] = useState<WalletLoginRequest | null>(null);
   const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHiddenChains()), []);
@@ -200,6 +205,12 @@ export function WalletDashboard() {
     const intent = parseScan(text);
 
     switch (intent.kind) {
+      case "nectarpay":
+        setNectarReq({ invoiceId: intent.invoiceId, nonce: intent.nonce });
+        return;
+      case "wallet_login":
+        setLoginReq(intent);
+        return;
       case "payment":
         if (intent.asset === "pop" || intent.asset === "phpop") {
           toast.info("POP is a scoreboard token — it can't be sent or spent.");
@@ -432,6 +443,14 @@ export function WalletDashboard() {
             <Sparkles className="mx-auto h-6 w-6 text-primary" />
             <p className="mt-2 font-display text-sm font-semibold uppercase">My pass</p>
           </Link>
+          <Link
+            to="/merchants"
+            className="col-span-2 rounded-2xl border border-primary/40 bg-primary/10 p-4 text-center backdrop-blur-xl transition hover:bg-primary/15"
+          >
+            <Store className="mx-auto h-6 w-6 text-primary" />
+            <p className="mt-2 font-display text-sm font-semibold uppercase">Spend TSD</p>
+            <p className="text-xs text-muted-foreground">NectarPay stores · earn POP</p>
+          </Link>
         </div>
 
         {/* Rewards */}
@@ -572,6 +591,22 @@ export function WalletDashboard() {
         txcBalance={txc}
         prefill={sendPrefill}
         onSent={() => void refresh()}
+      />
+
+      <NectarPaySheet
+        request={nectarReq}
+        onClose={() => setNectarReq(null)}
+        address={address}
+        sources={sources}
+        mnemonic={mnemonic}
+        tsdBalance={tsd}
+        onPaid={() => void refresh()}
+      />
+      <WalletLoginSheet
+        request={loginReq}
+        onClose={() => setLoginReq(null)}
+        address={address}
+        mnemonic={mnemonic}
       />
 
       <TopUpSheet open={addValueOpen} onOpenChange={setAddValueOpen} address={address} side="buy" />
