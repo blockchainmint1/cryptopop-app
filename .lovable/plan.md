@@ -1,58 +1,29 @@
+# POP Wallet x NectarPay
 
-## 1. Curated markets (Dallas, LA, Denver, Nashville, Salt Lake, Singapore)
+Events stay exactly as they are. This plan only adds NectarPay features to the wallet.
 
-- Add `pop_markets` table (slug, city, region, country, lat, lng, status: live/coming-soon, org_id nullable, launched_at, hero copy).
-- Seed the 6 markets. Dallas = live (default org). Others = coming-soon.
-- New `market_requests` table (city, name, email, why, status). Public insert via server fn with rate-limit + zod; admin read via existing admin gate.
-- Demote `/start` self-mint: remove from header/footer/CTAs. Leave route accessible only via direct URL or admin invite. Add a small "Bring POP to your city →" link in footer that points to new `/markets/request` form.
-- Add `/markets` index page (grid of 6 cities, live vs coming-soon badges) and link from header.
+## What the user gets
 
-## 2. `/how-it-works` — narrative user journey
+1. **Tap-to-pay at NectarPay merchants.** Scan a NectarPay checkout QR (on a terminal, or a link like `/i/<invoice>`). The wallet shows the store name, logo and amount in TSD. One tap (plus fingerprint or face unlock) pays it. The screen then waits for NectarPay to confirm: "Paid ✓ at Store Name".
+2. **Receipts.** Each NectarPay payment is saved as a receipt with store, amount, time, invoice number and a link to NectarPay's receipt. Recent transactions show the store name instead of a raw address. Receipts stay private on the phone, like today's labels.
+3. **POP for shopping.** A confirmed NectarPay payment earns POP (for example 1 POP per $1, set by us). It is sent to the wallet after NectarPay confirms the payment, and counted only once per invoice.
+4. **Merchant directory.** A new "Spend TSD" tile opens a list and map of NectarPay stores that accept TSD, sorted by distance, with a filter for the selected POP Market.
+5. **Sign in with wallet.** On NectarPay's login screen, scan the "Sign in with wallet" QR. The wallet asks "Sign in to NectarPay as T…xyz?" and signs with your key on the phone. Your key never leaves the device.
 
-Single scrolling page, 5 stages with screenshots/icons:
-1. **Discover** — find a POPup event or merchant in your city
-2. **Show up** — RSVP gets you a digital pass
-3. **Scan** — QR at venue mints POP to your wallet
-4. **Earn more** — bring a friend, share, complete activities
-5. **Support local** — spend time + attention at participating merchants
+## What NectarPay needs (small additions in that project)
 
-Includes the new tagline system + a "What is POP?" plain-English block + FAQ.
+- A public invoice lookup the wallet can read: store name, logo, amount, TSD address, status (pending, paid or expired). The hosted-pay endpoint may already cover this.
+- A public merchant list endpoint built on the existing map-pins data, limited to stores that accept TSD.
+- A signed "invoice paid" webhook sent to the wallet backend, used to trigger the POP reward.
+- Confirmation of the exact message and QR format for wallet sign-in, so our signing matches it.
 
-## 3. `/earn` — earning catalog + leaderboard + heatmap
+Once you approve, I'll handle the wallet side here and write out the matching NectarPay changes for you.
 
-Sections:
-- **Ways to earn** — categories (Attend, Share, Support local, Learn, Refer) with action cards driven by `reward_rules` table (already exists). Show POP amount per action.
-- **Where to earn** — merchant directory (new `merchants` table: name, city, market_slug, category, address, lat/lng, pop_per_visit, website, logo). Seed empty per market; admin can add later. Grouped by market.
-- **Top POP leaderboard** — server fn aggregates `pop_awards` by recipient with tabs Day/Week/Month/Quarter/All-time. Display name from `profiles`, masked when missing. Live data; empty state when none.
-- **POPup heatmap** — Google Maps with weighted markers from `qr_redemptions` joined to `qr_codes.lat/lng` (or merchant coords). Time-window matching leaderboard.
-- **Recent activity** ticker — last 20 awards.
+## Technical details
 
-All queries are server fns using service-role client, returning only non-PII (display_name, city, amount, time, market).
-
-## 4. Tagline & messaging system
-
-Hero tagline options I'll wire across hero + meta + og:
-- Primary: **"Small business support, gamified."**
-- Sub: **"Show up. Support local. Earn POP."**
-- Brand pillars expand to 4: **Connect · Experience · Support · Learn**
-
-I'll also draft 4 short explainers used in different surfaces (homepage hero, /how-it-works intro, /earn intro, footer one-liner).
-
-## 5. Header/footer cleanup
-
-- Header: Home · Markets · How it works · Earn · (Sign in)
-- Footer "Bring POP to your city" small link → /markets/request
-- Remove the prominent "Start a community" CTA from homepage; keep the route alive.
-
-## Technical notes
-
-- New tables: `pop_markets`, `market_requests`, `merchants`. All have GRANTs + RLS (markets/merchants public-read for anon; market_requests insert-only for anon, admin read).
-- New server fns: `getMarkets`, `requestMarket`, `getMerchants`, `getLeaderboard({window})`, `getHeatmap({window})`, `getEarnActions`.
-- Heatmap uses existing GOOGLE_MAPS_API_KEY connector. Falls back to a static city-bubble view if maps fail.
-- No changes to wallet/POP minting pipeline.
-
-## Out of scope this turn
-
-- Merchant onboarding flows / claim-your-business
-- POP redemption at merchants (just display the rule for now)
-- City-pages per market (`/markets/dallas` etc.) — stub linking to filtered /earn view
+- `scan-parse.ts`: new `nectarpay_invoice` intent (NectarPay `/i/<id>` URLs, `v1/pay/<id>` links, and BIP21 with `invoice=` / `order=` / `store=`) and a `wallet_login` intent (NectarPay wallet-challenge envelope).
+- `nectarpay.functions.ts`: server functions `getInvoice`, `getInvoiceStatus` (polled every 3 seconds after broadcast; TSD settles instantly up to the store's limit) and `listMerchants` (cached 5 minutes). `NECTARPAY_ORIGIN` goes in config.
+- Send sheet: invoice mode locks the amount, address and asset. On success it saves a receipt (tx-labels extended with invoiceId, storeId, logo and receiptUrl) and opens a "waiting for merchant" state.
+- Rewards: `/api/public/nectarpay-paid` checks the HMAC signature (new shared secret `NECTARPAY_WEBHOOK_SECRET`, requested later) and records a `pop_awards` row with source `nectarpay` and source_id set to the invoice id, so each invoice pays out once. Minting uses the existing mint lock. The POP rate is stored in `reward_rules` under the key `nectarpay_purchase`.
+- Sign-in: sign the challenge message with the device key via `wallet/sign.ts` (Bitcoin-style message signing using TXC's magic prefix), then POST it to NectarPay's wallet-callback.
+- UI: "Spend TSD" tile next to the Events and Earn tiles; new `/merchants` page with a list, plus the Google Maps view we already have. Checked at mobile width first.
