@@ -19,7 +19,7 @@ export type WalletTx = {
   direction: "in" | "out";
   txc: number;
   /** Omni token moved in this tx, sized to THIS address's share. */
-  token?: { symbol: string; propertyId: number; amount: number; multi: boolean } | null;
+  token?: { symbol: string; propertyId: number; amount: number } | null;
 };
 
 export type WalletReward = {
@@ -167,7 +167,6 @@ export const getAddressActivity = createServerFn({ method: "POST" })
             propertyId: o.propertyId,
             symbol: SYMBOLS[o.propertyId] ?? `#${o.propertyId}`,
             amount: Number(units) / scale,
-            multi: o.references.length > 1,
           };
         }
         return {
