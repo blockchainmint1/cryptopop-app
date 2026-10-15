@@ -392,7 +392,15 @@ export function WalletDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">
                       {txLabels[t.txid]?.merchant ??
-                        (t.direction === "in" ? "Received" : "Sent")}
+                        (t.direction === "in"
+                          ? t.token?.multi
+                            ? `Received ${t.token.symbol} · group payment`
+                            : t.token
+                              ? `Received ${t.token.symbol}`
+                              : "Received"
+                          : t.token
+                            ? `Sent ${t.token.symbol}`
+                            : "Sent")}
                       {!t.confirmed && (
                         <span className="ml-1 text-xs text-muted-foreground">· pending</span>
                       )}
@@ -410,7 +418,9 @@ export function WalletDashboard() {
 
                   <p className="shrink-0 font-mono text-xs">
                     {t.direction === "in" ? "+" : "−"}
-                    {t.txc.toFixed(8)} TXC
+                    {t.token
+                      ? `${t.token.amount.toLocaleString(undefined, { maximumFractionDigits: 8 })} ${t.token.symbol}`
+                      : `${t.txc.toFixed(8)} TXC`}
                   </p>
                 </li>
               ))}
