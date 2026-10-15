@@ -13,6 +13,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { WalletProvider } from "@/lib/wallet/wallet-context";
 import { initNativeShell } from "@/lib/native/shell";
 import { OfflineGate } from "@/components/offline-gate";
+import { NearbyAlerts } from "@/components/nearby-alerts";
 
 
 import appCss from "../styles.css?url";
@@ -82,7 +83,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "google-site-verification", content: "MFLZfKLuP3jN4CvPZmT4lhReUvqBzzuJqvb97VI6aG8" },
       { title: "CryptoPOP — Proof of Participation" },
       { name: "description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
-      { name: "theme-color", content: "#FF3DBE" },
+      { name: "theme-color", content: "#0B0710" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "POP Wallet" },
       { property: "og:title", content: "CryptoPOP — Proof of Participation" },
       { property: "og:description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
       { property: "og:type", content: "website" },
@@ -97,6 +102,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" },
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
     scripts: [{ src: "https://honest.money/hm.js", async: true }],
   }),
@@ -135,6 +142,7 @@ function RootComponent() {
             <Outlet />
           </div>
           <OfflineGate />
+          <NearbyAlerts />
           <Toaster richColors position="top-center" />
         </WalletProvider>
       </AuthProvider>
