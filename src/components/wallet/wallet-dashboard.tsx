@@ -393,10 +393,10 @@ export function WalletDashboard() {
                     <p className="truncate text-sm">
                       {txLabels[t.txid]?.merchant ??
                         (t.direction === "in"
-                          ? t.token?.multi
-                            ? `Received ${t.token.symbol} · group payment`
-                            : t.token
-                              ? `Received ${t.token.symbol}`
+                          ? t.token
+                            ? `Received ${t.token.symbol}`
+                            : "Received"
+
                               : "Received"
                           : t.token
                             ? `Sent ${t.token.symbol}`

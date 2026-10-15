@@ -19,7 +19,7 @@ export type WalletTx = {
   direction: "in" | "out";
   txc: number;
   /** Omni token moved in this tx, sized to THIS address's share. */
-  token?: { symbol: string; propertyId: number; amount: number; multi: boolean } | null;
+  token?: { symbol: string; propertyId: number; amount: number } | null;
 };
 
 export type WalletReward = {
