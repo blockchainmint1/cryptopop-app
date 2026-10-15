@@ -28,6 +28,7 @@ import { nativePlatform } from "@/lib/native/platform";
 import { useServerFn } from "@tanstack/react-start";
 import { listMarkets, type MarketOption } from "@/lib/public-events.functions";
 import { claimWelcomePop, WELCOME_POP } from "@/lib/welcome.functions";
+import { hmeRef } from "@/lib/hme";
 import { loadRegion, regionForMarket, saveMarketSlug, saveRegion } from "@/lib/wallet/region";
 import { deriveTxcAddress } from "@/lib/wallet";
 import logo from "@/assets/cryptopop-logo.png";
@@ -181,6 +182,7 @@ export function OnboardScreen() {
             email: cleanEmail || null,
             market: picked?.slug ?? null,
             client: `wallet-${plat}`,
+            ref: hmeRef(),
           },
         });
         if (res.awarded) toast.success(`Welcome — ${res.amount} POP is on its way`);
