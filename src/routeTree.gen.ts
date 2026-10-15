@@ -32,6 +32,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
+import { Route as TxTxidRouteImport } from './routes/tx.$txid'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as ApiPublicApkRouteImport } from './routes/api/public/apk'
 import { Route as ApiPublicBuildIdRouteImport } from './routes/api/public/build-id'
@@ -162,6 +163,11 @@ const EventsSlugRoute = EventsSlugRouteImport.update({
   path: '/events/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TxTxidRoute = TxTxidRouteImport.update({
+  id: '/tx/$txid',
+  path: '/tx/$txid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedScanSuccessRoute =
   AuthenticatedScanSuccessRouteImport.update({
     id: '/success',
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/tx/$txid': typeof TxTxidRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/api/public/apk': typeof ApiPublicApkRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/tx/$txid': typeof TxTxidRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
   '/api/public/apk': typeof ApiPublicApkRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/tx/$txid': typeof TxTxidRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
   '/api/public/apk': typeof ApiPublicApkRoute
@@ -379,6 +388,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
+    | '/tx/$txid'
     | '/events/'
     | '/scan/success'
     | '/api/public/apk'
@@ -417,6 +427,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
+    | '/tx/$txid'
     | '/events'
     | '/scan/success'
     | '/api/public/apk'
@@ -456,6 +467,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
+    | '/tx/$txid'
     | '/events/'
     | '/_authenticated/scan/success'
     | '/api/public/apk'
@@ -493,6 +505,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsSlugRoute: typeof EventsSlugRoute
+  TxTxidRoute: typeof TxTxidRoute
   EventsIndexRoute: typeof EventsIndexRoute
   ApiPublicApkRoute: typeof ApiPublicApkRoute
   ApiPublicBuildIdRoute: typeof ApiPublicBuildIdRoute
@@ -672,6 +685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tx/$txid': {
+      id: '/tx/$txid'
+      path: '/tx/$txid'
+      fullPath: '/tx/$txid'
+      preLoaderRoute: typeof TxTxidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/scan/success': {
       id: '/_authenticated/scan/success'
       path: '/success'
@@ -820,6 +840,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
   EventsSlugRoute: EventsSlugRoute,
+  TxTxidRoute: TxTxidRoute,
   EventsIndexRoute: EventsIndexRoute,
   ApiPublicApkRoute: ApiPublicApkRoute,
   ApiPublicBuildIdRoute: ApiPublicBuildIdRoute,
