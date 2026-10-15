@@ -321,14 +321,14 @@ export function WalletSettings({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="h-11"
-          autoComplete="current-password"
+          autoComplete="off"
         />
         <div className="flex gap-2">
           <Button
             variant="secondary"
             className="flex-1 rounded-full"
             disabled={!password || busy}
-            onClick={reveal}
+            onClick={() => setConfirmingReveal(true)}
           >
             <Eye className="mr-1.5 h-4 w-4" /> Reveal phrase
           </Button>
