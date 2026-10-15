@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   Fingerprint,
+  Loader2,
   Lock,
   LogOut,
   MapPin,
@@ -340,12 +341,46 @@ export function WalletSettings({
         </div>
       </div>
 
+      <Dialog open={confirmingReveal} onOpenChange={setConfirmingReveal}>
+        <DialogContent className="max-w-sm border-white/12 bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg uppercase">Are you sure?</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Anyone watching your screen — a person, a camera, a video call — can use these words
+              to take all your money. Only view your phrase when you're alone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button className="rounded-full" disabled={busy} onClick={() => void reveal()}>
+              {busy ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="mr-1.5 h-4 w-4" />
+              )}
+              I'm alone — show my phrase
+            </Button>
+            <Button
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => setConfirmingReveal(false)}
+            >
+              Not now
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {phrase && (
         <div className="space-y-2 rounded-2xl border border-white/12 bg-black/40 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-destructive">
+              Anyone watching can steal everything — hides in {hideIn}s
+            </p>
+            <Button variant="ghost" size="sm" onClick={() => setPhrase(null)}>
+              <EyeOff className="mr-1.5 h-4 w-4" /> Hide
+            </Button>
+          </div>
           <p className="font-mono text-sm leading-relaxed">{phrase}</p>
-          <Button variant="ghost" size="sm" onClick={() => setPhrase(null)}>
-            <EyeOff className="mr-1.5 h-4 w-4" /> Hide
-          </Button>
         </div>
       )}
 
