@@ -397,7 +397,6 @@ export function WalletDashboard() {
                             ? `Received ${t.token.symbol}`
                             : "Received"
 
-                              : "Received"
                           : t.token
                             ? `Sent ${t.token.symbol}`
                             : "Sent")}
