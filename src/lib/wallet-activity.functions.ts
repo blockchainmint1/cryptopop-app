@@ -19,6 +19,8 @@ export type WalletTx = {
   direction: "in" | "out";
   txc: number;
   /** Omni token moved in this tx, sized to THIS address's share. */
+  /** The other party (sender for incoming, recipient for outgoing), best guess. */
+  counterparty?: string | null;
   token?: { symbol: string; propertyId: number; amount: number } | null;
 };
 
@@ -169,8 +171,17 @@ export const getAddressActivity = createServerFn({ method: "POST" })
             amount: Number(units) / scale,
           };
         }
+        const counterparty =
+          dir === "in"
+            ? (o && o.sender !== addr ? o.sender : null) ??
+              (tx.vin ?? []).map((v) => v.prevout?.scriptpubkey_address).find((a) => a && a !== addr) ??
+              null
+            : (o ? o.references.find((a) => a !== addr) : null) ??
+              (tx.vout ?? []).map((v) => v.scriptpubkey_address).find((a) => a && a !== addr) ??
+              null;
         return {
           token,
+          counterparty,
           txid: tx.txid,
           time: tx.status?.block_time ?? null,
           confirmed: Boolean(tx.status?.confirmed),
