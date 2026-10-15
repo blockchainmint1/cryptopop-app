@@ -648,6 +648,24 @@ export type Database = {
           },
         ]
       }
+      hme_sso_nonces: {
+        Row: {
+          created_at: string
+          miner_id: string
+          nonce: string
+        }
+        Insert: {
+          created_at?: string
+          miner_id: string
+          nonce: string
+        }
+        Update: {
+          created_at?: string
+          miner_id?: string
+          nonce?: string
+        }
+        Relationships: []
+      }
       market_news: {
         Row: {
           body: string | null
