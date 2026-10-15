@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   Fingerprint,
+  Loader2,
   Lock,
   LogOut,
   MapPin,
@@ -18,6 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -82,6 +90,8 @@ export function WalletSettings({
   }, [fetchMarkets]);
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
+  const [confirmingReveal, setConfirmingReveal] = useState(false);
+  const [hideIn, setHideIn] = useState(0);
   const [busy, setBusy] = useState(false);
   const [bio, setBio] = useState({ available: false, enabled: false });
   const [notifs, setNotifs] = useState(false);
@@ -182,10 +192,26 @@ export function WalletSettings({
     const payload = await unlockVault(password);
     setBusy(false);
     if (!payload) return toast.error("Wrong password");
+    setConfirmingReveal(false);
     setPhrase(payload.mnemonic);
+    setHideIn(60);
     markBackedUp();
     setPassword("");
   }
+
+  // Auto-hide the phrase after 60 seconds, and count down for the user.
+  useEffect(() => {
+    if (!phrase) {
+      setHideIn(0);
+      return;
+    }
+    if (hideIn <= 0) {
+      setPhrase(null);
+      return;
+    }
+    const t = setTimeout(() => setHideIn((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phrase, hideIn]);
 
   async function toggleBiometric() {
     if (bio.enabled) {
@@ -303,14 +329,14 @@ export function WalletSettings({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="h-11"
-          autoComplete="current-password"
+          autoComplete="off"
         />
         <div className="flex gap-2">
           <Button
             variant="secondary"
             className="flex-1 rounded-full"
             disabled={!password || busy}
-            onClick={reveal}
+            onClick={() => setConfirmingReveal(true)}
           >
             <Eye className="mr-1.5 h-4 w-4" /> Reveal phrase
           </Button>
@@ -322,12 +348,46 @@ export function WalletSettings({
         </div>
       </div>
 
+      <Dialog open={confirmingReveal} onOpenChange={setConfirmingReveal}>
+        <DialogContent className="max-w-sm border-white/12 bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg uppercase">Are you sure?</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Anyone watching your screen — a person, a camera, a video call — can use these words
+              to take all your money. Only view your phrase when you're alone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button className="rounded-full" disabled={busy} onClick={() => void reveal()}>
+              {busy ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="mr-1.5 h-4 w-4" />
+              )}
+              I'm alone — show my phrase
+            </Button>
+            <Button
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => setConfirmingReveal(false)}
+            >
+              Not now
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {phrase && (
         <div className="space-y-2 rounded-2xl border border-white/12 bg-black/40 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-destructive">
+              Anyone watching can steal everything — hides in {hideIn}s
+            </p>
+            <Button variant="ghost" size="sm" onClick={() => setPhrase(null)}>
+              <EyeOff className="mr-1.5 h-4 w-4" /> Hide
+            </Button>
+          </div>
           <p className="font-mono text-sm leading-relaxed">{phrase}</p>
-          <Button variant="ghost" size="sm" onClick={() => setPhrase(null)}>
-            <EyeOff className="mr-1.5 h-4 w-4" /> Hide
-          </Button>
         </div>
       )}
 
