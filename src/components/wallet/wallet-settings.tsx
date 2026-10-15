@@ -82,6 +82,8 @@ export function WalletSettings({
   }, [fetchMarkets]);
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
+  const [confirmingReveal, setConfirmingReveal] = useState(false);
+  const [hideIn, setHideIn] = useState(0);
   const [busy, setBusy] = useState(false);
   const [bio, setBio] = useState({ available: false, enabled: false });
   const [notifs, setNotifs] = useState(false);
@@ -182,10 +184,26 @@ export function WalletSettings({
     const payload = await unlockVault(password);
     setBusy(false);
     if (!payload) return toast.error("Wrong password");
+    setConfirmingReveal(false);
     setPhrase(payload.mnemonic);
+    setHideIn(60);
     markBackedUp();
     setPassword("");
   }
+
+  // Auto-hide the phrase after 60 seconds, and count down for the user.
+  useEffect(() => {
+    if (!phrase) {
+      setHideIn(0);
+      return;
+    }
+    if (hideIn <= 0) {
+      setPhrase(null);
+      return;
+    }
+    const t = setTimeout(() => setHideIn((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phrase, hideIn]);
 
   async function toggleBiometric() {
     if (bio.enabled) {
