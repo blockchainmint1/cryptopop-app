@@ -12,6 +12,7 @@ const PrepareInput = z.object({
   from: Addr,
   to: Addr,
   amount: z.number().positive().finite(),
+  exclude: z.array(z.string().regex(/^[0-9a-f]{64}:\d+$/)).max(200).optional(),
 });
 
 const BroadcastInput = z.object({
@@ -28,13 +29,22 @@ export const prepareSend = createServerFn({ method: "POST" })
       feeSats: built.feeSats,
       inputCount: built.inputCount,
       totalSats: built.totalSats,
+      inputs: built.inputs,
+      feeRate: built.feeRate,
     };
   });
 
 export const broadcastSignedTx = createServerFn({ method: "POST" })
   .inputValidator((input) => BroadcastInput.parse(input))
   .handler(async ({ data }) => {
-    const { broadcastRaw } = await import("./send.server");
-    const txid = await broadcastRaw(data.rawHex);
-    return { txid };
+    const { broadcastRaw, CoinsSpentError } = await import("./send.server");
+    try {
+      const txid = await broadcastRaw(data.rawHex);
+      return { ok: true as const, txid };
+    } catch (e) {
+      if (e instanceof CoinsSpentError) return { ok: false as const, spent: e.outpoints, error: e.message };
+      const msg = e instanceof Error ? e.message : String(e);
+      const conflict = /conflict|missingorspent|just used/i.test(msg);
+      return { ok: false as const, spent: conflict ? null : undefined, error: msg };
+    }
   });

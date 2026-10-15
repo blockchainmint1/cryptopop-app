@@ -8,9 +8,41 @@ import { TXC_NETWORK } from "./txc.server";
 bitcoin.initEccLib(ecc);
 
 const DUST_SATS = 10_000;
-/** TEXITcoin's relay floor — 5 sat/vB gets stuck in the mempool at the register. */
-const FEE_SATS_PER_VBYTE = 10;
+/** Never go below this — 5 sat/vB gets stuck in the mempool at the register. */
+const FEE_FLOOR = 10;
 const MEMPOOL_BASE = "https://mempool.texitcoin.org/api";
+
+let feeCache: { rate: number; at: number } | null = null;
+/** Live fastest fee rate, floored to the node minimum and our 10 sat/vB floor. */
+async function getFeeRate(): Promise<number> {
+  if (feeCache && Date.now() - feeCache.at < 60_000) return feeCache.rate;
+  let rate = FEE_FLOOR;
+  try {
+    const res = await fetch(`${MEMPOOL_BASE}/v1/fees/recommended`, { signal: AbortSignal.timeout(2500) });
+    if (res.ok) {
+      const j = (await res.json()) as { fastestFee?: number; minimumFee?: number };
+      rate = Math.max(Number(j.fastestFee) || 0, Number(j.minimumFee) || 0, FEE_FLOOR);
+    }
+  } catch { /* keep floor */ }
+  rate = Math.min(Math.ceil(rate), 200);
+  feeCache = { rate, at: Date.now() };
+  return rate;
+}
+
+/** Turn raw node/explorer errors into plain, actionable messages. */
+export function friendlyBroadcastError(raw: string): string {
+  const m = raw.toLowerCase();
+  const tail = ` (node said: ${raw.replace(/<[^>]+>/g, "").slice(0, 160)})`;
+  if (m.includes("<html") || m.includes("cloudflare")) return "The TEXITcoin network is busy right now. Please try again in a moment.";
+  if (m.includes("mempool-conflict") || m.includes("missingorspent"))
+    return "Some coins you were spending were just used by another send. Please try again." + tail;
+  if (m.includes("already-in-mempool") || m.includes("already in block chain"))
+    return "This payment was already sent — check your activity before sending again." + tail;
+  if (m.includes("min relay fee") || m.includes("insufficient fee"))
+    return "The network fee was too low. Please try again." + tail;
+  if (m.includes("dust")) return "That amount is too small for the network to accept." + tail;
+  return raw;
+}
 
 type Utxo = { txid: string; vout: number; value: number };
 
@@ -48,7 +80,7 @@ async function isUnspent(txid: string, vout: number): Promise<boolean> {
   }
 }
 
-async function getSpendableUtxos(addr: string): Promise<Utxo[]> {
+async function getSpendableUtxos(addr: string, exclude: Set<string> = new Set()): Promise<Utxo[]> {
   const res = await fetch(`${MEMPOOL_BASE}/address/${addr}/utxo`);
   if (!res.ok) throw new Error(`utxo fetch http ${res.status}`);
   const raw = (await res.json()) as Array<{
@@ -58,7 +90,7 @@ async function getSpendableUtxos(addr: string): Promise<Utxo[]> {
     status: { confirmed: boolean };
   }>;
   const checked = await Promise.all(
-    raw.map(async (u) => ({
+    raw.filter((u) => !exclude.has(`${u.txid}:${u.vout}`)).map(async (u) => ({
       txid: u.txid,
       vout: u.vout,
       value: u.value,
@@ -144,6 +176,9 @@ export type UnsignedSend = {
   inputCount: number;
   /** Total sats leaving the wallet (fee + any dust/value outputs). */
   totalSats: number;
+  /** "txid:vout" of every coin spent. */
+  inputs: string[];
+  feeRate: number;
 };
 
 /**
@@ -157,15 +192,18 @@ export async function buildUnsignedSend(opts: {
   to: string;
   /** POP: whole tokens. TXC: whole coins. */
   amount: number;
+  /** "txid:vout" coins this device just spent — skip them. */
+  exclude?: string[];
 }): Promise<UnsignedSend> {
   const network = TXC_NETWORK;
+  const feeRatePromise = getFeeRate();
 
   let opReturnScript: Buffer | null = null;
   let opReturnLen = 0;
   let recipientSats = DUST_SATS;
 
   // Prepare the token payload and fetch coins at the same time.
-  const utxosPromise = getSpendableUtxos(opts.from);
+  const utxosPromise = getSpendableUtxos(opts.from, new Set(opts.exclude ?? []));
 
   if (opts.asset === "pop" || opts.asset === "tsd") {
     // Omni reads the recipient from a legacy output — a bech32 (txc1…) target
@@ -195,8 +233,11 @@ export async function buildUnsignedSend(opts: {
 
   const utxos = await utxosPromise;
   if (utxos.length === 0) {
-    throw new Error("No spendable TXC in this wallet — a small TXC balance is needed for fees.");
+    throw new Error(
+      "This address has no TXC to pay the network fee. Send a small amount of TXC to it first, then retry.",
+    );
   }
+  const FEE_SATS_PER_VBYTE = await feeRatePromise;
 
 
   const psbt = new bitcoin.Psbt({ network });
@@ -233,10 +274,24 @@ export async function buildUnsignedSend(opts: {
     feeSats: fee,
     inputCount: used.length,
     totalSats: recipientSats + fee,
+    inputs: used.map((u) => `${u.txid}:${u.vout}`),
+    feeRate: FEE_SATS_PER_VBYTE,
   };
 }
 
+export class CoinsSpentError extends Error {
+  constructor(public outpoints: string[]) {
+    super("Some coins you were spending were just used by another send. Please try again.");
+  }
+}
+
 export async function broadcastRaw(rawHex: string): Promise<string> {
+  // Last-moment check: are the exact coins we signed still unspent?
+  const tx = bitcoin.Transaction.fromHex(rawHex);
+  const outs = tx.ins.map((i) => ({ txid: Buffer.from(i.hash).reverse().toString("hex"), vout: i.index }));
+  const status = await Promise.all(outs.map((o) => isUnspent(o.txid, o.vout)));
+  const spent = outs.filter((_, i) => !status[i]).map((o) => `${o.txid}:${o.vout}`);
+  if (spent.length) throw new CoinsSpentError(spent);
   const res = await fetch(`${MEMPOOL_BASE}/tx`, {
     method: "POST",
     headers: { "content-type": "text/plain" },
@@ -248,7 +303,7 @@ export async function broadcastRaw(rawHex: string): Promise<string> {
       return await rpc<string>("sendrawtransaction", [rawHex]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      throw new Error(`Broadcast failed: ${text.startsWith("<") ? msg : text || msg}`);
+      throw new Error(friendlyBroadcastError(text.startsWith("<") ? msg : text || msg));
     }
   }
   return text;
