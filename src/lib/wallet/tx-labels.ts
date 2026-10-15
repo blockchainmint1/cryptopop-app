@@ -117,3 +117,18 @@ export function loadAddressLabels(): Record<string, TxLabel> {
 export function clearTxLabels() {
   write({ byTxid: {}, byAddress: {} });
 }
+
+/** Set (or clear) a private note on a transaction, keeping any vendor/receipt. */
+export function setTxNote(txid: string, note: string) {
+  const store = read();
+  const cur = store.byTxid[txid];
+  const memo = note.trim() || null;
+  store.byTxid[txid] = {
+    merchant: cur?.merchant ?? null,
+    address: cur?.address ?? null,
+    receipt: cur?.receipt ?? null,
+    memo,
+    at: cur?.at ?? Date.now(),
+  };
+  write(store);
+}

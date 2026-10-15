@@ -64,6 +64,7 @@ import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
 import { loadRegion, loadMarketSlug, marketCode } from "@/lib/wallet/region";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
+import { loadContacts, type Contact } from "@/lib/wallet/address-book";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
 import { NectarPaySheet } from "./nectarpay-sheet";
 import { WalletLoginSheet, type WalletLoginRequest } from "./wallet-login-sheet";
@@ -115,6 +116,8 @@ export function WalletDashboard() {
   useEffect(() => setRegion(loadRegion()), []);
   useEffect(() => setMarketSlug(loadMarketSlug()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
+  const [contacts, setContacts] = useState<Record<string, Contact>>({});
+  useEffect(() => setContacts(Object.fromEntries(loadContacts().map((c) => [c.address, c]))), []);
 
   useEffect(() => setBackupDismissed(isBackedUp()), []);
 
@@ -377,7 +380,12 @@ export function WalletDashboard() {
           ) : (
             <ul className="space-y-2">
               {shownTx.map((t) => (
-                <li key={t.txid} className="flex items-center gap-3">
+                <li key={t.txid}>
+                <Link
+                  to="/tx/$txid"
+                  params={{ txid: t.txid }}
+                  className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-white/5"
+                >
                   <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/12 ${
                       t.direction === "in" ? "text-primary" : "text-muted-foreground"
@@ -392,6 +400,7 @@ export function WalletDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">
                       {txLabels[t.txid]?.merchant ??
+                        (t.counterparty ? contacts[t.counterparty]?.name : undefined) ??
                         (t.direction === "in"
                           ? t.token
                             ? `Received ${t.token.symbol}`
@@ -420,6 +429,7 @@ export function WalletDashboard() {
                       ? `${t.token.amount.toLocaleString(undefined, { maximumFractionDigits: 8 })} ${t.token.symbol}`
                       : `${t.txc.toFixed(8)} TXC`}
                   </p>
+                </Link>
                 </li>
               ))}
             </ul>
