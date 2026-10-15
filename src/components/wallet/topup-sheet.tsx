@@ -26,6 +26,7 @@ import {
   type LocalOrder,
   type OrderSide,
 } from "@/lib/handoff";
+import { BridgeTopUpSheet } from "./bridge-topup-sheet";
 import { getHandoffStatus, getOrderStatuses, startHandoffOrder } from "@/lib/handoff.functions";
 
 
@@ -55,6 +56,7 @@ export function TopUpSheet({
   const [accepted, setAccepted] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [bridgeOpen, setBridgeOpen] = useState(false);
   const [history, setHistory] = useState<LocalOrder[]>([]);
   const [liveStatus, setLiveStatus] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{
@@ -141,6 +143,7 @@ export function TopUpSheet({
   const title = side === "buy" ? "Top up" : "Cash out";
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
         <SheetHeader className="text-left">
@@ -190,8 +193,20 @@ export function TopUpSheet({
                 disabled={ready === false}
                 onClick={() => setStep("amount")}
               >
-                Get started
+                Pay from my bank
               </Button>
+              {side === "buy" && (
+                <Button
+                  variant="secondary"
+                  className="h-12 w-full rounded-full"
+                  onClick={() => {
+                    onOpenChange(false);
+                    setBridgeOpen(true);
+                  }}
+                >
+                  I have USDC or PYUSD
+                </Button>
+              )}
 
               {history.length > 0 && (
                 <div className="space-y-2">
@@ -429,6 +444,8 @@ export function TopUpSheet({
         </div>
       </SheetContent>
     </Sheet>
+    <BridgeTopUpSheet open={bridgeOpen} onOpenChange={setBridgeOpen} address={address} />
+    </>
   );
 }
 

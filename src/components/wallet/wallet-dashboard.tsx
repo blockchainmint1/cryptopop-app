@@ -71,6 +71,7 @@ import { NectarPaySheet } from "./nectarpay-sheet";
 import { WalletLoginSheet, type WalletLoginRequest } from "./wallet-login-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { TopUpSheet } from "./topup-sheet";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { StoreRewardsCard } from "./store-rewards-card";
 import coin from "@/assets/cryptopop-coin.png";
 
@@ -78,6 +79,9 @@ import coin from "@/assets/cryptopop-coin.png";
 
 
 type ChainId = AssetId;
+/** Show the "running low" reminder under this many TSD. */
+const LOW_TSD = 10;
+
 export function WalletDashboard() {
   const { address, legacyAddress, origin, mnemonic } = useWallet();
   const navigate = useNavigate();
@@ -105,6 +109,17 @@ export function WalletDashboard() {
   const [expanded, setExpanded] = useState(false);
 
   const [showAllTx, setShowAllTx] = useState(false);
+  const [txOpen, setTxOpen] = useState(true);
+  const [lowDismissed, setLowDismissed] = useState(true);
+  useEffect(() => {
+    try {
+      const at = Number(localStorage.getItem("cp-low-tsd-dismissed") ?? 0);
+      setLowDismissed(Date.now() - at < 24 * 3600_000);
+      setTxOpen(localStorage.getItem("cp-tx-open") !== "0");
+    } catch {
+      setLowDismissed(false);
+    }
+  }, []);
   const [scanOpen, setScanOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
@@ -389,12 +404,58 @@ export function WalletDashboard() {
 
 
 
+        {/* Running low on TSD */}
+        {tsdVisible && tsd !== null && tsd < LOW_TSD && !lowDismissed && (
+          <Card className="relative border-amber-400/40 bg-amber-400/10 p-4 text-sm">
+            <button
+              type="button"
+              aria-label="Hide low balance reminder"
+              onClick={() => {
+                try {
+                  localStorage.setItem("cp-low-tsd-dismissed", String(Date.now()));
+                } catch {
+                  /* ignore */
+                }
+                setLowDismissed(true);
+              }}
+              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="pr-8 font-semibold">You're running low on TSD</p>
+            <p className="mt-1 text-muted-foreground">
+              Top-ups can take a few minutes, so top up early and you're ready to pay.
+            </p>
+            <Button size="sm" className="mt-3 rounded-full" onClick={() => setAddValueOpen(true)}>
+              <Plus className="mr-1 h-4 w-4" /> Top up
+            </Button>
+          </Card>
+        )}
+
+        <InstallAppPrompt />
+
         {/* Recent activity */}
         <Card className="space-y-3 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
-          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Recent activity
-          </p>
-          {shownTx.length === 0 ? (
+          <button
+            type="button"
+            className="flex w-full items-center justify-between font-mono text-xs uppercase tracking-widest text-muted-foreground"
+            aria-expanded={txOpen}
+            onClick={() => {
+              const next = !txOpen;
+              setTxOpen(next);
+              try {
+                localStorage.setItem("cp-tx-open", next ? "1" : "0");
+              } catch {
+                /* ignore */
+              }
+            }}
+          >
+            <span>
+              Recent activity{txs.length > 0 ? ` · ${txs.length}` : ""}
+            </span>
+            <ChevronDown className={`h-4 w-4 transition ${txOpen ? "rotate-180" : ""}`} />
+          </button>
+          {!txOpen ? null : shownTx.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {loading ? "Loading…" : "No transactions yet."}
             </p>
@@ -455,7 +516,7 @@ export function WalletDashboard() {
               ))}
             </ul>
           )}
-          {txs.length > 5 && (
+          {txOpen && txs.length > 5 && (
             <Button
               variant="ghost"
               size="sm"

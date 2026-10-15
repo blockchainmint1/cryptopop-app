@@ -8,8 +8,10 @@ import {
   EyeOff,
   Fingerprint,
   Lock,
-  
+  LogOut,
+  MapPin,
   ScanLine,
+  UserRound,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,9 @@ import { CloudBackupCard } from "./cloud-backup-card";
 import { UpdateCheckCard } from "./update-check-card";
 import { EcosystemLinksCard } from "./ecosystem-links-card";
 import { useAuth } from "@/hooks/use-auth";
+import { openHmeLogin } from "@/lib/hme";
+import { nearbyEnabled, setNearbyEnabled } from "@/lib/nearby-alerts";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
@@ -87,6 +92,26 @@ export function WalletSettings({
   const togglePushRow = useServerFn(setPushEnabled);
 
   useEffect(() => setNotifs(pushAvailable() && pushPreference()), []);
+  const [nearby, setNearby] = useState(false);
+  useEffect(() => setNearby(nearbyEnabled()), []);
+
+  function toggleNearby(on: boolean) {
+    if (!on) {
+      setNearby(false);
+      setNearbyEnabled(false);
+      return;
+    }
+    if (!navigator.geolocation) return toast.error("Location isn't available on this device.");
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setNearby(true);
+        setNearbyEnabled(true);
+        toast.success("We'll let you know when you're near a store that takes TSD.");
+      },
+      () => toast.error("Location is blocked in your phone settings."),
+      { timeout: 15000 },
+    );
+  }
 
 
   async function toggleNotifications(on: boolean) {
@@ -184,6 +209,33 @@ export function WalletSettings({
 
   return (
     <Card className="space-y-4 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
+      {/* Account */}
+      <div className="space-y-2">
+        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Account</p>
+        {user ? (
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+            <UserRound className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm">{user.email ?? "Signed in"}</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {user.app_metadata?.hme_member_id
+                  ? "Honest Money account"
+                  : `Signed in with ${String(user.app_metadata?.provider ?? "email")}`}
+              </p>
+            </div>
+            <Button variant="ghost" size="icon" aria-label="Sign out" onClick={() => void signOut()}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button variant="secondary" className="h-11 w-full rounded-full" onClick={openHmeLogin}>
+            Sign in with Honest Money
+          </Button>
+        )}
+      </div>
+
+      <InstallAppPrompt dismissible={false} />
+
       {/* POP market */}
       <div className="space-y-2">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -290,6 +342,19 @@ export function WalletSettings({
           </div>
         </div>
         <Switch checked={notifs} onCheckedChange={toggleNotifications} aria-label="Notifications" />
+      </div>
+
+      <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="font-display text-sm font-semibold uppercase">Nearby alerts</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              When you're near a TSD store · stays on your phone
+            </p>
+          </div>
+        </div>
+        <Switch checked={nearby} onCheckedChange={toggleNearby} aria-label="Nearby alerts" />
       </div>
 
       <CloudBackupCard />
