@@ -40,6 +40,7 @@ import {
   getBiometricStatus,
 } from "@/lib/native/biometric";
 import { CloudBackupCard } from "./cloud-backup-card";
+import { HmBackupCard } from "./hm-backup-card";
 import { UpdateCheckCard } from "./update-check-card";
 import { EcosystemLinksCard } from "./ecosystem-links-card";
 import { useAuth } from "@/hooks/use-auth";
@@ -418,6 +419,7 @@ export function WalletSettings({
       </div>
 
       <CloudBackupCard />
+      <HmBackupCard />
 
       <EcosystemLinksCard initialPayload={ecosystemLink} />
 

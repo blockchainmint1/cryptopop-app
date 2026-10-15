@@ -21,6 +21,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { CloudRestorePanel } from "./cloud-restore-panel";
 import { RESTORE_INTENT_KEY } from "@/lib/wallet/cloud-account";
+import { HmRestorePanel } from "./hm-restore-panel";
+import { peekHmAction } from "@/lib/wallet/hm-backup";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { createMnemonic, isValidMnemonic, normalizeMnemonic, type VaultOrigin } from "@/lib/wallet/vault";
 import { enableBiometric, isBiometricAvailable } from "@/lib/native/biometric";
@@ -57,7 +59,9 @@ export function OnboardScreen() {
   // Coming back from a Google/Apple redirect started on the restore panel.
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(RESTORE_INTENT_KEY)) {
+      if (peekHmAction() === "restore") {
+        setStep("hm" as Step);
+      } else if (sessionStorage.getItem(RESTORE_INTENT_KEY)) {
         sessionStorage.removeItem(RESTORE_INTENT_KEY);
         setStep("cloud");
       }
@@ -269,10 +273,23 @@ export function OnboardScreen() {
                   password.
                 </p>
               </button>
+
+              <button
+                onClick={() => setStep("hm" as Step)}
+                className="w-full rounded-2xl border border-white/12 bg-white/5 p-5 text-left transition hover:bg-white/10"
+              >
+                <div className="flex items-center gap-2 font-display text-lg font-semibold uppercase">
+                  <CloudDownload className="h-5 w-5" /> Restore from Honest Money
+                </div>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Backed up with your Honest Money account? Approve it there, then unlock here.
+                </p>
+              </button>
             </div>
           )}
 
           {step === "cloud" && <CloudRestorePanel onBack={() => setStep("choose")} />}
+          {step === ("hm" as Step) && <HmRestorePanel onBack={() => setStep("choose")} />}
 
 
           {step === "coin-rules" && (
