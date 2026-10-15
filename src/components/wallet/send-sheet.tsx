@@ -15,6 +15,7 @@ import {
 import { isValidTxcAddress } from "@/lib/wallet";
 import { signPsbt } from "@/lib/wallet/sign";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
+import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
 import { ASSETS, assetMeta, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { saveTxLabel } from "@/lib/wallet/tx-labels";
@@ -68,6 +69,7 @@ export function SendSheet({
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [txid, setTxid] = useState<string | null>(null);
   const [request, setRequest] = useState<SendPrefill | null>(null);
@@ -139,17 +141,35 @@ export function SendSheet({
 
     setBusy(true);
     try {
-      const built = await prepare({ data: { asset, from, to: dest, amount: value } });
-
-      const rawHex = signPsbt(built.psbtBase64, mnemonic);
-      const res = await broadcast({ data: { rawHex } });
+      let txidOut: string | null = null;
+      // One automatic retry if coins were just spent elsewhere.
+      for (let attempt = 0; attempt < 2 && !txidOut; attempt++) {
+        setProgress(attempt ? "Picking fresh coins…" : "Checking coins…");
+        const built = await prepare({
+          data: { asset, from, to: dest, amount: value, exclude: reservedOutpoints() },
+        });
+        setProgress("Signing on this device…");
+        const rawHex = signPsbt(built.psbtBase64, mnemonic);
+        setProgress(`Sending ${asset.toUpperCase()}…`);
+        const res = await broadcast({ data: { rawHex } });
+        if (res.ok) {
+          reserveOutpoints(built.inputs);
+          txidOut = res.txid;
+        } else if (res.spent !== undefined && attempt === 0) {
+          reserveOutpoints(res.spent ?? built.inputs);
+        } else {
+          if (res.spent !== undefined) reserveOutpoints(res.spent ?? built.inputs);
+          throw new Error(res.error);
+        }
+      }
+      if (!txidOut) throw new Error("Send failed");
       // Vendor name stays on this device only — never sent to the chain.
-      saveTxLabel(res.txid, {
+      saveTxLabel(txidOut, {
         merchant: request?.merchant ?? null,
         memo: request?.memo ?? null,
         address: dest,
       });
-      setTxid(res.txid);
+      setTxid(txidOut);
       toast.success("Sent — waiting for confirmation");
       onSent();
     } catch (e) {
@@ -157,6 +177,7 @@ export function SendSheet({
       toast.error((e as Error).message || "Send failed");
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   }
 
@@ -183,6 +204,12 @@ export function SendSheet({
               <p className="mt-2 font-display text-lg font-semibold uppercase">Broadcast</p>
               <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">{txid}</p>
             </div>
+            {asset !== "txc" && (
+              <p className="text-center text-xs text-muted-foreground">
+                Token transfers show in balances once the network confirms them, usually within a few
+                minutes. Check back shortly rather than sending again.
+              </p>
+            )}
             <Button className="w-full rounded-full" onClick={() => onOpenChange(false)}>
               Done
             </Button>
@@ -287,7 +314,7 @@ export function SendSheet({
               ) : (
                 <ArrowUpRight className="mr-1.5 h-4 w-4" />
               )}
-              {busy ? "Signing & sending…" : `Send ${asset.toUpperCase()}`}
+              {busy ? (progress ?? "Sending…") : `Send ${asset.toUpperCase()}`}
             </Button>
           </div>
         )}

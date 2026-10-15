@@ -19,6 +19,7 @@ import {
 } from "@/lib/nectarpay.functions";
 import { isPaidStatus, nectarReceiptUrl, rewardMessage, type NectarInvoice } from "@/lib/nectarpay";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
+import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
 import { derivePrivateKey, signPsbt } from "@/lib/wallet/sign";
 import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { saveTxLabel, updateReceipt } from "@/lib/wallet/tx-labels";
@@ -168,10 +169,21 @@ export function NectarPaySheet({
         throw new Error(`You need ${amount.toFixed(2)} TSD — you have ${tsdBalance.toFixed(2)}.`);
       }
       const from = sources.find((s) => (s.balances.tsd ?? 0) >= amount)?.address ?? address;
-      const built = await prepare({
-        data: { asset: "tsd", from, to: sel.invoice.address, amount },
-      });
-      const res = await broadcast({ data: { rawHex: signPsbt(built.psbtBase64, mnemonic) } });
+      let res: { txid: string } | null = null;
+      for (let attempt = 0; attempt < 2 && !res; attempt++) {
+        const built = await prepare({
+          data: { asset: "tsd", from, to: sel.invoice.address, amount, exclude: reservedOutpoints() },
+        });
+        const r = await broadcast({ data: { rawHex: signPsbt(built.psbtBase64, mnemonic) } });
+        if (r.ok) {
+          reserveOutpoints(built.inputs);
+          res = { txid: r.txid };
+        } else {
+          if (r.spent !== undefined) reserveOutpoints(r.spent ?? built.inputs);
+          if (r.spent === undefined || attempt === 1) throw new Error(r.error);
+        }
+      }
+      if (!res) throw new Error("Payment failed");
       saveTxLabel(res.txid, {
         merchant: inv.merchant?.name ?? "NectarPay store",
         memo: inv.description,
