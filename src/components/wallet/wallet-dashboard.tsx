@@ -63,6 +63,7 @@ import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
 import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
 import { loadRegion, loadMarketSlug, marketCode } from "@/lib/wallet/region";
 import { parseScan } from "@/lib/wallet/scan-parse";
+import { isEcosystemSite, loginSiteName } from "@/lib/ecosystem/hosts";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { loadContacts, type Contact } from "@/lib/wallet/address-book";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
@@ -245,10 +246,29 @@ export function WalletDashboard() {
         void navigate({ to: "/scan", search: { qr: intent.raw } as never });
         return;
 
+      case "ecosystem_link":
+        toast.success("Wallet link code — opening Ecosystem links");
+        void navigate({ to: "/settings", search: { link: intent.raw } as never });
+        return;
+
       case "pass":
-      case "link":
+      case "link": {
+        // A link code QR from an ecosystem site isn't a page to visit —
+        // open the Ecosystem links card with it pre-filled.
+        let host: string | null = null;
+        try {
+          host = new URL(intent.raw).hostname;
+        } catch {
+          /* not a URL */
+        }
+        if (host && isEcosystemSite(host)) {
+          toast.success(`Link code from ${loginSiteName(host)} — opening Ecosystem links`);
+          void navigate({ to: "/settings", search: { link: intent.raw } as never });
+          return;
+        }
         void navigate({ to: intent.path });
         return;
+      }
       case "words":
         toast.info("That's a recovery phrase — use Settings → restore to import it");
         return;
@@ -265,6 +285,7 @@ export function WalletDashboard() {
       <header className="flex items-center gap-2 px-4 pt-6">
         <Link
           to="/settings"
+          search={{}}
           aria-label="POP market"
           className="flex h-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 px-3 font-display text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10"
         >
@@ -282,7 +303,7 @@ export function WalletDashboard() {
         </div>
         <div className="flex shrink-0 items-center">
           <Button variant="ghost" size="icon" asChild aria-label="Settings">
-            <Link to="/settings">
+            <Link to="/settings" search={{}}>
               <Settings2 className="h-5 w-5" />
             </Link>
           </Button>

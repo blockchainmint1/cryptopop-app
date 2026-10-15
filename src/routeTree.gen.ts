@@ -34,6 +34,7 @@ import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 import { Route as TxTxidRouteImport } from './routes/tx.$txid'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
+import { Route as ApiNectarLinkRouteImport } from './routes/api/nectar.link'
 import { Route as ApiPublicApkRouteImport } from './routes/api/public/apk'
 import { Route as ApiPublicBuildIdRouteImport } from './routes/api/public/build-id'
 import { Route as ApiPublicLatestReleaseRouteImport } from './routes/api/public/latest-release'
@@ -174,6 +175,11 @@ const AuthenticatedScanSuccessRoute =
     path: '/success',
     getParentRoute: () => AuthenticatedScanRoute,
   } as any)
+const ApiNectarLinkRoute = ApiNectarLinkRouteImport.update({
+  id: '/api/nectar/link',
+  path: '/api/nectar/link',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicApkRoute = ApiPublicApkRouteImport.update({
   id: '/api/public/apk',
   path: '/api/public/apk',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/tx/$txid': typeof TxTxidRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/nectar/link': typeof ApiNectarLinkRoute
   '/api/public/apk': typeof ApiPublicApkRoute
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/tx/$txid': typeof TxTxidRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/nectar/link': typeof ApiNectarLinkRoute
   '/api/public/apk': typeof ApiPublicApkRoute
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/tx/$txid': typeof TxTxidRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
+  '/api/nectar/link': typeof ApiNectarLinkRoute
   '/api/public/apk': typeof ApiPublicApkRoute
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/tx/$txid'
     | '/events/'
     | '/scan/success'
+    | '/api/nectar/link'
     | '/api/public/apk'
     | '/api/public/build-id'
     | '/api/public/latest-release'
@@ -430,6 +440,7 @@ export interface FileRouteTypes {
     | '/tx/$txid'
     | '/events'
     | '/scan/success'
+    | '/api/nectar/link'
     | '/api/public/apk'
     | '/api/public/build-id'
     | '/api/public/latest-release'
@@ -470,6 +481,7 @@ export interface FileRouteTypes {
     | '/tx/$txid'
     | '/events/'
     | '/_authenticated/scan/success'
+    | '/api/nectar/link'
     | '/api/public/apk'
     | '/api/public/build-id'
     | '/api/public/latest-release'
@@ -507,6 +519,7 @@ export interface RootRouteChildren {
   EventsSlugRoute: typeof EventsSlugRoute
   TxTxidRoute: typeof TxTxidRoute
   EventsIndexRoute: typeof EventsIndexRoute
+  ApiNectarLinkRoute: typeof ApiNectarLinkRoute
   ApiPublicApkRoute: typeof ApiPublicApkRoute
   ApiPublicBuildIdRoute: typeof ApiPublicBuildIdRoute
   ApiPublicLatestReleaseRoute: typeof ApiPublicLatestReleaseRoute
@@ -699,6 +712,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanSuccessRouteImport
       parentRoute: typeof AuthenticatedScanRoute
     }
+    '/api/nectar/link': {
+      id: '/api/nectar/link'
+      path: '/api/nectar/link'
+      fullPath: '/api/nectar/link'
+      preLoaderRoute: typeof ApiNectarLinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/apk': {
       id: '/api/public/apk'
       path: '/api/public/apk'
@@ -842,6 +862,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsSlugRoute: EventsSlugRoute,
   TxTxidRoute: TxTxidRoute,
   EventsIndexRoute: EventsIndexRoute,
+  ApiNectarLinkRoute: ApiNectarLinkRoute,
   ApiPublicApkRoute: ApiPublicApkRoute,
   ApiPublicBuildIdRoute: ApiPublicBuildIdRoute,
   ApiPublicLatestReleaseRoute: ApiPublicLatestReleaseRoute,
