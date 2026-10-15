@@ -167,7 +167,6 @@ export const getAddressActivity = createServerFn({ method: "POST" })
             propertyId: o.propertyId,
             symbol: SYMBOLS[o.propertyId] ?? `#${o.propertyId}`,
             amount: Number(units) / scale,
-            multi: o.references.length > 1,
           };
         }
         return {
