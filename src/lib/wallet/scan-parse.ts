@@ -37,6 +37,7 @@ export type ScanIntent =
   | { kind: "address"; address: string; raw: string }
   | { kind: "words"; phrase: string; raw: string }
   | { kind: "link"; path: string; raw: string }
+  | { kind: "ecosystem_link"; raw: string }
   | { kind: "nectarpay"; invoiceId: string; nonce: string | null; raw: string }
   | {
       kind: "wallet_login";
@@ -196,6 +197,9 @@ function nectarFrom(raw: string): ScanIntent | null {
 export function parseScan(input: string): ScanIntent {
   const raw = (input ?? "").trim();
   if (!raw) return { kind: "unknown", raw };
+
+  // Ecosystem wallet link codes (hm-link:<url>).
+  if (/^hm-link:/i.test(raw)) return { kind: "ecosystem_link", raw };
 
   const nectar = nectarFrom(raw);
   if (nectar) return nectar;

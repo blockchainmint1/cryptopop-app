@@ -7,6 +7,9 @@ import { loadHiddenChains, toggleHiddenChain } from "@/lib/wallet/hidden-chains"
 import type { AssetId } from "@/lib/wallet/assets";
 
 export const Route = createFileRoute("/settings")({
+  validateSearch: (s: Record<string, unknown>): { link?: string } => ({
+    link: typeof s.link === "string" ? s.link : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Wallet Settings — CryptoPOP" },
@@ -31,6 +34,7 @@ function SettingsPage() {
   const { status, lock, forget } = useWallet();
   const navigate = useNavigate();
   const [hidden, setHidden] = useState<AssetId[]>([]);
+  const { link } = Route.useSearch();
 
   useEffect(() => setHidden(loadHiddenChains()), []);
 
@@ -59,6 +63,7 @@ function SettingsPage() {
         ) : (
           <WalletSettings
             hidden={hidden}
+            ecosystemLink={link}
             onToggleChain={(id) => setHidden((cur) => toggleHiddenChain(cur, id))}
             onLock={() => {
               lock();

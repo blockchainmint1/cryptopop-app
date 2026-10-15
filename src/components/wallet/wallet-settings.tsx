@@ -31,6 +31,7 @@ import {
 } from "@/lib/native/biometric";
 import { CloudBackupCard } from "./cloud-backup-card";
 import { UpdateCheckCard } from "./update-check-card";
+import { EcosystemLinksCard } from "./ecosystem-links-card";
 import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
@@ -51,11 +52,13 @@ export function WalletSettings({
   onLock,
   hidden,
   onToggleChain,
+  ecosystemLink,
 }: {
   onForget: () => void;
   onLock: () => void;
   hidden: AssetId[];
   onToggleChain: (id: AssetId) => void;
+  ecosystemLink?: string;
 }) {
   const [region, setRegion] = useState<RegionId>("tx");
   const [autoRegion, setAutoRegion] = useState(false);
@@ -290,6 +293,8 @@ export function WalletSettings({
       </div>
 
       <CloudBackupCard />
+
+      <EcosystemLinksCard initialPayload={ecosystemLink} />
 
       <UpdateCheckCard />
 
