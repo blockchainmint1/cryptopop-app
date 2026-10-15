@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/cryptopop-logo.png";
+import { openHmeLogin } from "@/lib/hme";
 import loginBg from "@/assets/login-cinematic-bg.jpg";
 
 export const Route = createFileRoute("/login")({
@@ -203,6 +204,13 @@ function LoginPage() {
                     }}
                   >
                     {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send magic link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openHmeLogin}
+                    className="h-12 w-full rounded-full border border-white/25 bg-white/5 font-display font-semibold text-white backdrop-blur-md hover:bg-white/10 transition"
+                  >
+                    Sign in with Honest Money
                   </button>
                   <p className="text-xs text-white/60">
                     By continuing you agree to receive a one-time sign-in email.

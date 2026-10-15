@@ -9,6 +9,7 @@ const schema = z.object({
   email: z.string().trim().email().max(254).optional().nullable(),
   market: z.string().trim().max(64).optional().nullable(),
   client: z.string().trim().max(32).optional().nullable(),
+  ref: z.string().trim().max(64).optional().nullable(),
 });
 
 export type WelcomeClaimResult = {
@@ -39,6 +40,13 @@ export const claimWelcomePop = createServerFn({ method: "POST" })
     }
 
     const email = data.email?.trim().toLowerCase() || null;
+
+    if (email) {
+      const { sendHubEvent } = await import("./hme.server");
+      const platform = (data.client ?? "web").replace(/^wallet-/, "");
+      void sendHubEvent({ event: "signup", email, ref: data.ref ?? null, metadata: { market: data.market ?? null } });
+      void sendHubEvent({ event: "wallet_download", email, ref: data.ref ?? null, metadata: { platform } });
+    }
 
     try {
       const res = await hubActivateWallet({
