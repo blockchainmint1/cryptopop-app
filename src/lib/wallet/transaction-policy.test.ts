@@ -27,6 +27,10 @@ describe("independent transaction policy", () => {
   it("rejects extra outputs", () => expect(() => validateSend(make("txc", (p) => p.addOutput({ address: to, value: 1n })), intent, [from])).toThrow());
   it("rejects POP sends", () => expect(() => validateSend(make(), { ...intent, asset: "pop" } as unknown as typeof intent, [from])).toThrow("POP rewards"));
   it("rejects phPOP sends", () => expect(() => validateSend(make(), { ...intent, asset: "phpop" } as unknown as typeof intent, [from])).toThrow("POP rewards"));
-  it("rejects excessive fees", () => expect(() => validateSend(make("txc", (p) => p.updateOutput(1, { value: 100_000n })), intent, [from])).toThrow());
+  it("rejects excessive fees", () => {
+    const p = bitcoin.Psbt.fromBase64(make());
+    p.addOutput({ address: to, value: 1n });
+    expect(() => validateSend(p.toBase64(), intent, [from])).toThrow();
+  });
   it("rejects a changed TSD amount", () => expect(() => validateSend(make("tsd"), { ...intent, asset: "tsd", amount: 1.26 }, [from])).toThrow());
 });

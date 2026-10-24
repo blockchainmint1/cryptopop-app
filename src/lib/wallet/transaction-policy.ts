@@ -41,7 +41,7 @@ export function validateSend(psbt: string, intent: SendIntent, ownedAddresses: s
     const input = tx.getInput(i);
     if (!input.txid || input.index === undefined || !input.nonWitnessUtxo || input.witnessUtxo ||
         (input.sighashType !== undefined && input.sighashType !== 1) || input.partialSig?.length ||
-        input.finalScriptSig || input.finalScriptWitness || input.redeemScript || input.witnessScript)
+        input.finalScriptSig?.length || input.finalScriptWitness?.length || input.redeemScript || input.witnessScript)
       throw new Error("Unsafe transaction input");
     // Rehash the complete previous transaction, not metadata supplied by the server.
     const previous = Transaction.fromRaw(RawTx.encode(input.nonWitnessUtxo));

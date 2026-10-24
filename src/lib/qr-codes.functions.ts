@@ -231,15 +231,16 @@ export const redeemQrCode = createServerFn({ method: "POST" })
 
     // Lock, consume and record in one database transaction.
     const { data: redemptionId, error: redErr } = await supabaseAdmin.rpc("consume_qr_code", {
-      p_code_id: code.id, p_user_id: context.userId, p_lat: data.lat ?? null, p_lng: data.lng ?? null,
+      p_code_id: code.id, p_user_id: context.userId, p_lat: data.lat ?? 0, p_lng: data.lng ?? 0,
     });
-    const redemption = { id: redemptionId };
     if (redErr) {
       if (redErr.code === "23505") {
         throw new Error("You've already claimed this code");
       }
       throw new Error(redErr.message);
     }
+    if (!redemptionId) throw new Error("Could not reserve this reward");
+    const redemption = { id: redemptionId };
 
     // Look up email for awardPop
     const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(
