@@ -1,5 +1,5 @@
 /**
- * Honest Money cloud backup proxy. The browser never sees CRYPTOPOP_BACKUP_KEY;
+ * Honest Money cloud backup proxy. The browser never sees the HME site key;
  * each call also needs a one-time member-approved pass from honest.money.
  * Payload is already encrypted on-device (PBKDF2 600k → AES-GCM).
  */

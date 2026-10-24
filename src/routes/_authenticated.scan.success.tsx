@@ -14,7 +14,13 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/scan/success")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "YOU GOT POP! — CryptoPOP" }] }),
+  head: () => ({ meta: [
+    { title: "YOU GOT POP! — CryptoPOP" },
+    { name: "description", content: "Your CryptoPOP reward confirmation." },
+    { property: "og:title", content: "YOU GOT POP! — CryptoPOP" },
+    { property: "og:description", content: "Your CryptoPOP reward confirmation." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: ScanSuccess,
 });
 
