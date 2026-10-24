@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
+import paypalImg from "@/assets/topup-paypal.jpg";
+import venmoImg from "@/assets/topup-venmo.jpg";
+import coinbaseImg from "@/assets/topup-coinbase.jpg";
+import metamaskImg from "@/assets/topup-metamask.jpg";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +23,85 @@ import {
 export const TSD_BRIDGE_URL = TSD_ORIGIN;
 type Attempt = { popup: Window; request: TopupRequest; signed: boolean; memberId: string | null; lastSeen: number };
 
+/**
+ * Where people already hold stablecoins. Each guide locks one coin/network
+ * route the bridge accepts, so the sender can't pick a mismatched pair.
+ */
+type Provider = {
+  key: string;
+  name: string;
+  coin: "USDC" | "PYUSD";
+  network: "Base" | "Ethereum";
+  still: string;
+  appUrl: string;
+  /** Optional native app scheme tried before falling back to appUrl. */
+  appScheme?: string;
+  steps: string[];
+};
+
+const PROVIDERS: Provider[] = [
+  {
+    key: "paypal", name: "PayPal", coin: "PYUSD", network: "Ethereum", still: paypalImg,
+    appUrl: "https://www.paypal.com/myaccount/crypto",
+    steps: [
+      "In PayPal, open Crypto and buy PYUSD with your linked bank or balance.",
+      "Tap PYUSD, then Send, then choose to send to an external address.",
+      "Paste the deposit address from this wallet, check the network says Ethereum, and send.",
+    ],
+  },
+  {
+    key: "venmo", name: "Venmo", coin: "PYUSD", network: "Ethereum", still: venmoImg,
+    appUrl: "https://venmo.com/", appScheme: "venmo://",
+    steps: [
+      "In Venmo, open Crypto and buy PYUSD.",
+      "Tap PYUSD, then Send, then choose an external crypto address.",
+      "Paste the deposit address from this wallet, check the network says Ethereum, and send.",
+    ],
+  },
+  {
+    key: "coinbase", name: "Coinbase", coin: "USDC", network: "Base", still: coinbaseImg,
+    appUrl: "https://www.coinbase.com/",
+    steps: [
+      "In Coinbase, buy USDC if you don't already have it.",
+      "Tap Send, pick USDC, then paste the deposit address from this wallet.",
+      "When asked for the network, pick Base, then send.",
+    ],
+  },
+  {
+    key: "metamask", name: "MetaMask", coin: "USDC", network: "Base", still: metamaskImg,
+    appUrl: "https://metamask.app.link/",
+    steps: [
+      "In MetaMask, switch the network at the top to Base.",
+      "Make sure you hold USDC on Base, then tap Send.",
+      "Paste the deposit address from this wallet and send.",
+    ],
+  },
+];
+
+function openProviderApp(p: Provider) {
+  if (p.appScheme) {
+    // Try the native app first; if nothing opens within ~1.5s, fall back to the website.
+    const timer = setTimeout(() => {
+      window.open(p.appUrl, "_blank", "noopener,noreferrer");
+    }, 1500);
+    const cancel = () => clearTimeout(timer);
+    window.addEventListener("pagehide", cancel, { once: true });
+    document.addEventListener("visibilitychange", cancel, { once: true });
+    window.location.href = p.appScheme;
+    return;
+  }
+  window.open(p.appUrl, "_blank", "noopener,noreferrer");
+}
+
+function GuideStep({ n, text }: { n: number; text: string }) {
+  return (
+    <li className="flex gap-3">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{n}</span>
+      <span className="text-muted-foreground">{text}</span>
+    </li>
+  );
+}
+
 export function BridgeTopUpSheet({ open, onOpenChange, address }: {
   open: boolean; onOpenChange: (v: boolean) => void; address: string | null;
 }) {
@@ -36,11 +119,12 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
   const [busy, setBusy] = useState(false);
   const [chain, setChain] = useState("ethereum");
   const [contract, setContract] = useState("");
+  const [provider, setProvider] = useState<Provider | null>(null);
 
   function disconnect(message?: string) {
     attempt.current?.popup.close();
     attempt.current = null;
-    setChallenge(null); setConnection(null); setWaiting(false); setBusy(false);
+    setChallenge(null); setConnection(null); setWaiting(false); setBusy(false); setProvider(null);
     setError(message ?? null);
   }
 
@@ -155,14 +239,58 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
       </SheetHeader>
       <div className="mt-4 space-y-5 pb-8 text-sm">
         {error && <p role="alert" className="break-words rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-destructive">{error}</p>}
-        {!connection && !challenge && <>
-          <p className="text-muted-foreground">Connect with Honest Money in the TSD window. Your recovery phrase stays on this device.</p>
+        {!connection && !challenge && !provider && <>
+          <p className="text-muted-foreground">Pick where your stablecoins are. We'll show you exactly what to tap. Your recovery phrase stays on this device.</p>
+          <div className="grid grid-cols-2 gap-3">
+            {PROVIDERS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setProvider(p)}
+                className="rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted"
+              >
+                <p className="font-display text-lg uppercase">{p.name}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {p.coin} on {p.network}
+                </p>
+              </button>
+            ))}
+          </div>
           <Button className="min-h-12 w-full rounded-full" disabled={loading || waiting} onClick={connect}>
             {waiting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
             {waiting ? "Waiting for TSD…" : error ? "Reconnect to TSD" : "Connect to TSD"}
           </Button>
           {waiting && <Button variant="outline" className="w-full" onClick={() => disconnect()}>Cancel connection</Button>}
         </>}
+        {!connection && !challenge && provider && <div className="space-y-4">
+          <button type="button" onClick={() => setProvider(null)} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ArrowLeft className="h-3 w-3" /> All accounts
+          </button>
+          <h2 className="font-display text-2xl uppercase">Top up from {provider.name}</h2>
+          <p className="text-muted-foreground">
+            Send <strong>{provider.coin}</strong> on <strong>{provider.network}</strong>. Use this same coin and network in {provider.name} and in this wallet.
+          </p>
+          <div className="relative overflow-hidden rounded-xl">
+            <img src={provider.still} alt={`${provider.name} top-up illustration`} className="w-full" loading="lazy" />
+          </div>
+          <ol className="space-y-2">
+            <GuideStep n={1} text="Tap Connect to TSD below and sign in with Honest Money in the TSD window." />
+            <GuideStep n={2} text={`Back here, pick ${provider.network} and ${provider.coin}, then copy the deposit address this wallet shows you.`} />
+            {provider.steps.map((s, i) => <GuideStep key={i} n={i + 3} text={s} />)}
+            <GuideStep n={provider.steps.length + 3} text="Come back here. TSD usually lands in a few minutes and progress shows on this screen." />
+          </ol>
+          <p className="rounded-lg border-2 border-destructive/60 bg-destructive/10 p-3 text-xs text-destructive">
+            <strong>{provider.network} only.</strong> If {provider.name} sends on a different network, the bridge won't see it.
+          </p>
+          <Button className="min-h-12 w-full rounded-full" disabled={loading || waiting} onClick={connect}>
+            {waiting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+            {waiting ? "Waiting for TSD…" : error ? "Reconnect to TSD" : "Connect to TSD"}
+          </Button>
+          <Button variant="outline" className="w-full" onClick={() => openProviderApp(provider)}>
+            Open {provider.name} <ExternalLink className="ml-2 h-4 w-4" />
+          </Button>
+          {waiting && <Button variant="outline" className="w-full" onClick={() => disconnect()}>Cancel connection</Button>}
+        </div>}
         {challenge && <div className="space-y-4">
           <ShieldCheck className="h-8 w-8 text-neon-cyan" />
           <h2 className="font-display text-2xl uppercase">Connect for receiving only?</h2>
