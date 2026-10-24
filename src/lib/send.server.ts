@@ -187,7 +187,7 @@ export type UnsignedSend = {
  * asset "txc"  → plain value transfer
  */
 export async function buildUnsignedSend(opts: {
-  asset: "pop" | "tsd" | "txc";
+  asset: "tsd" | "txc";
   from: string;
   to: string;
   /** POP: whole tokens. TXC: whole coins. */
@@ -196,6 +196,7 @@ export async function buildUnsignedSend(opts: {
   exclude?: string[];
 }): Promise<UnsignedSend> {
   const network = TXC_NETWORK;
+  if (opts.asset !== "tsd" && opts.asset !== "txc") throw new Error("POP rewards cannot be sent or spent");
   const feeRatePromise = getFeeRate();
 
   let opReturnScript: Buffer | null = null;
@@ -205,24 +206,23 @@ export async function buildUnsignedSend(opts: {
   // Prepare the token payload and fetch coins at the same time.
   const utxosPromise = getSpendableUtxos(opts.from, new Set(opts.exclude ?? []));
 
-  if (opts.asset === "pop" || opts.asset === "tsd") {
+  if (opts.asset === "tsd") {
     // Omni reads the recipient from a legacy output — a bech32 (txc1…) target
     // confirms on-chain but silently never moves the tokens.
     if (/^txc1/i.test(opts.to.trim())) {
       throw new Error("Token sends need a T… address — txc1 addresses aren't supported by Omni.");
     }
-    if (opts.asset === "pop" && !Number.isInteger(opts.amount)) {
-      throw new Error("POP amount must be a whole number");
-    }
     if (opts.amount <= 0) throw new Error("Amount must be greater than zero");
-    const id = opts.asset === "tsd" ? tsdPropertyId() : propertyId();
+    const id = tsdPropertyId();
     const divisible = await isDivisible(id);
     const units = divisible
       ? BigInt(Math.round(opts.amount * 1e8))
       : BigInt(Math.round(opts.amount));
     if (units <= 0n) throw new Error("Amount is too small to send");
     const data = simpleSendPayload(id, units);
-    opReturnScript = Buffer.from(bitcoin.payments.embed({ data: [data] }).output!);
+    const embedded = bitcoin.payments.embed({ data: [data] }).output;
+    if (!embedded) throw new Error("Could not build the token payload");
+    opReturnScript = Buffer.from(embedded);
     opReturnLen = data.length;
   } else {
     recipientSats = Math.round(opts.amount * 1e8);
@@ -257,7 +257,9 @@ export async function buildUnsignedSend(opts: {
 
   const hexes = await Promise.all(used.map((u) => getTxHex(u.txid)));
   used.forEach((u, i) => {
-    psbt.addInput({ hash: u.txid, index: u.vout, nonWitnessUtxo: Buffer.from(hexes[i]!, "hex") });
+    const previous = hexes[i];
+    if (!previous) throw new Error("Missing previous transaction");
+    psbt.addInput({ hash: u.txid, index: u.vout, nonWitnessUtxo: Buffer.from(previous, "hex") });
   });
 
 

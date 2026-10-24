@@ -7,6 +7,8 @@ import { HDKey } from "@scure/bip32";
 import { mnemonicToSeedSync } from "@scure/bip39";
 import { Transaction } from "@scure/btc-signer";
 import { base64 } from "@scure/base";
+import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
+import { validateSend, type SendIntent } from "./transaction-policy";
 
 /** TEXITcoin's registered SLIP-0044 coin type (texitcoin.org/build). */
 const DERIVATION_PATH = "m/44'/696969'/0'/0/0";
@@ -26,11 +28,10 @@ export function derivePrivateKey(mnemonic: string): Uint8Array {
 }
 
 /** Sign every input of a base64 PSBT with the wallet key and finalize it. */
-export function signPsbt(psbtBase64: string, mnemonic: string): string {
+export function signPsbt(psbtBase64: string, mnemonic: string, intent: SendIntent): string {
+  validateSend(psbtBase64, intent, [deriveTxcAddress(mnemonic), deriveLegacyTxcAddress(mnemonic)]);
   const tx = Transaction.fromPSBT(base64.decode(psbtBase64), {
-    allowUnknownInputs: true,
     allowUnknownOutputs: true,
-    allowLegacyWitnessUtxo: true,
   });
 
   // Inputs may belong to either the canonical 696969' key or an older 0' key,

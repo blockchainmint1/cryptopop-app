@@ -23,7 +23,7 @@ const config: CapacitorConfig = {
     androidScheme: "https",
     iosScheme: "https",
     // Anything outside these hosts opens in the system browser.
-    allowNavigation: ["cryptopop.org", "*.cryptopop.org", "*.lovable.app"],
+    allowNavigation: ["app.cryptopop.org", "wallet.cryptopop.org"],
   },
   android: {
     allowMixedContent: false,
@@ -32,7 +32,7 @@ const config: CapacitorConfig = {
   ios: {
     backgroundColor: "#0B0710",
     contentInset: "always",
-    limitsNavigationsToAppBoundDomains: false,
+    limitsNavigationsToAppBoundDomains: true,
   },
   plugins: {
     SplashScreen: {

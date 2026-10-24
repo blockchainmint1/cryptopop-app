@@ -11,8 +11,7 @@
 
 import { HDKey } from "@scure/bip32";
 import { createBase58check } from "@scure/base";
-import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
-import { wordlist } from "@scure/bip39/wordlists/english.js";
+import { mnemonicToSeedSync } from "@scure/bip39";
 import { ripemd160 } from "@noble/hashes/ripemd160";
 import { sha256 } from "@noble/hashes/sha256";
 
@@ -22,25 +21,6 @@ const base58check = createBase58check(sha256);
 
 function hash160(buf: Uint8Array): Uint8Array {
   return ripemd160(sha256(buf));
-}
-
-export function getOrCreateMnemonic(): string {
-  let m = localStorage.getItem(MNEMONIC_KEY);
-  if (!m || !validateMnemonic(m, wordlist)) {
-    m = generateMnemonic(wordlist, 128);
-    localStorage.setItem(MNEMONIC_KEY, m);
-  }
-  return m;
-}
-
-export function getMnemonic(): string | null {
-  const m = localStorage.getItem(MNEMONIC_KEY);
-  return m && validateMnemonic(m, wordlist) ? m : null;
-}
-
-export function setMnemonic(m: string): void {
-  if (!validateMnemonic(m, wordlist)) throw new Error("invalid mnemonic");
-  localStorage.setItem(MNEMONIC_KEY, m);
 }
 
 /** TEXITcoin's registered SLIP-0044 coin type. */
