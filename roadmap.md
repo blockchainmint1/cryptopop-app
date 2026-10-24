@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] TSD Bridge: in-wallet reusable EVM deposit address, account/destination binding and resumable status (waiting on bridge onboarding/routing contract verification)
 - [x] Audit: independently validate transactions locally before signing (32 tests pass)
 - [ ] Audit: fully local transaction construction and funded end-to-end send (needs funded test wallet)
 - [x] Audit: disable custodial creation/key export and preserve protected historical records
