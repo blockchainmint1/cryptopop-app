@@ -111,8 +111,7 @@ function RewardsAdmin() {
         </Card>
       ) : null}
 
-      {loading || !isAdmin ? null
-      ) : !programs ? (
+      {loading || !isAdmin ? null : !programs ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : programs.length === 0 ? (
         <Card className="p-5 text-sm text-muted-foreground">
