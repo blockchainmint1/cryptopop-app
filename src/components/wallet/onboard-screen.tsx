@@ -86,6 +86,7 @@ export function OnboardScreen() {
   const [markets, setMarkets] = useState<MarketOption[]>([]);
   const [marketSlug, setMarketSlug] = useState("");
   const [email, setEmail] = useState("");
+  const [hmeSignedIn, setHmeSignedIn] = useState(false);
 
   const fetchMarkets = useServerFn(listMarkets);
   const claimWelcome = useServerFn(claimWelcomePop);
