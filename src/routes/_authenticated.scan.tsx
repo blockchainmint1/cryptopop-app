@@ -16,7 +16,13 @@ export const Route = createFileRoute("/_authenticated/scan")({
   validateSearch: (s: Record<string, unknown>) => ({
     qr: typeof s.qr === "string" ? s.qr : undefined,
   }),
-  head: () => ({ meta: [{ title: "Scan to Earn — CryptoPOP" }] }),
+  head: () => ({ meta: [
+    { title: "Scan to Earn — CryptoPOP" },
+    { name: "description", content: "Claim CryptoPOP event participation rewards." },
+    { property: "og:title", content: "Scan to Earn — CryptoPOP" },
+    { property: "og:description", content: "Claim CryptoPOP event participation rewards." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: ScanPage,
 });
 

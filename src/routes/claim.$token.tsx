@@ -14,6 +14,10 @@ export const Route = createFileRoute("/claim/$token")({
   head: () => ({
     meta: [
       { title: "Claim POP — CryptoPOP" },
+      { name: "description", content: "Claim your CryptoPOP participation reward." },
+      { property: "og:title", content: "Claim POP — CryptoPOP" },
+      { property: "og:description", content: "Claim your CryptoPOP participation reward." },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

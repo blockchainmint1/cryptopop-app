@@ -14,7 +14,13 @@ export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => ({
     redirect: typeof search.redirect === "string" ? safeRedirect(search.redirect) : undefined,
   }),
-  head: () => ({ meta: [{ title: "Sign in — CryptoPOP" }] }),
+  head: () => ({ meta: [
+    { title: "Sign in — CryptoPOP" },
+    { name: "description", content: "Sign in to your CryptoPOP account." },
+    { property: "og:title", content: "Sign in — CryptoPOP" },
+    { property: "og:description", content: "Sign in to your CryptoPOP account." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: LoginPage,
 });
 

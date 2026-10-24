@@ -16,6 +16,7 @@ export const Route = createFileRoute("/terms")({
         property: "og:description",
         content: "The terms that govern your use of CryptoPOP.",
       },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
   }),
   component: TermsPage,
