@@ -190,12 +190,16 @@ export const redeemQrCode = createServerFn({ method: "POST" })
     z
       .object({
         token: z.string().trim().min(8).max(64),
+        address: z.string().trim().min(26).max(48),
+        signature: z.string().min(40).max(200),
         lat: z.number().min(-90).max(90).optional(),
         lng: z.number().min(-180).max(180).optional(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { verifyTxcMessage } = await import("./wallet/txc-message");
+    if (!verifyTxcMessage(data.address, `CryptoPOP claim:${data.token}:${context.userId}`, data.signature)) throw new Error("Wallet ownership proof failed");
     // Load code
     const { data: code, error: codeErr } = await supabaseAdmin
       .from("qr_codes")
@@ -225,19 +229,11 @@ export const redeemQrCode = createServerFn({ method: "POST" })
       }
     }
 
-    // Per-user dedupe: try insert redemption first.
-    const { data: redemption, error: redErr } = await supabaseAdmin
-      .from("qr_redemptions")
-      .insert({
-        code_id: code.id,
-        user_id: context.userId,
-        pop_amount: code.pop_reward,
-        status: "pending",
-        lat: data.lat ?? null,
-        lng: data.lng ?? null,
-      })
-      .select("id")
-      .single();
+    // Lock, consume and record in one database transaction.
+    const { data: redemptionId, error: redErr } = await supabaseAdmin.rpc("consume_qr_code", {
+      p_code_id: code.id, p_user_id: context.userId, p_lat: data.lat ?? null, p_lng: data.lng ?? null,
+    });
+    const redemption = { id: redemptionId };
     if (redErr) {
       if (redErr.code === "23505") {
         throw new Error("You've already claimed this code");
@@ -265,6 +261,7 @@ export const redeemQrCode = createServerFn({ method: "POST" })
       source: "qr_code",
       sourceId: `${code.id}:${context.userId}`,
       memo: `QR: ${code.label}`.slice(0, 60),
+      walletOverride: data.address,
     });
 
     // Update balance mirror so the /app dashboard reflects the new POP.
@@ -310,11 +307,7 @@ export const redeemQrCode = createServerFn({ method: "POST" })
       );
     }
 
-    // Bump use_count and finalize redemption
-    await supabaseAdmin
-      .from("qr_codes")
-      .update({ use_count: code.use_count + 1 })
-      .eq("id", code.id);
+    // Finalize the already-consumed redemption.
     await supabaseAdmin
       .from("qr_redemptions")
       .update({ status: award.status })

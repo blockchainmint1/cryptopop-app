@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { claimAtHub, type HubClaimError, type HubClaimResult } from "@/lib/pop-hub";
+import { parseScan } from "@/lib/wallet/scan-parse";
 import { useEnsureWallet } from "@/hooks/use-ensure-wallet";
 import logo from "@/assets/cryptopop-logo.png";
 
@@ -72,12 +73,13 @@ function ScanPage() {
     // New-style QR codes (admin/codes) encode a URL like
     // https://cryptopop.sg/claim/<token>. Route those to the claim page,
     // which handles redemption + geofence on its own.
-    const claimMatch = qr.match(/\/claim\/([A-Za-z0-9_-]{8,64})/);
-    if (claimMatch) {
+    const intent = parseScan(qr);
+    if (intent.kind === "award") {
       handledRef.current = true;
-      window.location.assign(`/claim/${claimMatch[1]}`);
+      window.location.assign(`/claim/${encodeURIComponent(intent.token)}`);
       return;
     }
+    if (intent.kind !== "checkin") { toast.error("Only CryptoPOP event or verified HME codes are accepted"); return; }
 
     if (!address) {
       toast.error(walletError ? "Wallet setup failed" : "Setting up your wallet…", {

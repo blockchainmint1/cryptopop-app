@@ -106,7 +106,7 @@ export async function issueRewards(opts: {
     if (after >= -Number(p.community_credit_limit)) kind = "community";
   }
 
-  const { error } = await supabaseAdmin.from("reward_ledger").insert({
+  const { data: earned, error } = await supabaseAdmin.from("reward_ledger").insert({
     program_id: p.id,
     kind,
     market_slug: kind === "community" ? p.market_slug : null,
@@ -115,17 +115,12 @@ export async function issueRewards(opts: {
     reason: "earn",
     invoice_id: opts.invoiceId,
     txid: opts.txid,
-  });
+  }).select("kind").single();
   if (error) {
     if (error.code === "23505") return null; // already issued
     throw error;
   }
-  if (kind === "community") {
-    await supabaseAdmin
-      .from("reward_programs")
-      .update({ community_balance: Number(p.community_balance) - amount })
-      .eq("id", p.id);
-  }
+  kind = earned?.kind === "community" ? "community" : "store";
   return { amount, kind, storeName: p.store_name };
 }
 
@@ -174,12 +169,5 @@ export async function redeemRewards(opts: {
     throw new Error("The store couldn't accept rewards right now — nothing was spent.");
   }
 
-  if (opts.kind === "community") {
-    // Accepting community rewards earns the store credit to pay forward.
-    await supabaseAdmin
-      .from("reward_programs")
-      .update({ community_balance: Number(p.community_balance) + total })
-      .eq("id", p.id);
-  }
   return { spent: total };
 }

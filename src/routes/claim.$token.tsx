@@ -5,6 +5,9 @@ import { Loader2, MapPin, CheckCircle2, AlertCircle, Coins } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useWallet } from "@/lib/wallet/wallet-context";
+import { derivePrivateKey } from "@/lib/wallet/sign";
+import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { lookupQrCode, redeemQrCode } from "@/lib/qr-codes.functions";
 
 export const Route = createFileRoute("/claim/$token")({
@@ -21,6 +24,7 @@ type Lookup = Awaited<ReturnType<typeof lookupQrCode>>;
 
 function ClaimPage() {
   const { token } = Route.useParams();
+  const wallet = useWallet();
   const navigate = useNavigate();
   const lookup = useServerFn(lookupQrCode);
   const redeem = useServerFn(redeemQrCode);
@@ -61,7 +65,11 @@ function ClaimPage() {
           );
         });
       }
-      const res = await redeem({ data: { token, ...(coords ?? {}) } });
+      if (!wallet.address || !wallet.mnemonic) throw new Error("Unlock your on-device wallet first, then return to this claim");
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Sign in to claim");
+      const signature = signTxcMessage(derivePrivateKey(wallet.mnemonic), `CryptoPOP claim:${token}:${userData.user.id}`);
+      const res = await redeem({ data: { token, address: wallet.address, signature, ...(coords ?? {}) } });
       navigate({
         to: "/scan/success",
         search: {
@@ -155,18 +163,18 @@ function ClaimPage() {
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Scan reward
           </p>
-          <p className="font-display text-2xl font-bold">{info!.found && info!.label}</p>
-          {info!.found && info!.eventName && (
-            <p className="text-xs text-muted-foreground">{info!.eventName}</p>
+          <p className="font-display text-2xl font-bold">{info?.found && info?.label}</p>
+          {info?.found && info?.eventName && (
+            <p className="text-xs text-muted-foreground">{info?.eventName}</p>
           )}
         </div>
 
         <div className="rounded-xl bg-muted/40 p-4 text-center">
           <p className="flex items-center justify-center gap-2 font-display text-3xl font-bold text-primary">
             <Coins className="h-6 w-6" />
-            {info!.found && info!.popReward} POP
+            {info?.found && info?.popReward} POP
           </p>
-          {info!.found && info!.requiresLocation && (
+          {info?.found && info?.requiresLocation && (
             <p className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
               <MapPin className="h-3 w-3" /> Location required
             </p>
