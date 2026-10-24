@@ -24,6 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { geocodeZip, listEventMarkets, listPublicEvents } from "@/lib/public-events.functions";
+import { getMerchants } from "@/lib/earn.functions";
+import { DiscoveryMap, type MapDiscoveryItem } from "@/components/discovery-map";
+import { LocateFixed } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 
 const eventsQuery = queryOptions({
@@ -34,6 +37,11 @@ const eventsQuery = queryOptions({
 const marketsQuery = queryOptions({
   queryKey: ["event-markets"],
   queryFn: () => listEventMarkets(),
+});
+
+const storesQuery = queryOptions({
+  queryKey: ["map-stores"],
+  queryFn: () => getMerchants(),
 });
 
 const RADIUS_OPTIONS = [10, 25, 50, 100, 250] as const;
@@ -55,6 +63,7 @@ export const Route = createFileRoute("/events/")({
     Promise.all([
       context.queryClient.ensureQueryData(eventsQuery),
       context.queryClient.ensureQueryData(marketsQuery),
+      context.queryClient.ensureQueryData(storesQuery),
     ]),
   head: () => ({
     meta: [
@@ -116,6 +125,7 @@ function formatWhen(startAt: string, endAt: string, timeZone: string) {
 function EventsPage() {
   const { data: events } = useSuspenseQuery(eventsQuery);
   const { data: markets } = useSuspenseQuery(marketsQuery);
+  const { data: stores } = useSuspenseQuery(storesQuery);
 
   const [market, setMarket] = useState<string>("all");
   const [showOnline, setShowOnline] = useState(true);
@@ -164,6 +174,34 @@ function EventsPage() {
   const upcoming = filtered.filter((e) => !e.past);
   const past = filtered.filter((e) => e.past).reverse();
   const filtersActive = market !== "all" || !showOnline || origin != null;
+
+  const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
+  const [findingMe, setFindingMe] = useState(false);
+  const [picked, setPicked] = useState<MapDiscoveryItem | null>(null);
+  function locateMe() {
+    if (!navigator.geolocation) return toast.error("Location isn't available on this device");
+    setFindingMe(true);
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        setMe({ lat: p.coords.latitude, lng: p.coords.longitude });
+        setFindingMe(false);
+      },
+      () => {
+        toast.error("Couldn't get your location — check location permission");
+        setFindingMe(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000 },
+    );
+  }
+  const mapItems = useMemo<MapDiscoveryItem[]>(() => {
+    const ev = upcoming
+      .filter((e) => !e.online && e.lat != null && e.lng != null)
+      .map((e) => ({ id: e.slug, type: "event" as const, title: e.name, lat: e.lat!, lng: e.lng! }));
+    const st = stores.merchants
+      .filter((m) => m.lat != null && m.lng != null && (market === "all" || m.market_slug === market))
+      .map((m) => ({ id: m.id, type: "merchant" as const, title: m.name, subtitle: m.category ?? m.address ?? undefined, lat: Number(m.lat), lng: Number(m.lng) }));
+    return [...ev, ...st];
+  }, [upcoming, stores.merchants, market]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -275,6 +313,40 @@ function EventsPage() {
             </div>
           )}
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-pink" /> Events</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-cyan" /> Stores</span>
+          </div>
+          <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={locateMe} disabled={findingMe}>
+            <LocateFixed className="mr-1.5 h-4 w-4" />
+            {findingMe ? "Finding…" : "Near me"}
+          </Button>
+        </div>
+        <DiscoveryMap items={mapItems} userLocation={me} onSelect={setPicked} />
+        {picked ? (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {picked.type === "event" ? "Event" : "Store"}
+              </p>
+              <p className="truncate font-semibold">{picked.title}</p>
+              {picked.subtitle ? <p className="truncate text-xs text-muted-foreground">{picked.subtitle}</p> : null}
+            </div>
+            {picked.type === "event" ? (
+              <Button asChild size="sm" className="shrink-0 rounded-full">
+                <Link to="/events/$slug" params={{ slug: picked.id }}>Open</Link>
+              </Button>
+            ) : (
+              <Button asChild size="sm" variant="outline" className="shrink-0 rounded-full">
+                <Link to="/merchants">Stores</Link>
+              </Button>
+            )}
+          </div>
+        ) : null}
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
