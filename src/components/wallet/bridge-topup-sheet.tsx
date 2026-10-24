@@ -124,7 +124,7 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
   function disconnect(message?: string) {
     attempt.current?.popup.close();
     attempt.current = null;
-    setChallenge(null); setConnection(null); setWaiting(false); setBusy(false);
+    setChallenge(null); setConnection(null); setWaiting(false); setBusy(false); setProvider(null);
     setError(message ?? null);
   }
 
