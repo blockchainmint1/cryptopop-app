@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] TSD Bridge: implement receiving-only popup connection, verified wallet signatures, in-wallet deposit address and progress
+- [x] TSD Bridge: implement receiving-only popup connection, verified wallet signatures, release-gated in-wallet deposit address and progress (54 safety tests; controlled popup flow verified without funds)
 - [ ] TSD Bridge: live new/existing-member acceptance (needs TSD publish, approved-origin member sign-in; any funds test requires Bobby's separate approval)
 - [x] Audit: independently validate transactions locally before signing (32 tests pass)
 - [ ] Audit: fully local transaction construction and funded end-to-end send (needs funded test wallet)
