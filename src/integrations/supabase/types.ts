@@ -204,6 +204,44 @@ export type Database = {
           },
         ]
       }
+      checkin_award_entitlements: {
+        Row: {
+          amount: number
+          created_at: string
+          heads: number
+          id: string
+          signup_id: string
+          source_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          heads: number
+          id?: string
+          signup_id: string
+          source_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          heads?: number
+          id?: string
+          signup_id?: string
+          source_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_award_entitlements_signup_id_fkey"
+            columns: ["signup_id"]
+            isOneToOne: false
+            referencedRelation: "event_signups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claims: {
         Row: {
           base_reward: number

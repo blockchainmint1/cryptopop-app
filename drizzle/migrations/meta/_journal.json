@@ -29,6 +29,13 @@
       "when": 1792831325171,
       "tag": "0003_immutable_reward_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792831414631,
+      "tag": "0004_durable_checkin_award_entitlements",
+      "breakpoints": true
     }
   ]
 }
