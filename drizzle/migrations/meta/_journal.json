@@ -15,6 +15,13 @@
       "when": 1792830499748,
       "tag": "0001_wallet_audit_atomic_rewards_and_qr",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792831234102,
+      "tag": "0002_hme_member_identity_mapping",
+      "breakpoints": true
     }
   ]
 }

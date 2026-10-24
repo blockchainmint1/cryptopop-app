@@ -1,0 +1,4 @@
+CREATE TABLE public.hme_member_identities (member_id text PRIMARY KEY, user_id uuid NOT NULL UNIQUE, created_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.hme_member_identities TO service_role;
+ALTER TABLE public.hme_member_identities ENABLE ROW LEVEL SECURITY;
+INSERT INTO public.hme_member_identities(member_id,user_id) SELECT raw_app_meta_data->>'hme_member_id',id FROM auth.users WHERE raw_app_meta_data->>'hme_member_id' IS NOT NULL AND raw_app_meta_data->>'hme_member_id' <> '' AND (SELECT count(*) FROM auth.users u WHERE u.raw_app_meta_data->>'hme_member_id' = auth.users.raw_app_meta_data->>'hme_member_id') = 1 ON CONFLICT DO NOTHING;

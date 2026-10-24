@@ -683,6 +683,24 @@ export type Database = {
           },
         ]
       }
+      hme_member_identities: {
+        Row: {
+          created_at: string
+          member_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          member_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          member_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hme_sso_nonces: {
         Row: {
           created_at: string
