@@ -16,11 +16,6 @@ export function useEcosystemSites(): void {
       .then(({ sites }) => {
 
         setEcosystemSites(sites);
-        try {
-          localStorage.setItem(KEY, JSON.stringify(sites));
-        } catch {
-          /* ignore */
-        }
       })
       .catch(() => {});
   }, []);

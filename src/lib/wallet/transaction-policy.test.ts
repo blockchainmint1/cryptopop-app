@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as bitcoin from "bitcoinjs-lib";
 import { deriveTxcAddress } from "../wallet";
 import { validateSend, tsdScript } from "./transaction-policy";
+import { signPsbt } from "./sign";
 
 const from = deriveTxcAddress("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about");
 const to = deriveTxcAddress("legal winner thank year wave sausage worth useful legal winner thank yellow");
@@ -31,4 +32,14 @@ describe("independent transaction policy", () => {
     expect(() => validateSend(make("txc", undefined, 100_000n), intent, [from])).toThrow("fee");
   });
   it("rejects a changed TSD amount", () => expect(() => validateSend(make("tsd"), { ...intent, asset: "tsd", amount: 1.26 }, [from])).toThrow());
+  it("signs and finalizes the checked TXC transaction", () => {
+    const raw = signPsbt(make(), "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", intent);
+    const tx = bitcoin.Transaction.fromHex(raw);
+    expect(tx.outs[0]?.value).toBe(100_000n);
+    expect(tx.ins[0]?.script.length).toBeGreaterThan(0);
+  });
+  it("signs and finalizes the checked TSD transaction", () => {
+    const raw = signPsbt(make("tsd"), "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", { ...intent, asset: "tsd", amount: 1.25 });
+    expect(bitcoin.Transaction.fromHex(raw).outs[0]?.script).toEqual(tsdScript(1.25));
+  });
 });

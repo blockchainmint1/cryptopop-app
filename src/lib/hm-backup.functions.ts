@@ -18,12 +18,13 @@ function friendly(status: number): string {
 }
 
 async function call(method: string, passToken: string, query = "", body?: unknown) {
-  const key = process.env["CRYPTOPOP_BACKUP_KEY"];
+  const key = process.env["HME_ECOSYSTEM"];
   if (!key) throw new Error("Honest Money backup isn't configured");
   const res = await fetch(HM_URL + query, {
     method,
     headers: {
       Authorization: `Bearer ${key}`,
+      "X-HME-Site": "pop-wallet",
       "X-HM-Backup-Pass": passToken,
       ...(body ? { "Content-Type": "application/json" } : {}),
     },
@@ -31,7 +32,7 @@ async function call(method: string, passToken: string, query = "", body?: unknow
   });
   if (res.status === 404) return null;
   if (!res.ok) {
-    console.error("[hm-backup]", method, res.status, await res.text().catch(() => ""));
+    console.error("[hm-backup]", method, res.status);
     throw new Error(friendly(res.status));
   }
   return (await res.json()) as Record<string, unknown>;

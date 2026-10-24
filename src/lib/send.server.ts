@@ -121,17 +121,11 @@ async function getTxHex(txid: string): Promise<string> {
   return hex;
 }
 
-function propertyId(): number {
-  const raw = process.env.TXC_TOKEN_ID ?? "37";
-  const n = Number(raw);
-  return Number.isInteger(n) && n > 0 ? n : 37;
-}
-
 /** TSD (Texas Stable Dollar) Omni property id. */
 function tsdPropertyId(): number {
   const raw = process.env.TXC_TSD_TOKEN_ID ?? "39";
   const n = Number(raw);
-  if (!Number.isInteger(n) || n <= 0) {
+  if (n !== 39) {
     throw new Error("TSD is not configured on this network yet.");
   }
   return n;
@@ -290,6 +284,16 @@ export class CoinsSpentError extends Error {
 export async function broadcastRaw(rawHex: string): Promise<string> {
   // Last-moment check: are the exact coins we signed still unspent?
   const tx = bitcoin.Transaction.fromHex(rawHex);
+  for (const output of tx.outs) {
+    if (output.script[0] !== bitcoin.opcodes.OP_RETURN) continue;
+    const chunks = bitcoin.script.decompile(output.script);
+    const payload = chunks?.[1];
+    if (!(payload instanceof Uint8Array) || payload.length !== 20 ||
+        Buffer.from(payload).subarray(0, 8).toString("hex") !== "6f6d6e6900000000" ||
+        Buffer.from(payload).readUInt32BE(8) !== 39) {
+      throw new Error("This wallet only relays TSD or TXC payments; POP rewards cannot be sent or spent.");
+    }
+  }
   const outs = tx.ins.map((i) => ({ txid: Buffer.from(i.hash).reverse().toString("hex"), vout: i.index }));
   const status = await Promise.all(outs.map((o) => isUnspent(o.txid, o.vout)));
   const spent = outs.filter((_, i) => !status[i]).map((o) => `${o.txid}:${o.vout}`);
