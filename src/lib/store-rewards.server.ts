@@ -93,6 +93,8 @@ export async function issueRewards(opts: {
   invoiceId: string;
   txid: string;
 }): Promise<{ amount: number; kind: RewardKind; storeName: string } | null> {
+  const { assertPaymentOwner } = await import("./payment-owner.server");
+  await assertPaymentOwner(opts.txid, opts.address);
   const p = await programByStore(opts.storeId);
   if (!p || !p.enabled || p.rate_bps <= 0) return null;
   const amount = roundCents((opts.usd * p.rate_bps) / 10000);

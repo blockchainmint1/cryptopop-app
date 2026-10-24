@@ -27,6 +27,7 @@ export function txcMagicHash(message: string): Uint8Array {
   const enc = new TextEncoder();
   const p = enc.encode(PREFIX);
   const m = enc.encode(message);
+  if (m.length > 65_535) throw new Error("Wallet messages cannot exceed 65,535 bytes");
   const len = varInt(m.length);
   const buf = new Uint8Array(p.length + len.length + m.length);
   buf.set(p, 0);

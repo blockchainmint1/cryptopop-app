@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { CloudSignInButtons } from "./cloud-sign-in-buttons";
 import { useCloudAccount } from "@/lib/wallet/cloud-account";
 import { loadVault, markBackedUp, unlockVault } from "@/lib/wallet/vault";
+import { passwordStrongEnough } from "@/lib/wallet/hm-backup";
 import {
   deleteWalletCloudBackup,
   getWalletCloudBackup,
@@ -39,6 +40,7 @@ export function CloudBackupCard() {
   async function backUp() {
     const stored = loadVault();
     if (!stored) return toast.error("No wallet on this device");
+    if (!passwordStrongEnough(password)) return toast.error("Cloud backup needs 12+ characters and three types: uppercase, lowercase, numbers, symbols. Change your wallet password first.");
     setBusy(true);
     try {
       const payload = await unlockVault(password);

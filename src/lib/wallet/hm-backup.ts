@@ -19,9 +19,12 @@ export function startHmApproval(action: HmAction, returnPath: string) {
 export function takeHmPass(): { pass: string; action: HmAction } | null {
   if (typeof window === "undefined") return null;
   const url = new URL(window.location.href);
-  const pass = url.searchParams.get("hm_backup_pass");
+  const fragment = new URLSearchParams(url.hash.slice(1));
+  const pass = fragment.get("hm_backup_pass") ?? url.searchParams.get("hm_backup_pass");
   if (!pass) return null;
   url.searchParams.delete("hm_backup_pass");
+  fragment.delete("hm_backup_pass");
+  url.hash = fragment.toString();
   window.history.replaceState(null, "", url.pathname + url.search + url.hash);
   let action: HmAction | null = null;
   try {
@@ -35,7 +38,8 @@ export function takeHmPass(): { pass: string; action: HmAction } | null {
 
 export function peekHmAction(): HmAction | null {
   if (typeof window === "undefined") return null;
-  if (!new URL(window.location.href).searchParams.get("hm_backup_pass")) return null;
+  const url = new URL(window.location.href);
+  if (!url.searchParams.get("hm_backup_pass") && !new URLSearchParams(url.hash.slice(1)).get("hm_backup_pass")) return null;
   try {
     return sessionStorage.getItem(ACTION_KEY) as HmAction | null;
   } catch {
