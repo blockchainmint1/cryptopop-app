@@ -1,6 +1,6 @@
 /// <reference types="google.maps" />
 import { useEffect, useRef, useState } from "react";
-import { loadGoogleMaps } from "@/lib/google-maps";
+import { loadGoogleMaps, MAPS_AUTH_FAILED_EVENT } from "@/lib/google-maps";
 
 export type MapDiscoveryItem = {
   id: string;
@@ -42,6 +42,12 @@ export function DiscoveryMap({ items, userLocation, onSelect }: Props) {
   selectRef.current = onSelect;
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const fail = () => setFailed(true);
+    window.addEventListener(MAPS_AUTH_FAILED_EVENT, fail);
+    return () => window.removeEventListener(MAPS_AUTH_FAILED_EVENT, fail);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

@@ -323,7 +323,7 @@ function EventsPage() {
           </div>
           <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={locateMe} disabled={findingMe}>
             <LocateFixed className="mr-1.5 h-4 w-4" />
-            {findingMe ? "Finding…" : "Near me"}
+            {findingMe ? "Finding…" : "My location"}
           </Button>
         </div>
         <DiscoveryMap items={mapItems} userLocation={me} onSelect={setPicked} />
