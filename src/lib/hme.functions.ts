@@ -27,6 +27,19 @@ export const exchangeHmeTicket = createServerFn({ method: "POST" })
       if (accountError || !account.user?.email) throw new Error("sign_in_failed");
       // Identity is the stable HME member id, not a recycled/changed email.
       email = account.user.email;
+    } else {
+      // A verified HME email does not prove ownership of an existing local
+      // account. New accounts may be created; existing ones must be signed in.
+      const { error: createError } = await supabaseAdmin.auth.admin.createUser({ email, email_confirm: true,
+        app_metadata: { hme_member_id: ticket.minerId } });
+      if (createError) {
+        const { getRequestHeader } = await import("@tanstack/react-start/server");
+        const bearer = getRequestHeader("authorization");
+        if (!bearer?.startsWith("Bearer ")) throw new Error("Sign in to your existing CryptoPOP account before linking Honest Money.");
+        const { data: signedIn, error: signedInError } = await supabaseAdmin.auth.getUser(bearer.slice(7));
+        if (signedInError || signedIn.user?.email?.toLowerCase() !== email.toLowerCase())
+          throw new Error("Existing account ownership must be confirmed before linking Honest Money.");
+      }
     }
     const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
