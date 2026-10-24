@@ -393,13 +393,20 @@ export function WalletDashboard() {
           )}
         </Card>
 
-        {/* Top up (VectorPay handoff) */}
+        {/* Top up (VectorPay handoff) — disabled until VectorPay is ready */}
         <Button
           variant="secondary"
-          className="h-12 w-full rounded-full"
-          onClick={() => setAddValueOpen(true)}
+          className="h-12 w-full rounded-full opacity-50"
+          onClick={() =>
+            toast.info("Top-ups are coming soon", {
+              description: "We're finishing up bank top-ups — check back shortly.",
+            })
+          }
         >
           <Plus className="mr-1.5 h-4 w-4" /> Top up
+          <span className="ml-auto rounded-full border border-white/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Coming soon
+          </span>
         </Button>
 
 
