@@ -119,6 +119,7 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
   const [busy, setBusy] = useState(false);
   const [chain, setChain] = useState("ethereum");
   const [contract, setContract] = useState("");
+  const [provider, setProvider] = useState<Provider | null>(null);
 
   function disconnect(message?: string) {
     attempt.current?.popup.close();
