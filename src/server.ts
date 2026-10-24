@@ -70,6 +70,8 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const throttled = rateLimitForPath(new URL(request.url).pathname, request.headers);
+      if (throttled) return throttled;
       const handler = await getServerEntry();
       const nonce = crypto.randomUUID().replace(/-/g, "");
       const requestHeaders = new Headers(request.headers);
