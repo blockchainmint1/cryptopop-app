@@ -169,6 +169,41 @@ export type Database = {
           },
         ]
       }
+      checkin_adjustments: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          new_guests: number
+          previous_guests: number
+          signup_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          new_guests: number
+          previous_guests: number
+          signup_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          new_guests?: number
+          previous_guests?: number
+          signup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_adjustments_signup_id_fkey"
+            columns: ["signup_id"]
+            isOneToOne: false
+            referencedRelation: "event_signups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claims: {
         Row: {
           base_reward: number
@@ -1685,6 +1720,15 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      consume_qr_code: {
+        Args: {
+          p_code_id: string
+          p_lat: number
+          p_lng: number
+          p_user_id: string
+        }
+        Returns: string
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }

@@ -8,6 +8,13 @@
       "when": 1792054689661,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792830499748,
+      "tag": "0001_wallet_audit_atomic_rewards_and_qr",
+      "breakpoints": true
     }
   ]
 }
