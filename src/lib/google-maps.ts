@@ -4,8 +4,11 @@ declare global {
   interface Window {
     google?: typeof google;
     __cryptopopMapsInit?: () => void;
+    gm_authFailure?: () => void;
   }
 }
+
+export const MAPS_AUTH_FAILED_EVENT = "cryptopop:maps-auth-failed";
 
 let mapsPromise: Promise<typeof google> | null = null;
 
@@ -18,6 +21,7 @@ export function loadGoogleMaps(): Promise<typeof google> {
   const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID;
   if (!key) return Promise.reject(new Error("Maps API key missing"));
 
+  window.gm_authFailure = () => window.dispatchEvent(new Event(MAPS_AUTH_FAILED_EVENT));
   mapsPromise = new Promise((resolve, reject) => {
     window.__cryptopopMapsInit = () => {
       if (window.google?.maps) resolve(window.google);

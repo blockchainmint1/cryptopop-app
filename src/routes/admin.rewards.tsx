@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowLeft, Store } from "lucide-react";
+import { ArrowLeft, MapPin, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { listRewardPrograms, updateRewardProgram } from "@/lib/store-rewards.functions";
+import { locateMerchants } from "@/lib/merchant-map.functions";
 
 export const Route = createFileRoute("/admin/rewards")({
   head: () => ({
@@ -52,6 +53,22 @@ function RewardsAdmin() {
     if (isAdmin) load();
   }, [isAdmin, load]);
 
+  const locate = useServerFn(locateMerchants);
+  const [locating, setLocating] = useState(false);
+  async function placeStores() {
+    setLocating(true);
+    try {
+      const r = await locate();
+      if (!r.placed.length && !r.missed.length) toast.success("Every store with an address is already on the map");
+      else if (r.missed.length) toast.warning(`Placed ${r.placed.length}. Couldn't find: ${r.missed.join(", ")} — check their addresses.`);
+      else toast.success(`Placed ${r.placed.length} store${r.placed.length === 1 ? "" : "s"} on the map`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLocating(false);
+    }
+  }
+
   async function save(id: string, patch: Record<string, unknown>) {
     try {
       await update({ data: { id, ...patch } as never });
@@ -79,7 +96,22 @@ function RewardsAdmin() {
         <p className="text-sm text-muted-foreground">Checking access…</p>
       ) : !isAdmin ? (
         <p className="text-sm text-muted-foreground">Sign in as a POP manager to see this page.</p>
-      ) : !programs ? (
+      ) : null}
+
+      {isAdmin ? (
+        <Card className="flex items-center justify-between gap-3 p-4">
+          <div className="min-w-0 text-sm">
+            <p className="font-semibold">Store map pins</p>
+            <p className="text-muted-foreground">Look up any store that has a street address but no map pin yet.</p>
+          </div>
+          <Button size="sm" variant="outline" disabled={locating} onClick={placeStores}>
+            <MapPin className="mr-1.5 h-4 w-4" />
+            {locating ? "Placing…" : "Place stores"}
+          </Button>
+        </Card>
+      ) : null}
+
+      {loading || !isAdmin ? null : !programs ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : programs.length === 0 ? (
         <Card className="p-5 text-sm text-muted-foreground">
