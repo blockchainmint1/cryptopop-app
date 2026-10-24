@@ -43,7 +43,9 @@ export async function verifyHmeTicket(token: string): Promise<HmeTicket> {
   if (!safeEqual(mac, sig.toLowerCase())) throw new Error("bad_signature");
   const t = JSON.parse(b64urlDecode(body)) as HmeTicket;
   if (t.iss !== "honest.money" || t.site !== HME_SERVICE) throw new Error("wrong_ticket_destination");
-  if (typeof t.minerId !== "string" || typeof t.email !== "string" || typeof t.nonce !== "string" || !Number.isFinite(t.exp)) throw new Error("bad_ticket");
+  if (typeof t.minerId !== "string" || !t.minerId || t.minerId.length > 128 ||
+      typeof t.email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t.email) || t.email.length > 254 ||
+      typeof t.nonce !== "string" || !t.nonce || t.nonce.length > 256 || !Number.isFinite(t.exp)) throw new Error("bad_ticket");
   if (t.exp * 1000 <= Date.now() || t.exp * 1000 > Date.now() + 125_000) throw new Error("expired");
   if (t.redirect && (!t.redirect.startsWith("/") || t.redirect.startsWith("//") || t.redirect.includes("\\"))) t.redirect = undefined;
   return t;

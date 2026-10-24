@@ -20,9 +20,7 @@ const TTL_MS = 10 * 60 * 1000;
 
 export async function loadEcosystemSites(): Promise<EcosystemSite[]> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.sites;
-  // The shared ecosystem secret. honest.money signs the registry with the same
-  // secret it uses for SSO tickets (saved here as HME_HMAC_SECRET); either
-  // name is accepted so a dedicated registry secret can be added later.
+  // HME's per-site key authenticates this request and verifies the signed list.
   const secret = process.env["HME_ECOSYSTEM"];
   if (!secret) throw new Error("ecosystem secret missing");
   const res = await fetch(process.env["ECOSYSTEM_SITES_URL"] || DEFAULT_URL, {

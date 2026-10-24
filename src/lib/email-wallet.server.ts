@@ -30,7 +30,7 @@ export function validateTxcAddress(raw: string): string {
 }
 
 /**
- * Award POP to an email. Ensures the wallet exists, records the ledger entry,
+ * Award POP to an explicit device-wallet address, records the ledger entry,
  * and broadcasts an on-chain TXC grant immediately.
  * Idempotent on (source, source_id) — re-calls with the same key are no-ops.
  *
@@ -44,15 +44,13 @@ export async function awardPop(opts: {
   sourceId?: string | null;
   memo?: string;
   /**
-   * If provided, mint to this external TXC address instead of deriving/creating
-   * an email-keyed custodial wallet. Used when a user supplies their own wallet
-   * at signup. Skips ensureEmailWallet entirely.
+   * Required for all awards; email-derived custodial wallets are retired.
    */
   walletOverride?: string | null;
 }): Promise<{ awardId: string | null; status: "sent" | "failed" | "duplicate" }> {
   const email = normalizeEmail(opts.email);
 
-  // 1. Resolve target wallet — external override wins; otherwise ensure custodial.
+  // 1. Resolve the explicitly provided non-custodial target.
   if (!opts.walletOverride) throw new Error("Open your on-device wallet to receive POP; email wallets are retired.");
   const walletAddress = validateTxcAddress(opts.walletOverride);
 

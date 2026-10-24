@@ -198,7 +198,7 @@ export function WalletDashboard() {
         }
       },
       onTap: (url) => {
-        if (url.startsWith("/")) void navigate({ to: url });
+        if (url.startsWith("/") && !url.startsWith("//") && !url.includes("\\")) void navigate({ to: url });
       },
     });
   }, [address, savePushToken, navigate]);
