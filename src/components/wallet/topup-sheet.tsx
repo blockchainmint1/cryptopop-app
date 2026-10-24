@@ -210,7 +210,7 @@ export function TopUpSheet({
                     setBridgeOpen(true);
                   }}
                 >
-                  I have USDC or PYUSD
+                  Stablecoins (USDC or PYUSD)
                 </Button>
               )}
 
