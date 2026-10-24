@@ -132,6 +132,7 @@ function RootComponent() {
 
   useEffect(() => {
     void initNativeShell();
+    void import("@/lib/pwa-register").then((m) => m.registerOfflineSupport());
   }, []);
 
   return (
