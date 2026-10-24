@@ -45,7 +45,6 @@ function LoginPage() {
     routeAfterSignIn()
       .then((to) => {
         if (cancelled) return;
-        console.info("Admin redirect decision", { to, email: session.user.email });
         navigate({ to: to as never, replace: true });
       })
       .catch((error) => {

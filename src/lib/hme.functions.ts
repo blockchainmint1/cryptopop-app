@@ -12,6 +12,7 @@ export const exchangeHmeTicket = createServerFn({ method: "POST" })
     const ticket = await verifyHmeTicket(data.token);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    await supabaseAdmin.from("hme_sso_nonces").delete().lt("created_at", new Date(Date.now() - 86400_000).toISOString());
     const { error: nonceErr } = await supabaseAdmin
       .from("hme_sso_nonces")
       .insert({ nonce: ticket.nonce, miner_id: ticket.minerId });

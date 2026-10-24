@@ -14,6 +14,7 @@ import { WalletProvider } from "@/lib/wallet/wallet-context";
 import { initNativeShell } from "@/lib/native/shell";
 import { OfflineGate } from "@/components/offline-gate";
 import { NearbyAlerts } from "@/components/nearby-alerts";
+import { useEcosystemSites } from "@/lib/ecosystem/sites";
 
 
 import appCss from "../styles.css?url";
@@ -126,6 +127,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEcosystemSites();
 
   useEffect(() => {
     void initNativeShell();

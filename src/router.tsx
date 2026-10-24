@@ -1,14 +1,18 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { routeTree } from "./routeTree.gen";
+
+const requestNonce = createIsomorphicFn()
+  .server(async (): Promise<string | undefined> => {
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    return getRequestHeader("x-cryptopop-csp-nonce");
+  })
+  .client(async (): Promise<string | undefined> => undefined);
 
 export const getRouter = async () => {
   const queryClient = new QueryClient();
-  let nonce: string | undefined;
-  if (import.meta.env.SSR) {
-    const { getRequestHeader } = await import("@tanstack/react-start/server");
-    nonce = getRequestHeader("x-cryptopop-csp-nonce");
-  }
+  const nonce = await requestNonce();
 
   const router = createRouter({
     routeTree,
