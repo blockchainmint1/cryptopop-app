@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { rateLimitForPath } from "./lib/rate-limit.server";
 
 type ServerEntry = {
   fetch: (request: Request, options?: { context: { nonce: string } }) => Promise<Response> | Response;
@@ -69,6 +70,8 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const throttled = rateLimitForPath(new URL(request.url).pathname, request.headers);
+      if (throttled) return throttled;
       const handler = await getServerEntry();
       const nonce = crypto.randomUUID().replace(/-/g, "");
       const requestHeaders = new Headers(request.headers);

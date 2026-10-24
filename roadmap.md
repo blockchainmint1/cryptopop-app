@@ -15,7 +15,7 @@
 - [ ] Audit: rebuild APK/iOS with native hardening (binary release not made)
 - [ ] Audit: automated merchant settlement reconciliation (NectarPay idempotency/status contract needed)
 - [ ] Audit: replace unauthenticated blast cron (old caller now rejected; authenticated scheduler needed)
-- [ ] Audit: public endpoint rate limits, remaining Maps-key/update-feed findings (not completed)
+- [x] Audit: public endpoint rate limits (downloads 10/min, link relay 30/min, other public reads 120/min per IP)
 - [x] Rewards backend tables + POP manager screen (/admin/rewards)
 - [x] Earn store/community rewards after NectarPay TSD payments; wallet balances
 - [x] Pay with rewards in wallet (live once NectarPay endpoint exists)
