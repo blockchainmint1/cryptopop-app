@@ -14,6 +14,7 @@ import { WalletProvider } from "@/lib/wallet/wallet-context";
 import { initNativeShell } from "@/lib/native/shell";
 import { OfflineGate } from "@/components/offline-gate";
 import { NearbyAlerts } from "@/components/nearby-alerts";
+import { InstallInstructionsAutoPopup } from "@/components/install-app-prompt";
 import { useEcosystemSites } from "@/lib/ecosystem/sites";
 
 
