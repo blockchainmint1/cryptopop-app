@@ -73,7 +73,8 @@ export default {
       const nonce = crypto.randomUUID().replace(/-/g, "");
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set("x-cryptopop-csp-nonce", nonce);
-      const response = await handler.fetch(new Request(request, { headers: requestHeaders }), { context: { nonce } });
+      const securedRequest = new Request(request.url, { method: request.method, headers: requestHeaders, body: request.body, ...(request.body ? { duplex: "half" } : {}) } as RequestInit);
+      const response = await handler.fetch(securedRequest, { context: { nonce } });
       const normalized = await normalizeCatastrophicSsrResponse(response);
       const headers = new Headers(normalized.headers);
       headers.set("Referrer-Policy", "no-referrer");
