@@ -518,6 +518,27 @@ export function OnboardScreen() {
                 </select>
               </div>
 
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-12 w-full rounded-full"
+                disabled={hmeSignedIn}
+                onClick={() => openHmeLogin()}
+              >
+                {hmeSignedIn ? (
+                  <Check className="mr-1.5 h-4 w-4" />
+                ) : (
+                  <KeyRound className="mr-1.5 h-4 w-4" />
+                )}
+                {hmeSignedIn ? "Signed in with Honest Money" : "Use my Honest Money account"}
+              </Button>
+              {hmeSignedIn && (
+                <p className="text-xs text-muted-foreground">
+                  Using {email || "your Honest Money email"} for the welcome POP — or type a
+                  different one below.
+                </p>
+              )}
+
               <div className="space-y-2">
                 <label className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-muted-foreground">
                   <Mail className="h-3.5 w-3.5" /> Email (optional)
