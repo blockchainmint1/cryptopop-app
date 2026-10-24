@@ -46,7 +46,7 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
 
   // Teardown on panel closure, wallet lock/change, or signed-in member change.
   useEffect(() => {
-    if (!open || wallet.status !== "unlocked" || wallet.address !== address) disconnect();
+    disconnect();
     return () => { attempt.current?.popup.close(); attempt.current = null; };
   }, [open, address, wallet.address, wallet.status, memberId]);
 
@@ -93,7 +93,7 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
       if (!active) return;
       if (active.popup.closed) { disconnect("The TSD window closed. Reconnect to get current deposit details."); return; }
       if (connection && Date.now() - active.lastSeen > 95_000) disconnect("The bridge connection was lost. Reconnect before sending stablecoins.");
-      else if (!connection && Date.now() - active.lastSeen > 10 * 60_000) disconnect("The connection timed out. Please reconnect.");
+      else if (!connection && Date.now() - active.lastSeen > (active.signed ? 60_000 : 10 * 60_000)) disconnect("The connection timed out. Please reconnect.");
     }, 1000);
     return () => window.clearInterval(timer);
   }, [open, connection]);
