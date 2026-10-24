@@ -32,7 +32,7 @@ export function useCloudAccount() {
     };
   }, []);
 
-  const signIn = useCallback(async (provider: "google" | "apple", rememberRestore = false) => {
+  const signIn = useCallback(async (provider: "google", rememberRestore = false) => {
     if (rememberRestore) {
       try {
         sessionStorage.setItem(RESTORE_INTENT_KEY, "1");
