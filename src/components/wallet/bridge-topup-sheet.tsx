@@ -239,14 +239,58 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
       </SheetHeader>
       <div className="mt-4 space-y-5 pb-8 text-sm">
         {error && <p role="alert" className="break-words rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-destructive">{error}</p>}
-        {!connection && !challenge && <>
-          <p className="text-muted-foreground">Connect with Honest Money in the TSD window. Your recovery phrase stays on this device.</p>
+        {!connection && !challenge && !provider && <>
+          <p className="text-muted-foreground">Pick where your stablecoins are. We'll show you exactly what to tap. Your recovery phrase stays on this device.</p>
+          <div className="grid grid-cols-2 gap-3">
+            {PROVIDERS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setProvider(p)}
+                className="rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted"
+              >
+                <p className="font-display text-lg uppercase">{p.name}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {p.coin} on {p.network}
+                </p>
+              </button>
+            ))}
+          </div>
           <Button className="min-h-12 w-full rounded-full" disabled={loading || waiting} onClick={connect}>
             {waiting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
             {waiting ? "Waiting for TSD…" : error ? "Reconnect to TSD" : "Connect to TSD"}
           </Button>
           {waiting && <Button variant="outline" className="w-full" onClick={() => disconnect()}>Cancel connection</Button>}
         </>}
+        {!connection && !challenge && provider && <div className="space-y-4">
+          <button type="button" onClick={() => setProvider(null)} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ArrowLeft className="h-3 w-3" /> All accounts
+          </button>
+          <h2 className="font-display text-2xl uppercase">Top up from {provider.name}</h2>
+          <p className="text-muted-foreground">
+            Send <strong>{provider.coin}</strong> on <strong>{provider.network}</strong>. Use this same coin and network in {provider.name} and in this wallet.
+          </p>
+          <div className="relative overflow-hidden rounded-xl">
+            <img src={provider.still} alt={`${provider.name} top-up illustration`} className="w-full" loading="lazy" />
+          </div>
+          <ol className="space-y-2">
+            <GuideStep n={1} text="Tap Connect to TSD below and sign in with Honest Money in the TSD window." />
+            <GuideStep n={2} text={`Back here, pick ${provider.network} and ${provider.coin}, then copy the deposit address this wallet shows you.`} />
+            {provider.steps.map((s, i) => <GuideStep key={i} n={i + 3} text={s} />)}
+            <GuideStep n={provider.steps.length + 3} text="Come back here. TSD usually lands in a few minutes and progress shows on this screen." />
+          </ol>
+          <p className="rounded-lg border-2 border-destructive/60 bg-destructive/10 p-3 text-xs text-destructive">
+            <strong>{provider.network} only.</strong> If {provider.name} sends on a different network, the bridge won't see it.
+          </p>
+          <Button className="min-h-12 w-full rounded-full" disabled={loading || waiting} onClick={connect}>
+            {waiting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+            {waiting ? "Waiting for TSD…" : error ? "Reconnect to TSD" : "Connect to TSD"}
+          </Button>
+          <Button variant="outline" className="w-full" onClick={() => openProviderApp(provider)}>
+            Open {provider.name} <ExternalLink className="ml-2 h-4 w-4" />
+          </Button>
+          {waiting && <Button variant="outline" className="w-full" onClick={() => disconnect()}>Cancel connection</Button>}
+        </div>}
         {challenge && <div className="space-y-4">
           <ShieldCheck className="h-8 w-8 text-neon-cyan" />
           <h2 className="font-display text-2xl uppercase">Connect for receiving only?</h2>
