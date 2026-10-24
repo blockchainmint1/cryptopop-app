@@ -189,11 +189,17 @@ export function TopUpSheet({
                 </li>
               </ul>
               <Button
-                className="h-12 w-full rounded-full"
-                disabled={ready === false}
-                onClick={() => setStep("amount")}
+                className="h-12 w-full rounded-full opacity-50"
+                onClick={() =>
+                  toast.info("Bank top-ups are coming soon", {
+                    description: "We're finishing up with our banking partner — you can already top up with USDC or PYUSD below.",
+                  })
+                }
               >
                 Pay from my bank
+                <span className="ml-auto rounded-full border border-white/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Coming soon
+                </span>
               </Button>
               {side === "buy" && (
                 <Button
