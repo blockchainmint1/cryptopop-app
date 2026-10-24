@@ -1,0 +1,10 @@
+name: Wallet safety tests
+on: [push, pull_request]
+jobs:
+  wallet-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx vitest run

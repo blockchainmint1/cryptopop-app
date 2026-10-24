@@ -18,6 +18,7 @@
  *   https://app.cryptopop.org/pay?to=T…&amount=…&asset=tsd
  *   {"cryptopop":"pay","to":"T…","amount":12.5,"asset":"tsd","merchant":"…"}
  */
+import { isEcosystemSite } from "@/lib/ecosystem/hosts";
 import { isValidTxcAddress } from "@/lib/wallet";
 import { assetFromOmniId, normalizeAsset, type AssetId } from "./assets";
 
@@ -140,11 +141,11 @@ function nectarFrom(raw: string): ScanIntent | null {
     const nonce = p.get("nonce") ?? "";
     const cb = p.get("cb") ?? "";
     const host = hostOf(cb);
-    if (nonce && host && cb.startsWith("https://")) {
+    if (nonce && host && isEcosystemSite(host) && cb.startsWith("https://") && (!p.get("from") || p.get("from") === host)) {
       const msg = p.get("msg");
       return {
         kind: "wallet_login",
-        host: p.get("from") ?? host,
+        host,
         nonce,
         callback: cb,
         id: p.get("id"),
@@ -160,10 +161,10 @@ function nectarFrom(raw: string): ScanIntent | null {
       const j = JSON.parse(raw) as Record<string, unknown>;
       if (j.type === "hm-login" && typeof j.nonce === "string" && typeof j.callback === "string") {
         const host = hostOf(j.callback);
-        if (host && j.callback.startsWith("https://")) {
+        if (host && isEcosystemSite(host) && j.callback.startsWith("https://") && (!j.origin || j.origin === host || j.origin === `https://${host}`)) {
           return {
             kind: "wallet_login",
-            host: typeof j.origin === "string" ? j.origin : host,
+            host,
             nonce: j.nonce,
             callback: j.callback,
             id: null,
@@ -199,7 +200,12 @@ export function parseScan(input: string): ScanIntent {
   if (!raw) return { kind: "unknown", raw };
 
   // Ecosystem wallet link codes (hm-link:<url>).
-  if (/^hm-link:/i.test(raw)) return { kind: "ecosystem_link", raw };
+  if (/^hm-link:/i.test(raw)) {
+    try { const u = new URL(raw.replace(/^hm-link:/i, ""));
+      if (u.protocol === "https:" && !u.username && !u.password && !u.port && isEcosystemSite(u.hostname)) return { kind: "ecosystem_link", raw };
+    } catch { /* invalid */ }
+    return { kind: "unknown", raw };
+  }
 
   const nectar = nectarFrom(raw);
   if (nectar) return nectar;
@@ -235,6 +241,7 @@ export function parseScan(input: string): ScanIntent {
   if (/^https?:\/\//i.test(raw)) {
     try {
       const url = new URL(raw);
+      if (url.protocol !== "https:" || url.username || url.password || url.port || !isEcosystemSite(url.hostname)) return { kind: "unknown", raw };
       const path = url.pathname + url.search;
       const ci = checkinFrom(url.searchParams, raw);
       if (ci) return ci;

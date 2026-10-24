@@ -13,9 +13,11 @@ export function openHmeLogin() {
 /** The ?ref affiliate code saved by honest.money/hm.js (30-day cookie). */
 export function hmeRef(): string | null {
   try {
-    const w = window as unknown as { honestMoney?: { ref?: () => string | null } };
-    const r = w.honestMoney?.ref?.();
-    if (r) return r;
+    const incoming = new URL(window.location.href).searchParams.get("ref");
+    if (incoming && /^[A-Za-z0-9_-]{1,64}$/.test(incoming)) {
+      document.cookie = `hm_ref=${encodeURIComponent(incoming)}; Max-Age=2592000; Path=/; Secure; SameSite=Lax`;
+      return incoming;
+    }
     const m = document.cookie.match(/(?:^|;\s*)hm_ref=([^;]+)/);
     return m ? decodeURIComponent(m[1]) : null;
   } catch {

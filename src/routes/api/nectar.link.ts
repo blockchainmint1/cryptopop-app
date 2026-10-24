@@ -13,7 +13,9 @@
  * Usage: /api/nectar/link?url=<url-encoded absolute https URL>.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { isPublicHostname } from "@/lib/ecosystem/hosts";
+import { isPublicHostname, isEcosystemSite, setEcosystemSites } from "@/lib/ecosystem/hosts";
+
+import { loadEcosystemSites } from "@/lib/ecosystem/sites.server";
 
 const MAX_BODY_BYTES = 32 * 1024;
 const TIMEOUT_MS = 10_000;
@@ -25,7 +27,7 @@ function targetFrom(request: Request): URL | null {
     const target = new URL(raw);
     if (target.protocol !== "https:") return null;
     if (target.port || target.username || target.password) return null;
-    if (!isPublicHostname(target.hostname)) return null;
+    if (!isPublicHostname(target.hostname) || !isEcosystemSite(target.hostname)) return null;
     return target;
   } catch {
     return null;
@@ -40,6 +42,7 @@ function jsonError(error: string, status: number): Response {
 }
 
 async function forward(request: Request, method: "GET" | "POST", body?: string): Promise<Response> {
+  try { setEcosystemSites(await loadEcosystemSites()); } catch { setEcosystemSites([]); }
   const target = targetFrom(request);
   if (!target) return jsonError("untrusted_url", 400);
   if (body !== undefined && body.length > MAX_BODY_BYTES) return jsonError("payload_too_large", 413);

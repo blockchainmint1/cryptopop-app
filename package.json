@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "test": "vitest run",
     "format": "prettier --write .",
     "cap:assets": "capacitor-assets generate --ios --assetPath resources",
     "ios:harden": "node scripts/patch-native.mjs ios",
@@ -23,7 +24,7 @@
     "@capacitor/app": "^8.1.1",
     "@capacitor/app-launcher": "^8.0.1",
     "@capacitor/browser": "^8.0.4",
-    "@capacitor/core": "^8.4.2",
+    "@capacitor/core": "^8.4.3",
     "@capacitor/network": "^8",
     "@capacitor/push-notifications": "^8",
     "@capacitor/splash-screen": "^8",
@@ -115,10 +116,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.4.2",
+    "@capacitor/android": "^8.4.3",
     "@capacitor/assets": "^3",
     "@capacitor/cli": "^8.4.2",
-    "@capacitor/ios": "^8",
+    "@capacitor/ios": "^8.4.3",
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "2.26.5",
     "@types/canvas-confetti": "^1.9.0",
@@ -139,7 +140,8 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^5.0.5"
   },
   "pnpm": {
     "overrides": {

@@ -1,4 +1,21 @@
 # Roadmap
+- [x] Audit: independently validate transactions locally before signing (32 tests pass)
+- [ ] Audit: fully local transaction construction and funded end-to-end send (needs funded test wallet)
+- [x] Audit: disable custodial creation/key export and preserve protected historical records
+- [ ] Audit: legacy balance reconciliation and ownership-verified migration (135 records; ownership/funds not reconciled)
+- [x] Audit: exact-host HME scan/link allowlisting; signed registry verified (35 sites)
+- [x] Audit: remove tracking scripts from all wallet pages; memory-only unlocked phrase
+- [x] Audit: payment-owner checks, atomic QR consumption, admin-only guest increases, 20-guest ceiling
+- [x] Audit: durable check-in entitlements, truthful delivery status, immutable merchant ledger
+- [ ] Audit: controlled award retries/wallet attachment (needs ownership and uncertain-broadcast reconciliation)
+- [x] Audit: HME issuer/site/nonce checks and stable member-id mapping; handoff documented
+- [ ] Audit: real HME sign-in/backup round trip (needs member approval on approved domains)
+- [x] Audit: POP/phPOP blocked in send, signing and relay; merchant-dollar rewards remain separate
+- [x] Audit: safe smaller privacy fixes, patched native dependencies, CI regression tests
+- [ ] Audit: rebuild APK/iOS with native hardening (binary release not made)
+- [ ] Audit: automated merchant settlement reconciliation (NectarPay idempotency/status contract needed)
+- [ ] Audit: replace unauthenticated blast cron (old caller now rejected; authenticated scheduler needed)
+- [ ] Audit: public endpoint rate limits, remaining Maps-key/update-feed findings (not completed)
 - [x] Rewards backend tables + POP manager screen (/admin/rewards)
 - [x] Earn store/community rewards after NectarPay TSD payments; wallet balances
 - [x] Pay with rewards in wallet (live once NectarPay endpoint exists)

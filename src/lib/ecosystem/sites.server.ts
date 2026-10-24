@@ -6,6 +6,7 @@
  * Unsigned or badly signed lists are rejected, so a hijacked response can't
  * mark a phishing site as trusted.
  */
+import { isPublicHostname } from "./hosts";
 import { createHmac, timingSafeEqual } from "crypto";
 
 export interface EcosystemSite {
@@ -19,19 +20,18 @@ const TTL_MS = 10 * 60 * 1000;
 
 export async function loadEcosystemSites(): Promise<EcosystemSite[]> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.sites;
-  // The shared ecosystem secret. honest.money signs the registry with the same
-  // secret it uses for SSO tickets (saved here as HME_HMAC_SECRET); either
-  // name is accepted so a dedicated registry secret can be added later.
-  const secret = process.env["HME_HMAC_SECRET"] ?? process.env["HME_ECOSYSTEM"];
+  // HME's per-site key authenticates this request and verifies the signed list.
+  const secret = process.env["HME_ECOSYSTEM"];
   if (!secret) throw new Error("ecosystem secret missing");
   const res = await fetch(process.env["ECOSYSTEM_SITES_URL"] || DEFAULT_URL, {
-    headers: { accept: "application/json" },
+    headers: { accept: "application/json", Authorization: `Bearer ${secret}`, "X-HME-Site": "pop-wallet" },
     signal: AbortSignal.timeout(5000),
   });
   if (!res.ok) throw new Error(`registry ${res.status}`);
   const body = await res.text();
   const ts = res.headers.get("x-hme-timestamp") ?? "";
   const sig = res.headers.get("x-hme-signature") ?? "";
+  if (!/^\d{10}$/.test(ts) || !/^[0-9a-f]{64}$/i.test(sig)) throw new Error("registry signature malformed");
   const expected = createHmac("sha256", secret).update(`${ts}.${body}`).digest("hex");
   const a = Buffer.from(sig, "hex");
   const b = Buffer.from(expected, "hex");
@@ -40,7 +40,7 @@ export async function loadEcosystemSites(): Promise<EcosystemSite[]> {
   if (Math.abs(Date.now() / 1000 - Number(ts)) > 86400) throw new Error("registry signature stale");
   const parsed = JSON.parse(body) as { sites?: { host?: unknown; label?: unknown; active?: unknown }[] };
   const sites = (parsed.sites ?? [])
-    .filter((s) => typeof s.host === "string" && s.active !== false)
+    .filter((s) => typeof s.host === "string" && isPublicHostname(s.host) && s.active !== false)
     .map((s) => ({ host: String(s.host).toLowerCase(), label: typeof s.label === "string" ? s.label : "" }))
     .slice(0, 500);
   cache = { at: Date.now(), sites };

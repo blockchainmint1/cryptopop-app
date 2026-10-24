@@ -25,6 +25,9 @@ export const Route = createFileRoute("/my-pass")({
     meta: [
       { title: "My Pass — CryptoPOP" },
       { name: "description", content: "Your CryptoPOP event passes and check-in QR codes." },
+      { property: "og:title", content: "My Pass — CryptoPOP" },
+      { property: "og:description", content: "Your CryptoPOP event passes and check-in QR codes." },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

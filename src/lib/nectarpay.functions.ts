@@ -198,6 +198,8 @@ export const claimNectarReward = createServerFn({ method: "POST" })
       return { awarded: 0, status: "tx_mismatch" };
     }
     const currency = String(raw.currency ?? raw.fiat_currency ?? raw.fiatCurrency ?? "USD").toUpperCase();
+    const { assertPaymentOwner } = await import("./payment-owner.server");
+    await assertPaymentOwner(data.txid, data.address);
     const fiat = Number(raw.fiat_amount ?? raw.fiatAmount ?? 0);
     const usd = currency === "USD" ? fiat : 0;
     const amount = Math.floor(usd * NECTARPAY_POP_PER_USD);

@@ -10,21 +10,12 @@ const KEY = "cryptopop:ecosystem-sites";
 
 export function useEcosystemSites(): void {
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(KEY);
-      if (saved) setEcosystemSites(JSON.parse(saved));
-    } catch {
-      /* ignore */
-    }
+    // Never trust a locally edited registry cache for authorization.
+    try { localStorage.removeItem(KEY); } catch { /* optional cleanup */ }
     getEcosystemSites()
       .then(({ sites }) => {
-        if (!sites.length) return;
+
         setEcosystemSites(sites);
-        try {
-          localStorage.setItem(KEY, JSON.stringify(sites));
-        } catch {
-          /* ignore */
-        }
       })
       .catch(() => {});
   }, []);

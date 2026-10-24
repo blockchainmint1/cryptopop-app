@@ -8,7 +8,13 @@ export const Route = createFileRoute("/auth/callback")({
   validateSearch: (search: Record<string, unknown>) => ({
     redirect: typeof search.redirect === "string" ? safeRedirect(search.redirect) : undefined,
   }),
-  head: () => ({ meta: [{ title: "Signing in…" }] }),
+  head: () => ({ meta: [
+    { title: "Signing in — CryptoPOP Wallet" },
+    { name: "description", content: "Complete your CryptoPOP Wallet sign-in." },
+    { property: "og:title", content: "Signing in — CryptoPOP Wallet" },
+    { property: "og:description", content: "Complete your CryptoPOP Wallet sign-in." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: CallbackPage,
 });
 

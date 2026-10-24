@@ -169,6 +169,79 @@ export type Database = {
           },
         ]
       }
+      checkin_adjustments: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          new_guests: number
+          previous_guests: number
+          signup_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          new_guests: number
+          previous_guests: number
+          signup_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          new_guests?: number
+          previous_guests?: number
+          signup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_adjustments_signup_id_fkey"
+            columns: ["signup_id"]
+            isOneToOne: false
+            referencedRelation: "event_signups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkin_award_entitlements: {
+        Row: {
+          amount: number
+          created_at: string
+          heads: number
+          id: string
+          signup_id: string
+          source_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          heads: number
+          id?: string
+          signup_id: string
+          source_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          heads?: number
+          id?: string
+          signup_id?: string
+          source_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_award_entitlements_signup_id_fkey"
+            columns: ["signup_id"]
+            isOneToOne: false
+            referencedRelation: "event_signups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claims: {
         Row: {
           base_reward: number
@@ -647,6 +720,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hme_member_identities: {
+        Row: {
+          created_at: string
+          member_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          member_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          member_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       hme_sso_nonces: {
         Row: {
@@ -1685,6 +1776,15 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      consume_qr_code: {
+        Args: {
+          p_code_id: string
+          p_lat: number
+          p_lng: number
+          p_user_id: string
+        }
+        Returns: string
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }

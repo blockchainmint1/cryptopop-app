@@ -14,6 +14,7 @@ import { WalletProvider } from "@/lib/wallet/wallet-context";
 import { initNativeShell } from "@/lib/native/shell";
 import { OfflineGate } from "@/components/offline-gate";
 import { NearbyAlerts } from "@/components/nearby-alerts";
+import { useEcosystemSites } from "@/lib/ecosystem/sites";
 
 
 import appCss from "../styles.css?url";
@@ -94,8 +95,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "CryptoPOP — Proof of Participation" },
       { name: "twitter:description", content: "Show up. Scan in. Experience. Earn POP. The proof-of-participation wallet for events on TXC." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/d697ac2c-dc29-4272-8ebf-b2b4a54c8be7" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/d697ac2c-dc29-4272-8ebf-b2b4a54c8be7" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -105,7 +104,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/manifest.json" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
-    scripts: [{ src: "https://honest.money/hm.js", async: true }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -129,6 +127,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEcosystemSites();
 
   useEffect(() => {
     void initNativeShell();

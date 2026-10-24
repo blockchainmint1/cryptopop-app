@@ -1,7 +1,7 @@
 /**
  * Host policy for wallet link + website sign-in flows.
  *
- * Any public HTTPS host may request a wallet link or sign-in — a link only
+ * Only exact, verified ecosystem HTTPS hosts may request a wallet link or sign-in. A link only
  * shares watch-only keys and a sign-in signature authorizes no payment, so the
  * protection is (a) the wallet showing which domain is asking and (b) the
  * strict validation in src/lib/ecosystem/link.ts. Hosts are classified into
@@ -9,7 +9,7 @@
  *
  *   first-party — our own honest.money / cryptopop.org properties
  *   partner     — known partner sites, shown with a friendly name
- *   unknown     — anything else: allowed, with an explicit warning
+ *   unknown     — anything else: blocked
  *
  * Both the client validator and the server proxy read from this single source.
  * This module must stay dependency-free: it is imported by client bundles.
@@ -37,11 +37,11 @@ const PARTNER_NAMES: Record<string, string> = {
 
 export const TRUSTED_LOGIN_HOSTS: ReadonlySet<string> = new Set(Object.keys(PARTNER_NAMES));
 
-const FIRST_PARTY_APEXES = ["honest.money", "cryptopop.org"];
+const FIRST_PARTY_APEXES = ["honest.money", "cryptopop.org", "app.cryptopop.org", "wallet.cryptopop.org"];
 
 function isFirstParty(hostname: string): boolean {
   return FIRST_PARTY_APEXES.some(
-    (apex) => hostname === apex || hostname.endsWith(`.${apex}`),
+    (apex) => hostname === apex,
   );
 }
 

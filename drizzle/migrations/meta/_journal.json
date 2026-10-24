@@ -8,6 +8,34 @@
       "when": 1792054689661,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792830499748,
+      "tag": "0001_wallet_audit_atomic_rewards_and_qr",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792831234102,
+      "tag": "0002_hme_member_identity_mapping",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792831325171,
+      "tag": "0003_immutable_reward_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792831414631,
+      "tag": "0004_durable_checkin_award_entitlements",
+      "breakpoints": true
     }
   ]
 }

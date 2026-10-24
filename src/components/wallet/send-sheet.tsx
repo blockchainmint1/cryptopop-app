@@ -13,6 +13,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { isValidTxcAddress } from "@/lib/wallet";
+import { validateSend } from "@/lib/wallet/transaction-policy";
+import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
 import { signPsbt } from "@/lib/wallet/sign";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
@@ -65,7 +67,8 @@ export function SendSheet({
   // POP / phPOP are scoreboard points for now — not spendable/tradeable.
   const SENDABLE_ASSETS = ASSETS.filter((a) => a.id !== "pop" && a.id !== "phpop");
 
-  const [asset, setAsset] = useState<AssetId>("tsd");
+  const [asset, setAsset] = useState<"tsd" | "txc">("tsd");
+  const [review, setReview] = useState<{ built: Awaited<ReturnType<typeof prepare>>; from: string; to: string; amount: number; asset: "tsd" | "txc"; feeSats: number } | null>(null);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
@@ -97,6 +100,7 @@ export function SendSheet({
     setTo("");
     setAmount("");
     setTxid(null);
+    setReview(null);
     setRequest(null);
   }
 
@@ -105,7 +109,8 @@ export function SendSheet({
     setScanOpen(false);
     if (intent.kind === "payment") {
       setTo(intent.to);
-      if (intent.asset !== "pop") setAsset(intent.asset);
+      if (intent.asset !== "tsd" && intent.asset !== "txc") return toast.error("POP rewards cannot be sent or spent");
+      setAsset(intent.asset);
       if (intent.amount != null) setAmount(String(intent.amount));
       setRequest(intent);
       toast.success(intent.merchant ? `Payment request from ${intent.merchant}` : "Payment request loaded");
@@ -118,8 +123,9 @@ export function SendSheet({
     toast.error("That code isn't a wallet address or payment request");
   }
 
-  async function submit() {
+  async function submit(confirm = false) {
     if (!address || !mnemonic) return toast.error("Wallet is locked");
+    if (confirm && !review) return;
     const dest = to.trim();
     if (!isValidTxcAddress(dest)) return toast.error("That doesn't look like a TXC address");
     if (dest === address || sources?.some((s) => s.address === dest)) {
@@ -127,9 +133,7 @@ export function SendSheet({
     }
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) return toast.error("Enter an amount");
-    if (asset === "pop" && !Number.isInteger(value)) {
-      return toast.error("POP is sent in whole tokens");
-    }
+    if (asset !== "tsd" && asset !== "txc") return toast.error("POP rewards cannot be sent or spent");
     if (available !== null && value > available) {
       return toast.error(`You only have ${available} ${asset.toUpperCase()}`);
     }
@@ -145,11 +149,18 @@ export function SendSheet({
       // One automatic retry if coins were just spent elsewhere.
       for (let attempt = 0; attempt < 2 && !txidOut; attempt++) {
         setProgress(attempt ? "Picking fresh coins…" : "Checking coins…");
-        const built = await prepare({
+        const built = confirm && review && attempt === 0 ? review.built : await prepare({
           data: { asset, from, to: dest, amount: value, exclude: reservedOutpoints() },
         });
+        const intent = { asset, from, to: dest, amount: value };
+        const checked = validateSend(built.psbtBase64, intent, [deriveTxcAddress(mnemonic), deriveLegacyTxcAddress(mnemonic)]);
+        if (!confirm) { setReview({ built, ...intent, feeSats: checked.feeSats }); return; }
+        if (!review || review.asset !== asset || review.to !== dest || review.amount !== value || review.from !== from || checked.feeSats > review.feeSats) {
+          setReview({ built, ...intent, feeSats: checked.feeSats });
+          throw new Error("Payment or fee changed — review and confirm again");
+        }
         setProgress("Signing on this device…");
-        const rawHex = signPsbt(built.psbtBase64, mnemonic);
+        const rawHex = signPsbt(built.psbtBase64, mnemonic, intent);
         setProgress(`Sending ${asset.toUpperCase()}…`);
         const res = await broadcast({ data: { rawHex } });
         if (res.ok) {
@@ -233,7 +244,7 @@ export function SendSheet({
                 <button
                   key={a.id}
                   type="button"
-                  onClick={() => setAsset(a.id)}
+                  onClick={() => { if (a.id === "tsd" || a.id === "txc") setAsset(a.id); }}
                   className={`rounded-2xl border px-2 py-3 text-center transition ${
                     asset === a.id
                       ? "border-primary bg-primary/15"
@@ -242,7 +253,7 @@ export function SendSheet({
                 >
                   <p className="font-display text-sm font-semibold uppercase">{a.name}</p>
                   <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {balances[a.id] === null ? "—" : balances[a.id]!.toFixed(a.decimals)}
+                    {balances[a.id] === null ? "—" : balances[a.id]?.toFixed(a.decimals)}
                   </p>
                 </button>
               ))}
@@ -280,7 +291,7 @@ export function SendSheet({
                   inputMode="decimal"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder={asset === "pop" ? "100" : asset === "tsd" ? "0.00" : "0.00000000"}
+                  placeholder={asset === "tsd" ? "0.00" : "0.00000000"}
                   className="h-11 font-mono text-sm"
                 />
                 {available !== null && (
@@ -289,9 +300,7 @@ export function SendSheet({
                     className="h-11 shrink-0 rounded-xl"
                     onClick={() =>
                       setAmount(
-                        asset === "pop"
-                          ? String(Math.floor(available))
-                          : asset === "tsd"
+                        asset === "tsd"
                             ? available.toFixed(2)
                             : Math.max(available - 0.001, 0).toFixed(8),
                       )
@@ -308,13 +317,23 @@ export function SendSheet({
               </p>
             </div>
 
-            <Button className="h-12 w-full rounded-full" onClick={submit} disabled={busy}>
+            {review && (
+              <div className="space-y-2 border-t border-border pt-3">
+                <p className="font-display uppercase">Confirm payment</p>
+                <p>{review.amount} {review.asset.toUpperCase()}</p>
+                <p className="break-all font-mono text-xs">To: {review.to}</p>
+                <p className="text-sm">Network fee: {(review.feeSats / 1e8).toFixed(8)} TXC</p>
+                <Button className="w-full" disabled={busy} onClick={() => void submit(true)}>Confirm and send</Button>
+                <Button variant="ghost" className="w-full" disabled={busy} onClick={() => setReview(null)}>Cancel</Button>
+              </div>
+            )}
+            <Button className="h-12 w-full rounded-full" onClick={() => void submit()} disabled={busy}>
               {busy ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : (
                 <ArrowUpRight className="mr-1.5 h-4 w-4" />
               )}
-              {busy ? (progress ?? "Sending…") : `Send ${asset.toUpperCase()}`}
+              {busy ? (progress ?? "Sending…") : `Review ${asset.toUpperCase()} payment`}
             </Button>
           </div>
         )}

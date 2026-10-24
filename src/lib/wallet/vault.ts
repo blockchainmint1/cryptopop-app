@@ -3,8 +3,7 @@
  *
  * A single BIP39 mnemonic is encrypted with the user's device password
  * (PBKDF2-SHA256 → AES-GCM) and stored in localStorage. The plaintext
- * mnemonic only ever lives in memory (plus a short-lived sessionStorage cache
- * so a page reload doesn't force a re-unlock). Nothing leaves the device.
+ * mnemonic only ever lives in memory. Reloading requires another unlock.
  */
 import { generateMnemonic, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
@@ -151,24 +150,18 @@ export async function changeVaultPassword(current: string, next: string): Promis
 interface SessionEntry extends VaultPayload {
   touchedAt: number;
 }
+let memorySession: SessionEntry | null = null;
 
 export function cacheSession(payload: VaultPayload): void {
-  try {
-    sessionStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({ ...payload, touchedAt: Date.now() } satisfies SessionEntry),
-    );
-  } catch {
-    /* ignore */
-  }
+  memorySession = { ...payload, touchedAt: Date.now() };
+  try { sessionStorage.removeItem(SESSION_KEY); } catch { /* cleanup old versions */ }
 }
 
 export function loadSession(): VaultPayload | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const entry = JSON.parse(raw) as SessionEntry;
+    sessionStorage.removeItem(SESSION_KEY);
+    const entry = memorySession;
     if (!entry?.mnemonic || Date.now() - entry.touchedAt > AUTO_LOCK_MS) {
       clearSession();
       return null;
@@ -180,18 +173,11 @@ export function loadSession(): VaultPayload | null {
 }
 
 export function touchSession(): void {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return;
-    const entry = JSON.parse(raw) as SessionEntry;
-    entry.touchedAt = Date.now();
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(entry));
-  } catch {
-    /* ignore */
-  }
+  if (memorySession) memorySession.touchedAt = Date.now();
 }
 
 export function clearSession(): void {
+  memorySession = null;
   try {
     sessionStorage.removeItem(SESSION_KEY);
   } catch {

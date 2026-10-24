@@ -17,6 +17,7 @@ export const Route = createFileRoute("/privacy")({
         property: "og:description",
         content: "How CryptoPOP handles your data.",
       },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
   }),
   component: PrivacyPage,

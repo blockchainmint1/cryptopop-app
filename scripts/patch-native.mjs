@@ -73,6 +73,9 @@ if (target === "android") {
       ],
     ];
     let out = plist;
+    if (!out.includes("WKAppBoundDomains")) {
+      out = out.replace("</dict>\n</plist>", "\t<key>WKAppBoundDomains</key>\n\t<array><string>app.cryptopop.org</string><string>wallet.cryptopop.org</string></array>\n</dict>\n</plist>");
+    }
     for (const [key, value] of entries) {
       if (out.includes(`<key>${key}</key>`)) continue;
       out = out.replace("</dict>\n</plist>", `\t<key>${key}</key>\n\t<string>${value}</string>\n</dict>\n</plist>`);

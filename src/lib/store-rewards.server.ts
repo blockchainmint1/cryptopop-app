@@ -93,6 +93,8 @@ export async function issueRewards(opts: {
   invoiceId: string;
   txid: string;
 }): Promise<{ amount: number; kind: RewardKind; storeName: string } | null> {
+  const { assertPaymentOwner } = await import("./payment-owner.server");
+  await assertPaymentOwner(opts.txid, opts.address);
   const p = await programByStore(opts.storeId);
   if (!p || !p.enabled || p.rate_bps <= 0) return null;
   const amount = roundCents((opts.usd * p.rate_bps) / 10000);
@@ -104,7 +106,7 @@ export async function issueRewards(opts: {
     if (after >= -Number(p.community_credit_limit)) kind = "community";
   }
 
-  const { error } = await supabaseAdmin.from("reward_ledger").insert({
+  const { data: earned, error } = await supabaseAdmin.from("reward_ledger").insert({
     program_id: p.id,
     kind,
     market_slug: kind === "community" ? p.market_slug : null,
@@ -113,17 +115,12 @@ export async function issueRewards(opts: {
     reason: "earn",
     invoice_id: opts.invoiceId,
     txid: opts.txid,
-  });
+  }).select("kind").single();
   if (error) {
     if (error.code === "23505") return null; // already issued
     throw error;
   }
-  if (kind === "community") {
-    await supabaseAdmin
-      .from("reward_programs")
-      .update({ community_balance: Number(p.community_balance) - amount })
-      .eq("id", p.id);
-  }
+  kind = earned?.kind === "community" ? "community" : "store";
   return { amount, kind, storeName: p.store_name };
 }
 
@@ -168,16 +165,12 @@ export async function redeemRewards(opts: {
   try {
     await opts.notifyStore();
   } catch (e) {
-    await supabaseAdmin.from("reward_ledger").delete().eq("id", row.id);
-    throw new Error("The store couldn't accept rewards right now — nothing was spent.");
+    // A timeout is ambiguous: the merchant may already have accepted payment.
+    // Preserve the debit until settlement is reconciled; never restore spendable
+    // value merely because an HTTP response was lost.
+    console.error("[rewards] settlement requires reconciliation", row.id);
+    throw new Error("Payment confirmation is pending. Your rewards are reserved; do not pay this bill again until the store confirms.");
   }
 
-  if (opts.kind === "community") {
-    // Accepting community rewards earns the store credit to pay forward.
-    await supabaseAdmin
-      .from("reward_programs")
-      .update({ community_balance: Number(p.community_balance) + total })
-      .eq("id", p.id);
-  }
   return { spent: total };
 }

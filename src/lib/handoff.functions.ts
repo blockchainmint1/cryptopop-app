@@ -25,10 +25,7 @@ export const startHandoffOrder = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { postOrder, cashoutDepositAddress, handoffConfigured } = await import("./handoff.server");
     const feeUsd = Math.round(data.usd * 0.01 * 100) / 100;
-    const orderId = `CP-${Date.now().toString(36).toUpperCase()}-${Math.random()
-      .toString(36)
-      .slice(2, 6)
-      .toUpperCase()}`;
+    const orderId = `CP-${crypto.randomUUID()}`;
 
     if (!handoffConfigured()) {
       return {

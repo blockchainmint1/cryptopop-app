@@ -433,7 +433,7 @@ export async function sendBlastOne(opts: {
         sent_at: new Date().toISOString(),
       });
     }
-    console.error(`[blast ${campaignId}] send to ${email} failed:`, msg);
+    console.error(`[blast ${campaignId}] send failed`);
     return { ok: false, error: msg };
   }
 }

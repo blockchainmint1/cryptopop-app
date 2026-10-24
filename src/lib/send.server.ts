@@ -121,17 +121,11 @@ async function getTxHex(txid: string): Promise<string> {
   return hex;
 }
 
-function propertyId(): number {
-  const raw = process.env.TXC_TOKEN_ID ?? "37";
-  const n = Number(raw);
-  return Number.isInteger(n) && n > 0 ? n : 37;
-}
-
 /** TSD (Texas Stable Dollar) Omni property id. */
 function tsdPropertyId(): number {
   const raw = process.env.TXC_TSD_TOKEN_ID ?? "39";
   const n = Number(raw);
-  if (!Number.isInteger(n) || n <= 0) {
+  if (n !== 39) {
     throw new Error("TSD is not configured on this network yet.");
   }
   return n;
@@ -187,7 +181,7 @@ export type UnsignedSend = {
  * asset "txc"  → plain value transfer
  */
 export async function buildUnsignedSend(opts: {
-  asset: "pop" | "tsd" | "txc";
+  asset: "tsd" | "txc";
   from: string;
   to: string;
   /** POP: whole tokens. TXC: whole coins. */
@@ -196,6 +190,7 @@ export async function buildUnsignedSend(opts: {
   exclude?: string[];
 }): Promise<UnsignedSend> {
   const network = TXC_NETWORK;
+  if (opts.asset !== "tsd" && opts.asset !== "txc") throw new Error("POP rewards cannot be sent or spent");
   const feeRatePromise = getFeeRate();
 
   let opReturnScript: Buffer | null = null;
@@ -205,24 +200,23 @@ export async function buildUnsignedSend(opts: {
   // Prepare the token payload and fetch coins at the same time.
   const utxosPromise = getSpendableUtxos(opts.from, new Set(opts.exclude ?? []));
 
-  if (opts.asset === "pop" || opts.asset === "tsd") {
+  if (opts.asset === "tsd") {
     // Omni reads the recipient from a legacy output — a bech32 (txc1…) target
     // confirms on-chain but silently never moves the tokens.
     if (/^txc1/i.test(opts.to.trim())) {
       throw new Error("Token sends need a T… address — txc1 addresses aren't supported by Omni.");
     }
-    if (opts.asset === "pop" && !Number.isInteger(opts.amount)) {
-      throw new Error("POP amount must be a whole number");
-    }
     if (opts.amount <= 0) throw new Error("Amount must be greater than zero");
-    const id = opts.asset === "tsd" ? tsdPropertyId() : propertyId();
+    const id = tsdPropertyId();
     const divisible = await isDivisible(id);
     const units = divisible
       ? BigInt(Math.round(opts.amount * 1e8))
       : BigInt(Math.round(opts.amount));
     if (units <= 0n) throw new Error("Amount is too small to send");
     const data = simpleSendPayload(id, units);
-    opReturnScript = Buffer.from(bitcoin.payments.embed({ data: [data] }).output!);
+    const embedded = bitcoin.payments.embed({ data: [data] }).output;
+    if (!embedded) throw new Error("Could not build the token payload");
+    opReturnScript = Buffer.from(embedded);
     opReturnLen = data.length;
   } else {
     recipientSats = Math.round(opts.amount * 1e8);
@@ -257,7 +251,9 @@ export async function buildUnsignedSend(opts: {
 
   const hexes = await Promise.all(used.map((u) => getTxHex(u.txid)));
   used.forEach((u, i) => {
-    psbt.addInput({ hash: u.txid, index: u.vout, nonWitnessUtxo: Buffer.from(hexes[i]!, "hex") });
+    const previous = hexes[i];
+    if (!previous) throw new Error("Missing previous transaction");
+    psbt.addInput({ hash: u.txid, index: u.vout, nonWitnessUtxo: Buffer.from(previous, "hex") });
   });
 
 
@@ -288,6 +284,16 @@ export class CoinsSpentError extends Error {
 export async function broadcastRaw(rawHex: string): Promise<string> {
   // Last-moment check: are the exact coins we signed still unspent?
   const tx = bitcoin.Transaction.fromHex(rawHex);
+  for (const output of tx.outs) {
+    if (output.script[0] !== bitcoin.opcodes.OP_RETURN) continue;
+    const chunks = bitcoin.script.decompile(output.script);
+    const payload = chunks?.[1];
+    if (!(payload instanceof Uint8Array) || payload.length !== 20 ||
+        Buffer.from(payload).subarray(0, 8).toString("hex") !== "6f6d6e6900000000" ||
+        Buffer.from(payload).readUInt32BE(8) !== 39) {
+      throw new Error("This wallet only relays TSD or TXC payments; POP rewards cannot be sent or spent.");
+    }
+  }
   const outs = tx.ins.map((i) => ({ txid: Buffer.from(i.hash).reverse().toString("hex"), vout: i.index }));
   const status = await Promise.all(outs.map((o) => isUnspent(o.txid, o.vout)));
   const spent = outs.filter((_, i) => !status[i]).map((o) => `${o.txid}:${o.vout}`);

@@ -16,13 +16,6 @@ function sinceFor(w: z.infer<typeof windowSchema>): string | null {
   }
 }
 
-function maskEmail(email: string): string {
-  const [user, domain] = email.split("@");
-  if (!user || !domain) return "anonymous";
-  const head = user.slice(0, 2);
-  return `${head}${"•".repeat(Math.max(1, user.length - 2))}@${domain}`;
-}
-
 export const getEarnActions = createServerFn({ method: "GET" }).handler(async () => {
   const { createClient } = await import("@supabase/supabase-js");
   const sb = createClient(
@@ -60,18 +53,18 @@ export const getLeaderboard = createServerFn({ method: "POST" })
     const since = sinceFor(data.window);
     let q = supabaseAdmin
       .from("pop_awards")
-      .select("email, amount, created_at")
+      .select("wallet_address, amount, created_at")
       .eq("status", "sent");
     if (since) q = q.gte("created_at", since);
     const { data: rows } = await q.limit(5000);
     const totals = new Map<string, number>();
     for (const r of rows ?? []) {
-      const k = (r.email ?? "").toLowerCase();
+      const k = r.wallet_address ?? "";
       if (!k) continue;
       totals.set(k, (totals.get(k) ?? 0) + Number(r.amount));
     }
     const leaders = [...totals.entries()]
-      .map(([email, total]) => ({ display: maskEmail(email), total }))
+      .map(([address, total]) => ({ display: `${address.slice(0, 6)}…${address.slice(-4)}`, total }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 25);
     return { window: data.window, leaders };
@@ -89,23 +82,27 @@ export const getHeatmap = createServerFn({ method: "POST" })
       .not("lng", "is", null);
     if (since) q = q.gte("created_at", since);
     const { data: rows } = await q.limit(5000);
-    return {
-      window: data.window,
-      points: (rows ?? []).map((r) => ({ lat: r.lat, lng: r.lng, weight: r.pop_amount })),
-    };
+    const cells = new Map<string, { lat: number; lng: number; weight: number; count: number }>();
+    for (const r of rows ?? []) {
+      if (r.lat === null || r.lng === null) continue;
+      const lat = Math.round(r.lat * 100) / 100, lng = Math.round(r.lng * 100) / 100;
+      const key = `${lat}:${lng}`, old = cells.get(key);
+      cells.set(key, { lat, lng, weight: (old?.weight ?? 0) + Number(r.pop_amount), count: (old?.count ?? 0) + 1 });
+    }
+    return { window: data.window, points: [...cells.values()].filter((c) => c.count >= 3).map(({ count: _count, ...p }) => p) };
   });
 
 export const getRecentActivity = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("pop_awards")
-    .select("email, amount, source, created_at")
+    .select("wallet_address, amount, source, created_at")
     .eq("status", "sent")
     .order("created_at", { ascending: false })
     .limit(20);
   return {
     activity: (data ?? []).map((r) => ({
-      display: maskEmail(r.email ?? ""),
+      display: `${r.wallet_address.slice(0, 6)}…${r.wallet_address.slice(-4)}`,
       amount: Number(r.amount),
       source: r.source,
       at: r.created_at,
