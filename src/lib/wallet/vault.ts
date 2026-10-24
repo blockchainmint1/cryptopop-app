@@ -3,8 +3,7 @@
  *
  * A single BIP39 mnemonic is encrypted with the user's device password
  * (PBKDF2-SHA256 → AES-GCM) and stored in localStorage. The plaintext
- * mnemonic only ever lives in memory (plus a short-lived sessionStorage cache
- * so a page reload doesn't force a re-unlock). Nothing leaves the device.
+ * mnemonic only ever lives in memory. Reloading requires another unlock.
  */
 import { generateMnemonic, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";

@@ -1,6 +1,4 @@
-// Email-keyed custodial wallet system.
-// Derives a deterministic TXC address from WALLET_MASTER_SEED + email,
-// records POP awards in a ledger, and broadcasts them on-chain immediately.
+// POP award ledger. Only explicitly supplied non-custodial addresses receive awards.
 
 import { createBase58check } from "@scure/base";
 import { sha256 } from "@noble/hashes/sha256";
