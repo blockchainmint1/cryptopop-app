@@ -142,6 +142,7 @@ function RootComponent() {
           </div>
           <OfflineGate />
           <NearbyAlerts />
+          <InstallInstructionsAutoPopup />
           <Toaster richColors position="top-center" />
         </WalletProvider>
       </AuthProvider>
