@@ -37,11 +37,11 @@ const PARTNER_NAMES: Record<string, string> = {
 
 export const TRUSTED_LOGIN_HOSTS: ReadonlySet<string> = new Set(Object.keys(PARTNER_NAMES));
 
-const FIRST_PARTY_APEXES = ["honest.money", "cryptopop.org"];
+const FIRST_PARTY_APEXES = ["honest.money", "cryptopop.org", "app.cryptopop.org", "wallet.cryptopop.org"];
 
 function isFirstParty(hostname: string): boolean {
   return FIRST_PARTY_APEXES.some(
-    (apex) => hostname === apex || hostname.endsWith(`.${apex}`),
+    (apex) => hostname === apex,
   );
 }
 

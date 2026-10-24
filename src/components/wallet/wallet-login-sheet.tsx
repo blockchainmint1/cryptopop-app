@@ -9,7 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { NECTARPAY_TRUSTED_HOSTS } from "@/lib/nectarpay";
+import { isEcosystemSite } from "@/lib/ecosystem/hosts";
 import { derivePrivateKey } from "@/lib/wallet/sign";
 import { signTxcMessage } from "@/lib/wallet/txc-message";
 
@@ -33,11 +33,6 @@ function buildMessage(host: string, nonce: string) {
   ].join("\n");
 }
 
-function isTrusted(host: string) {
-  const h = host.toLowerCase();
-  return NECTARPAY_TRUSTED_HOSTS.some((t) => h === t || h.endsWith(`.${t}`));
-}
-
 export function WalletLoginSheet({
   request,
   onClose,
@@ -59,7 +54,7 @@ export function WalletLoginSheet({
       return "";
     }
   })();
-  const trusted = !!request && isTrusted(cbHost);
+  const trusted = !!request && isEcosystemSite(cbHost);
   const expired = !!request?.expiresAt && request.expiresAt < Date.now();
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
 
@@ -67,7 +62,10 @@ export function WalletLoginSheet({
     if (!request || !address || !mnemonic) return toast.error("Unlock your wallet first");
     setBusy(true);
     try {
-      const message = request.message ?? buildMessage(request.host, request.nonce);
+      const callback = new URL(request.callback);
+      if (callback.protocol !== "https:" || callback.port || callback.username || callback.password || !isEcosystemSite(callback.hostname) || callback.hostname !== request.host) throw new Error("Only verified HME sites can request sign-in");
+      if (request.expiresAt !== null && request.expiresAt <= Date.now()) throw new Error("Sign-in code expired");
+      const message = request.message ?? buildMessage(callback.hostname, request.nonce);
       if (!message.includes(`Nonce: ${request.nonce}`)) throw new Error("Sign-in request looks wrong");
       const signature = signTxcMessage(derivePrivateKey(mnemonic), message);
       const body = request.id
@@ -77,6 +75,8 @@ export function WalletLoginSheet({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        redirect: "error",
+        credentials: "omit",
       });
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
@@ -123,15 +123,16 @@ export function WalletLoginSheet({
                 <p className="flex items-start gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-xs">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   This request is from {cbHost || "an unknown site"}, which isn't a known NectarPay
-                  site. Only continue if you trust it.
+                  site. Sign-in is blocked.
                 </p>
               )}
+              {request?.message && <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all text-xs text-muted-foreground">{request.message}</pre>}
               {expired && (
                 <p className="text-sm text-destructive">This code has expired — refresh the page and scan again.</p>
               )}
               <Button
                 className="h-12 w-full rounded-full"
-                disabled={busy || expired}
+                disabled={busy || expired || !trusted}
                 onClick={() => void approve()}
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Approve sign-in"}

@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachSupabaseAuth } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueTransactionalEmail } from "./email/send.server";
-import { ensureEmailWallet, awardPop, validateTxcAddress } from "./email-wallet.server";
+import { awardPop, validateTxcAddress } from "./email-wallet.server";
 import { getRewardAmount } from "./reward-rules.server";
 import { notifyEventSignup } from "./telegram.server";
 
@@ -264,11 +264,16 @@ export const checkInSignup = createServerFn({ method: "POST" })
       // with the same resulting total are a no-op.
       const addedHeads = Math.max(0, data.guest_count ?? 0);
       if (addedHeads > 0) {
-        const newGuestCount = (existing.guest_count ?? 0) + addedHeads;
-        await supabaseAdmin
+        await assertAdmin(context.userId);
+        const { cappedGuestTotal } = await import("./checkin-policy");
+        const newGuestCount = cappedGuestTotal(existing.guest_count ?? 0, addedHeads);
+        const { data: changed } = await supabaseAdmin
           .from("event_signups")
-          .update({ guest_count: newGuestCount })
-          .eq("id", data.id);
+          .update({ guest_count: newGuestCount, checked_in_by: context.userId })
+          .eq("id", data.id)
+          .eq("guest_count", existing.guest_count ?? 0)
+          .select("id");
+        if (!changed?.length) throw new Error("Guest count changed — reload this pass");
         const topUp = perHead * addedHeads;
         if (topUp > 0 && existing.email) {
           try {
@@ -277,7 +282,7 @@ export const checkInSignup = createServerFn({ method: "POST" })
               amount: topUp,
               source: "event_checkin",
               sourceId: `${existing.id}:g${newGuestCount}`,
-              memo: `Check-in +${addedHeads}`,
+              memo: `Check-in +${addedHeads} by ${context.userId}`,
               walletOverride: existing.external_wallet,
             });
           } catch (e) {
@@ -314,6 +319,9 @@ export const checkInSignup = createServerFn({ method: "POST" })
         ? data.guest_count
         : (existing.guest_count ?? 0);
 
+    const { cappedGuestTotal } = await import("./checkin-policy");
+    cappedGuestTotal(guestCount, 0);
+
     const update: {
       checked_in_at: string;
       checked_in_by: string;
@@ -325,10 +333,13 @@ export const checkInSignup = createServerFn({ method: "POST" })
     if (typeof data.guest_count === "number") {
       update.guest_count = guestCount;
     }
-    const { error } = await supabaseAdmin
+    const { data: changed, error } = await supabaseAdmin
       .from("event_signups")
       .update(update)
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .is("checked_in_at", null)
+      .select("id");
+    if (!changed?.length && !error) throw new Error("This pass was just checked in — reload it");
     if (error) throw new Error(error.message);
 
     // Award POP per head (attendee + guests). Idempotent via (source, source_id).
@@ -387,7 +398,7 @@ export const adminAddGuest = createServerFn({ method: "POST" })
     if (evErr || !ev) throw new Error("Event not found");
 
     const lcEmail = data.email.toLowerCase();
-    const signupReward = await getRewardAmount("event_signup", 10);
+    const signupReward = 0;
 
     const trimmedMobile = data.mobile_number?.trim() || null;
     const { data: inserted, error } = await supabaseAdmin
@@ -420,25 +431,9 @@ export const adminAddGuest = createServerFn({ method: "POST" })
       throw new Error("Failed to add guest");
     }
 
-    // Custodial wallet + signup POP award (mirrors createEventSignup).
-    let walletAddress: string | null = null;
-    try {
-      const w = await ensureEmailWallet(lcEmail);
-      walletAddress = w.walletAddress;
-    } catch (e) {
-      console.error("[adminAddGuest] ensureEmailWallet", e);
-    }
-    try {
-      await awardPop({
-        email: lcEmail,
-        amount: signupReward,
-        source: "event_signup",
-        sourceId: inserted.id,
-        memo: "CryptoPOP signup (admin added)",
-      });
-    } catch (e) {
-      console.error("[adminAddGuest] awardPop", e);
-    }
+    // Walk-ins without a device wallet receive a pass, never a server-managed key.
+    // POP can be awarded after they register their own wallet.
+    const walletAddress: string | null = null;
 
     // Format event date for the email in the event's time zone.
     const start = new Date(ev.start_at);

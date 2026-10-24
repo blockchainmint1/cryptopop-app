@@ -13,7 +13,7 @@ import { BIP32Factory } from "bip32";
 import { deriveTxcAddress, TXC_COIN_TYPE, TXC_PATH } from "@/lib/wallet";
 import { derivePrivateKeyAtPath } from "@/lib/wallet/sign";
 import { signTxcMessage, verifyTxcMessage } from "@/lib/wallet/txc-message";
-import { isPublicHostname } from "./hosts";
+import { isPublicHostname, isEcosystemSite } from "./hosts";
 import {
   isRequestedDialect,
   validateRequested,
@@ -99,7 +99,7 @@ export function parseLinkInput(raw: string): string | null {
   if (!text) return null;
   try {
     const url = new URL(text);
-    if (url.protocol === "https:" && !url.port && !url.username && isPublicHostname(url.hostname))
+    if (url.protocol === "https:" && !url.port && !url.username && !url.password && isPublicHostname(url.hostname) && isEcosystemSite(url.hostname))
       return url.toString();
     return null;
   } catch {
@@ -148,6 +148,7 @@ export function validateManifest(
   const fail = (m: string): never => {
     throw new Error(m);
   };
+  if (!isEcosystemSite(host)) fail("Only verified HME sites can link to this wallet.");
   if (raw["type"] !== "hm-link-xpubs") fail("This QR isn't a wallet link.");
   if (raw["from"] !== host) fail("Link comes from an untrusted server.");
   if (typeof raw["challenge_id"] !== "string" || !raw["challenge_id"]) fail("Link is malformed.");
@@ -246,6 +247,7 @@ export async function submitLink(args: {
   mnemonic: string;
 }): Promise<NectarLinkResult> {
   const { manifest, mnemonic } = args;
+  if (!isEcosystemSite(manifest.from) || !sameHost(manifest.callback_url, manifest.from)) throw new Error("Untrusted HME site");
   const keys = await deriveWalletKeys(mnemonic);
 
   const payload = {

@@ -14,6 +14,7 @@
 import * as ecc from "@bitcoinerlab/secp256k1";
 import { mnemonicToSeedSync } from "@scure/bip39";
 import { BIP32Factory } from "bip32";
+import { isEcosystemSite } from "./hosts";
 import { TXC_COIN_TYPE } from "@/lib/wallet";
 import { signIdentity } from "./link";
 
@@ -75,6 +76,7 @@ export function validateRequested(raw: Record<string, unknown>, manifestUrl: str
   if (raw["type"] !== "hm-link-xpubs") fail("That code isn't a wallet link.");
   const origin = new URL(manifestUrl).origin;
   const host = new URL(manifestUrl).hostname;
+  if (!isEcosystemSite(host)) fail("Only verified HME sites can link to this wallet.");
   const submitUrl = String(raw["submit_url"]);
   try {
     if (new URL(submitUrl).origin !== origin) fail("Link sends keys to a different server.");
@@ -86,7 +88,7 @@ export function validateRequested(raw: Record<string, unknown>, manifestUrl: str
   if (typeof token !== "string" || !/^[A-Za-z0-9_-]{8,64}$/.test(token)) fail("Link is malformed.");
   if (typeof challenge !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(challenge)) fail("Link is malformed.");
   const exp = Date.parse(String(raw["expires_at"] ?? ""));
-  if (Number.isFinite(exp) && exp <= Date.now()) fail("This link has expired.");
+  if (!Number.isFinite(exp) || exp <= Date.now()) fail("This link has expired.");
   // Some servers double-escape the newlines in the template; normalise.
   const template = String(raw["message_template"] ?? "").replace(/\\n/g, "\n");
   if (!TEMPLATE_RE.test(template)) fail("Link asks to sign an unexpected message.");
@@ -119,7 +121,8 @@ export async function submitRequested(args: {
   mnemonic: string;
 }): Promise<{ appName: string }> {
   const { manifest, mnemonic } = args;
-  const key = manifest.keys[0]!;
+  const key = manifest.keys[0];
+  if (!key || !isEcosystemSite(manifest.host)) throw new Error("Invalid wallet link");
   const seed = mnemonicToSeedSync(mnemonic);
   const xpub = bip32
     .fromSeed(seed, TXC_NETWORK as never)
