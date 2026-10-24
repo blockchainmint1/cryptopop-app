@@ -30,7 +30,8 @@ import { nativePlatform } from "@/lib/native/platform";
 import { useServerFn } from "@tanstack/react-start";
 import { listMarkets, type MarketOption } from "@/lib/public-events.functions";
 import { claimWelcomePop, WELCOME_POP } from "@/lib/welcome.functions";
-import { hmeRef } from "@/lib/hme";
+import { openHmeLogin, hmeRef } from "@/lib/hme";
+import { supabase } from "@/integrations/supabase/client";
 import { loadRegion, regionForMarket, saveMarketSlug, saveRegion } from "@/lib/wallet/region";
 import { deriveTxcAddress } from "@/lib/wallet";
 import logo from "@/assets/cryptopop-logo.png";
@@ -69,6 +70,34 @@ export function OnboardScreen() {
       /* ignore */
     }
   }, []);
+
+  // Honest Money SSO: prefill the email step with the member's account email.
+  // The /sso popup posts "hme-sso-done" back here once the session is set.
+  useEffect(() => {
+    let alive = true;
+    const grab = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const mail = data.session?.user?.email;
+        if (alive && mail) {
+          setEmail((cur) => cur || mail);
+          setHmeSignedIn(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    void grab();
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if ((e.data as { type?: string } | null)?.type === "hme-sso-done") void grab();
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      alive = false;
+      window.removeEventListener("message", onMessage);
+    };
+  }, []);
   const [origin, setOrigin] = useState<VaultOrigin>("coin");
   const [mnemonic, setMnemonic] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
@@ -85,6 +114,7 @@ export function OnboardScreen() {
   const [markets, setMarkets] = useState<MarketOption[]>([]);
   const [marketSlug, setMarketSlug] = useState("");
   const [email, setEmail] = useState("");
+  const [hmeSignedIn, setHmeSignedIn] = useState(false);
 
   const fetchMarkets = useServerFn(listMarkets);
   const claimWelcome = useServerFn(claimWelcomePop);
@@ -487,6 +517,27 @@ export function OnboardScreen() {
                   ))}
                 </select>
               </div>
+
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-12 w-full rounded-full"
+                disabled={hmeSignedIn}
+                onClick={() => openHmeLogin()}
+              >
+                {hmeSignedIn ? (
+                  <Check className="mr-1.5 h-4 w-4" />
+                ) : (
+                  <KeyRound className="mr-1.5 h-4 w-4" />
+                )}
+                {hmeSignedIn ? "Signed in with Honest Money" : "Use my Honest Money account"}
+              </Button>
+              {hmeSignedIn && (
+                <p className="text-xs text-muted-foreground">
+                  Using {email || "your Honest Money email"} for the welcome POP — or type a
+                  different one below.
+                </p>
+              )}
 
               <div className="space-y-2">
                 <label className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-muted-foreground">
