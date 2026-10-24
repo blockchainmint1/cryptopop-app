@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { rateLimitForPath } from "./lib/rate-limit.server";
 
 type ServerEntry = {
   fetch: (request: Request, options?: { context: { nonce: string } }) => Promise<Response> | Response;
