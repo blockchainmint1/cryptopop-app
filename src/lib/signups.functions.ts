@@ -275,9 +275,10 @@ export const checkInSignup = createServerFn({ method: "POST" })
           .select("id");
         if (!changed?.length) throw new Error("Guest count changed — reload this pass");
         const topUp = perHead * addedHeads;
+        let delivered = 0;
         if (topUp > 0 && existing.email) {
           try {
-            await awardPop({
+            const award = await awardPop({
               email: existing.email,
               amount: topUp,
               source: "event_checkin",
@@ -285,6 +286,7 @@ export const checkInSignup = createServerFn({ method: "POST" })
               memo: `Check-in +${addedHeads} by ${context.userId}`,
               walletOverride: existing.external_wallet,
             });
+            if (award.status === "sent") delivered = topUp;
           } catch (e) {
             console.error("[checkInSignup] top-up awardPop", e);
           }
@@ -296,7 +298,7 @@ export const checkInSignup = createServerFn({ method: "POST" })
           addedHeads,
           checkedInAt: existing.checked_in_at,
           fullName: existing.full_name,
-          popAwarded: topUp,
+          popAwarded: delivered,
           heads: addedHeads,
         };
       }
@@ -345,9 +347,10 @@ export const checkInSignup = createServerFn({ method: "POST" })
     // Award POP per head (attendee + guests). Idempotent via (source, source_id).
     const heads = 1 + Math.max(0, guestCount);
     const total = perHead * heads;
+    let delivered = 0;
     if (total > 0 && existing.email) {
       try {
-        await awardPop({
+        const award = await awardPop({
           email: existing.email,
           amount: total,
           source: "event_checkin",
@@ -355,6 +358,7 @@ export const checkInSignup = createServerFn({ method: "POST" })
           memo: heads > 1 ? `Check-in ×${heads}` : "Event check-in",
           walletOverride: existing.external_wallet,
         });
+        if (award.status === "sent") delivered = total;
       } catch (e) {
         console.error("[checkInSignup] awardPop", e);
       }
@@ -365,7 +369,7 @@ export const checkInSignup = createServerFn({ method: "POST" })
       alreadyCheckedIn: false,
       checkedInAt: now,
       fullName: existing.full_name,
-      popAwarded: total,
+      popAwarded: delivered,
       heads,
     };
   });

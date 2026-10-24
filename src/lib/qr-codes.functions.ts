@@ -315,7 +315,7 @@ export const redeemQrCode = createServerFn({ method: "POST" })
       .eq("id", redemption.id);
 
     if (award.status === "failed") {
-      throw new Error("Mint failed — please try again later");
+      throw new Error("Your claim is recorded, but delivery needs review. Please contact the POP organizer; scanning again will not create another award.");
     }
     return {
       ok: true,

@@ -165,8 +165,11 @@ export async function redeemRewards(opts: {
   try {
     await opts.notifyStore();
   } catch (e) {
-    await supabaseAdmin.from("reward_ledger").delete().eq("id", row.id);
-    throw new Error("The store couldn't accept rewards right now — nothing was spent.");
+    // A timeout is ambiguous: the merchant may already have accepted payment.
+    // Preserve the debit until settlement is reconciled; never restore spendable
+    // value merely because an HTTP response was lost.
+    console.error("[rewards] settlement requires reconciliation", row.id);
+    throw new Error("Payment confirmation is pending. Your rewards are reserved; do not pay this bill again until the store confirms.");
   }
 
   return { spent: total };

@@ -62,6 +62,7 @@ export const payWithRewards = createServerFn({ method: "POST" })
     }
 
     const secret = process.env["NECTARPAY_REWARDS_SECRET"];
+    if (!secret) throw new Error("This store's reward payments are not available yet.");
     const { redeemRewards } = await import("./store-rewards.server");
     return redeemRewards({
       storeId,
@@ -70,7 +71,6 @@ export const payWithRewards = createServerFn({ method: "POST" })
       total,
       invoiceId: data.invoiceId,
       notifyStore: async () => {
-        if (!secret) throw new Error("rewards_not_configured");
         const { createHmac } = await import("crypto");
         const body = JSON.stringify({ invoiceId: data.invoiceId, amount: total, kind: data.kind, wallet: data.address });
         const sig = createHmac("sha256", secret).update(body).digest("hex");
