@@ -9,3 +9,4 @@
 - Legacy custodial key derivation/provisioning/export is retired; preserve protected historical records until ownership-verified balance reconciliation, because deletion could strand existing funds.
 - Native navigation is limited to wallet origins and current patched Capacitor releases; native-boundary changes need rebuilt binaries, unlike web-only improvements.
 - Run the wallet safety tests on CI and before reporting security changes complete, because signing, ownership and authorization rules need executable regression coverage.
+- Street-address geocoding runs server-side with the unrestricted server Maps key (src/lib/geocode.server.ts); the managed gateway key is referrer-restricted and Geocoding rejects it.
