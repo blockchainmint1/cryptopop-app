@@ -86,6 +86,33 @@ function InstallInstructionsDialog({ os, onClose }: { os: "ios" | "android"; onC
   );
 }
 
+/**
+ * Auto-showing install how-to popup, mounted once at the app root.
+ * Only for Android browsers where Chrome never fired beforeinstallprompt
+ * (e.g. no service worker yet); shows once per device.
+ */
+export function InstallInstructionsAutoPopup() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (isNative() || isStandalone() || platform() !== "android" || deferred) return;
+    const timer = window.setTimeout(() => {
+      if (deferred || isStandalone()) return;
+      try {
+        if (localStorage.getItem(MODAL_SHOWN_KEY)) return;
+        localStorage.setItem(MODAL_SHOWN_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+      setShow(true);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  if (!show) return null;
+  return <InstallInstructionsDialog os="android" onClose={() => setShow(false)} />;
+}
+
 /** "Add POP Wallet to your home screen" card for iPhone and Android browsers. */
 export function InstallAppPrompt({ dismissible = true }: { dismissible?: boolean }) {
   const [mode, setMode] = useState<"hidden" | "android" | "ios" | "other">("hidden");
@@ -105,25 +132,7 @@ export function InstallAppPrompt({ dismissible = true }: { dismissible?: boolean
     const pick = () => setMode(deferred ? "android" : os === "ios" ? "ios" : os === "android" ? "other" : "hidden");
     pick();
     window.addEventListener("cp-install-ready", pick);
-
-    // No beforeinstallprompt (e.g. no service worker yet): show the how-to popup once per device.
-    let timer: number | undefined;
-    if (dismissible && os === "android" && !deferred) {
-      timer = window.setTimeout(() => {
-        if (deferred || isStandalone()) return;
-        try {
-          if (localStorage.getItem(MODAL_SHOWN_KEY)) return;
-          localStorage.setItem(MODAL_SHOWN_KEY, "1");
-        } catch {
-          /* ignore */
-        }
-        setShowDialog(true);
-      }, 1500);
-    }
-    return () => {
-      window.removeEventListener("cp-install-ready", pick);
-      if (timer) window.clearTimeout(timer);
-    };
+    return () => window.removeEventListener("cp-install-ready", pick);
   }, [dismissible]);
 
   const dismiss = () => {
