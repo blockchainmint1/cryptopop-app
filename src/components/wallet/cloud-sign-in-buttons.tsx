@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCloudAccount } from "@/lib/wallet/cloud-account";
 
-/** Google + Apple sign-in buttons used by the cloud backup flows. */
+/** Google sign-in button used by the cloud backup flows. */
 export function CloudSignInButtons({
   rememberRestore = false,
   className,
@@ -13,12 +13,12 @@ export function CloudSignInButtons({
   className?: string;
 }) {
   const { signIn } = useCloudAccount();
-  const [busy, setBusy] = useState<"google" | "apple" | null>(null);
+  const [busy, setBusy] = useState<"google" | null>(null);
 
-  async function go(provider: "google" | "apple") {
-    setBusy(provider);
+  async function go() {
+    setBusy("google");
     try {
-      await signIn(provider, rememberRestore);
+      await signIn("google", rememberRestore);
     } catch (e) {
       toast.error((e as Error).message || "Sign-in failed");
     } finally {
@@ -33,7 +33,7 @@ export function CloudSignInButtons({
           variant="secondary"
           className="h-12 w-full rounded-full"
           disabled={busy !== null}
-          onClick={() => go("google")}
+          onClick={go}
         >
           {busy === "google" ? (
             <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -41,15 +41,6 @@ export function CloudSignInButtons({
             <GoogleGlyph />
           )}
           Continue with Google
-        </Button>
-        <Button
-          variant="secondary"
-          className="h-12 w-full rounded-full"
-          disabled={busy !== null}
-          onClick={() => go("apple")}
-        >
-          {busy === "apple" ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <AppleGlyph />}
-          Continue with Apple
         </Button>
       </div>
     </div>
@@ -72,14 +63,6 @@ function GoogleGlyph() {
         fill="#EA4335"
         d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0A12 12 0 0 0 1.3 6.7l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"
       />
-    </svg>
-  );
-}
-
-function AppleGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" className="mr-1.5 h-4 w-4 fill-current" aria-hidden="true">
-      <path d="M16.4 12.7c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.8-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.5 1.3-.1 1.8-.8 3.3-.8s2 .8 3.3.8c1.4 0 2.3-1.2 3.1-2.5.6-.9.9-1.4 1.4-2.5-3.6-1.4-3.6-4.2-2.6-4.3zM14 4.6c.7-.9 1.2-2.1 1-3.3-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z" />
     </svg>
   );
 }
