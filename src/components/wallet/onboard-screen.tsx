@@ -78,9 +78,9 @@ export function OnboardScreen() {
     const grab = async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        const u = data.session?.user;
-        if (alive && u?.email) {
-          setEmail((cur) => cur || u.email);
+        const mail = data.session?.user?.email;
+        if (alive && mail) {
+          setEmail((cur) => cur || mail);
           setHmeSignedIn(true);
         }
       } catch {
