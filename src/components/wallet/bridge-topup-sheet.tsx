@@ -120,11 +120,14 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
   const [chain, setChain] = useState("ethereum");
   const [contract, setContract] = useState("");
   const [provider, setProvider] = useState<Provider | null>(null);
+  // Set when the TSD window closes after a successful connection: keep the last
+  // verified details on screen, but stop live updates until the user refreshes.
+  const [paused, setPaused] = useState(false);
 
   function disconnect(message?: string) {
     attempt.current?.popup.close();
     attempt.current = null;
-    setChallenge(null); setConnection(null); setWaiting(false); setBusy(false); setProvider(null);
+    setChallenge(null); setConnection(null); setWaiting(false); setBusy(false); setProvider(null); setPaused(false);
     setError(message ?? null);
   }
 
@@ -175,6 +178,7 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
     const timer = window.setInterval(() => {
       const active = attempt.current;
       if (!active) return;
+      if (active.popup.closed && connection) { attempt.current = null; setPaused(true); return; }
       if (active.popup.closed) { disconnect("The TSD window closed. Reconnect to get current deposit details."); return; }
       if (connection && Date.now() - active.lastSeen > 95_000) disconnect("The bridge connection was lost. Reconnect before sending stablecoins.");
       else if (!connection && Date.now() - active.lastSeen > (active.signed ? 60_000 : 10 * 60_000)) disconnect("The connection timed out. Please reconnect.");
@@ -302,6 +306,10 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
           {!memberId && <p className="text-muted-foreground">Only approve if you signed in to your own Honest Money account in the TSD window.</p>}
           <Button className="min-h-12 w-full rounded-full" disabled={busy} onClick={approve}>Approve receiving-only connection</Button>
           <Button variant="outline" className="w-full" onClick={() => disconnect()}>Cancel</Button>
+        </div>}
+        {connection && paused && <div role="status" className="space-y-3 rounded-lg border border-border bg-muted p-3">
+          <p>You're connected. Live progress pauses while the TSD window is closed — tap refresh any time to check on your top-up.</p>
+          <Button variant="outline" className="w-full rounded-full" disabled={loading} onClick={connect}>Refresh progress</Button>
         </div>}
         {connection && <>
           {!connection.available && <p role="status" className="rounded-lg border border-border bg-muted p-3">TSD top-ups are paused. No deposit address is available while the bridge is paused.</p>}

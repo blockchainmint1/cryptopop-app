@@ -5,7 +5,7 @@ Wallet implementation follows the TSD project handoff (snapshot 38bb9883).
 - Top up → Stablecoins opens the retained `https://tsd.honest.money/connect` popup.
 - Exact sender origin/window, protocol, request, destination, known HME member, five-minute expiry and one-use challenge checks precede local consent signing.
 - No keys, recovery phrases, spending authorization, or cash-out access leave the wallet.
-- Current connection information stays in memory only; closing the panel/popup, locking/changing the wallet, or changing member requires reconnection.
+- Current connection information stays in memory only; closing the panel, locking/changing the wallet, or changing member requires reconnection. Closing the TSD popup after a verified connection keeps the last verified details on screen with live progress paused until the member taps Refresh (which reconnects).
 - Progress refreshes every 30 seconds only while the panel and document are visible. Bridge errors and lost connections remove deposit instructions.
 - Deposit UI uses only bridge-provided Ethereum/Base token contracts, decimals, limits, address and availability. It does not infer completion from a TSD payout transaction.
 
