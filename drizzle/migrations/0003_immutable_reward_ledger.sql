@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.reject_reward_ledger_mutation() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$ BEGIN RAISE EXCEPTION 'Reward ledger entries are immutable; use a reviewed compensating entry for reconciliation'; END $$;
+REVOKE ALL ON FUNCTION public.reject_reward_ledger_mutation() FROM PUBLIC, anon, authenticated;
+CREATE TRIGGER reward_ledger_immutable BEFORE UPDATE OR DELETE ON public.reward_ledger FOR EACH ROW EXECUTE FUNCTION public.reject_reward_ledger_mutation();
