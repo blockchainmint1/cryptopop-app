@@ -1,4 +1,11 @@
 # Roadmap
+- [ ] Audit: validate transactions locally before signing; investigate local construction
+- [ ] Audit: retire custodial wallet access
+- [ ] Audit: restrict scans and outbound wallet connections to verified HME sites
+- [ ] Audit: remove tracking from sensitive wallet pages
+- [ ] Audit: secure POP claims and cap door-scanner awards
+- [ ] Audit: document HME changes and enforce non-spendable POP
+- [ ] Audit: safe smaller fixes and regression tests
 - [x] Rewards backend tables + POP manager screen (/admin/rewards)
 - [x] Earn store/community rewards after NectarPay TSD payments; wallet balances
 - [x] Pay with rewards in wallet (live once NectarPay endpoint exists)
