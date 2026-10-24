@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
+import paypalImg from "@/assets/topup-paypal.jpg";
+import venmoImg from "@/assets/topup-venmo.jpg";
+import coinbaseImg from "@/assets/topup-coinbase.jpg";
+import metamaskImg from "@/assets/topup-metamask.jpg";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
