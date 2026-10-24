@@ -70,6 +70,34 @@ export function OnboardScreen() {
       /* ignore */
     }
   }, []);
+
+  // Honest Money SSO: prefill the email step with the member's account email.
+  // The /sso popup posts "hme-sso-done" back here once the session is set.
+  useEffect(() => {
+    let alive = true;
+    const grab = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const u = data.session?.user;
+        if (alive && u?.email) {
+          setEmail((cur) => cur || u.email);
+          setHmeSignedIn(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    void grab();
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if ((e.data as { type?: string } | null)?.type === "hme-sso-done") void grab();
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      alive = false;
+      window.removeEventListener("message", onMessage);
+    };
+  }, []);
   const [origin, setOrigin] = useState<VaultOrigin>("coin");
   const [mnemonic, setMnemonic] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
