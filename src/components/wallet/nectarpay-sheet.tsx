@@ -20,6 +20,8 @@ import {
 import { isPaidStatus, nectarReceiptUrl, rewardMessage, type NectarInvoice } from "@/lib/nectarpay";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
+import { validateSend } from "@/lib/wallet/transaction-policy";
+import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
 import { derivePrivateKey, signPsbt } from "@/lib/wallet/sign";
 import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { saveTxLabel, updateReceipt } from "@/lib/wallet/tx-labels";
@@ -66,6 +68,7 @@ export function NectarPaySheet({
   const [earned, setEarned] = useState<{ amount: number; storeName: string } | null>(null);
   const [paidWithRewards, setPaidWithRewards] = useState<number | null>(null);
 
+  const [review, setReview] = useState<{ built: Awaited<ReturnType<typeof prepare>>; from: string; to: string; amount: number; feeSats: number } | null>(null);
   const [stage, setStage] = useState<Stage>("loading");
   const [inv, setInv] = useState<NectarInvoice | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +80,7 @@ export function NectarPaySheet({
     if (!request) return;
     let cancelled = false;
     setStage("loading");
+    setReview(null);
     setInv(null);
     setError(null);
     setTxid(null);
@@ -155,9 +159,10 @@ export function NectarPaySheet({
     }, 3000);
   }
 
-  async function pay() {
+  async function pay(confirm = false) {
     if (!request || !inv) return;
     if (!address || !mnemonic) return toast.error("Unlock your wallet first");
+    if (confirm && !review) return;
     setStage("paying");
     try {
       const sel = await selectTsd({ data: { id: request.invoiceId, nonce: request.nonce } });
@@ -171,10 +176,17 @@ export function NectarPaySheet({
       const from = sources.find((s) => (s.balances.tsd ?? 0) >= amount)?.address ?? address;
       let res: { txid: string } | null = null;
       for (let attempt = 0; attempt < 2 && !res; attempt++) {
-        const built = await prepare({
+        const built = confirm && review && attempt === 0 ? review.built : await prepare({
           data: { asset: "tsd", from, to: sel.invoice.address, amount, exclude: reservedOutpoints() },
         });
-        const r = await broadcast({ data: { rawHex: signPsbt(built.psbtBase64, mnemonic) } });
+        const intent = { asset: "tsd" as const, from, to: sel.invoice.address, amount };
+        const checked = validateSend(built.psbtBase64, intent, [deriveTxcAddress(mnemonic), deriveLegacyTxcAddress(mnemonic)]);
+        if (!confirm) { setReview({ built, from, to: sel.invoice.address, amount, feeSats: checked.feeSats }); setStage("review"); return; }
+        if (!review || review.to !== sel.invoice.address || review.amount !== amount || review.from !== from || checked.feeSats > review.feeSats) {
+          setReview({ built, from, to: sel.invoice.address, amount, feeSats: checked.feeSats });
+          throw new Error("Payment or fee changed — review and confirm again");
+        }
+        const r = await broadcast({ data: { rawHex: signPsbt(built.psbtBase64, mnemonic, intent) } });
         if (r.ok) {
           reserveOutpoints(built.inputs);
           res = { txid: r.txid };
@@ -303,7 +315,7 @@ export function NectarPaySheet({
                       disabled={stage === "paying"}
                       onClick={() => void payRewards("store")}
                     >
-                      Pay with store rewards (${rewardOpts!.storeBalance.toFixed(2)})
+                      Pay with store rewards (${rewardOpts?.storeBalance.toFixed(2)})
                     </Button>
                   )}
                   {canCommunity && (
@@ -313,7 +325,7 @@ export function NectarPaySheet({
                       disabled={stage === "paying"}
                       onClick={() => void payRewards("community")}
                     >
-                      Pay with community rewards (${rewardOpts!.communityBalance.toFixed(2)})
+                      Pay with community rewards (${rewardOpts?.communityBalance.toFixed(2)})
                     </Button>
                   )}
                 </div>
@@ -322,6 +334,15 @@ export function NectarPaySheet({
                 <p className="text-center text-[11px] text-muted-foreground">
                   Rewards must cover the whole bill to use them.
                 </p>
+              )}
+              {review && (
+                <div className="space-y-2 border-t border-border pt-3">
+                  <p>{review.amount.toFixed(2)} TSD</p>
+                  <p className="break-all font-mono text-xs">To: {review.to}</p>
+                  <p className="text-sm">Network fee: {(review.feeSats / 1e8).toFixed(8)} TXC</p>
+                  <Button className="w-full" disabled={stage === "paying"} onClick={() => void pay(true)}>Confirm and pay</Button>
+                  <Button variant="ghost" className="w-full" disabled={stage === "paying"} onClick={() => setReview(null)}>Cancel</Button>
+                </div>
               )}
               <Button
                 className="h-12 w-full rounded-full"
@@ -333,7 +354,7 @@ export function NectarPaySheet({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Paying…
                   </>
                 ) : (
-                  `Pay ${money(inv.fiatAmount, inv.currency)}`
+                  `Review ${money(inv.fiatAmount, inv.currency)} payment`
                 )}
               </Button>
             </>
