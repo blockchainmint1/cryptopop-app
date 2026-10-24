@@ -23,6 +23,85 @@ import {
 export const TSD_BRIDGE_URL = TSD_ORIGIN;
 type Attempt = { popup: Window; request: TopupRequest; signed: boolean; memberId: string | null; lastSeen: number };
 
+/**
+ * Where people already hold stablecoins. Each guide locks one coin/network
+ * route the bridge accepts, so the sender can't pick a mismatched pair.
+ */
+type Provider = {
+  key: string;
+  name: string;
+  coin: "USDC" | "PYUSD";
+  network: "Base" | "Ethereum";
+  still: string;
+  appUrl: string;
+  /** Optional native app scheme tried before falling back to appUrl. */
+  appScheme?: string;
+  steps: string[];
+};
+
+const PROVIDERS: Provider[] = [
+  {
+    key: "paypal", name: "PayPal", coin: "PYUSD", network: "Ethereum", still: paypalImg,
+    appUrl: "https://www.paypal.com/myaccount/crypto",
+    steps: [
+      "In PayPal, open Crypto and buy PYUSD with your linked bank or balance.",
+      "Tap PYUSD, then Send, then choose to send to an external address.",
+      "Paste the deposit address from this wallet, check the network says Ethereum, and send.",
+    ],
+  },
+  {
+    key: "venmo", name: "Venmo", coin: "PYUSD", network: "Ethereum", still: venmoImg,
+    appUrl: "https://venmo.com/", appScheme: "venmo://",
+    steps: [
+      "In Venmo, open Crypto and buy PYUSD.",
+      "Tap PYUSD, then Send, then choose an external crypto address.",
+      "Paste the deposit address from this wallet, check the network says Ethereum, and send.",
+    ],
+  },
+  {
+    key: "coinbase", name: "Coinbase", coin: "USDC", network: "Base", still: coinbaseImg,
+    appUrl: "https://www.coinbase.com/",
+    steps: [
+      "In Coinbase, buy USDC if you don't already have it.",
+      "Tap Send, pick USDC, then paste the deposit address from this wallet.",
+      "When asked for the network, pick Base, then send.",
+    ],
+  },
+  {
+    key: "metamask", name: "MetaMask", coin: "USDC", network: "Base", still: metamaskImg,
+    appUrl: "https://metamask.app.link/",
+    steps: [
+      "In MetaMask, switch the network at the top to Base.",
+      "Make sure you hold USDC on Base, then tap Send.",
+      "Paste the deposit address from this wallet and send.",
+    ],
+  },
+];
+
+function openProviderApp(p: Provider) {
+  if (p.appScheme) {
+    // Try the native app first; if nothing opens within ~1.5s, fall back to the website.
+    const timer = setTimeout(() => {
+      window.open(p.appUrl, "_blank", "noopener,noreferrer");
+    }, 1500);
+    const cancel = () => clearTimeout(timer);
+    window.addEventListener("pagehide", cancel, { once: true });
+    document.addEventListener("visibilitychange", cancel, { once: true });
+    window.location.href = p.appScheme;
+    return;
+  }
+  window.open(p.appUrl, "_blank", "noopener,noreferrer");
+}
+
+function GuideStep({ n, text }: { n: number; text: string }) {
+  return (
+    <li className="flex gap-3">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{n}</span>
+      <span className="text-muted-foreground">{text}</span>
+    </li>
+  );
+}
+
 export function BridgeTopUpSheet({ open, onOpenChange, address }: {
   open: boolean; onOpenChange: (v: boolean) => void; address: string | null;
 }) {
