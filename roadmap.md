@@ -25,3 +25,10 @@
 - [ ] Save NECTARPAY_REWARDS_SECRET (blocked: user doing setup)
 - [ ] NectarPay-side build (blocked: other project)
 - [ ] On-chain reward tokens per store/market (later; ledger works without it)
+
+## NFC tap-to-pay cards
+- [x] /nfc test page: read card (Android Chrome), link, pockets at 1110'/0/N, balances, on/off, fund, lost
+- [ ] Server card service: encrypted per-card key, PIN, limits ($100/tap, $500/day) — next step
+- [ ] Telegram approvals over limits
+- [ ] NectarPay tap → pay endpoint (needs shared payment credential agreed with NectarPay)
+- [ ] Bobby: register 1110' "CryptoPOP NFC cards" in HME path list

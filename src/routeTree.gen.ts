@@ -18,6 +18,7 @@ import { Route as ManifestoRouteImport } from './routes/manifesto'
 import { Route as MerchantsRouteImport } from './routes/merchants'
 import { Route as MyPassRouteImport } from './routes/my-pass'
 import { Route as MyPopRouteImport } from './routes/my-pop'
+import { Route as NfcRouteImport } from './routes/nfc'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -93,6 +94,11 @@ const MyPassRoute = MyPassRouteImport.update({
 const MyPopRoute = MyPopRouteImport.update({
   id: '/my-pop',
   path: '/my-pop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NfcRoute = NfcRouteImport.update({
+  id: '/nfc',
+  path: '/nfc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/merchants': typeof MerchantsRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
+  '/nfc': typeof NfcRoute
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/merchants': typeof MerchantsRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
+  '/nfc': typeof NfcRoute
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -358,6 +366,7 @@ export interface FileRoutesById {
   '/merchants': typeof MerchantsRoute
   '/my-pass': typeof MyPassRoute
   '/my-pop': typeof MyPopRoute
+  '/nfc': typeof NfcRoute
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -402,6 +411,7 @@ export interface FileRouteTypes {
     | '/merchants'
     | '/my-pass'
     | '/my-pop'
+    | '/nfc'
     | '/privacy'
     | '/settings'
     | '/sitemap.xml'
@@ -444,6 +454,7 @@ export interface FileRouteTypes {
     | '/merchants'
     | '/my-pass'
     | '/my-pop'
+    | '/nfc'
     | '/privacy'
     | '/settings'
     | '/sitemap.xml'
@@ -487,6 +498,7 @@ export interface FileRouteTypes {
     | '/merchants'
     | '/my-pass'
     | '/my-pop'
+    | '/nfc'
     | '/privacy'
     | '/settings'
     | '/sitemap.xml'
@@ -531,6 +543,7 @@ export interface RootRouteChildren {
   MerchantsRoute: typeof MerchantsRoute
   MyPassRoute: typeof MyPassRoute
   MyPopRoute: typeof MyPopRoute
+  NfcRoute: typeof NfcRoute
   PrivacyRoute: typeof PrivacyRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -624,6 +637,13 @@ declare module '@tanstack/react-router' {
       path: '/my-pop'
       fullPath: '/my-pop'
       preLoaderRoute: typeof MyPopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nfc': {
+      id: '/nfc'
+      path: '/nfc'
+      fullPath: '/nfc'
+      preLoaderRoute: typeof NfcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -890,6 +910,7 @@ const rootRouteChildren: RootRouteChildren = {
   MerchantsRoute: MerchantsRoute,
   MyPassRoute: MyPassRoute,
   MyPopRoute: MyPopRoute,
+  NfcRoute: NfcRoute,
   PrivacyRoute: PrivacyRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS nectarpay_sync_state_read ON public.nectarpay_sync_state;
+CREATE POLICY nectarpay_sync_state_admin_read ON public.nectarpay_sync_state FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
