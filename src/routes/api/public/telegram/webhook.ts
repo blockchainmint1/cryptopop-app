@@ -34,11 +34,14 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
         const text: string = msg?.text ?? "";
         const code = /^\/start\s+(CP[A-Z0-9]{8})$/.exec(text.trim())?.[1];
         if (code && msg?.chat?.id) {
-          const { data } = await sb.from("nfc_cards").update({ tg_chat_id: String(msg.chat.id), tg_code: null })
-            .eq("tg_code", code).is("killed_at", null).select("label");
+          const { data } = await sb.from("nfc_wallet_telegram")
+            .update({ tg_chat_id: String(msg.chat.id), tg_code: null } as never)
+            .eq("tg_code", code).select("owner_address");
           await s.tg("sendMessage", {
             chat_id: msg.chat.id,
-            text: data?.length ? `You'll now get tap alerts and approvals for "${data[0].label}".` : "That code didn't match a card. Make a new one in CryptoPOP → NFC Cards.",
+            text: data?.length
+              ? "You're linked! You'll now get tap alerts and approvals for every card on your CryptoPOP wallet."
+              : "That code didn't match a wallet. Make a new one in CryptoPOP → NFC Cards.",
           });
         }
         return Response.json({ ok: true });

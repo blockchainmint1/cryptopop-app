@@ -129,6 +129,17 @@ function NfcPage() {
     }
   }
 
+  async function updateWallet(patch: Record<string, unknown>, ok?: string) {
+    if (!mnemonic) return;
+    try {
+      await updateFn({ data: ownerEnvelope(mnemonic, "update", patch) });
+      if (ok) toast.success(ok);
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Update failed");
+    }
+  }
+
   async function withdraw(c: CardRow) {
     if (!mnemonic || !address) return;
     const b = bals[c.index];
@@ -199,6 +210,36 @@ function NfcPage() {
         </Button>
       </Card>
 
+      {data && (
+        <Card className="space-y-2 p-4">
+          <h2 className="font-display text-2xl">Telegram alerts</h2>
+          <p className="text-xs text-muted-foreground">
+            One Telegram account for your whole wallet. Every card's taps and approval requests
+            (like "Jimmy wants to pay $48 at the football game") go to that chat.
+          </p>
+          {data.telegramLinked ? (
+            <div className="flex items-center justify-between text-xs">
+              <span>Telegram alerts on for all your cards</span>
+              <Button size="sm" variant="ghost" onClick={() => updateWallet({ clearTelegram: true }, "Telegram unlinked")}>Unlink</Button>
+            </div>
+          ) : data.telegramCode ? (
+            <div className="space-y-1 text-xs">
+              <p>Open Telegram and send this to the bot:</p>
+              {data.botName ? (
+                <a className="font-mono underline" href={`https://t.me/${data.botName}?start=${data.telegramCode}`} target="_blank" rel="noreferrer">
+                  Open @{data.botName} (code {data.telegramCode})
+                </a>
+              ) : (
+                <p className="font-mono">/start {data.telegramCode}</p>
+              )}
+              <Button size="sm" variant="ghost" onClick={refresh}>I've done it</Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => updateWallet({ newTelegramCode: true })}>Connect Telegram alerts</Button>
+          )}
+        </Card>
+      )}
+
       {data && data.cards.length === 0 && <p className="text-center text-sm text-muted-foreground">No cards yet.</p>}
 
       {data?.cards.map((c) => {
@@ -240,29 +281,6 @@ function NfcPage() {
                 </Button>
               </div>
             )}
-
-            <div className="rounded-md border border-border p-3 text-xs">
-              {c.telegramLinked ? (
-                <div className="flex items-center justify-between">
-                  <span>Telegram alerts on</span>
-                  <Button size="sm" variant="ghost" onClick={() => update(c, { clearTelegram: true }, "Telegram unlinked")}>Unlink</Button>
-                </div>
-              ) : c.telegramCode ? (
-                <div className="space-y-1">
-                  <p>Open Telegram and send this to the bot:</p>
-                  {data.botName ? (
-                    <a className="font-mono underline" href={`https://t.me/${data.botName}?start=${c.telegramCode}`} target="_blank" rel="noreferrer">
-                      Open @{data.botName} (code {c.telegramCode})
-                    </a>
-                  ) : (
-                    <p className="font-mono">/start {c.telegramCode}</p>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={refresh}>I've done it</Button>
-                </div>
-              ) : (
-                <Button size="sm" variant="outline" onClick={() => update(c, { newTelegramCode: true })}>Connect Telegram alerts</Button>
-              )}
-            </div>
 
             {c.locked && <Button size="sm" variant="outline" onClick={() => update(c, { unlock: true }, "Card unlocked")}>Unlock card</Button>}
 
