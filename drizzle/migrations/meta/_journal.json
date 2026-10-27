@@ -43,6 +43,13 @@
       "when": 1793097387591,
       "tag": "0005_audit_lock_signups_orgs",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793100700347,
+      "tag": "0006_nectarpay_directory_mirror",
+      "breakpoints": true
     }
   ]
 }

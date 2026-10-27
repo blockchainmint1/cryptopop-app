@@ -885,6 +885,126 @@ export type Database = {
           },
         ]
       }
+      nectarpay_stores: {
+        Row: {
+          accepts: string[]
+          category: string | null
+          city: string | null
+          country: string | null
+          description: string | null
+          first_seen_at: string
+          hours: string | null
+          id: string
+          is_active: boolean
+          last_seen_at: string
+          lat: number | null
+          listing: string
+          lng: number | null
+          logo_url: string | null
+          name: string | null
+          phone: string | null
+          pin_source: string | null
+          postal_code: string | null
+          presence: string
+          region: string | null
+          slug: string | null
+          source_updated_at: string | null
+          status: string
+          street: string | null
+          website: string | null
+        }
+        Insert: {
+          accepts?: string[]
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          description?: string | null
+          first_seen_at?: string
+          hours?: string | null
+          id: string
+          is_active?: boolean
+          last_seen_at?: string
+          lat?: number | null
+          listing?: string
+          lng?: number | null
+          logo_url?: string | null
+          name?: string | null
+          phone?: string | null
+          pin_source?: string | null
+          postal_code?: string | null
+          presence?: string
+          region?: string | null
+          slug?: string | null
+          source_updated_at?: string | null
+          status?: string
+          street?: string | null
+          website?: string | null
+        }
+        Update: {
+          accepts?: string[]
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          description?: string | null
+          first_seen_at?: string
+          hours?: string | null
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          lat?: number | null
+          listing?: string
+          lng?: number | null
+          logo_url?: string | null
+          name?: string | null
+          phone?: string | null
+          pin_source?: string | null
+          postal_code?: string | null
+          presence?: string
+          region?: string | null
+          slug?: string | null
+          source_updated_at?: string | null
+          status?: string
+          street?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      nectarpay_sync_state: {
+        Row: {
+          cursor: string | null
+          id: number
+          last_count: number | null
+          last_error: string | null
+          last_ok_at: string | null
+          last_removed: number | null
+          last_run_at: string | null
+          last_status: string
+          running_until: string | null
+        }
+        Insert: {
+          cursor?: string | null
+          id?: number
+          last_count?: number | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          last_removed?: number | null
+          last_run_at?: string | null
+          last_status?: string
+          running_until?: string | null
+        }
+        Update: {
+          cursor?: string | null
+          id?: number
+          last_count?: number | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          last_removed?: number | null
+          last_run_at?: string | null
+          last_status?: string
+          running_until?: string | null
+        }
+        Relationships: []
+      }
       onramp_orders: {
         Row: {
           account_mask: string | null
