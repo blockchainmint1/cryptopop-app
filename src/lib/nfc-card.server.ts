@@ -40,11 +40,28 @@ export function safeEqual(a: string, b: string): boolean {
 }
 
 /** Verify a partner request: hex HMAC-SHA256(secret, ts + "." + content), ±300s. */
+/** Short public fingerprint of the shared secret, so both apps can compare copies without revealing it. */
+async function secretPrint(secret: string): Promise<string> {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(secret)));
+  return hex.encode(d).slice(0, 8);
+}
+
 export async function verifyPartner(ts: string | null, sig: string | null, content: string): Promise<boolean> {
   const secret = process.env.NFC_PAY_SECRET;
-  if (!secret || !ts || !sig || !/^\d{9,11}$/.test(ts) || !/^[0-9a-f]{64}$/i.test(sig)) return false;
-  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false;
-  return safeEqual(await hmacHex(secret, `${ts}.${content}`), sig.toLowerCase());
+  const reject = async (why: string) => {
+    console.warn(`[card/pay] rejected: ${why}`, {
+      ts, sigLen: sig?.length ?? 0, bodyLen: content.length,
+      skewSec: ts && /^\d+$/.test(ts) ? Math.round(Date.now() / 1000 - Number(ts)) : null,
+      secretFp: secret ? await secretPrint(secret) : null, secretLen: secret?.length ?? 0,
+    });
+    return false;
+  };
+  if (!secret) return reject("NFC_PAY_SECRET missing on server");
+  if (!ts || !/^\d{9,11}$/.test(ts)) return reject("x-hme-timestamp missing or not unix seconds");
+  if (!sig || !/^[0-9a-f]{64}$/i.test(sig)) return reject("x-hme-signature missing or not 64 hex chars");
+  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return reject("timestamp more than 5 minutes off");
+  if (!safeEqual(await hmacHex(secret, `${ts}.${content}`), sig.toLowerCase())) return reject("signature mismatch (secret or signed text differs)");
+  return true;
 }
 
 async function aesKey(): Promise<CryptoKey> {
