@@ -9,8 +9,6 @@ import {
   Fingerprint,
   KeyRound,
   Loader2,
-  Mail,
-  MapPin,
   ScanLine,
   ShieldCheck,
   Sparkles,
@@ -28,11 +26,8 @@ import { createMnemonic, isValidMnemonic, normalizeMnemonic, type VaultOrigin } 
 import { enableBiometric, isBiometricAvailable } from "@/lib/native/biometric";
 import { nativePlatform } from "@/lib/native/platform";
 import { useServerFn } from "@tanstack/react-start";
-import { listMarkets, type MarketOption } from "@/lib/public-events.functions";
-import { claimWelcomePop, WELCOME_POP } from "@/lib/welcome.functions";
-import { openHmeLogin, hmeRef } from "@/lib/hme";
-import { supabase } from "@/integrations/supabase/client";
-import { loadRegion, regionForMarket, saveMarketSlug, saveRegion } from "@/lib/wallet/region";
+import { claimWelcomePop } from "@/lib/welcome.functions";
+import { hmeRef } from "@/lib/hme";
 import { deriveTxcAddress } from "@/lib/wallet";
 import logo from "@/assets/cryptopop-logo.png";
 
@@ -43,8 +38,7 @@ type Step =
   | "seed-confirm"
   | "import"
   | "cloud"
-  | "password"
-  | "welcome";
+  | "password";
 
 const COIN_RULES = [
   "My Cold Storage Coin is my only backup. If I lose it, this wallet is gone forever.",
