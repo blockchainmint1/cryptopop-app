@@ -415,92 +415,15 @@ export function OnboardScreen() {
               )}
               <Button
                 className="h-12 w-full rounded-full"
-                onClick={() => {
-                  if (pass1.length < 8) return toast.error("Password must be at least 8 characters");
-                  if (pass1 !== pass2) return toast.error("Passwords do not match");
-                  setStep("welcome");
-                }}
+                onClick={handleCreate}
+                disabled={busy}
               >
-                <ShieldCheck className="mr-1.5 h-4 w-4" /> Continue
-              </Button>
-            </div>
-          )}
-
-          {step === "welcome" && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold uppercase">Where do you POP?</h2>
-              <p className="text-sm text-muted-foreground">
-                Pick your market so you see the right events, merchants and points token.
-              </p>
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5" /> POP market
-                </label>
-                <select
-                  value={marketSlug}
-                  onChange={(e) => setMarketSlug(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-white/12 bg-black/30 px-3 text-sm"
-                >
-                  {markets.length === 0 && <option value="">Loading markets…</option>}
-                  {markets.map((m) => (
-                    <option key={m.slug} value={m.slug} className="bg-background">
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-12 w-full rounded-full"
-                disabled={hmeSignedIn}
-                onClick={() => openHmeLogin()}
-              >
-                {hmeSignedIn ? (
-                  <Check className="mr-1.5 h-4 w-4" />
-                ) : (
-                  <KeyRound className="mr-1.5 h-4 w-4" />
-                )}
-                {hmeSignedIn ? "Signed in with Honest Money" : "Use my Honest Money account"}
-              </Button>
-              {hmeSignedIn && (
-                <p className="text-xs text-muted-foreground">
-                  Using {email || "your Honest Money email"} for the welcome POP — or type a
-                  different one below.
-                </p>
-              )}
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-muted-foreground">
-                  <Mail className="h-3.5 w-3.5" /> Email (optional)
-                </label>
-                <Input
-                  type="email"
-                  inputMode="email"
-                  autoCapitalize="none"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Add it and we'll drop {WELCOME_POP} POP into this wallet to get you started, and
-                  match you to events you RSVP for. Skip it and your wallet stays fully anonymous —
-                  we never email your keys, and we can't recover them.
-                </p>
-              </div>
-
-              <Button className="h-12 w-full rounded-full" onClick={handleCreate} disabled={busy}>
                 {busy ? (
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                 ) : (
                   <ShieldCheck className="mr-1.5 h-4 w-4" />
                 )}
                 {busy ? "Creating wallet…" : "Create wallet"}
-              </Button>
-              <Button variant="ghost" className="w-full" onClick={() => setStep("password")}>
-                <ArrowLeft className="mr-1 h-4 w-4" /> Back
               </Button>
             </div>
           )}
