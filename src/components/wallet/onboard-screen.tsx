@@ -9,8 +9,6 @@ import {
   Fingerprint,
   KeyRound,
   Loader2,
-  Mail,
-  MapPin,
   ScanLine,
   ShieldCheck,
   Sparkles,
@@ -28,11 +26,8 @@ import { createMnemonic, isValidMnemonic, normalizeMnemonic, type VaultOrigin } 
 import { enableBiometric, isBiometricAvailable } from "@/lib/native/biometric";
 import { nativePlatform } from "@/lib/native/platform";
 import { useServerFn } from "@tanstack/react-start";
-import { listMarkets, type MarketOption } from "@/lib/public-events.functions";
-import { claimWelcomePop, WELCOME_POP } from "@/lib/welcome.functions";
-import { openHmeLogin, hmeRef } from "@/lib/hme";
-import { supabase } from "@/integrations/supabase/client";
-import { loadRegion, regionForMarket, saveMarketSlug, saveRegion } from "@/lib/wallet/region";
+import { claimWelcomePop } from "@/lib/welcome.functions";
+import { hmeRef } from "@/lib/hme";
 import { deriveTxcAddress } from "@/lib/wallet";
 import logo from "@/assets/cryptopop-logo.png";
 
@@ -43,8 +38,7 @@ type Step =
   | "seed-confirm"
   | "import"
   | "cloud"
-  | "password"
-  | "welcome";
+  | "password";
 
 const COIN_RULES = [
   "My Cold Storage Coin is my only backup. If I lose it, this wallet is gone forever.",
@@ -71,33 +65,6 @@ export function OnboardScreen() {
     }
   }, []);
 
-  // Honest Money SSO: prefill the email step with the member's account email.
-  // The /sso popup posts "hme-sso-done" back here once the session is set.
-  useEffect(() => {
-    let alive = true;
-    const grab = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const mail = data.session?.user?.email;
-        if (alive && mail) {
-          setEmail((cur) => cur || mail);
-          setHmeSignedIn(true);
-        }
-      } catch {
-        /* ignore */
-      }
-    };
-    void grab();
-    const onMessage = (e: MessageEvent) => {
-      if (e.origin !== window.location.origin) return;
-      if ((e.data as { type?: string } | null)?.type === "hme-sso-done") void grab();
-    };
-    window.addEventListener("message", onMessage);
-    return () => {
-      alive = false;
-      window.removeEventListener("message", onMessage);
-    };
-  }, []);
   const [origin, setOrigin] = useState<VaultOrigin>("coin");
   const [mnemonic, setMnemonic] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
@@ -111,33 +78,8 @@ export function OnboardScreen() {
   const [copied, setCopied] = useState(false);
   const [confirmIdx] = useState(() => Math.floor(Math.random() * 12));
   const [confirmWord, setConfirmWord] = useState("");
-  const [markets, setMarkets] = useState<MarketOption[]>([]);
-  const [marketSlug, setMarketSlug] = useState("");
-  const [email, setEmail] = useState("");
-  const [hmeSignedIn, setHmeSignedIn] = useState(false);
 
-  const fetchMarkets = useServerFn(listMarkets);
   const claimWelcome = useServerFn(claimWelcomePop);
-
-  // Pull the market catalog once; preselect the one matching the detected region.
-  useEffect(() => {
-    let alive = true;
-    void fetchMarkets()
-      .then((rows) => {
-        if (!alive || !rows?.length) return;
-        setMarkets(rows);
-        const detected = loadRegion();
-        const match =
-          rows.find((m) => regionForMarket(m.country, m.slug) === detected) ?? rows[0];
-        setMarketSlug((cur) => cur || match.slug);
-      })
-      .catch(() => {
-        /* offline — market step falls back to skip */
-      });
-    return () => {
-      alive = false;
-    };
-  }, [fetchMarkets]);
 
   const words = useMemo(() => (mnemonic ? mnemonic.split(" ") : []), [mnemonic]);
 
@@ -197,31 +139,22 @@ export function OnboardScreen() {
           toast.message("Biometric unlock wasn't enabled — you can turn it on in settings.");
         }
       }
-      // Remember the chosen market (and the points token that goes with it).
-      const picked = markets.find((m) => m.slug === marketSlug);
-      if (picked) {
-        saveMarketSlug(picked.slug);
-        saveRegion(regionForMarket(picked.country, picked.slug));
-      }
 
-      // Register the wallet with the hub (CRM + welcome grant). Runs with or
-      // without an email — no email means an anonymous activation, no grant.
-      const cleanEmail = email.trim().toLowerCase();
+      // Register the wallet with the hub (anonymous activation — no email or
+      // market is collected during onboarding; both can be added later in
+      // Settings). Best-effort: never block wallet creation.
       try {
         const address = deriveTxcAddress(mnemonic);
         const plat = nativePlatform();
-        const res = await claimWelcome({
+        await claimWelcome({
           data: {
             address,
-            email: cleanEmail || null,
-            market: picked?.slug ?? null,
+            email: null,
+            market: null,
             client: `wallet-${plat}`,
             ref: hmeRef(),
           },
         });
-        if (res.awarded) toast.success(`Welcome — ${res.amount} POP is on its way`);
-        else if (res.reason === "duplicate")
-          toast.message("This wallet or email already claimed its welcome POP");
       } catch {
         /* activation is best-effort — never block wallet creation */
       }
@@ -229,7 +162,6 @@ export function OnboardScreen() {
       setMnemonic("");
       setPass1("");
       setPass2("");
-      setEmail("");
       toast.success("Your wallet is ready");
     } catch (e) {
       toast.error((e as Error).message);
@@ -483,92 +415,15 @@ export function OnboardScreen() {
               )}
               <Button
                 className="h-12 w-full rounded-full"
-                onClick={() => {
-                  if (pass1.length < 8) return toast.error("Password must be at least 8 characters");
-                  if (pass1 !== pass2) return toast.error("Passwords do not match");
-                  setStep("welcome");
-                }}
+                onClick={handleCreate}
+                disabled={busy}
               >
-                <ShieldCheck className="mr-1.5 h-4 w-4" /> Continue
-              </Button>
-            </div>
-          )}
-
-          {step === "welcome" && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold uppercase">Where do you POP?</h2>
-              <p className="text-sm text-muted-foreground">
-                Pick your market so you see the right events, merchants and points token.
-              </p>
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5" /> POP market
-                </label>
-                <select
-                  value={marketSlug}
-                  onChange={(e) => setMarketSlug(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-white/12 bg-black/30 px-3 text-sm"
-                >
-                  {markets.length === 0 && <option value="">Loading markets…</option>}
-                  {markets.map((m) => (
-                    <option key={m.slug} value={m.slug} className="bg-background">
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-12 w-full rounded-full"
-                disabled={hmeSignedIn}
-                onClick={() => openHmeLogin()}
-              >
-                {hmeSignedIn ? (
-                  <Check className="mr-1.5 h-4 w-4" />
-                ) : (
-                  <KeyRound className="mr-1.5 h-4 w-4" />
-                )}
-                {hmeSignedIn ? "Signed in with Honest Money" : "Use my Honest Money account"}
-              </Button>
-              {hmeSignedIn && (
-                <p className="text-xs text-muted-foreground">
-                  Using {email || "your Honest Money email"} for the welcome POP — or type a
-                  different one below.
-                </p>
-              )}
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-muted-foreground">
-                  <Mail className="h-3.5 w-3.5" /> Email (optional)
-                </label>
-                <Input
-                  type="email"
-                  inputMode="email"
-                  autoCapitalize="none"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Add it and we'll drop {WELCOME_POP} POP into this wallet to get you started, and
-                  match you to events you RSVP for. Skip it and your wallet stays fully anonymous —
-                  we never email your keys, and we can't recover them.
-                </p>
-              </div>
-
-              <Button className="h-12 w-full rounded-full" onClick={handleCreate} disabled={busy}>
                 {busy ? (
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                 ) : (
                   <ShieldCheck className="mr-1.5 h-4 w-4" />
                 )}
                 {busy ? "Creating wallet…" : "Create wallet"}
-              </Button>
-              <Button variant="ghost" className="w-full" onClick={() => setStep("password")}>
-                <ArrowLeft className="mr-1 h-4 w-4" /> Back
               </Button>
             </div>
           )}
