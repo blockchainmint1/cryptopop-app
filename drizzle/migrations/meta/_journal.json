@@ -36,6 +36,13 @@
       "when": 1792831414631,
       "tag": "0004_durable_checkin_award_entitlements",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793097387591,
+      "tag": "0005_audit_lock_signups_orgs",
+      "breakpoints": true
     }
   ]
 }
