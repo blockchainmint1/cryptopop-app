@@ -721,6 +721,130 @@ export type Database = {
           },
         ]
       }
+      game_plays: {
+        Row: {
+          answers: Json
+          created_at: string
+          email: string
+          finished: boolean
+          game_key: string
+          id: string
+          pop_awarded: number
+          puzzle_date: string
+          score: number
+          solved: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          email?: string
+          finished?: boolean
+          game_key: string
+          id?: string
+          pop_awarded?: number
+          puzzle_date: string
+          score?: number
+          solved?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          email?: string
+          finished?: boolean
+          game_key?: string
+          id?: string
+          pop_awarded?: number
+          puzzle_date?: string
+          score?: number
+          solved?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_plays_game_key_fkey"
+            columns: ["game_key"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      game_puzzles: {
+        Row: {
+          created_at: string
+          game_key: string
+          id: string
+          payload: Json
+          puzzle_date: string
+          solution: Json
+        }
+        Insert: {
+          created_at?: string
+          game_key: string
+          id?: string
+          payload?: Json
+          puzzle_date: string
+          solution?: Json
+        }
+        Update: {
+          created_at?: string
+          game_key?: string
+          id?: string
+          payload?: Json
+          puzzle_date?: string
+          solution?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_puzzles_game_key_fkey"
+            columns: ["game_key"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          daily_cap_pop: number
+          enabled: boolean
+          key: string
+          kind: string
+          pop_reward: number
+          settings: Json
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          daily_cap_pop?: number
+          enabled?: boolean
+          key: string
+          kind?: string
+          pop_reward?: number
+          settings?: Json
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          daily_cap_pop?: number
+          enabled?: boolean
+          key?: string
+          kind?: string
+          pop_reward?: number
+          settings?: Json
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hme_member_identities: {
         Row: {
           created_at: string
@@ -1943,6 +2067,45 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      trivia_bank: {
+        Row: {
+          answer: number
+          category: string
+          created_at: string
+          difficulty: number
+          id: string
+          options: Json
+          q: string
+          source: string
+          status: string
+          used_on: string | null
+        }
+        Insert: {
+          answer: number
+          category: string
+          created_at?: string
+          difficulty?: number
+          id?: string
+          options: Json
+          q: string
+          source?: string
+          status?: string
+          used_on?: string | null
+        }
+        Update: {
+          answer?: number
+          category?: string
+          created_at?: string
+          difficulty?: number
+          id?: string
+          options?: Json
+          q?: string
+          source?: string
+          status?: string
+          used_on?: string | null
         }
         Relationships: []
       }
