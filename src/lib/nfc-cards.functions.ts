@@ -26,7 +26,7 @@ const LinkBody = z.object({
   returnAddress: Addr,
 });
 const UpdateBody = z.object({
-  id: z.string().uuid(),
+  id: z.string().uuid().optional(),
   label: z.string().trim().min(1).max(40).optional(),
   enabled: z.boolean().optional(),
   pin: z.string().regex(/^\d{4,8}$/).optional(),

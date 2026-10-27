@@ -165,7 +165,7 @@ export async function executePayment(paymentId: string): Promise<{ status: strin
     key.fill(0);
     const txid = await broadcastRaw(tx.hex);
     await sb.from("nfc_card_payments").update({ status: "sent", txid }).eq("id", paymentId);
-    await notify(c.tg_chat_id, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.`);
+    await notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.`);
     return { status: "sent", txid };
   } catch (e) {
     console.error("[nfc pay]", e);
