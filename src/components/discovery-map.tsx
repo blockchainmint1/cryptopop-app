@@ -26,10 +26,13 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   { elementType: "labels.text.fill", stylers: [{ color: "#9a9dac" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#08080f" }] },
   { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  // District and neighborhood names (OAK LAWN, DESIGN DISTRICT…) crowd out the pins.
+  { featureType: "administrative.neighborhood", stylers: [{ visibility: "off" }] },
+  // Street names and highway shields: the merchant and event pins are what matter here.
+  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "road", elementType: "geometry", stylers: [{ color: "#1b1b27" }] },
   { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2b2434" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#6d7080" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#070711" }] },
 ];
