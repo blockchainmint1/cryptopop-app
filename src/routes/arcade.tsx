@@ -120,7 +120,7 @@ function ArcadePage() {
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <h1 className="font-display text-2xl uppercase tracking-wide">
-          pts <span className="text-neon-lime">Arcade</span>
+          POP <span className="text-neon-lime">Arcade</span>
         </h1>
       </header>
 

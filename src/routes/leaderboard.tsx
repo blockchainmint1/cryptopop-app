@@ -11,7 +11,7 @@ import {
   ShoppingBag,
   Trophy,
   Users,
-  Gamepad2,
+  Gamepad,
 } from "lucide-react";
 import { toast } from "sonner";
 import coin from "@/assets/cryptopop-coin.png";
@@ -293,7 +293,7 @@ function PopPage() {
           <Link to="/arcade" search={{ game: undefined }} className="mt-2 block">
             <Card className="flex items-center gap-4 border-white/12 bg-white/5 p-4 transition hover:bg-white/10">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <Gamepad2 className="h-5 w-5" />
+                <Gamepad className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-display text-base font-semibold uppercase tracking-wide">
