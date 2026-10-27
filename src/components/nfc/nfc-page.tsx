@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight, CreditCard } from "lucide-react";
+import { ArrowLeft, Camera, ChevronRight, CreditCard } from "lucide-react";
+import { QrScanDialog } from "@/components/wallet/qr-scan-dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ export function NfcPage({ cardId }: { cardId?: string }) {
   const [data, setData] = useState<ListRes | null>(null);
   const [bals, setBals] = useState<Record<number, Bal>>({});
   const [uid, setUid] = useState("");
+  const [qrOpen, setQrOpen] = useState(false);
   const [label, setLabel] = useState("");
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
@@ -333,13 +335,31 @@ export function NfcPage({ cardId }: { cardId?: string }) {
           <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
             <p className="text-sm font-medium">This device can't read cards directly</p>
             <p className="text-xs text-muted-foreground">
-              iPhones can't read NFC cards in a web browser. Type the card's ID below instead — you can
-              read it with the POP Wallet app on an Android phone, or tap the card at a NectarPay terminal
-              to see its ID.
+              iPhones can't read NFC cards in a web browser. Type the card's UID below, or tap the camera to scan a QR code of it — e.g. read the card
+              with an NFC inspector on the terminal and show its UID as a QR.
             </p>
           </div>
         )}
-        <Input placeholder={nfcOk ? "Card ID" : "Card ID (type it in)"} value={uid} onChange={(e) => setUid(e.target.value)} />
+        <div className="flex gap-2">
+          <Input placeholder={nfcOk ? "Card ID" : "Card ID (type or scan)"} value={uid} onChange={(e) => setUid(e.target.value)} />
+          <Button type="button" variant="outline" size="icon" aria-label="Scan card ID QR code" onClick={() => setQrOpen(true)}>
+            <Camera className="h-4 w-4" />
+          </Button>
+        </div>
+        <QrScanDialog
+          open={qrOpen}
+          onOpenChange={setQrOpen}
+          title="Scan card ID"
+          description="Scan a QR code of the card's UID (e.g. 04:A2:3B:1C:5D:80:00)."
+          onResult={(text) => {
+            const m = text.match(/uid[=:]\s*([0-9A-Fa-f:\s-]+)/i);
+            const id = normalizeUid(m ? m[1] : text);
+            setQrOpen(false);
+            if (!/^[0-9A-F]{8,20}$/.test(id)) { toast.error("That QR doesn't look like a card ID"); return; }
+            setUid(id);
+            toast.success("Card ID filled in");
+          }}
+        />
         <Input placeholder="Name (e.g. Blue card)" maxLength={40} value={label} onChange={(e) => setLabel(e.target.value)} />
         <Input placeholder="Card PIN (4–8 digits)" inputMode="numeric" type="password" autoComplete="off" maxLength={8}
           value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
