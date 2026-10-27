@@ -151,14 +151,25 @@ function NfcPage() {
     if (!window.confirm(`Send ${tsd ? `${tsd} TSD` : ""}${tsd && txc ? " and " : ""}${txc ? `${txc} TXC` : ""} from your wallet to “${c.label}”?`)) return;
     setFunding(true);
     try {
-      for (const [asset, amount] of [["tsd", tsd], ["txc", txc]] as const) {
-        if (!amount) continue;
-        const intent = { asset, from: address, to: c.address, amount };
+      if (tsd > 0 && txc > 0) {
+        // One transaction carries both the TSD and the TXC — a second send
+        // right after the first would collide with it in the mempool.
+        const intent = { asset: "tsd" as const, from: address, to: c.address, amount: tsd, txcAmount: txc };
         const built = await prep({ data: intent });
         const raw = signPsbt(built.psbtBase64, mnemonic, intent);
         const r = await bcast({ data: { rawHex: raw } });
-        if (!r.ok) throw new Error(`${asset.toUpperCase()}: ${r.error}`);
-        toast.success(`${amount} ${asset.toUpperCase()} sent to ${c.label}`);
+        if (!r.ok) throw new Error(r.error);
+        toast.success(`${tsd} TSD and ${txc} TXC sent to ${c.label}`);
+      } else {
+        for (const [asset, amount] of [["tsd", tsd], ["txc", txc]] as const) {
+          if (!amount) continue;
+          const intent = { asset, from: address, to: c.address, amount };
+          const built = await prep({ data: intent });
+          const raw = signPsbt(built.psbtBase64, mnemonic, intent);
+          const r = await bcast({ data: { rawHex: raw } });
+          if (!r.ok) throw new Error(`${asset.toUpperCase()}: ${r.error}`);
+          toast.success(`${amount} ${asset.toUpperCase()} sent to ${c.label}`);
+        }
       }
       setFundIdx(null);
       setTimeout(() => void refresh(), 4000);

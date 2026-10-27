@@ -2,7 +2,14 @@ import { base64, createBase58check } from "@scure/base";
 import { sha256 } from "@noble/hashes/sha256";
 import { Transaction, RawTx } from "@scure/btc-signer";
 
-export type SendIntent = { asset: "tsd" | "txc"; from: string; to: string; amount: number };
+export type SendIntent = {
+  asset: "tsd" | "txc";
+  from: string;
+  to: string;
+  amount: number;
+  /** Extra TXC delivered to the same recipient inside a TSD send (one tx, no mempool conflict). */
+  txcAmount?: number;
+};
 export const MAX_SEND_FEE_SATS = 1_000_000; // 0.01 TXC, never set by the server
 const check = createBase58check(sha256);
 const equal = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
@@ -56,7 +63,15 @@ export function validateSend(psbt: string, intent: SendIntent, ownedAddresses: s
       throw new Error("The transaction spends coins that are not yours");
     inputTotal += prev.amount;
   }
-  const recipientAmount = intent.asset === "tsd" ? 10_000n : BigInt(Math.round(intent.amount * 1e8));
+  let txcSats = 0n;
+  if (intent.txcAmount !== undefined) {
+    if (intent.asset !== "tsd") throw new Error("Extra TXC can only ride along with a TSD send");
+    if (!Number.isFinite(intent.txcAmount) || intent.txcAmount <= 0) throw new Error("Invalid TXC amount");
+    if (Math.abs(intent.txcAmount * 1e8 - Math.round(intent.txcAmount * 1e8)) > 1e-6)
+      throw new Error("TXC amounts must use at most eight decimal places");
+    txcSats = BigInt(Math.round(intent.txcAmount * 1e8));
+  }
+  const recipientAmount = intent.asset === "tsd" ? 10_000n + txcSats : BigInt(Math.round(intent.amount * 1e8));
   if (recipientAmount < 10_000n) throw new Error("Payment is below the network minimum");
   if (intent.asset === "txc" && Math.abs(intent.amount * 1e8 - Math.round(intent.amount * 1e8)) > 1e-6)
     throw new Error("TXC amounts must use at most eight decimal places");
