@@ -40,6 +40,8 @@ export type NectarMerchant = {
   lng: number;
   logoUrl: string | null;
   website: string | null;
+  /** Sells online (no walk-in storefront). */
+  online?: boolean;
 };
 
 export const PAID_STATUSES = ["paid", "confirmed", "overpaid", "completed", "settled"];

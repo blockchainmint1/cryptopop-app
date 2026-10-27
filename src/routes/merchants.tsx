@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Globe, List, Map as MapIcon, MapPin, Store } from "lucide-react";
+import { ArrowLeft, Globe, SlidersHorizontal, List, Map as MapIcon, MapPin, Store } from "lucide-react";
 import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { listNectarMerchants } from "@/lib/nectarpay.functions";
+import { geocodeZip } from "@/lib/public-events.functions";
 import type { NectarMerchant } from "@/lib/nectarpay";
 import { loadGoogleMaps } from "@/lib/google-maps";
 
@@ -46,6 +47,32 @@ function MerchantsPage() {
   });
   const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
   const [view, setView] = useState<"list" | "map">("list");
+  const [showOnline, setShowOnline] = useState(true);
+  const [category, setCategory] = useState("all");
+  const [radiusMi, setRadiusMi] = useState(0); // 0 = any distance
+  const [zip, setZip] = useState("");
+  const [zipPoint, setZipPoint] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [zipErr, setZipErr] = useState<string | null>(null);
+  const [zipBusy, setZipBusy] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const lookupZip = useServerFn(geocodeZip);
+
+  async function applyZip() {
+    setZipErr(null);
+    if (!zip.trim()) {
+      setZipPoint(null);
+      return;
+    }
+    setZipBusy(true);
+    try {
+      setZipPoint(await lookupZip({ data: { zip: zip.trim() } }));
+      if (!radiusMi) setRadiusMi(25);
+    } catch (e) {
+      setZipErr(e instanceof Error ? e.message : "Couldn't find that ZIP code");
+    } finally {
+      setZipBusy(false);
+    }
+  }
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -55,14 +82,27 @@ function MerchantsPage() {
     );
   }, []);
 
+  const origin = zipPoint ?? me;
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of data?.merchants ?? []) set.add(m.category || "Other");
+    return [...set].sort();
+  }, [data]);
+  const allCount = data?.merchants.length ?? 0;
   const merchants = useMemo(() => {
-    const list = (data?.merchants ?? []).map((m) => ({
+    let list = (data?.merchants ?? []).map((m) => ({
       ...m,
-      km: me ? distanceKm(me, m) : null,
+      km: origin ? distanceKm(origin, m) : null,
     }));
-    if (me) list.sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
+    if (!showOnline) list = list.filter((m) => !m.online);
+    if (category !== "all") list = list.filter((m) => (m.category || "Other") === category);
+    if (radiusMi > 0 && origin)
+      list = list.filter((m) => m.online || (m.km ?? 0) * 0.621 <= radiusMi);
+    if (origin) list.sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
     return list;
-  }, [data, me]);
+  }, [data, origin, showOnline, category, radiusMi]);
+  const activeFilters =
+    (showOnline ? 0 : 1) + (category !== "all" ? 1 : 0) + (radiusMi > 0 ? 1 : 0) + (zipPoint ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -96,8 +136,119 @@ function MerchantsPage() {
           on your wallet home and earn POP on every purchase.
         </p>
 
+        <div className="rounded-2xl border border-border bg-card">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((o) => !o)}
+            className="flex w-full items-center gap-2 px-4 py-3 text-left"
+            aria-expanded={filtersOpen}
+          >
+            <SlidersHorizontal className="h-4 w-4 text-primary" />
+            <span className="flex-1 font-mono text-xs uppercase tracking-wider">
+              Filters{activeFilters ? ` · ${activeFilters} on` : ""}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {merchants.length} of {allCount} stores
+            </span>
+          </button>
+          {filtersOpen && (
+            <div className="space-y-4 border-t border-border px-4 py-4">
+              <label className="flex items-center justify-between gap-3 text-sm">
+                <span>Show online stores</span>
+                <input
+                  type="checkbox"
+                  checked={showOnline}
+                  onChange={(e) => setShowOnline(e.target.checked)}
+                  className="h-5 w-5 accent-[hsl(var(--primary))]"
+                />
+              </label>
+              <div className="space-y-1">
+                <label htmlFor="cat" className="font-mono text-[11px] uppercase text-muted-foreground">
+                  Category
+                </label>
+                <select
+                  id="cat"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All categories</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="zip" className="font-mono text-[11px] uppercase text-muted-foreground">
+                  ZIP code {me && !zipPoint ? "(using your location)" : ""}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="zip"
+                    inputMode="numeric"
+                    maxLength={5}
+                    placeholder="e.g. 75069"
+                    value={zip}
+                    onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
+                    onKeyDown={(e) => e.key === "Enter" && applyZip()}
+                    className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyZip}
+                    disabled={zipBusy}
+                    className="rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                  >
+                    {zipBusy ? "…" : "Set"}
+                  </button>
+                  {zipPoint && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setZip("");
+                        setZipPoint(null);
+                      }}
+                      className="rounded-xl border border-border px-3 text-sm text-muted-foreground"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                {zipPoint && <p className="text-xs text-muted-foreground">Near {zipPoint.label}</p>}
+                {zipErr && <p className="text-xs text-destructive">{zipErr}</p>}
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between font-mono text-[11px] uppercase text-muted-foreground">
+                  <span>Distance</span>
+                  <span className="text-foreground">{radiusMi ? `Within ${radiusMi} mi` : "Any distance"}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={radiusMi}
+                  disabled={!origin}
+                  onChange={(e) => setRadiusMi(Number(e.target.value))}
+                  className="w-full accent-[hsl(var(--primary))] disabled:opacity-40"
+                  aria-label="Distance limit in miles"
+                />
+                {!origin && (
+                  <p className="text-xs text-muted-foreground">Enter a ZIP code or allow location to limit by distance.</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading stores…</p>
+        ) : data?.available && allCount > 0 && merchants.length === 0 ? (
+          <p className="rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            No stores match these filters. Try a wider distance or another category.
+          </p>
         ) : !data?.available || merchants.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-6 text-center">
             <Store className="mx-auto h-8 w-8 text-primary" />
@@ -122,8 +273,8 @@ function MerchantsPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-display text-base font-semibold uppercase">{m.name}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {[m.category, m.city].filter(Boolean).join(" · ")}
-                  {m.km != null && ` · ${(m.km * 0.621).toFixed(1)} mi`}
+                  {[m.online ? "Online" : null, m.category, m.city].filter(Boolean).join(" · ")}
+                  {m.km != null && !m.online && ` · ${(m.km * 0.621).toFixed(1)} mi`}
                 </p>
               </div>
               <a

@@ -147,7 +147,7 @@ export const listNectarMerchants = createServerFn({ method: "GET" }).handler(
       const read = async () => {
         const { data, error } = await supabaseAdmin
           .from("nectarpay_stores")
-          .select("id, name, category, city, region, country, street, lat, lng, logo_url, website")
+          .select("id, name, category, city, region, country, street, lat, lng, logo_url, website, presence")
           .eq("is_active", true)
           .contains("accepts", ["TSD"])
           .not("name", "is", null)
@@ -177,6 +177,7 @@ export const listNectarMerchants = createServerFn({ method: "GET" }).handler(
           lng: Number(r.lng),
           logoUrl: r.logo_url ?? null,
           website: r.website ?? null,
+          online: r.presence === "online",
         }))
         .filter((m) => m.id && Number.isFinite(m.lat) && Number.isFinite(m.lng));
 
