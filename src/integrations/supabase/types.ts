@@ -1100,8 +1100,6 @@ export type Database = {
           pocket_address: string
           pocket_index: number
           return_address: string
-          tg_chat_id: string | null
-          tg_code: string | null
           uid_hash: string
           uid_hint: string
           updated_at: string
@@ -1121,8 +1119,6 @@ export type Database = {
           pocket_address: string
           pocket_index: number
           return_address: string
-          tg_chat_id?: string | null
-          tg_code?: string | null
           uid_hash: string
           uid_hint: string
           updated_at?: string
@@ -1142,10 +1138,32 @@ export type Database = {
           pocket_address?: string
           pocket_index?: number
           return_address?: string
-          tg_chat_id?: string | null
-          tg_code?: string | null
           uid_hash?: string
           uid_hint?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      nfc_wallet_telegram: {
+        Row: {
+          created_at: string
+          owner_address: string
+          tg_chat_id: string | null
+          tg_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          owner_address: string
+          tg_chat_id?: string | null
+          tg_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          owner_address?: string
+          tg_chat_id?: string | null
+          tg_code?: string | null
           updated_at?: string
         }
         Relationships: []
