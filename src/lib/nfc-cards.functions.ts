@@ -106,7 +106,8 @@ export const nfcUpdateCard = createServerFn({ method: "POST" })
     const b = await open(data, "update", UpdateBody);
     const s = await import("./nfc-card.server");
     const sb = await s.admin();
-    const patch: Record<string, unknown> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patch: Record<string, any> = {};
     if (b.label !== undefined) patch.label = b.label;
     if (b.enabled !== undefined) patch.enabled = b.enabled;
     if (b.perTapUsd !== undefined) patch.per_tap_usd = b.perTapUsd;
@@ -121,7 +122,7 @@ export const nfcUpdateCard = createServerFn({ method: "POST" })
       patch.tg_code = "CP" + Array.from(r, (x) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x % 32]).join("");
     }
     if (b.clearTelegram) Object.assign(patch, { tg_chat_id: null, tg_code: null });
-    const { data: rows } = await sb.from("nfc_cards").update(patch)
+    const { data: rows } = await sb.from("nfc_cards").update(patch as never)
       .eq("id", b.id).eq("owner_address", data.owner).is("killed_at", null).select("id");
     if (!rows?.length) throw new Error("Card not found");
     return { ok: true };

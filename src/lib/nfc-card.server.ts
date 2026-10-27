@@ -54,7 +54,7 @@ async function aesKey(): Promise<CryptoKey> {
 
 export async function encryptKey(keyHex: string): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await aesKey(), hex.decode(keyHex)));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await aesKey(), new Uint8Array(hex.decode(keyHex))));
   const out = new Uint8Array(12 + ct.length);
   out.set(iv);
   out.set(ct, 12);
@@ -73,7 +73,7 @@ export function addressOfKey(keyHex: string): string {
 export async function hashPin(pin: string, saltB64?: string): Promise<{ hash: string; salt: string }> {
   const salt = saltB64 ? base64.decode(saltB64) : crypto.getRandomValues(new Uint8Array(16));
   const k = await crypto.subtle.importKey("raw", enc.encode(pin), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 100_000 }, k, 256);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new Uint8Array(salt), iterations: 100_000 }, k, 256);
   return { hash: base64.encode(new Uint8Array(bits)), salt: base64.encode(salt) };
 }
 

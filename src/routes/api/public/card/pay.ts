@@ -62,7 +62,7 @@ export const Route = createFileRoute("/api/public/card/pay")({
           return json({ status: "declined", reason: "Invoice amount mismatch" });
 
         const { data: res, error } = await sb.rpc("nfc_reserve_payment", {
-          p_card: card.id, p_invoice: inv.id || input.invoice_id, p_merchant: inv.merchant?.name ?? null,
+          p_card: card.id, p_invoice: inv.id || input.invoice_id, p_merchant: inv.merchant?.name ?? "",
           p_usd: inv.fiatAmount, p_tsd: inv.tsdAmount, p_recipient: inv.address,
         });
         const row = res?.[0];
