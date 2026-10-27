@@ -47,7 +47,7 @@ export const Route = createFileRoute("/api/public/card/pay")({
           return json({ status: "declined", reason: (e as Error).message || "Invoice unavailable" });
         }
         // PIN only above the owner's per-card amount (0 = every tap).
-        if (inv.fiatAmount > Number(card.pin_above_usd ?? 0)) {
+        if (!(Number(inv.fiatAmount) <= Number(card.pin_above_usd ?? 0))) {
           if (!input.pin) return json({ status: "pin_required" });
           const { hash } = await s.hashPin(input.pin, card.pin_salt);
           const ok = s.safeEqual(hash, card.pin_hash);
