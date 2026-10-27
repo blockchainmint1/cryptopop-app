@@ -307,7 +307,12 @@ function NfcPage() {
                 <p className="font-mono text-xs text-muted-foreground">TXC for fees</p>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">Limits: ${c.perTapUsd} a tap · ${c.dailyUsd} a day without approval</p>
+            <LimitsEditor
+              perTap={c.perTapUsd}
+              daily={c.dailyUsd}
+              onSave={(perTapUsd, dailyUsd) => update(c, { perTapUsd, dailyUsd }, "Approval limits saved")}
+            />
+            <p className="text-xs text-muted-foreground">Every spend sends you a Telegram alert. Above these amounts, you approve it first.</p>
 
             {fundIdx === c.index && (
               <div className="space-y-2 rounded-md bg-muted p-3 text-center">
@@ -352,6 +357,35 @@ function NfcPage() {
           </Card>
         );
       })}
+    </div>
+  );
+}
+
+function LimitsEditor({ perTap, daily, onSave }: { perTap: number; daily: number; onSave: (p: number, d: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [p, setP] = useState(String(perTap));
+  const [d, setD] = useState(String(daily));
+  if (!open)
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">Ask me over ${perTap} a tap · ${daily} a day</p>
+        <Button size="sm" variant="ghost" onClick={() => { setP(String(perTap)); setD(String(daily)); setOpen(true); }}>Edit</Button>
+      </div>
+    );
+  const pn = Number(p), dn = Number(d);
+  const valid = p !== "" && d !== "" && Number.isFinite(pn) && Number.isFinite(dn) && pn >= 0 && dn >= 0;
+  return (
+    <div className="space-y-2 rounded-md bg-muted p-3">
+      <p className="font-mono text-xs uppercase text-muted-foreground">Ask for approval over</p>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs">$ per tap<Input inputMode="decimal" value={p} onChange={(e) => setP(e.target.value)} /></label>
+        <label className="text-xs">$ per day<Input inputMode="decimal" value={d} onChange={(e) => setD(e.target.value)} /></label>
+      </div>
+      <p className="text-xs text-muted-foreground">Set $0 to approve every spend.</p>
+      <div className="grid grid-cols-2 gap-2">
+        <Button size="sm" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button size="sm" disabled={!valid} onClick={() => { onSave(pn, dn); setOpen(false); }}>Save</Button>
+      </div>
     </div>
   );
 }
