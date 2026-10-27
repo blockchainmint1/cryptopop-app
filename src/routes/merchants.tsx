@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Globe, List, Map as MapIcon, MapPin, Store } from "lucide-react";
+import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { listNectarMerchants } from "@/lib/nectarpay.functions";
 import type { NectarMerchant } from "@/lib/nectarpay";
@@ -150,6 +151,8 @@ function MerchantsPage() {
         )}
       </main>
       <SiteFooter />
+      <BottomNavSpacer />
+      <BottomNav />
     </div>
   );
 }
