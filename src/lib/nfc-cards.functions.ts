@@ -78,8 +78,10 @@ export const nfcListCards = createServerFn({ method: "POST" })
     const s = await import("./nfc-card.server");
     const sb = await s.admin();
     const { data: cards } = await sb.from("nfc_cards")
-      .select("id,label,uid_hint,pocket_index,pocket_address,per_tap_usd,daily_usd,enabled,killed_at,pin_fails,tg_code,tg_chat_id,created_at")
+      .select("id,label,uid_hint,pocket_index,pocket_address,per_tap_usd,daily_usd,enabled,killed_at,pin_fails,created_at")
       .eq("owner_address", data.owner).order("pocket_index");
+    const { data: tgRow } = await sb.from("nfc_wallet_telegram")
+      .select("tg_code,tg_chat_id").eq("owner_address", data.owner).maybeSingle();
     const ids = (cards ?? []).map((c) => c.id);
     const { data: pays } = ids.length
       ? await sb.from("nfc_card_payments").select("id,card_id,merchant_name,amount_usd,status,reason,txid,created_at")
@@ -88,11 +90,13 @@ export const nfcListCards = createServerFn({ method: "POST" })
     const me = await s.tg("getMe", {});
     return {
       botName: (me?.result?.username as string | undefined) ?? null,
+      telegramCode: tgRow?.tg_code ?? null,
+      telegramLinked: !!tgRow?.tg_chat_id,
       usedIndices: (cards ?? []).map((c) => c.pocket_index),
       cards: (cards ?? []).filter((c) => !c.killed_at).map((c) => ({
         id: c.id, label: c.label, uidHint: c.uid_hint, index: c.pocket_index, address: c.pocket_address,
         perTapUsd: Number(c.per_tap_usd), dailyUsd: Number(c.daily_usd), enabled: c.enabled,
-        locked: c.pin_fails >= 5, telegramCode: c.tg_code, telegramLinked: !!c.tg_chat_id,
+        locked: c.pin_fails >= 5,
         payments: (pays ?? []).filter((p) => p.card_id === c.id).slice(0, 20).map((p) => ({
           id: p.id, merchant: p.merchant_name, usd: Number(p.amount_usd), status: p.status, reason: p.reason, txid: p.txid, at: p.created_at,
         })),
