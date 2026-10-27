@@ -139,31 +139,22 @@ export function OnboardScreen() {
           toast.message("Biometric unlock wasn't enabled — you can turn it on in settings.");
         }
       }
-      // Remember the chosen market (and the points token that goes with it).
-      const picked = markets.find((m) => m.slug === marketSlug);
-      if (picked) {
-        saveMarketSlug(picked.slug);
-        saveRegion(regionForMarket(picked.country, picked.slug));
-      }
 
-      // Register the wallet with the hub (CRM + welcome grant). Runs with or
-      // without an email — no email means an anonymous activation, no grant.
-      const cleanEmail = email.trim().toLowerCase();
+      // Register the wallet with the hub (anonymous activation — no email or
+      // market is collected during onboarding; both can be added later in
+      // Settings). Best-effort: never block wallet creation.
       try {
         const address = deriveTxcAddress(mnemonic);
         const plat = nativePlatform();
-        const res = await claimWelcome({
+        await claimWelcome({
           data: {
             address,
-            email: cleanEmail || null,
-            market: picked?.slug ?? null,
+            email: null,
+            market: null,
             client: `wallet-${plat}`,
             ref: hmeRef(),
           },
         });
-        if (res.awarded) toast.success(`Welcome — ${res.amount} POP is on its way`);
-        else if (res.reason === "duplicate")
-          toast.message("This wallet or email already claimed its welcome POP");
       } catch {
         /* activation is best-effort — never block wallet creation */
       }
@@ -171,7 +162,6 @@ export function OnboardScreen() {
       setMnemonic("");
       setPass1("");
       setPass2("");
-      setEmail("");
       toast.success("Your wallet is ready");
     } catch (e) {
       toast.error((e as Error).message);
