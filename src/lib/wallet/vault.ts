@@ -16,7 +16,7 @@ const BACKUP_KEY = "cryptopop.wallet.backed-up.v1";
 const LEGACY_MNEMONIC_KEY = "cryptopop:mnemonic";
 
 /** Idle time before the wallet auto-locks. */
-export const AUTO_LOCK_MS = 5 * 60 * 1000;
+export const AUTO_LOCK_MS = 10 * 60 * 1000;
 
 export type VaultOrigin = "coin" | "generated" | "imported";
 

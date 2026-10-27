@@ -112,7 +112,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       scheduleLock();
     };
 
-    const BACKGROUND_GRACE_MS = 15_000;
+    const BACKGROUND_GRACE_MS = 2 * 60_000;
     let bgTimer: ReturnType<typeof setTimeout> | null = null;
     const armBackgroundLock = () => {
       if (bgTimer) clearTimeout(bgTimer);
