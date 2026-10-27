@@ -76,7 +76,6 @@ export function rateLimitForPath(pathname: string, headers: Headers): Response |
     // key and fires from a datacenter IP, so it is exempt from IP limiting.
     if (pathname === "/lovable/email/queue/process") return null;
     rule = { limit: 120, windowMs: 60_000 };
-  }
   } else if (pathname.startsWith("/_serverFn")) {
     // Security audit H2: server-function RPCs (send prep, broadcast, chain
     // reads, backup relay) fan out to the node/explorer/partners.
