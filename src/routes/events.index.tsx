@@ -67,6 +67,11 @@ export const Route = createFileRoute("/events/")({
       context.queryClient.ensureQueryData(marketsQuery),
       context.queryClient.ensureQueryData(storesQuery),
     ]),
+  staleTime: 60_000,
+  gcTime: 5 * 60_000,
+  pendingMs: 150,
+  pendingMinMs: 300,
+  pendingComponent: EventsPending,
   head: () => ({
     meta: [
       { title: "Upcoming CryptoPOP Events — RSVP & Earn POP" },
