@@ -71,6 +71,13 @@
       "when": 1793102244622,
       "tag": "0009_lock_nectarpay_sync_state",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793103255374,
+      "tag": "0010_nfc_card_service",
+      "breakpoints": true
     }
   ]
 }
