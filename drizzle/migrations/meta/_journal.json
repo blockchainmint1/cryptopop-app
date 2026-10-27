@@ -64,6 +64,13 @@
       "when": 1793100934808,
       "tag": "0008_nectarpay_upsert_json_cast",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793102244622,
+      "tag": "0009_lock_nectarpay_sync_state",
+      "breakpoints": true
     }
   ]
 }
