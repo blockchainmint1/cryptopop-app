@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
@@ -59,9 +59,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { registerPushDevice, setPushEnabled } from "@/lib/push.functions";
 import { pushAvailable, pushPreference, registerPush, setPushPreference } from "@/lib/native/push";
-import { regionAssets, type AssetId, type RegionId } from "@/lib/wallet/assets";
+import { type AssetId } from "@/lib/wallet/assets";
 import { loadHiddenChains } from "@/lib/wallet/hidden-chains";
-import { loadRegion, loadMarketSlug, marketCode } from "@/lib/wallet/region";
+import { loadMarketSlug, marketCode } from "@/lib/wallet/region";
+
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { isEcosystemSite, loginSiteName } from "@/lib/ecosystem/hosts";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
@@ -104,6 +105,8 @@ export function WalletDashboard() {
   const [copied, setCopied] = useState(false);
 
   const [hidden, setHidden] = useState<ChainId[]>([]);
+  const [marketSlug, setMarketSlug] = useState<string | null>(null);
+
 
   const [showAllTx, setShowAllTx] = useState(false);
   const [txOpen, setTxOpen] = useState(true);
