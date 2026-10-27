@@ -130,6 +130,7 @@ async function placeMissingPins(sb: SupabaseClient<Database>, budget: number) {
     .select("id, street, city, region, postal_code, country, listing")
     .eq("is_active", true)
     .is("lat", null)
+    .order("listing", { ascending: false })
     .limit(budget);
   if (error || !data?.length) return 0;
 
