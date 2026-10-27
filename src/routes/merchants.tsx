@@ -159,7 +159,7 @@ function MerchantsPage() {
                   type="checkbox"
                   checked={showOnline}
                   onChange={(e) => setShowOnline(e.target.checked)}
-                  className="h-5 w-5 accent-[hsl(var(--primary))]"
+                  className="h-5 w-5 accent-primary"
                 />
               </label>
               <div className="space-y-1">
@@ -232,7 +232,7 @@ function MerchantsPage() {
                   value={radiusMi}
                   disabled={!origin}
                   onChange={(e) => setRadiusMi(Number(e.target.value))}
-                  className="w-full accent-[hsl(var(--primary))] disabled:opacity-40"
+                  className="w-full accent-primary disabled:opacity-40"
                   aria-label="Distance limit in miles"
                 />
                 {!origin && (
