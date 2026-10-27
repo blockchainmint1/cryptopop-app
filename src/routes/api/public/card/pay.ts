@@ -68,8 +68,11 @@ export const Route = createFileRoute("/api/public/card/pay")({
         });
         const row = res?.[0];
         if (error || !row) {
-          const dup = /duplicate|unique/i.test(error?.message ?? "");
-          return json({ status: "declined", reason: dup ? "This invoice is already being paid" : "Card is off" });
+          const msg = error?.message ?? "no row returned";
+          console.error("[card/pay] reserve failed:", msg);
+          const dup = /duplicate|unique/i.test(msg);
+          const off = /card is off/i.test(msg);
+          return json({ status: "declined", reason: dup ? "This invoice is already being paid" : off ? "Card is off" : "Card payment couldn't start — try again" });
         }
         if (row.status === "approval_required") {
           if (!ownerChat) {
