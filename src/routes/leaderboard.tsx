@@ -128,7 +128,7 @@ function PopPage() {
         if (!alive) return;
         setRewards(r.rewards);
         setRank(r.rank.rank);
-        setPoints(r.rank.awarded);
+        setPoints(r.rank.awarded ?? 0);
       })
       .catch(() => undefined)
       .finally(() => alive && setLoadingMine(false));
