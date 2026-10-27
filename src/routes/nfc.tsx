@@ -307,7 +307,12 @@ function NfcPage() {
                 <p className="font-mono text-xs text-muted-foreground">TXC for fees</p>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">Limits: ${c.perTapUsd} a tap · ${c.dailyUsd} a day without approval</p>
+            <LimitsEditor
+              perTap={c.perTapUsd}
+              daily={c.dailyUsd}
+              onSave={(perTapUsd, dailyUsd) => update(c, { perTapUsd, dailyUsd }, "Approval limits saved")}
+            />
+            <p className="text-xs text-muted-foreground">Every spend sends you a Telegram alert. Above these amounts, you approve it first.</p>
 
             {fundIdx === c.index && (
               <div className="space-y-2 rounded-md bg-muted p-3 text-center">
