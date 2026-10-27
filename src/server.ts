@@ -82,6 +82,8 @@ export default {
       const headers = new Headers(normalized.headers);
       headers.set("Referrer-Policy", "no-referrer");
       headers.set("X-Content-Type-Options", "nosniff");
+      headers.set("Permissions-Policy", "camera=(self), geolocation=(self), microphone=(), payment=()");
+      if (!import.meta.env.DEV) headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
       if (headers.get("content-type")?.includes("text/html")) {
         const development = import.meta.env.DEV;
         headers.set("Content-Security-Policy", [
@@ -93,7 +95,9 @@ export default {
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.lovable.app https://*.lovable.dev https://honest.money https://*.honest.money https://cryptopop.org https://app.nectar-pay.com https://mempool.texitcoin.org https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com" + (development ? " ws: wss:" : ""),
           "frame-src 'self' https://*.lovable.dev https://*.lovable.app https://honest.money https://accounts.google.com",
           "worker-src 'self' blob:",
-          "object-src 'none'", "base-uri 'self'", "form-action 'self' https://honest.money",
+          "object-src 'none'", "base-uri 'self'",
+          // Security audit M1: only our own pages and the Lovable editor may frame the wallet.
+          "frame-ancestors 'self' https://*.lovable.dev https://*.lovable.app", "form-action 'self' https://honest.money",
         ].join("; "));
       }
       return new Response(normalized.body, { status: normalized.status, statusText: normalized.statusText, headers });

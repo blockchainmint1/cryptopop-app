@@ -221,7 +221,7 @@ export const searchSignups = createServerFn({ method: "POST" })
       .limit(100);
     const q = data.q?.trim();
     if (q) {
-      const like = `%${q.replace(/[%_]/g, "")}%`;
+      const like = `%${q.replace(/[%_,().*\\"'\\]/g, "")}%`;
       query = query.or(
         `full_name.ilike.${like},email.ilike.${like},mobile_number.ilike.${like}`,
       );

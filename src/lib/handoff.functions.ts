@@ -57,7 +57,10 @@ export const startHandoffOrder = createServerFn({ method: "POST" })
         ? Math.round((data.usd + feeUsd) * 100) / 100
         : Math.round(data.usd * 100) / 100;
 
-    const origin = data.origin?.replace(/\/$/, "");
+    const ALLOWED_ORIGINS = ["https://app.cryptopop.org", "https://wallet.cryptopop.org", "https://cryptopop-wallet.lovable.app"];
+    const requested = data.origin?.replace(/\/$/, "");
+    // Security audit M2: never let the caller choose where checkout returns to.
+    const origin = requested && ALLOWED_ORIGINS.includes(requested) ? requested : ALLOWED_ORIGINS[0];
     const returnUrl = origin ? `${origin}/wallet/order/${orderId}` : undefined;
 
     const relay = await postOrder({

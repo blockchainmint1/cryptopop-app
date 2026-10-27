@@ -65,3 +65,12 @@ describe("clientIp", () => {
     expect(clientIp(new Headers())).toBe("unknown");
   });
 });
+
+describe("server function throttle (audit H2)", () => {
+  it("blocks the 181st server-function call per minute from one IP", async () => {
+    const { rateLimitForPath } = await import("./rate-limit.server");
+    const h = new Headers({ "cf-connecting-ip": "203.0.113.77" });
+    for (let i = 0; i < 180; i++) expect(rateLimitForPath("/_serverFn/abc", h)).toBeNull();
+    expect(rateLimitForPath("/_serverFn/xyz", h)?.status).toBe(429);
+  });
+});

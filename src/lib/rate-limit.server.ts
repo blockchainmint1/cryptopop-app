@@ -39,7 +39,11 @@ export function checkRateLimit(
   if (now - lastSweep > 60_000) {
     lastSweep = now;
     for (const [k, bucket] of buckets) if (bucket.resetAt <= now) buckets.delete(k);
-    if (buckets.size > 50_000) buckets.clear(); // safety valve under flood
+    if (buckets.size > 50_000) {
+      // Evict oldest entries instead of resetting every counter under flood.
+      let drop = buckets.size - 40_000;
+      for (const k of buckets.keys()) { if (drop-- <= 0) break; buckets.delete(k); }
+    }
   }
 
   const existing = buckets.get(key);
@@ -72,6 +76,11 @@ export function rateLimitForPath(pathname: string, headers: Headers): Response |
     // key and fires from a datacenter IP, so it is exempt from IP limiting.
     if (pathname === "/lovable/email/queue/process") return null;
     rule = { limit: 120, windowMs: 60_000 };
+  } else if (pathname.startsWith("/_serverFn")) {
+    // Security audit H2: server-function RPCs (send prep, broadcast, chain
+    // reads, backup relay) fan out to the node/explorer/partners.
+    scope = "/_serverFn";
+    rule = { limit: 180, windowMs: 60_000 };
   }
   if (!rule) return null;
 
