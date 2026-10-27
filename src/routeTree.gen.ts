@@ -26,6 +26,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated.scan'
+import { Route as AdminDirectoryRouteImport } from './routes/admin.directory'
 import { Route as AdminPushRouteImport } from './routes/admin.push'
 import { Route as AdminRewardsRouteImport } from './routes/admin.rewards'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -134,6 +135,11 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   id: '/scan',
   path: '/scan',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AdminDirectoryRoute = AdminDirectoryRouteImport.update({
+  id: '/admin/directory',
+  path: '/admin/directory',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPushRoute = AdminPushRouteImport.update({
   id: '/admin/push',
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/directory': typeof AdminDirectoryRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -315,6 +322,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/directory': typeof AdminDirectoryRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -358,6 +366,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
   '/_authenticated/scan': typeof AuthenticatedScanRouteWithChildren
+  '/admin/directory': typeof AdminDirectoryRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/rewards': typeof AdminRewardsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/admin/directory'
     | '/admin/push'
     | '/admin/rewards'
     | '/auth/callback'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/recover-wallet'
     | '/scan'
+    | '/admin/directory'
     | '/admin/push'
     | '/admin/rewards'
     | '/auth/callback'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
     | '/_authenticated/scan'
+    | '/admin/directory'
     | '/admin/push'
     | '/admin/rewards'
     | '/auth/callback'
@@ -524,6 +536,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SsoRoute: typeof SsoRoute
   TermsRoute: typeof TermsRoute
+  AdminDirectoryRoute: typeof AdminDirectoryRoute
   AdminPushRoute: typeof AdminPushRoute
   AdminRewardsRoute: typeof AdminRewardsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -668,6 +681,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/scan'
       preLoaderRoute: typeof AuthenticatedScanRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/admin/directory': {
+      id: '/admin/directory'
+      path: '/admin/directory'
+      fullPath: '/admin/directory'
+      preLoaderRoute: typeof AdminDirectoryRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/push': {
       id: '/admin/push'
@@ -875,6 +895,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SsoRoute: SsoRoute,
   TermsRoute: TermsRoute,
+  AdminDirectoryRoute: AdminDirectoryRoute,
   AdminPushRoute: AdminPushRoute,
   AdminRewardsRoute: AdminRewardsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
