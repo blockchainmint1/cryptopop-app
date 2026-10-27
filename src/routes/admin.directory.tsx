@@ -110,7 +110,7 @@ function DirectoryAdmin() {
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Last pull</p>
           <p className="mt-1 text-sm">{when(data?.lastRunAt ?? null)}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Status: {data?.lastStatus ?? "never"} · {data?.lastCount ?? 0} stores in the feed · {data?.lastRemoved ?? 0} retired
+            Status: {data?.lastStatus ?? "never"} · {data?.lastCount ?? 0} changed in that pull · {data?.lastRemoved ?? 0} retired
           </p>
           {data?.lastError ? <p className="mt-2 text-xs text-destructive">{data.lastError}</p> : null}
           <p className="mt-2 text-xs text-muted-foreground">
