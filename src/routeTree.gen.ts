@@ -38,6 +38,7 @@ import { Route as ApiNectarLinkRouteImport } from './routes/api/nectar.link'
 import { Route as ApiPublicApkRouteImport } from './routes/api/public/apk'
 import { Route as ApiPublicBuildIdRouteImport } from './routes/api/public/build-id'
 import { Route as ApiPublicLatestReleaseRouteImport } from './routes/api/public/latest-release'
+import { Route as ApiPublicNectarpaySyncRouteImport } from './routes/api/public/nectarpay-sync'
 import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/public/vectorpay-status'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as WalletOrderIdRouteImport } from './routes/wallet.order.$id'
@@ -195,6 +196,11 @@ const ApiPublicLatestReleaseRoute = ApiPublicLatestReleaseRouteImport.update({
   path: '/api/public/latest-release',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNectarpaySyncRoute = ApiPublicNectarpaySyncRouteImport.update({
+  id: '/api/public/nectarpay-sync',
+  path: '/api/public/nectarpay-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVectorpayStatusRoute =
   ApiPublicVectorpayStatusRouteImport.update({
     id: '/api/public/vectorpay-status',
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/api/public/apk': typeof ApiPublicApkRoute
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
+  '/api/public/nectarpay-sync': typeof ApiPublicNectarpaySyncRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -320,6 +327,7 @@ export interface FileRoutesByTo {
   '/api/public/apk': typeof ApiPublicApkRoute
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
+  '/api/public/nectarpay-sync': typeof ApiPublicNectarpaySyncRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/api/public/apk': typeof ApiPublicApkRoute
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
+  '/api/public/nectarpay-sync': typeof ApiPublicNectarpaySyncRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -404,6 +413,7 @@ export interface FileRouteTypes {
     | '/api/public/apk'
     | '/api/public/build-id'
     | '/api/public/latest-release'
+    | '/api/public/nectarpay-sync'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -444,6 +454,7 @@ export interface FileRouteTypes {
     | '/api/public/apk'
     | '/api/public/build-id'
     | '/api/public/latest-release'
+    | '/api/public/nectarpay-sync'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/api/public/apk'
     | '/api/public/build-id'
     | '/api/public/latest-release'
+    | '/api/public/nectarpay-sync'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -523,6 +535,7 @@ export interface RootRouteChildren {
   ApiPublicApkRoute: typeof ApiPublicApkRoute
   ApiPublicBuildIdRoute: typeof ApiPublicBuildIdRoute
   ApiPublicLatestReleaseRoute: typeof ApiPublicLatestReleaseRoute
+  ApiPublicNectarpaySyncRoute: typeof ApiPublicNectarpaySyncRoute
   ApiPublicVectorpayStatusRoute: typeof ApiPublicVectorpayStatusRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   WalletOrderIdRoute: typeof WalletOrderIdRoute
@@ -740,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLatestReleaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/nectarpay-sync': {
+      id: '/api/public/nectarpay-sync'
+      path: '/api/public/nectarpay-sync'
+      fullPath: '/api/public/nectarpay-sync'
+      preLoaderRoute: typeof ApiPublicNectarpaySyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/vectorpay-status': {
       id: '/api/public/vectorpay-status'
       path: '/api/public/vectorpay-status'
@@ -866,6 +886,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicApkRoute: ApiPublicApkRoute,
   ApiPublicBuildIdRoute: ApiPublicBuildIdRoute,
   ApiPublicLatestReleaseRoute: ApiPublicLatestReleaseRoute,
+  ApiPublicNectarpaySyncRoute: ApiPublicNectarpaySyncRoute,
   ApiPublicVectorpayStatusRoute: ApiPublicVectorpayStatusRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   WalletOrderIdRoute: WalletOrderIdRoute,
