@@ -120,7 +120,11 @@ function PopPage() {
     };
   }, [address, fetchRewards]);
 
-  const inviteLink = address ? `${window.location.origin}/?ref=${address}` : "";
+  // Read the site address only after the page is live in the browser, so the
+  // server render never touches `window`.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
+  const inviteLink = address && origin ? `${origin}/?ref=${address}` : "";
 
   const copyInvite = async () => {
     if (!inviteLink) return;
