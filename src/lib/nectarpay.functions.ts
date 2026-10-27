@@ -22,12 +22,12 @@ const nonceSchema = z.string().trim().max(128).regex(/^[A-Za-z0-9_-]*$/).nullabl
 
 type RawInvoice = Record<string, unknown>;
 
-function invoiceUrl(id: string, nonce?: string | null, select = false) {
+export function invoiceUrl(id: string, nonce?: string | null, select = false) {
   if (nonce) return `${NECTARPAY_ORIGIN}/api/public/v1/pay/${id}?t=${encodeURIComponent(nonce)}`;
   return `${NECTARPAY_ORIGIN}/api/public/v1/invoices/${id}/public${select ? "/select" : ""}`;
 }
 
-async function fetchJson(url: string, init?: RequestInit): Promise<RawInvoice> {
+export async function fetchJson(url: string, init?: RequestInit): Promise<RawInvoice> {
   const res = await fetch(url, {
     ...init,
     headers: { Accept: "application/json", "Content-Type": "application/json", ...(init?.headers ?? {}) },
@@ -43,7 +43,7 @@ function storeIdOf(raw: RawInvoice): string | null {
   return id ? String(id) : null;
 }
 
-function normalize(raw: RawInvoice, fallback?: NectarInvoice | null): NectarInvoice {
+export function normalize(raw: RawInvoice, fallback?: NectarInvoice | null): NectarInvoice {
   const options = (raw.options ?? raw.availableOptions ?? []) as Array<Record<string, unknown>>;
   const acceptsTsd =
     options.some((o) => String(o.key ?? o.option ?? "").toLowerCase() === "txc:tsd") ||
