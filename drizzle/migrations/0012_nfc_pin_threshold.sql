@@ -1,0 +1,2 @@
+ALTER TABLE public.nfc_cards ADD COLUMN IF NOT EXISTS pin_above_usd numeric NOT NULL DEFAULT 0;
+COMMENT ON COLUMN public.nfc_cards.pin_above_usd IS 'Taps above this USD amount require the card PIN; 0 = PIN on every tap.';

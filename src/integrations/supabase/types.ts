@@ -1094,6 +1094,7 @@ export type Database = {
           label: string
           owner_address: string
           per_tap_usd: number
+          pin_above_usd: number
           pin_fails: number
           pin_hash: string
           pin_salt: string
@@ -1113,6 +1114,7 @@ export type Database = {
           label: string
           owner_address: string
           per_tap_usd?: number
+          pin_above_usd?: number
           pin_fails?: number
           pin_hash: string
           pin_salt: string
@@ -1132,6 +1134,7 @@ export type Database = {
           label?: string
           owner_address?: string
           per_tap_usd?: number
+          pin_above_usd?: number
           pin_fails?: number
           pin_hash?: string
           pin_salt?: string
