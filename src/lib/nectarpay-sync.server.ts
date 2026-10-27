@@ -8,6 +8,8 @@
 // the admin "Sync now" button, and the first wallet request after a cold start.
 import { z } from "zod";
 import { NECTARPAY_ORIGIN } from "./nectarpay";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 export type SyncResult = {
   status: "ok" | "busy" | "fresh" | "error";
@@ -121,7 +123,7 @@ function chunks<T>(list: T[], size: number): T[][] {
 }
 
 /** Fill in map pins for stores the feed didn't place, street address first. */
-async function placeMissingPins(sb: ReturnType<Awaited<typeof import "@/integrations/supabase/client.server">["supabaseAdmin"] extends never ? never : typeof import("@/integrations/supabase/client.server")["supabaseAdmin"]>, budget: number) {
+async function placeMissingPins(sb: SupabaseClient<Database>, budget: number) {
   const { geocodeAddress } = await import("./geocode.server");
   const { data, error } = await sb
     .from("nectarpay_stores")
