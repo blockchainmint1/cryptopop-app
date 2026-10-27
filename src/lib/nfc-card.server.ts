@@ -131,6 +131,13 @@ export async function notify(chatId: string | null, text: string) {
   if (chatId) await tg("sendMessage", { chat_id: chatId, parse_mode: "HTML", text });
 }
 
+/** One Telegram chat per wallet: alerts/approvals for every card the owner linked. */
+export async function walletChat(ownerAddress: string): Promise<string | null> {
+  const sb = await admin();
+  const { data } = await sb.from("nfc_wallet_telegram").select("tg_chat_id").eq("owner_address", ownerAddress).maybeSingle();
+  return (data?.tg_chat_id as string | null) ?? null;
+}
+
 // ---------- Paying ----------
 /** Sign and broadcast a reserved payment (status must already be 'sending'). */
 export async function executePayment(paymentId: string): Promise<{ status: string; txid?: string; reason?: string }> {
@@ -139,9 +146,10 @@ export async function executePayment(paymentId: string): Promise<{ status: strin
   if (!p || p.status !== "sending") return { status: p?.status ?? "failed" };
   const { data: c } = await sb.from("nfc_cards").select("*").eq("id", p.card_id).single();
   const { data: k } = await sb.from("nfc_card_keys").select("enc_key").eq("card_id", p.card_id).maybeSingle();
+  const chat = c ? await walletChat(c.owner_address) : null;
   const fail = async (reason: string) => {
     await sb.from("nfc_card_payments").update({ status: "failed", reason }).eq("id", paymentId);
-    await notify(c?.tg_chat_id ?? null, `⚠️ Tap payment of $${Number(p.amount_usd).toFixed(2)} failed: ${esc(reason)}`);
+    await notify(chat, `⚠️ Tap payment of $${Number(p.amount_usd).toFixed(2)} failed: ${esc(reason)}`);
     return { status: "failed", reason };
   };
   if (!c || !k || !c.enabled || c.killed_at) return fail("Card is off");
