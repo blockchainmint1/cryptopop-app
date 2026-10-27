@@ -11,3 +11,4 @@
 - Run the wallet safety tests on CI and before reporting security changes complete, because signing, ownership and authorization rules need executable regression coverage.
 - Street-address geocoding runs server-side with the unrestricted server Maps key (src/lib/geocode.server.ts); the managed gateway key is referrer-restricted and Geocoding rejects it.
 - TSD top-ups use an exact-origin, retained-popup receiving-only protocol with locally reconstructed consent signatures and memory-only connection state; deposit instructions remain release-gated until live acceptance passes, so stale or untested connections cannot invite transfers.
+- Any page outside the wallet dashboard that needs the device address must branch on wallet status (loading/locked/none) and offer unlock or setup, because a reload leaves the vault locked and the address is null.
