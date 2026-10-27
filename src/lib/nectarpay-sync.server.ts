@@ -63,7 +63,7 @@ const directorySchema = z.object({
   removed: z.array(z.string().max(64)).max(50000).default([]),
 });
 
-type FeedStore = z.infer<typeof storeSchema>;
+type FeedStore = z.input<typeof storeSchema>;
 
 function iso(value: string | null | undefined): string | null {
   if (!value) return null;
