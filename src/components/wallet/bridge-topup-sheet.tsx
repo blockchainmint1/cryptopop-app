@@ -9,6 +9,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AutoTopupPanel } from "./auto-topup-panel";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { useAuth } from "@/hooks/use-auth";
 import { derivePrivateKey } from "@/lib/wallet/sign";
@@ -244,6 +245,7 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
       <div className="mt-4 space-y-5 pb-8 text-sm">
         {error && <p role="alert" className="break-words rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-destructive">{error}</p>}
         {!connection && !challenge && !provider && <>
+          <AutoTopupPanel address={address} />
           <p className="text-muted-foreground">Pick where your stablecoins are. We'll show you exactly what to tap. Your recovery phrase stays on this device.</p>
           <div className="grid grid-cols-2 gap-3">
             {PROVIDERS.map((p) => (
