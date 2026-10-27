@@ -34,6 +34,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
+import { Route as NfcCardIdRouteImport } from './routes/nfc_.$cardId'
 import { Route as TxTxidRouteImport } from './routes/tx.$txid'
 import { Route as AuthenticatedScanSuccessRouteImport } from './routes/_authenticated.scan.success'
 import { Route as ApiNectarLinkRouteImport } from './routes/api/nectar.link'
@@ -179,6 +180,11 @@ const EventsSlugRoute = EventsSlugRouteImport.update({
   path: '/events/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NfcCardIdRoute = NfcCardIdRouteImport.update({
+  id: '/nfc_/$cardId',
+  path: '/nfc/$cardId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TxTxidRoute = TxTxidRouteImport.update({
   id: '/tx/$txid',
   path: '/tx/$txid',
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/nfc/$cardId': typeof NfcCardIdRoute
   '/tx/$txid': typeof TxTxidRoute
   '/events/': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
@@ -351,6 +358,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/nfc/$cardId': typeof NfcCardIdRoute
   '/tx/$txid': typeof TxTxidRoute
   '/events': typeof EventsIndexRoute
   '/scan/success': typeof AuthenticatedScanSuccessRoute
@@ -398,6 +406,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/claim/$token': typeof ClaimTokenRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/nfc_/$cardId': typeof NfcCardIdRoute
   '/tx/$txid': typeof TxTxidRoute
   '/events/': typeof EventsIndexRoute
   '/_authenticated/scan/success': typeof AuthenticatedScanSuccessRoute
@@ -445,6 +454,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
+    | '/nfc/$cardId'
     | '/tx/$txid'
     | '/events/'
     | '/scan/success'
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
+    | '/nfc/$cardId'
     | '/tx/$txid'
     | '/events'
     | '/scan/success'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/claim/$token'
     | '/events/$slug'
+    | '/nfc_/$cardId'
     | '/tx/$txid'
     | '/events/'
     | '/_authenticated/scan/success'
@@ -580,6 +592,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   ClaimTokenRoute: typeof ClaimTokenRoute
   EventsSlugRoute: typeof EventsSlugRoute
+  NfcCardIdRoute: typeof NfcCardIdRoute
   TxTxidRoute: typeof TxTxidRoute
   EventsIndexRoute: typeof EventsIndexRoute
   ApiNectarLinkRoute: typeof ApiNectarLinkRoute
@@ -778,6 +791,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/nfc_/$cardId': {
+      id: '/nfc_/$cardId'
+      path: '/nfc/$cardId'
+      fullPath: '/nfc/$cardId'
+      preLoaderRoute: typeof NfcCardIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tx/$txid': {
       id: '/tx/$txid'
       path: '/tx/$txid'
@@ -963,6 +983,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   ClaimTokenRoute: ClaimTokenRoute,
   EventsSlugRoute: EventsSlugRoute,
+  NfcCardIdRoute: NfcCardIdRoute,
   TxTxidRoute: TxTxidRoute,
   EventsIndexRoute: EventsIndexRoute,
   ApiNectarLinkRoute: ApiNectarLinkRoute,
