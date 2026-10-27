@@ -28,7 +28,9 @@
 
 ## NFC tap-to-pay cards
 - [x] /nfc test page: read card (Android Chrome), link, pockets at 1110'/0/N, balances, on/off, fund, lost
-- [ ] Server card service: encrypted per-card key, PIN, limits ($100/tap, $500/day) — next step
-- [ ] Telegram approvals over limits
-- [ ] NectarPay tap → pay endpoint (needs shared payment credential agreed with NectarPay)
+- [x] Server card service: encrypted per-card key, PIN, limits ($100/tap, $500/day)
+- [x] Telegram approvals over limits (code built; bot webhook pending Bobby's OK)
+- [x] NectarPay tap → pay endpoint /api/public/card/pay
+- [ ] NectarPay builds checkout side + saves NFC_PAY_SECRET
+- [ ] Publish so the endpoint is live
 - [ ] Bobby: register 1110' "CryptoPOP NFC cards" in HME path list
