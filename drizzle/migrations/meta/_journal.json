@@ -92,6 +92,13 @@
       "when": 1793114174910,
       "tag": "0012_nfc_pin_threshold",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793116400673,
+      "tag": "0013_arcade_games",
+      "breakpoints": true
     }
   ]
 }

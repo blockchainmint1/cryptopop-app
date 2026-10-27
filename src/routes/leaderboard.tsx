@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   Trophy,
   Users,
+  Gamepad,
 } from "lucide-react";
 import { toast } from "sonner";
 import coin from "@/assets/cryptopop-coin.png";
@@ -284,6 +285,30 @@ function PopPage() {
               ))
             )}
           </div>
+        </section>
+
+        {/* ARCADE — daily games, just for fun (no POP payouts) */}
+        <section>
+          {sectionTitle("Play")}
+          <Link to="/arcade" search={{ game: undefined }} className="mt-2 block">
+            <Card className="flex items-center gap-4 border-white/12 bg-white/5 p-4 transition hover:bg-white/10">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <Gamepad className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-display text-base font-semibold uppercase tracking-wide">
+                  POP Arcade
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Six new daily games — word, trivia, tiles, crossword, hive, numbers
+                </span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block font-display text-sm font-semibold text-primary">Just for fun</span>
+                <ChevronRight className="ml-auto mt-1 h-4 w-4 text-muted-foreground" />
+              </span>
+            </Card>
+          </Link>
         </section>
 
         {/* 4. WAYS TO EARN — the three doors */}
