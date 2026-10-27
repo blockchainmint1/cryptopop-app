@@ -19,6 +19,8 @@ import { getAddressRewards, type WalletReward } from "@/lib/wallet-activity.func
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { UnlockScreen } from "@/components/wallet/unlock-screen";
 
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
@@ -79,8 +81,23 @@ function sectionTitle(text: string) {
   );
 }
 
+function PageHeader() {
+  return (
+    <header className="flex items-center gap-2 border-b border-border px-4 py-4">
+      <Link
+        to="/"
+        aria-label="Back to wallet"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-muted-foreground transition hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Link>
+      <h1 className="font-display text-2xl font-bold tracking-tight">POP</h1>
+    </header>
+  );
+}
+
 function PopPage() {
-  const { address } = useWallet();
+  const { address, status } = useWallet();
   const fetchLeaders = useServerFn(getPopLeaderboard);
   const fetchRewards = useServerFn(getAddressRewards);
 
