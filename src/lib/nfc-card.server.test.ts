@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { createHmac } from "node:crypto";
 import { generateMnemonic } from "@scure/bip39";
-import { wordlist } from "@scure/bip39/wordlists/english";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
 import * as s from "./nfc-card.server";
 import { ownerEnvelope, pocketAddress, pocketKeyHex, nfcPocketPath } from "./wallet/nfc-cards";
 
