@@ -330,11 +330,16 @@ export function NfcPage({ cardId }: { cardId?: string }) {
             {scanning ? "Hold the card to the back of your phone…" : "Tap a card to read it"}
           </Button>
         ) : (
-          <p className="text-xs text-muted-foreground">
-            Card reading works in the POP Wallet app and in Chrome on Android. Here, type the card ID instead.
-          </p>
+          <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
+            <p className="text-sm font-medium">This device can't read cards directly</p>
+            <p className="text-xs text-muted-foreground">
+              iPhones can't read NFC cards in a web browser. Type the card's ID below instead — you can
+              read it with the POP Wallet app on an Android phone, or tap the card at a NectarPay terminal
+              to see its ID.
+            </p>
+          </div>
         )}
-        <Input placeholder="Card ID" value={uid} onChange={(e) => setUid(e.target.value)} />
+        <Input placeholder={nfcOk ? "Card ID" : "Card ID (type it in)"} value={uid} onChange={(e) => setUid(e.target.value)} />
         <Input placeholder="Name (e.g. Blue card)" maxLength={40} value={label} onChange={(e) => setLabel(e.target.value)} />
         <Input placeholder="Card PIN (4–8 digits)" inputMode="numeric" type="password" autoComplete="off" maxLength={8}
           value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
