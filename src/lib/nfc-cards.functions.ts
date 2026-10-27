@@ -110,6 +110,21 @@ export const nfcUpdateCard = createServerFn({ method: "POST" })
     const b = await open(data, "update", UpdateBody);
     const s = await import("./nfc-card.server");
     const sb = await s.admin();
+    // Telegram linking is per wallet, not per card.
+    if (b.newTelegramCode) {
+      const r = crypto.getRandomValues(new Uint8Array(8));
+      const code = "CP" + Array.from(r, (x) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x % 32]).join("");
+      await sb.from("nfc_wallet_telegram").upsert(
+        { owner_address: data.owner, tg_code: code, tg_chat_id: null } as never,
+        { onConflict: "owner_address" },
+      );
+      return { ok: true };
+    }
+    if (b.clearTelegram) {
+      await sb.from("nfc_wallet_telegram").delete().eq("owner_address", data.owner);
+      return { ok: true };
+    }
+    if (!b.id) throw new Error("Card not found");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const patch: Record<string, any> = {};
     if (b.label !== undefined) patch.label = b.label;
@@ -121,11 +136,6 @@ export const nfcUpdateCard = createServerFn({ method: "POST" })
       const p = await s.hashPin(b.pin);
       Object.assign(patch, { pin_hash: p.hash, pin_salt: p.salt, pin_fails: 0 });
     }
-    if (b.newTelegramCode) {
-      const r = crypto.getRandomValues(new Uint8Array(8));
-      patch.tg_code = "CP" + Array.from(r, (x) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x % 32]).join("");
-    }
-    if (b.clearTelegram) Object.assign(patch, { tg_chat_id: null, tg_code: null });
     const { data: rows } = await sb.from("nfc_cards").update(patch as never)
       .eq("id", b.id).eq("owner_address", data.owner).is("killed_at", null).select("id");
     if (!rows?.length) throw new Error("Card not found");
