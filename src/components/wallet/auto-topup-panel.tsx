@@ -11,7 +11,8 @@ import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { openHmeLogin } from "@/lib/hme";
 import { linkTsdBridge, tsdLinkMessage } from "@/lib/tsd-partner.functions";
 import { TOPUP_DEPOSITS_ENABLED } from "@/lib/tsd-topup";
-import type { PartnerAccount } from "@/lib/tsd-partner.server";
+
+type PartnerAccount = Extract<Awaited<ReturnType<typeof linkTsdBridge>>, { status: "ready" }>;
 
 /**
  * One-tap TSD Bridge setup: Honest Money sign-in, then the wallet signs its
