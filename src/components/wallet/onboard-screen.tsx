@@ -65,33 +65,6 @@ export function OnboardScreen() {
     }
   }, []);
 
-  // Honest Money SSO: prefill the email step with the member's account email.
-  // The /sso popup posts "hme-sso-done" back here once the session is set.
-  useEffect(() => {
-    let alive = true;
-    const grab = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const mail = data.session?.user?.email;
-        if (alive && mail) {
-          setEmail((cur) => cur || mail);
-          setHmeSignedIn(true);
-        }
-      } catch {
-        /* ignore */
-      }
-    };
-    void grab();
-    const onMessage = (e: MessageEvent) => {
-      if (e.origin !== window.location.origin) return;
-      if ((e.data as { type?: string } | null)?.type === "hme-sso-done") void grab();
-    };
-    window.addEventListener("message", onMessage);
-    return () => {
-      alive = false;
-      window.removeEventListener("message", onMessage);
-    };
-  }, []);
   const [origin, setOrigin] = useState<VaultOrigin>("coin");
   const [mnemonic, setMnemonic] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
@@ -105,33 +78,8 @@ export function OnboardScreen() {
   const [copied, setCopied] = useState(false);
   const [confirmIdx] = useState(() => Math.floor(Math.random() * 12));
   const [confirmWord, setConfirmWord] = useState("");
-  const [markets, setMarkets] = useState<MarketOption[]>([]);
-  const [marketSlug, setMarketSlug] = useState("");
-  const [email, setEmail] = useState("");
-  const [hmeSignedIn, setHmeSignedIn] = useState(false);
 
-  const fetchMarkets = useServerFn(listMarkets);
   const claimWelcome = useServerFn(claimWelcomePop);
-
-  // Pull the market catalog once; preselect the one matching the detected region.
-  useEffect(() => {
-    let alive = true;
-    void fetchMarkets()
-      .then((rows) => {
-        if (!alive || !rows?.length) return;
-        setMarkets(rows);
-        const detected = loadRegion();
-        const match =
-          rows.find((m) => regionForMarket(m.country, m.slug) === detected) ?? rows[0];
-        setMarketSlug((cur) => cur || match.slug);
-      })
-      .catch(() => {
-        /* offline — market step falls back to skip */
-      });
-    return () => {
-      alive = false;
-    };
-  }, [fetchMarkets]);
 
   const words = useMemo(() => (mnemonic ? mnemonic.split(" ") : []), [mnemonic]);
 
