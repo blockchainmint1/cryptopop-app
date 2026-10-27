@@ -44,7 +44,7 @@ describe("independent transaction policy", () => {
   });
   it("accepts a combined TSD + TXC output to the same recipient", () => {
     const combo = { asset: "tsd" as const, from, to, amount: 1.25, txcAmount: 0.001 };
-    expect(validateSend(make("tsd", undefined, undefined, 110_000n), combo, [from]).feeSats).toBe(10_000);
+    expect(validateSend(make("tsd", undefined, 1_880_000n, 110_000n), combo, [from]).feeSats).toBe(10_000);
   });
   it("rejects a combined send with the wrong TXC amount", () => {
     const combo = { asset: "tsd" as const, from, to, amount: 1.25, txcAmount: 0.002 };
@@ -55,7 +55,7 @@ describe("independent transaction policy", () => {
   });
   it("signs and finalizes a combined TSD + TXC transaction", () => {
     const combo = { asset: "tsd" as const, from, to, amount: 1.25, txcAmount: 0.001 };
-    const raw = signPsbt(make("tsd", undefined, undefined, 110_000n), "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", combo);
+    const raw = signPsbt(make("tsd", undefined, 1_880_000n, 110_000n), "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", combo);
     const tx = bitcoin.Transaction.fromHex(raw);
     expect(tx.outs[0]?.script).toEqual(tsdScript(1.25));
     expect(tx.outs[1]?.value).toBe(110_000n);
