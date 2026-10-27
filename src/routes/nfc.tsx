@@ -18,8 +18,8 @@ import {
   normalizeUid,
   pocketAddress,
   nfcPocketPath,
-  webNfcSupported,
 } from "@/lib/wallet/nfc-cards";
+import { nfcReadAvailable, readCardId } from "@/lib/native/nfc";
 
 export const Route = createFileRoute("/nfc")({
   head: () => ({
@@ -51,7 +51,7 @@ function NfcPage() {
 
   useEffect(() => {
     setCards(loadCards());
-    setNfcOk(webNfcSupported());
+    setNfcOk(nfcReadAvailable());
   }, []);
 
   const update = (next: NfcCard[]) => {
@@ -80,23 +80,14 @@ function NfcPage() {
   }, [refresh]);
 
   async function scan() {
+    setScanning(true);
     try {
-      // Web NFC: Chrome on Android only.
-      const Reader = (window as unknown as { NDEFReader: new () => any }).NDEFReader;
-      const reader = new Reader();
-      const ctrl = new AbortController();
-      setScanning(true);
-      await reader.scan({ signal: ctrl.signal });
-      reader.onreading = (e: { serialNumber?: string }) => {
-        setUid(normalizeUid(e.serialNumber ?? ""));
-        toast.success("Card read");
-        setScanning(false);
-        ctrl.abort();
-      };
-      reader.onreadingerror = () => toast.error("Couldn't read that card — try again");
+      setUid(await readCardId());
+      toast.success("Card read");
     } catch (e) {
-      setScanning(false);
       toast.error(e instanceof Error ? e.message : "NFC not available");
+    } finally {
+      setScanning(false);
     }
   }
 
@@ -148,7 +139,7 @@ function NfcPage() {
           </Button>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Card reading works in Chrome on Android. On this device, type the card ID instead.
+            Card reading works in the POP Wallet app and in Chrome on Android. On this device, type the card ID instead.
           </p>
         )}
         <Input placeholder="Card ID" value={uid} onChange={(e) => setUid(e.target.value)} />

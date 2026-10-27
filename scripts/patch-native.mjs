@@ -35,6 +35,8 @@ if (target === "android") {
       '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />',
       '<uses-permission android:name="android.permission.INTERNET" />',
       '<uses-feature android:name="android.hardware.camera" android:required="false" />',
+      '<uses-permission android:name="android.permission.NFC" />',
+      '<uses-feature android:name="android.hardware.nfc" android:required="false" />',
     ];
     let out = xml;
     for (const p of perms) {
