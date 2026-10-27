@@ -26,7 +26,8 @@ import {
 import { geocodeZip, listEventMarkets, listPublicEvents } from "@/lib/public-events.functions";
 import { getMerchants } from "@/lib/earn.functions";
 import { DiscoveryMap, type MapDiscoveryItem } from "@/components/discovery-map";
-import { LocateFixed } from "lucide-react";
+import { Car, Footprints, LocateFixed } from "lucide-react";
+import { directionsUrl } from "@/lib/directions";
 import { SiteFooter } from "@/components/site-footer";
 
 const eventsQuery = queryOptions({
@@ -319,32 +320,47 @@ function EventsPage() {
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-pink" /> Events</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-cyan" /> Stores</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-lime" /> Stores</span>
           </div>
           <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={locateMe} disabled={findingMe}>
             <LocateFixed className="mr-1.5 h-4 w-4" />
             {findingMe ? "Finding…" : "My location"}
           </Button>
         </div>
-        <DiscoveryMap items={mapItems} userLocation={me} onSelect={setPicked} />
+        <DiscoveryMap items={mapItems} userLocation={me} onSelect={setPicked} onLocate={locateMe} locating={findingMe} />
         {picked ? (
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {picked.type === "event" ? "Event" : "Store"}
-              </p>
-              <p className="truncate font-semibold">{picked.title}</p>
-              {picked.subtitle ? <p className="truncate text-xs text-muted-foreground">{picked.subtitle}</p> : null}
+          <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {picked.type === "event" ? "Event" : "Store"}
+                  {me ? ` · ${milesBetween(me.lat, me.lng, picked.lat, picked.lng).toFixed(1)} mi away` : ""}
+                </p>
+                <p className="truncate font-semibold">{picked.title}</p>
+                {picked.subtitle ? <p className="truncate text-xs text-muted-foreground">{picked.subtitle}</p> : null}
+              </div>
+              {picked.type === "event" ? (
+                <Button asChild size="sm" className="shrink-0 rounded-full">
+                  <Link to="/events/$slug" params={{ slug: picked.id }}>Open</Link>
+                </Button>
+              ) : (
+                <Button asChild size="sm" variant="outline" className="shrink-0 rounded-full">
+                  <Link to="/merchants">Stores</Link>
+                </Button>
+              )}
             </div>
-            {picked.type === "event" ? (
-              <Button asChild size="sm" className="shrink-0 rounded-full">
-                <Link to="/events/$slug" params={{ slug: picked.id }}>Open</Link>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <a href={directionsUrl(picked, "driving")} target="_blank" rel="noreferrer">
+                  <Car className="mr-1.5 h-4 w-4" /> Drive
+                </a>
               </Button>
-            ) : (
-              <Button asChild size="sm" variant="outline" className="shrink-0 rounded-full">
-                <Link to="/merchants">Stores</Link>
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <a href={directionsUrl(picked, "walking")} target="_blank" rel="noreferrer">
+                  <Footprints className="mr-1.5 h-4 w-4" /> Walk
+                </a>
               </Button>
-            )}
+            </div>
           </div>
         ) : null}
       </section>
