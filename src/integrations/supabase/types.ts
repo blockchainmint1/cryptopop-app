@@ -1873,6 +1873,7 @@ export type Database = {
         Args: { p_holder: string; p_ttl_seconds?: number }
         Returns: boolean
       }
+      claim_nectarpay_sync: { Args: { p_minutes?: number }; Returns: boolean }
       claim_pop_award: {
         Args: { p_award_id: string }
         Returns: {
@@ -1960,6 +1961,10 @@ export type Database = {
         }[]
       }
       release_pop_mint_lock: { Args: { p_holder: string }; Returns: undefined }
+      upsert_nectarpay_stores: {
+        Args: { p_rows: Json; p_touch?: boolean }
+        Returns: number
+      }
       user_owns_email: {
         Args: { _email: string; _user_id: string }
         Returns: boolean
