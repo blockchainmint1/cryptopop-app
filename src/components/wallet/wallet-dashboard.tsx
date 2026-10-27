@@ -75,6 +75,7 @@ import { TopUpSheet } from "./topup-sheet";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { StoreRewardsCard } from "./store-rewards-card";
 import coin from "@/assets/cryptopop-coin.png";
+import { BottomNav } from "@/components/bottom-nav";
 
 
 
@@ -345,6 +346,25 @@ export function WalletDashboard() {
           </p>
         </Card>
 
+        {/* Send / receive */}
+        <div className="flex gap-3">
+          <Button
+            className="h-12 flex-1 rounded-full"
+            onClick={() => {
+              setSendPrefill(null);
+              setSendOpen(true);
+            }}
+          >
+            <ArrowUpRight className="mr-1.5 h-4 w-4" /> Send
+          </Button>
+          <Button
+            variant="secondary"
+            className="h-12 flex-1 rounded-full"
+            onClick={() => setReceiveOpen(true)}
+          >
+            <ArrowDownLeft className="mr-1.5 h-4 w-4" /> Receive
+          </Button>
+        </div>
 
         {/* Top up (VectorPay handoff) */}
         <Button
@@ -583,27 +603,7 @@ export function WalletDashboard() {
         </p>
       </main>
 
-      {/* Sticky send / receive */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/90 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-md gap-3">
-          <Button
-            className="h-12 flex-1 rounded-full"
-            onClick={() => {
-              setSendPrefill(null);
-              setSendOpen(true);
-            }}
-          >
-            <ArrowUpRight className="mr-1.5 h-4 w-4" /> Send
-          </Button>
-          <Button
-            variant="secondary"
-            className="h-12 flex-1 rounded-full"
-            onClick={() => setReceiveOpen(true)}
-          >
-            <ArrowDownLeft className="mr-1.5 h-4 w-4" /> Receive
-          </Button>
-        </div>
-      </div>
+      <BottomNav />
 
       <QrScanDialog
         open={scanOpen}

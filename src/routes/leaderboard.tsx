@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, Trophy } from "lucide-react";
 import { getPopLeaderboard, type LeaderRow } from "@/lib/leaderboard.functions";
 import { getAddressRewards, type WalletReward } from "@/lib/wallet-activity.functions";
 import { useWallet } from "@/lib/wallet/wallet-context";
+import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/leaderboard")({
@@ -173,6 +174,8 @@ function LeaderboardPage() {
           </div>
         </section>
       </main>
+      <BottomNavSpacer />
+      <BottomNav />
     </div>
   );
 }
