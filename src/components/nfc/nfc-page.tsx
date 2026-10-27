@@ -265,12 +265,20 @@ export function NfcPage({ cardId }: { cardId?: string }) {
 
             {c.payments.length > 0 && (
               <div className="space-y-1 border-t border-border pt-2">
-                {c.payments.map((p) => (
-                  <div key={p.id} className="flex justify-between text-xs">
-                    <span>{p.merchant ?? "NectarPay"} · {new Date(p.at).toLocaleString()}</span>
-                    <span className="font-mono">${p.usd.toFixed(2)} {p.status}</span>
-                  </div>
-                ))}
+                <p className="font-mono text-xs uppercase text-muted-foreground">Card spends</p>
+                {c.payments.map((p) => {
+                  const row = (
+                    <>
+                      <span className="min-w-0 truncate">{p.merchant || "NectarPay"} · {new Date(p.at).toLocaleString()}</span>
+                      <span className="shrink-0 font-mono">${p.usd.toFixed(2)} {p.status}</span>
+                    </>
+                  );
+                  return p.txid ? (
+                    <Link key={p.id} to="/tx/$txid" params={{ txid: p.txid }} className="flex justify-between gap-2 py-1 text-xs hover:text-primary">{row}</Link>
+                  ) : (
+                    <div key={p.id} className="flex justify-between gap-2 py-1 text-xs" title={p.reason ?? undefined}>{row}</div>
+                  );
+                })}
               </div>
             )}
           </Card>

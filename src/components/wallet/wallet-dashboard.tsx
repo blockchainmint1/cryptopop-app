@@ -74,6 +74,7 @@ import { QrScanDialog } from "./qr-scan-dialog";
 import { TopUpSheet } from "./topup-sheet";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { StoreRewardsCard } from "./store-rewards-card";
+import { TapToPayCard } from "./tap-to-pay-card";
 import coin from "@/assets/cryptopop-coin.png";
 import { BottomNav } from "@/components/bottom-nav";
 
@@ -501,101 +502,13 @@ export function WalletDashboard() {
           )}
         </Card>
 
-        {/* Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link
-            to="/events"
-            className="rounded-2xl border border-white/12 bg-white/5 p-4 text-center backdrop-blur-xl transition hover:bg-white/10"
-          >
-            <CalendarDays className="mx-auto h-6 w-6 text-primary" />
-            <p className="mt-2 font-display text-sm font-semibold uppercase">Events</p>
-          </Link>
-          <Link
-            to="/my-pass"
-            className="rounded-2xl border border-white/12 bg-white/5 p-4 text-center backdrop-blur-xl transition hover:bg-white/10"
-          >
-            <Sparkles className="mx-auto h-6 w-6 text-primary" />
-            <p className="mt-2 font-display text-sm font-semibold uppercase">My pass</p>
-          </Link>
-          <Link
-            to="/merchants"
-            className="col-span-2 rounded-2xl border border-primary/40 bg-primary/10 p-4 text-center backdrop-blur-xl transition hover:bg-primary/15"
-          >
-            <Store className="mx-auto h-6 w-6 text-primary" />
-            <p className="mt-2 font-display text-sm font-semibold uppercase">Spend TSD</p>
-            <p className="text-xs text-muted-foreground">NectarPay stores · earn POP</p>
-          </Link>
-        </div>
+        <TapToPayCard />
 
         {address && (
           <StoreRewardsCard
             addresses={legacyAddress ? [address, legacyAddress] : [address]}
             refreshKey={txs.length + (tsd ?? 0)}
           />
-        )}
-
-        {/* Rewards */}
-        <Card className="space-y-3 border-white/12 bg-white/5 p-5 backdrop-blur-xl">
-          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Rewards earned
-          </p>
-          {rewards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {loading
-                ? "Loading…"
-                : "No rewards yet — RSVP to an event or check in to start earning POP."}
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {rewards.slice(0, 10).map((r) => (
-                <li
-                  key={r.id}
-                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2"
-                >
-                  <Gift className="h-4 w-4 shrink-0 text-primary" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm capitalize">{r.source.replace(/_/g, " ")}</p>
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString()} · {r.status}
-                    </p>
-                  </div>
-                  <p className="shrink-0 font-display text-base font-semibold">+{r.amount}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-
-        {origin !== "coin" && !backupDismissed && (
-          <Card className="relative border-amber-400/40 bg-amber-400/10 p-4 text-sm">
-            <button
-              type="button"
-              aria-label="Hide backup reminder"
-              onClick={() => setBackupDismissed(true)}
-              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <p className="flex items-center gap-2 pr-8 font-semibold">
-              <ShieldCheck className="h-4 w-4" /> Back up your phrase
-            </p>
-            <p className="mt-1 text-muted-foreground">
-              Write down your 12 words, or scan a Cold Storage Coin next time for an instant offline
-              backup.
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-3 w-full"
-              onClick={() => {
-                markBackedUp();
-                setBackupDismissed(true);
-                toast.success("Marked as backed up");
-              }}
-            >
-              <Check className="mr-1 h-4 w-4" /> I've backed it up
-            </Button>
-          </Card>
         )}
 
         <p className="pt-2 text-center text-xs text-muted-foreground">
