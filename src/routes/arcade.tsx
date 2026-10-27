@@ -761,7 +761,7 @@ function Trivia({ state }: { state: TriviaState }) {
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {right
-                ? `${shown.seconds}s — +${shown.pop} POP${shown.pop >= r.fast_pop ? " speed bonus" : ""}`
+                ? `${shown.seconds}s — +${shown.pop} pts${shown.pop >= r.fast_pop ? " speed bonus" : ""}`
                 : `The answer was ${shown.options[shown.correct]}.`}
             </p>
           </div>
