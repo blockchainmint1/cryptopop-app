@@ -67,6 +67,11 @@ export const Route = createFileRoute("/events/")({
       context.queryClient.ensureQueryData(marketsQuery),
       context.queryClient.ensureQueryData(storesQuery),
     ]),
+  staleTime: 60_000,
+  gcTime: 5 * 60_000,
+  pendingMs: 150,
+  pendingMinMs: 300,
+  pendingComponent: EventsPending,
   head: () => ({
     meta: [
       { title: "Upcoming CryptoPOP Events — RSVP & Earn POP" },
@@ -97,6 +102,29 @@ export const Route = createFileRoute("/events/")({
   ),
   component: EventsPage,
 });
+
+function EventsPending() {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="flex items-center gap-2 border-b border-border px-4 py-4">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" />
+        </span>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Events</h1>
+      </header>
+      <div className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6" aria-busy="true" aria-label="Loading events">
+        <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+        <div className="h-64 w-full animate-pulse rounded-2xl bg-muted" />
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="h-56 animate-pulse rounded-3xl bg-muted" />
+          <div className="h-56 animate-pulse rounded-3xl bg-muted" />
+        </div>
+      </div>
+      <BottomNavSpacer />
+      <BottomNav />
+    </div>
+  );
+}
 
 function formatWhen(startAt: string, endAt: string, timeZone: string) {
   try {
