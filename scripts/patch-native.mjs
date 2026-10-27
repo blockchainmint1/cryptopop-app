@@ -67,6 +67,7 @@ if (target === "android") {
   patch("ios/App/App/Info.plist", (plist) => {
     const entries = [
       ["NSCameraUsageDescription", "Scan Cold Storage Coins, merchant QR codes, and event QR passes."],
+      ["NFCReaderUsageDescription", "Read your tap-to-pay card so it can be linked to your wallet."],
       ["NSFaceIDUsageDescription", "Unlock your POP Wallet with Face ID."],
       ["NSPhotoLibraryAddUsageDescription", "Save your wallet QR code or event pass."],
       [
