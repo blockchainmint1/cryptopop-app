@@ -186,11 +186,16 @@ export async function buildUnsignedSend(opts: {
   to: string;
   /** POP: whole tokens. TXC: whole coins. */
   amount: number;
+  /** Extra TXC delivered to the same recipient inside a TSD send — one
+   *  transaction instead of two, so back-to-back sends can't collide. */
+  txcAmount?: number;
   /** "txid:vout" coins this device just spent — skip them. */
   exclude?: string[];
 }): Promise<UnsignedSend> {
   const network = TXC_NETWORK;
   if (opts.asset !== "tsd" && opts.asset !== "txc") throw new Error("POP rewards cannot be sent or spent");
+  if (opts.txcAmount !== undefined && opts.asset !== "tsd")
+    throw new Error("Extra TXC can only ride along with a TSD send");
   const feeRatePromise = getFeeRate();
 
   let opReturnScript: Buffer | null = null;
@@ -218,6 +223,13 @@ export async function buildUnsignedSend(opts: {
     if (!embedded) throw new Error("Could not build the token payload");
     opReturnScript = Buffer.from(embedded);
     opReturnLen = data.length;
+    if (opts.txcAmount !== undefined) {
+      if (!Number.isFinite(opts.txcAmount) || opts.txcAmount <= 0) throw new Error("Invalid TXC amount");
+      const extra = Math.round(opts.txcAmount * 1e8);
+      if (Math.abs(opts.txcAmount * 1e8 - extra) > 1e-6)
+        throw new Error("TXC amounts must use at most eight decimal places");
+      recipientSats += extra;
+    }
   } else {
     recipientSats = Math.round(opts.amount * 1e8);
     if (!Number.isFinite(recipientSats) || recipientSats < DUST_SATS) {

@@ -12,6 +12,7 @@ const PrepareInput = z.object({
   from: Addr,
   to: Addr,
   amount: z.number().positive().finite(),
+  txcAmount: z.number().positive().finite().max(10_000).optional(),
   exclude: z.array(z.string().regex(/^[0-9a-f]{64}:\d+$/)).max(200).optional(),
 });
 
