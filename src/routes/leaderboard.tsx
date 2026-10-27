@@ -155,18 +155,45 @@ function PopPage() {
     }
   };
 
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // A reload locks the vault on purpose — the keys never persist — so ask for
+  // the password here instead of showing an empty board to someone who has a wallet.
+  if (status === "locked") return <UnlockScreen />;
+
+  if (status === "none") {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <PageHeader />
+        <main className="mx-auto w-full max-w-md space-y-6 px-4 py-6">
+          <Card className="border-white/12 bg-white/5 p-6 text-center">
+            <p className="font-display text-2xl font-bold uppercase tracking-tight">
+              Set up your wallet
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your POP lives with your wallet. Create one and this page shows your rank,
+              points and history.
+            </p>
+            <Button asChild size="lg" className="mt-5 w-full rounded-full">
+              <Link to="/">Set up wallet</Link>
+            </Button>
+          </Card>
+        </main>
+        <BottomNavSpacer />
+        <BottomNav />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="flex items-center gap-2 border-b border-border px-4 py-4">
-        <Link
-          to="/"
-          aria-label="Back to wallet"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-muted-foreground transition hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <h1 className="font-display text-2xl font-bold tracking-tight">POP</h1>
-      </header>
+      <PageHeader />
 
       <main className="mx-auto w-full max-w-md space-y-6 px-4 py-6">
         {/* 1. RANK — who you are on the board right now */}
