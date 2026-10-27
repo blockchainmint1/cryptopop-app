@@ -18,16 +18,13 @@ export type DirectoryStatus = {
   acceptsTsd: number;
 };
 
-async function assertAdmin(sb: { rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: unknown }> }, userId: string) {
-  const { data } = await sb.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (!data) throw new Error("Forbidden");
-}
 
 export const getDirectoryStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<DirectoryStatus> => {
     const sb = context.supabase;
-    await assertAdmin(sb, context.userId);
+    const { data: isAdmin } = await sb.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!isAdmin) throw new Error("Forbidden");
 
     const [state, active, named, cityOnly, withPin, acceptsTsd] = await Promise.all([
       sb.from("nectarpay_sync_state").select("*").eq("id", 1).single(),
@@ -66,7 +63,8 @@ export const syncDirectoryNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = context.supabase;
-    await assertAdmin(sb, context.userId);
+    const { data: isAdmin } = await sb.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!isAdmin) throw new Error("Forbidden");
     const { runNectarpaySync } = await import("./nectarpay-sync.server");
     return runNectarpaySync({ force: true });
   });
