@@ -39,5 +39,26 @@ export function registerOfflineSupport() {
     void unregisterAppWorkers().catch(() => undefined);
     return;
   }
-  navigator.serviceWorker.register(SW_PATH, { scope: "/" }).catch(() => undefined);
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker
+    .register(SW_PATH, { scope: "/" })
+    .then((reg) => {
+      // Check for a newer version whenever the app comes back to the foreground.
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") void reg.update().catch(() => undefined);
+      });
+    })
+    .catch(() => undefined);
+  // A new version took over: offer a refresh (never force it — reload locks the vault).
+  let notified = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || notified) return;
+    notified = true;
+    void import("sonner").then(({ toast }) =>
+      toast("A new version of CryptoPOP is ready", {
+        duration: Infinity,
+        action: { label: "Refresh", onClick: () => window.location.reload() },
+      }),
+    );
+  });
 }
