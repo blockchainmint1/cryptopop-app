@@ -122,35 +122,64 @@ export const getNectarInvoiceStatus = createServerFn({ method: "GET" })
     }
   });
 
+const MERCHANT_TTL_MS = 5 * 60_000;
 let merchantCache: { at: number; list: NectarMerchant[] } | null = null;
 
-/** Public NectarPay stores that accept TSD. */
+/**
+ * Stores that accept TSD, read from our own copy of NectarPay's directory
+ * (refreshed hourly by the database timer).
+ *
+ * Only stores a shopper can actually act on are returned: a name plus a map
+ * pin. NectarPay's "city pin only" stores carry no name or address, so they
+ * stay out of the list — the admin directory page reports how many of them are
+ * waiting for their merchant to turn on a full listing.
+ *
+ * If our copy is empty (fresh database, or the timer hasn't run yet) we pull
+ * the feed once inline rather than showing an empty page.
+ */
 export const listNectarMerchants = createServerFn({ method: "GET" }).handler(
   async (): Promise<{ merchants: NectarMerchant[]; available: boolean }> => {
-    if (merchantCache && Date.now() - merchantCache.at < 5 * 60_000) {
+    if (merchantCache && Date.now() - merchantCache.at < MERCHANT_TTL_MS) {
       return { merchants: merchantCache.list, available: true };
     }
     try {
-      const res = await fetch(`${NECTARPAY_ORIGIN}/api/public/v1/merchants?token=TSD`, {
-        headers: { Accept: "application/json" },
-      });
-      if (!res.ok) return { merchants: [], available: false };
-      const body = (await res.json()) as { merchants?: Array<Record<string, unknown>> } | Array<Record<string, unknown>>;
-      const rows = Array.isArray(body) ? body : (body.merchants ?? []);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const read = async () => {
+        const { data, error } = await supabaseAdmin
+          .from("nectarpay_stores")
+          .select("id, name, category, city, region, country, street, lat, lng, logo_url, website")
+          .eq("is_active", true)
+          .contains("accepts", ["TSD"])
+          .not("name", "is", null)
+          .not("lat", "is", null)
+          .not("lng", "is", null)
+          .limit(2000);
+        if (error) throw new Error(error.message);
+        return data ?? [];
+      };
+
+      let rows = await read();
+      if (rows.length === 0) {
+        const { runNectarpaySync } = await import("./nectarpay-sync.server");
+        await runNectarpaySync();
+        rows = await read();
+      }
+
       const list: NectarMerchant[] = rows
         .map((r) => ({
-          id: String(r.store_id ?? r.id ?? ""),
+          id: r.id,
           name: String(r.name ?? "Merchant"),
-          category: (r.category as string | null) ?? null,
-          city: (r.city as string | null) ?? null,
-          country: (r.country as string | null) ?? null,
-          address: (r.address as string | null) ?? null,
+          category: r.category ?? null,
+          city: r.city ?? null,
+          country: r.country ?? null,
+          address: r.street ?? null,
           lat: Number(r.lat),
           lng: Number(r.lng),
-          logoUrl: (r.logo_url as string | null) ?? (r.logoUrl as string | null) ?? null,
-          website: (r.website as string | null) ?? null,
+          logoUrl: r.logo_url ?? null,
+          website: r.website ?? null,
         }))
         .filter((m) => m.id && Number.isFinite(m.lat) && Number.isFinite(m.lng));
+
       merchantCache = { at: Date.now(), list };
       return { merchants: list, available: true };
     } catch (e) {
@@ -159,6 +188,7 @@ export const listNectarMerchants = createServerFn({ method: "GET" }).handler(
     }
   },
 );
+
 
 /**
  * Claim POP for a paid NectarPay invoice. The wallet proves it owns the
