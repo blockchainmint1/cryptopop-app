@@ -33,17 +33,8 @@ export const Route = createFileRoute("/api/public/card/pay")({
         if (!card || card.killed_at) return json({ status: "declined", reason: "Card not recognized" });
         if (!card.enabled) return json({ status: "declined", reason: "Card is turned off" });
         if (card.pin_fails >= 5) return json({ status: "declined", reason: "Card locked after wrong PINs — owner must unlock" });
-        if (!input.pin) return json({ status: "pin_required" });
-        const { hash } = await s.hashPin(input.pin, card.pin_salt);
-        const ok = s.safeEqual(hash, card.pin_hash);
-        const { data: fails } = await sb.rpc("nfc_record_pin", { p_card: card.id, p_ok: ok });
-        const ownerChat = await s.walletChat(card.owner_address);
-        if (!ok) {
-          if ((fails ?? 0) >= 5) await s.notify(ownerChat, `🔒 ${card.label} locked after 5 wrong PINs.`);
-          return json({ status: "pin_required", reason: "Wrong PIN" });
-        }
-
         // Read the real invoice from NectarPay — amount and destination come from them, not the caller.
+        const chatP = s.walletChat(card.owner_address);
         const np = await import("@/lib/nectarpay.functions");
         let inv;
         try {
@@ -55,6 +46,18 @@ export const Route = createFileRoute("/api/public/card/pay")({
         } catch (e) {
           return json({ status: "declined", reason: (e as Error).message || "Invoice unavailable" });
         }
+        // PIN only above the owner's per-card amount (0 = every tap).
+        if (inv.fiatAmount > Number(card.pin_above_usd ?? 0)) {
+          if (!input.pin) return json({ status: "pin_required" });
+          const { hash } = await s.hashPin(input.pin, card.pin_salt);
+          const ok = s.safeEqual(hash, card.pin_hash);
+          const { data: fails } = await sb.rpc("nfc_record_pin", { p_card: card.id, p_ok: ok });
+          if (!ok) {
+            if ((fails ?? 0) >= 5) await s.notify(await chatP, `🔒 ${card.label} locked after 5 wrong PINs.`);
+            return json({ status: "pin_required", reason: "Wrong PIN" });
+          }
+        }
+        const ownerChat = await chatP;
         if (inv.status !== "pending") return json({ status: "declined", reason: `Invoice is ${inv.status}` });
         if (inv.currency.toUpperCase() !== "USD") return json({ status: "declined", reason: "Only USD invoices" });
         if (!inv.address || !inv.tsdAmount || !/^T[1-9A-HJ-NP-Za-km-z]{25,40}$/.test(inv.address))
@@ -82,7 +85,7 @@ export const Route = createFileRoute("/api/public/card/pay")({
           await s.askApproval(ownerChat, { id: row.payment_id, amount_usd: inv.fiatAmount, merchant_name: inv.merchant?.name ?? null }, card.label);
           return json({ status: "approval_required", payment_id: row.payment_id });
         }
-        const out = await s.executePayment(row.payment_id);
+        const out = await s.executePayment(row.payment_id, { card, chat: ownerChat });
         return json({ ...out, payment_id: row.payment_id });
       },
 

@@ -157,13 +157,20 @@ export async function walletChat(ownerAddress: string): Promise<string | null> {
 
 // ---------- Paying ----------
 /** Sign and broadcast a reserved payment (status must already be 'sending'). */
-export async function executePayment(paymentId: string): Promise<{ status: string; txid?: string; reason?: string }> {
+export async function executePayment(
+  paymentId: string,
+  known?: { card: { id: string; owner_address: string }; chat: string | null },
+): Promise<{ status: string; txid?: string; reason?: string }> {
   const sb = await admin();
   const { data: p } = await sb.from("nfc_card_payments").select("*").eq("id", paymentId).single();
   if (!p || p.status !== "sending") return { status: p?.status ?? "failed" };
-  const { data: c } = await sb.from("nfc_cards").select("*").eq("id", p.card_id).single();
-  const { data: k } = await sb.from("nfc_card_keys").select("enc_key").eq("card_id", p.card_id).maybeSingle();
-  const chat = c ? await walletChat(c.owner_address) : null;
+  // Fresh card row (enabled/killed may change) + key + chat, fetched together.
+  const [{ data: c }, { data: k }, knownChat] = await Promise.all([
+    sb.from("nfc_cards").select("*").eq("id", p.card_id).single(),
+    sb.from("nfc_card_keys").select("enc_key").eq("card_id", p.card_id).maybeSingle(),
+    known && known.card.id === p.card_id ? Promise.resolve(known.chat) : Promise.resolve(undefined),
+  ]);
+  const chat = knownChat !== undefined ? knownChat : c ? await walletChat(c.owner_address) : null;
   const fail = async (reason: string) => {
     await sb.from("nfc_card_payments").update({ status: "failed", reason }).eq("id", paymentId);
     await notify(chat, `⚠️ Tap payment of $${Number(p.amount_usd).toFixed(2)} failed: ${esc(reason)}`);
@@ -181,8 +188,10 @@ export async function executePayment(paymentId: string): Promise<{ status: strin
     tx.finalize();
     key.fill(0);
     const txid = await broadcastRaw(tx.hex);
-    await sb.from("nfc_card_payments").update({ status: "sent", txid }).eq("id", paymentId);
-    await notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.`);
+    await Promise.all([
+      sb.from("nfc_card_payments").update({ status: "sent", txid }).eq("id", paymentId),
+      notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.`).catch(() => undefined),
+    ]);
     return { status: "sent", txid };
   } catch (e) {
     console.error("[nfc pay]", e);
