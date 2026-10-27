@@ -51,7 +51,10 @@ export function validateSend(psbt: string, intent: SendIntent, ownedAddresses: s
         input.finalScriptSig?.length || input.finalScriptWitness?.length || input.redeemScript || input.witnessScript)
       throw new Error("Unsafe transaction input");
     // Rehash the complete previous transaction, not metadata supplied by the server.
-    const previous = Transaction.fromRaw(RawTx.encode(input.nonWitnessUtxo));
+    // The previous transaction may carry an Omni OP_RETURN output (e.g. the
+    // TSD send that funded these coins) — allow it; we only verify the one
+    // output being spent below.
+    const previous = Transaction.fromRaw(RawTx.encode(input.nonWitnessUtxo), { allowUnknownOutputs: true });
     const id = Array.from(input.txid, (b) => b.toString(16).padStart(2, "0")).join("");
     if (previous.id !== id) throw new Error("Previous transaction does not match the input");
     const key = `${id}:${input.index}`;
