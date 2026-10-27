@@ -3,7 +3,7 @@ import { CalendarDays, MapPin, Wallet } from "lucide-react";
 import coin from "@/assets/cryptopop-coin.png";
 
 /**
- * Sticky footer navigation: Directory, Events, Wallet, POP.
+ * Sticky footer navigation: Wallet, Directory, Events, POP.
  * The active tab is lit in brand pink; the rest stay muted.
  */
 function itemClass(active: boolean) {
@@ -28,6 +28,14 @@ export function BottomNav() {
     >
       <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-1 px-2">
         <Link
+          to="/"
+          aria-current={onWallet ? "page" : undefined}
+          className={itemClass(onWallet)}
+        >
+          <Wallet className="h-5 w-5" />
+          Wallet
+        </Link>
+        <Link
           to="/merchants"
           aria-current={onDirectory ? "page" : undefined}
           className={itemClass(onDirectory)}
@@ -42,14 +50,6 @@ export function BottomNav() {
         >
           <CalendarDays className="h-5 w-5" />
           Events
-        </Link>
-        <Link
-          to="/"
-          aria-current={onWallet ? "page" : undefined}
-          className={itemClass(onWallet)}
-        >
-          <Wallet className="h-5 w-5" />
-          Wallet
         </Link>
         <Link
           to="/leaderboard"
