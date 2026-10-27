@@ -11,6 +11,7 @@ import { useWallet } from "@/lib/wallet/wallet-context";
 import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
+import { signPsbt } from "@/lib/wallet/sign";
 import { nfcLinkCard, nfcListCards, nfcUpdateCard, nfcKillCard } from "@/lib/nfc-cards.functions";
 import { normalizeUid, pocketAddress, pocketKeyHex, ownerEnvelope, signPocketSend, nfcPocketPath } from "@/lib/wallet/nfc-cards";
 import { nfcReadAvailable, readCardId } from "@/lib/native/nfc";
@@ -53,6 +54,9 @@ function NfcPage() {
   const [scanning, setScanning] = useState(false);
   const [nfcOk, setNfcOk] = useState(false);
   const [fundIdx, setFundIdx] = useState<number | null>(null);
+  const [fundTsd, setFundTsd] = useState("100");
+  const [fundTxc, setFundTxc] = useState("1");
+  const [funding, setFunding] = useState(false);
 
   useEffect(() => setNfcOk(nfcReadAvailable()), []);
 
@@ -137,6 +141,31 @@ function NfcPage() {
       await refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Update failed");
+    }
+  }
+
+  async function loadCard(c: CardRow) {
+    if (!mnemonic || !address) return;
+    const tsd = Number(fundTsd), txc = Number(fundTxc);
+    if (!(tsd >= 0 && txc >= 0) || (!tsd && !txc)) return toast.error("Enter an amount");
+    if (!window.confirm(`Send ${tsd ? `${tsd} TSD` : ""}${tsd && txc ? " and " : ""}${txc ? `${txc} TXC` : ""} from your wallet to “${c.label}”?`)) return;
+    setFunding(true);
+    try {
+      for (const [asset, amount] of [["tsd", tsd], ["txc", txc]] as const) {
+        if (!amount) continue;
+        const intent = { asset, from: address, to: c.address, amount };
+        const built = await prep({ data: intent });
+        const raw = signPsbt(built.psbtBase64, mnemonic, intent);
+        const r = await bcast({ data: { rawHex: raw } });
+        if (!r.ok) throw new Error(`${asset.toUpperCase()}: ${r.error}`);
+        toast.success(`${amount} ${asset.toUpperCase()} sent to ${c.label}`);
+      }
+      setFundIdx(null);
+      setTimeout(() => void refresh(), 4000);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't load card");
+    } finally {
+      setFunding(false);
     }
   }
 
