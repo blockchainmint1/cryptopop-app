@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   Trophy,
   Users,
+  Gamepad2,
 } from "lucide-react";
 import { toast } from "sonner";
 import coin from "@/assets/cryptopop-coin.png";
