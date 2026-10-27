@@ -370,8 +370,8 @@ function PopPage() {
                 </p>
               )}
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Referral POP isn't crediting yet — we're wiring it up. Your link is already saved
-                on the phone that opens it.
+                Referral POP isn't live yet. Keep the link — we will tell you the day it starts
+                crediting.
               </p>
             </Card>
           </div>
