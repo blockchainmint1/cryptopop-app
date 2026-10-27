@@ -35,6 +35,8 @@ if (target === "android") {
       '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />',
       '<uses-permission android:name="android.permission.INTERNET" />',
       '<uses-feature android:name="android.hardware.camera" android:required="false" />',
+      '<uses-permission android:name="android.permission.NFC" />',
+      '<uses-feature android:name="android.hardware.nfc" android:required="false" />',
     ];
     let out = xml;
     for (const p of perms) {
@@ -65,6 +67,7 @@ if (target === "android") {
   patch("ios/App/App/Info.plist", (plist) => {
     const entries = [
       ["NSCameraUsageDescription", "Scan Cold Storage Coins, merchant QR codes, and event QR passes."],
+      ["NFCReaderUsageDescription", "Read your tap-to-pay card so it can be linked to your wallet."],
       ["NSFaceIDUsageDescription", "Unlock your POP Wallet with Face ID."],
       ["NSPhotoLibraryAddUsageDescription", "Save your wallet QR code or event pass."],
       [
