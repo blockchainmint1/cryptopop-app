@@ -78,6 +78,13 @@
       "when": 1793103255374,
       "tag": "0010_nfc_card_service",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793113541330,
+      "tag": "0011_fix_nfc_reserve_ambiguous_status",
+      "breakpoints": true
     }
   ]
 }
