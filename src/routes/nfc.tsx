@@ -308,11 +308,12 @@ function NfcPage() {
               </div>
             </div>
             <LimitsEditor
+              pinAbove={c.pinAboveUsd ?? 0}
               perTap={c.perTapUsd}
               daily={c.dailyUsd}
-              onSave={(perTapUsd, dailyUsd) => update(c, { perTapUsd, dailyUsd }, "Approval limits saved")}
+              onSave={(pinAboveUsd, perTapUsd, dailyUsd) => update(c, { pinAboveUsd, perTapUsd, dailyUsd }, "Card settings saved")}
             />
-            <p className="text-xs text-muted-foreground">Every spend sends you a Telegram alert. Above these amounts, you approve it first.</p>
+            <p className="text-xs text-muted-foreground">Every spend sends you a Telegram alert.</p>
 
             {fundIdx === c.index && (
               <div className="space-y-2 rounded-md bg-muted p-3 text-center">
@@ -361,30 +362,41 @@ function NfcPage() {
   );
 }
 
-function LimitsEditor({ perTap, daily, onSave }: { perTap: number; daily: number; onSave: (p: number, d: number) => void }) {
+function LimitsEditor({ pinAbove, perTap, daily, onSave }: { pinAbove: number; perTap: number; daily: number; onSave: (pin: number, p: number, d: number) => void }) {
   const [open, setOpen] = useState(false);
+  const [x, setX] = useState(String(pinAbove));
   const [p, setP] = useState(String(perTap));
   const [d, setD] = useState(String(daily));
   if (!open)
     return (
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">Ask me over ${perTap} a tap · ${daily} a day</p>
-        <Button size="sm" variant="ghost" onClick={() => { setP(String(perTap)); setD(String(daily)); setOpen(true); }}>Edit</Button>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-0.5 text-xs text-muted-foreground">
+          <p>PIN: {pinAbove > 0 ? `over $${pinAbove}` : "every tap"}</p>
+          <p>Telegram approval: {perTap > 0 ? `over $${perTap} a tap` : "every tap"} · over ${daily} a day</p>
+        </div>
+        <Button size="sm" variant="ghost" onClick={() => { setX(String(pinAbove)); setP(String(perTap)); setD(String(daily)); setOpen(true); }}>Edit</Button>
       </div>
     );
-  const pn = Number(p), dn = Number(d);
-  const valid = p !== "" && d !== "" && Number.isFinite(pn) && Number.isFinite(dn) && pn >= 0 && dn >= 0;
+  const xn = Number(x), pn = Number(p), dn = Number(d);
+  const valid = [x, p, d].every((v) => v !== "") && [xn, pn, dn].every((n) => Number.isFinite(n) && n >= 0);
   return (
-    <div className="space-y-2 rounded-md bg-muted p-3">
-      <p className="font-mono text-xs uppercase text-muted-foreground">Ask for approval over</p>
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs">$ per tap<Input inputMode="decimal" value={p} onChange={(e) => setP(e.target.value)} /></label>
-        <label className="text-xs">$ per day<Input inputMode="decimal" value={d} onChange={(e) => setD(e.target.value)} /></label>
+    <div className="space-y-3 rounded-md bg-muted p-3">
+      <div className="space-y-1">
+        <p className="font-mono text-xs uppercase text-muted-foreground">Ask for PIN over</p>
+        <label className="text-xs">$ per tap<Input inputMode="decimal" value={x} onChange={(e) => setX(e.target.value)} /></label>
+        <p className="text-xs text-muted-foreground">$0 = PIN on every tap. Small taps under this amount go through with no PIN.</p>
       </div>
-      <p className="text-xs text-muted-foreground">Set $0 to approve every spend.</p>
+      <div className="space-y-1">
+        <p className="font-mono text-xs uppercase text-muted-foreground">Ask me on Telegram over</p>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="text-xs">$ per tap<Input inputMode="decimal" value={p} onChange={(e) => setP(e.target.value)} /></label>
+          <label className="text-xs">$ per day<Input inputMode="decimal" value={d} onChange={(e) => setD(e.target.value)} /></label>
+        </div>
+        <p className="text-xs text-muted-foreground">$0 = approve every spend.</p>
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <Button size="sm" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-        <Button size="sm" disabled={!valid} onClick={() => { onSave(pn, dn); setOpen(false); }}>Save</Button>
+        <Button size="sm" disabled={!valid} onClick={() => { onSave(xn, pn, dn); setOpen(false); }}>Save</Button>
       </div>
     </div>
   );
