@@ -531,7 +531,7 @@ export function WalletDashboard() {
           <SheetHeader className="text-left">
             <SheetTitle className="font-display uppercase">Receive</SheetTitle>
             <SheetDescription>
-              Share this address to receive POP or TXC.{" "}
+              Share this address to receive TSD, TXC or POP.{" "}
               {origin === "coin" ? "Coin-backed" : origin === "imported" ? "Imported" : "Seed phrase"}{" "}
               wallet.
             </SheetDescription>
