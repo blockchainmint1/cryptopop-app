@@ -300,6 +300,15 @@ function NfcPage() {
 
             {fundIdx === c.index && (
               <div className="space-y-2 rounded-md bg-muted p-3 text-center">
+                <p className="font-mono text-xs uppercase text-muted-foreground">Load from my wallet</p>
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <label className="text-xs">TSD<Input inputMode="decimal" value={fundTsd} onChange={(e) => setFundTsd(e.target.value)} /></label>
+                  <label className="text-xs">TXC (fees)<Input inputMode="decimal" value={fundTxc} onChange={(e) => setFundTxc(e.target.value)} /></label>
+                </div>
+                <Button size="sm" className="w-full" disabled={funding} onClick={() => loadCard(c)}>
+                  {funding ? "Sending…" : "Send to this card"}
+                </Button>
+                <p className="pt-2 text-xs text-muted-foreground">Or send from another wallet:</p>
                 <div className="mx-auto w-fit rounded bg-foreground p-2">
                   <QRCodeSVG value={c.address} size={140} />
                 </div>
