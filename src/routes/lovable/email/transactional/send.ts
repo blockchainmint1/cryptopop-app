@@ -59,6 +59,16 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           return Response.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        // Security audit H1: only administrators may use this generic sender.
+        // App flows send server-side; this stops self-registered users from
+        // relaying branded emails with their own content.
+        const { data: adminRow } = await supabase
+          .from('user_roles').select('role')
+          .eq('user_id', user.id).eq('role', 'admin').maybeSingle()
+        if (!adminRow) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 })
+        }
+
         // Parse request body
         let templateName: string
         let recipientEmail: string

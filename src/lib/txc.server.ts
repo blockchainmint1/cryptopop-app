@@ -30,7 +30,7 @@ export const TXC_NETWORK: bitcoin.Network = {
 
 
 const DUST_SATS = 10_000;
-const FEE_SATS_PER_VBYTE = 5;
+const FEE_SATS_PER_VBYTE = 10; // match the send floor; 5 sat/vB stalls in the mempool
 const MEMPOOL_BASE = "https://mempool.texitcoin.org/api";
 
 function envPropertyId(): number {
