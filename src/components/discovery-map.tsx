@@ -1,5 +1,6 @@
 /// <reference types="google.maps" />
 import { useEffect, useRef, useState } from "react";
+import { LocateFixed } from "lucide-react";
 import { loadGoogleMaps, MAPS_AUTH_FAILED_EVENT } from "@/lib/google-maps";
 
 export type MapDiscoveryItem = {
@@ -15,6 +16,8 @@ type Props = {
   items: MapDiscoveryItem[];
   userLocation: { lat: number; lng: number } | null;
   onSelect: (item: MapDiscoveryItem) => void;
+  onLocate?: () => void;
+  locating?: boolean;
 };
 
 /** Dark basemap so the map matches the app's ink-black UI (Google needs literal colors). */
@@ -32,7 +35,7 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
 ];
 
 /** Events (pink "E") and stores (cyan "S") on one map; nearby pins cluster when zoomed out. */
-export function DiscoveryMap({ items, userLocation, onSelect }: Props) {
+export function DiscoveryMap({ items, userLocation, onSelect, onLocate, locating }: Props) {
   const boxRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -62,7 +65,7 @@ export function DiscoveryMap({ items, userLocation, onSelect }: Props) {
           streetViewControl: false,
           fullscreenControl: false,
           styles: DARK_MAP_STYLES,
-          gestureHandling: "cooperative",
+          gestureHandling: "greedy",
           backgroundColor: "#0e0e18",
         });
         setReady(true);
@@ -78,7 +81,8 @@ export function DiscoveryMap({ items, userLocation, onSelect }: Props) {
     const g = window.google;
     if (!ready || !map || !g) return;
     const css = getComputedStyle(document.documentElement);
-    const color = { event: css.getPropertyValue("--neon-pink").trim(), merchant: css.getPropertyValue("--neon-cyan").trim() };
+    const color = { event: css.getPropertyValue("--neon-pink").trim(), merchant: css.getPropertyValue("--neon-lime").trim() };
+    const glow = css.getPropertyValue("--neon-pink").trim();
     const ink = css.getPropertyValue("--ink").trim();
 
     const render = () => {
@@ -98,6 +102,7 @@ export function DiscoveryMap({ items, userLocation, onSelect }: Props) {
             lng: group.reduce((s, i) => s + i.lng, 0) / group.length,
           };
           const hasEvent = group.some((i) => i.type === "event");
+          if (hasEvent) markersRef.current.push(new g.maps.Marker({ map, position: pos, clickable: false, zIndex: 1, icon: { path: g.maps.SymbolPath.CIRCLE, scale: 26, fillColor: glow, fillOpacity: 0.22, strokeOpacity: 0 } }));
           const m = new g.maps.Marker({
             map,
             position: pos,
@@ -116,6 +121,7 @@ export function DiscoveryMap({ items, userLocation, onSelect }: Props) {
         group.forEach((it, i) => {
           const a = (i / group.length) * Math.PI * 2;
           const pos = group.length > 1 ? { lat: it.lat + 0.00025 * Math.cos(a), lng: it.lng + 0.00025 * Math.sin(a) } : { lat: it.lat, lng: it.lng };
+          if (it.type === "event") markersRef.current.push(new g.maps.Marker({ map, position: pos, clickable: false, zIndex: 1, icon: { path: g.maps.SymbolPath.CIRCLE, scale: 24, fillColor: glow, fillOpacity: 0.22, strokeOpacity: 0 } }));
           const m = new g.maps.Marker({
             map,
             position: pos,
@@ -178,5 +184,24 @@ export function DiscoveryMap({ items, userLocation, onSelect }: Props) {
       </div>
     );
   }
-  return <div ref={boxRef} className="h-72 w-full overflow-hidden rounded-3xl border border-border bg-card sm:h-96" aria-label="Map of events and stores" />;
+  return (
+    <div className="relative">
+      <div ref={boxRef} className="h-[60vh] min-h-80 w-full overflow-hidden rounded-3xl border border-border bg-card sm:h-[70vh]" aria-label="Map of events and stores" />
+      <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5 font-mono text-[10px] uppercase tracking-widest">
+        <span className="rounded-full border border-neon-pink/60 bg-background/80 px-2.5 py-1 text-neon-pink backdrop-blur">E · Events</span>
+        <span className="rounded-full border border-neon-lime/60 bg-background/80 px-2.5 py-1 text-neon-lime backdrop-blur">S · Stores</span>
+      </div>
+      {onLocate ? (
+        <button
+          type="button"
+          onClick={onLocate}
+          disabled={locating}
+          aria-label="Show my location"
+          className="absolute bottom-4 right-4 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur disabled:opacity-60"
+        >
+          <LocateFixed className={locating ? "h-5 w-5 animate-pulse" : "h-5 w-5"} />
+        </button>
+      ) : null}
+    </div>
+  );
 }

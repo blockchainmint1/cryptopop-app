@@ -320,14 +320,14 @@ function EventsPage() {
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-pink" /> Events</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-cyan" /> Stores</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-neon-lime" /> Stores</span>
           </div>
           <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={locateMe} disabled={findingMe}>
             <LocateFixed className="mr-1.5 h-4 w-4" />
             {findingMe ? "Finding…" : "My location"}
           </Button>
         </div>
-        <DiscoveryMap items={mapItems} userLocation={me} onSelect={setPicked} />
+        <DiscoveryMap items={mapItems} userLocation={me} onSelect={setPicked} onLocate={locateMe} locating={findingMe} />
         {picked ? (
           <div className="mt-3 rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-3">
