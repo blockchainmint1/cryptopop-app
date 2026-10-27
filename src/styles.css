@@ -67,6 +67,7 @@
   --color-neon-pink: var(--neon-pink);
   --color-neon-cyan: var(--neon-cyan);
   --color-neon-lime: var(--neon-lime);
+  --color-warn: oklch(0.83 0.15 80); /* game "wrong spot" amber */
   --font-display: "Bebas Neue", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
