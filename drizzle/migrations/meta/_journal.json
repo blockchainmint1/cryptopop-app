@@ -85,6 +85,13 @@
       "when": 1793113541330,
       "tag": "0011_fix_nfc_reserve_ambiguous_status",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793114174910,
+      "tag": "0012_nfc_pin_threshold",
+      "breakpoints": true
     }
   ]
 }
