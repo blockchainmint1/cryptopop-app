@@ -295,3 +295,178 @@ html.native [contenteditable="true"] {
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* ===== POP Arcade game animations (from Chad's build) ===== */
+/* POPword: shake the board when a guess isn't a real word (no try used). */
+@keyframes popword-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.popword-shake { animation: popword-shake 0.45s ease; }
+
+/* POPword: each accepted letter turns past a branded back before its result. */
+.popword-flip-tile {
+  width: 2.75rem;
+  height: 2.75rem;
+  perspective: 700px;
+}
+.popword-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: popword-tile-turn 2200ms linear both;
+  will-change: transform;
+}
+.popword-flip-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  text-transform: uppercase;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.popword-flip-start { animation: popword-start-face 2200ms step-end both; }
+.popword-flip-logo {
+  transform: rotateX(180deg);
+  border-color: var(--primary);
+  background: var(--primary);
+}
+.popword-flip-logo img {
+  width: 1.75rem;
+  height: 1.75rem;
+  object-fit: contain;
+}
+.popword-flip-result { animation: popword-result-face 2200ms step-end both; }
+.popword-flip-delay-0 :is(.popword-flip-inner, .popword-flip-start, .popword-flip-result) { animation-delay: 0ms; }
+.popword-flip-delay-1 :is(.popword-flip-inner, .popword-flip-start, .popword-flip-result) { animation-delay: 480ms; }
+.popword-flip-delay-2 :is(.popword-flip-inner, .popword-flip-start, .popword-flip-result) { animation-delay: 960ms; }
+.popword-flip-delay-3 :is(.popword-flip-inner, .popword-flip-start, .popword-flip-result) { animation-delay: 1440ms; }
+.popword-flip-delay-4 :is(.popword-flip-inner, .popword-flip-start, .popword-flip-result) { animation-delay: 1920ms; }
+/* One continuous turn avoids velocity changes; the logo naturally owns the middle half. */
+@keyframes popword-tile-turn {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(360deg); }
+}
+@keyframes popword-start-face {
+  0%, 24% { visibility: visible; }
+  25%, 100% { visibility: hidden; }
+}
+@keyframes popword-result-face {
+  0%, 74% { visibility: hidden; }
+  75%, 100% { visibility: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .popword-flip-inner,
+  .popword-flip-start,
+  .popword-flip-result {
+    animation: none;
+  }
+  .popword-flip-start,
+  .popword-flip-logo { display: none; }
+}
+
+/* POP Tiles: compact neon cabinet with a true four-by-four opening board. */
+.poptiles-stage {
+  position: relative;
+  border-color: color-mix(in oklab, var(--neon-purple) 45%, var(--border));
+  background:
+    linear-gradient(145deg, color-mix(in oklab, var(--card) 92%, var(--neon-purple)), var(--card));
+  box-shadow:
+    inset 0 0 30px color-mix(in oklab, var(--neon-purple) 8%, transparent),
+    0 0 42px -18px color-mix(in oklab, var(--neon-pink) 60%, transparent);
+}
+.poptiles-stage::before,
+.poptiles-stage::after {
+  content: "";
+  position: absolute;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.16;
+  pointer-events: none;
+}
+.poptiles-stage::before { right: -4rem; top: -4rem; background: var(--neon-pink); }
+.poptiles-stage::after { bottom: -5rem; left: -4rem; background: var(--neon-lime); }
+.poptiles-icon {
+  display: inline-flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--bone);
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-purple));
+  box-shadow: 0 0 16px color-mix(in oklab, var(--neon-pink) 48%, transparent);
+}
+.poptiles-scoreboard {
+  min-width: 5rem;
+  border: 1px solid color-mix(in oklab, var(--neon-pink) 30%, transparent);
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.55rem;
+  background: color-mix(in oklab, var(--background) 72%, transparent);
+  text-align: right;
+}
+.poptiles-life {
+  height: 0.45rem;
+  width: 0.45rem;
+  border-radius: 999px;
+  background: var(--neon-pink);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--neon-pink) 85%, transparent);
+}
+.poptiles-life-used { background: var(--muted); box-shadow: none; }
+.poptiles-board { position: relative; z-index: 1; }
+.poptiles-tile {
+  aspect-ratio: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  border: 1px solid color-mix(in oklab, var(--neon-cyan) 19%, var(--border));
+  border-bottom-width: 4px;
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  background: color-mix(in oklab, var(--muted) 78%, var(--background));
+  color: var(--foreground);
+  font-family: var(--font-display);
+  font-size: clamp(0.68rem, 3vw, 0.86rem);
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+.poptiles-tile:nth-child(4n + 1) { border-color: color-mix(in oklab, var(--neon-pink) 30%, var(--border)); }
+.poptiles-tile:nth-child(4n + 2) { border-color: color-mix(in oklab, var(--neon-lime) 28%, var(--border)); }
+.poptiles-tile:nth-child(4n + 3) { border-color: color-mix(in oklab, var(--neon-cyan) 30%, var(--border)); }
+.poptiles-tile:nth-child(4n) { border-color: color-mix(in oklab, var(--neon-purple) 35%, var(--border)); }
+.poptiles-tile:hover { transform: translateY(-2px); filter: brightness(1.15); }
+.poptiles-tile:active { transform: translateY(2px); border-bottom-width: 1px; }
+.poptiles-tile-selected {
+  z-index: 2;
+  transform: translateY(-2px) scale(1.035);
+  border-color: var(--neon-pink) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-purple));
+  color: var(--bone);
+  box-shadow: 0 0 20px color-mix(in oklab, var(--neon-pink) 48%, transparent);
+  animation: poptiles-lock 240ms ease-out;
+}
+.poptiles-guess { box-shadow: 0 5px 0 color-mix(in oklab, var(--neon-purple) 78%, var(--background)); }
+.poptiles-guess:active { transform: translateY(3px); box-shadow: 0 2px 0 color-mix(in oklab, var(--neon-purple) 78%, var(--background)); }
+.poptiles-clear { border-color: color-mix(in oklab, var(--neon-pink) 35%, var(--border)); color: var(--neon-pink); }
+@keyframes poptiles-lock {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 transparent; }
+  70% { transform: translateY(-2px) scale(1.08); }
+  100% { transform: translateY(-2px) scale(1.035); box-shadow: 0 0 20px color-mix(in oklab, var(--neon-pink) 48%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poptiles-tile,
+  .poptiles-tile-selected { animation: none; transition: none; }
+}
