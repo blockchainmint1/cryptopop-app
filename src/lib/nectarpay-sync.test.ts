@@ -26,7 +26,7 @@ describe("store directory mirror", () => {
 
   it("normalises the coins a store accepts", () => {
     expect(toRow({ ...base, accepts: ["tsd", "TSD", " txc ", "not a coin!", "x".repeat(30)] }).accepts).toEqual(["TSD", "TXC"]);
-    expect(toRow({ ...base, accepts: undefined }).accepts).toEqual([]);
+    expect(toRow({ id: base.id }).accepts).toEqual([]);
   });
 
   it("carries the address through so a pin can be placed", () => {
