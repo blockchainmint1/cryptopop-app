@@ -37,8 +37,9 @@ export const Route = createFileRoute("/api/public/card/pay")({
         const { hash } = await s.hashPin(input.pin, card.pin_salt);
         const ok = s.safeEqual(hash, card.pin_hash);
         const { data: fails } = await sb.rpc("nfc_record_pin", { p_card: card.id, p_ok: ok });
+        const ownerChat = await s.walletChat(card.owner_address);
         if (!ok) {
-          if ((fails ?? 0) >= 5) await s.notify(card.tg_chat_id, `🔒 ${card.label} locked after 5 wrong PINs.`);
+          if ((fails ?? 0) >= 5) await s.notify(ownerChat, `🔒 ${card.label} locked after 5 wrong PINs.`);
           return json({ status: "pin_required", reason: "Wrong PIN" });
         }
 
@@ -71,11 +72,11 @@ export const Route = createFileRoute("/api/public/card/pay")({
           return json({ status: "declined", reason: dup ? "This invoice is already being paid" : "Card is off" });
         }
         if (row.status === "approval_required") {
-          if (!card.tg_chat_id) {
+          if (!ownerChat) {
             await sb.from("nfc_card_payments").update({ status: "declined", reason: "Over limit and no Telegram approver" }).eq("id", row.payment_id);
             return json({ status: "declined", payment_id: row.payment_id, reason: "Over the card's limit" });
           }
-          await s.askApproval(card.tg_chat_id, { id: row.payment_id, amount_usd: inv.fiatAmount, merchant_name: inv.merchant?.name ?? null }, card.label);
+          await s.askApproval(ownerChat, { id: row.payment_id, amount_usd: inv.fiatAmount, merchant_name: inv.merchant?.name ?? null }, card.label);
           return json({ status: "approval_required", payment_id: row.payment_id });
         }
         const out = await s.executePayment(row.payment_id);
