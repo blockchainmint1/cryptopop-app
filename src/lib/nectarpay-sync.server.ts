@@ -88,7 +88,7 @@ function coins(list: string[] | undefined): string[] {
   return Array.from(new Set((list ?? []).map((c) => c.trim().toUpperCase()).filter((c) => /^[A-Z0-9_-]{1,10}$/.test(c)))).slice(0, 60);
 }
 
-function toRow(s: FeedStore) {
+export function toRow(s: FeedStore) {
   const a = s.address ?? {};
   return {
     id: s.id,
