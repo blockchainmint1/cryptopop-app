@@ -104,9 +104,6 @@ export function WalletDashboard() {
   const [copied, setCopied] = useState(false);
 
   const [hidden, setHidden] = useState<ChainId[]>([]);
-  const [region, setRegion] = useState<RegionId>("tx");
-  const [marketSlug, setMarketSlug] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
 
   const [showAllTx, setShowAllTx] = useState(false);
   const [txOpen, setTxOpen] = useState(true);
@@ -129,7 +126,6 @@ export function WalletDashboard() {
   const [addValueOpen, setAddValueOpen] = useState(false);
 
   useEffect(() => setHidden(loadHiddenChains()), []);
-  useEffect(() => setRegion(loadRegion()), []);
   useEffect(() => setMarketSlug(loadMarketSlug()), []);
   useEffect(() => setTxLabels(loadTxLabels()), []);
   const [contacts, setContacts] = useState<Record<string, Contact>>({});
@@ -203,15 +199,8 @@ export function WalletDashboard() {
     });
   }, [address, savePushToken, navigate]);
 
-  const balances: Record<ChainId, number | null> = useMemo(
-    () => ({ pop, phpop, tsd, txc }),
-    [pop, phpop, tsd, txc],
-  );
-
-  const visibleChains = regionAssets(region).filter((c) => !hidden.includes(c.id));
   const tsdVisible = !hidden.includes("tsd");
-  const headline = tsdVisible ? (tsd ?? 0).toFixed(2) : (pop ?? 0).toLocaleString();
-  const headlineLabel = tsdVisible ? "TSD · Texas Stable Dollar" : "POP";
+
 
   async function copyAddress() {
     if (!address) return;
@@ -332,66 +321,27 @@ export function WalletDashboard() {
       <main className="mx-auto w-full max-w-md space-y-4 px-4 pb-32 pt-4">
         {/* Total balance across chains */}
         <Card className="relative overflow-hidden border-white/12 bg-white/5 p-6 text-center backdrop-blur-xl">
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={loading}
+            aria-label="Refresh balance"
+            className="absolute right-3 top-3 rounded-full p-2 text-muted-foreground transition hover:text-foreground"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
           <img src={coin} alt="" aria-hidden className="mx-auto h-12 w-12" />
           <p className="mt-3 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
             Total balance
           </p>
           <p className="font-display text-6xl font-bold leading-none">
-            {loading && pop === null && tsd === null ? "—" : headline}
+            {loading && tsd === null ? "—" : (tsd ?? 0).toFixed(2)}
           </p>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            {headlineLabel} · {visibleChains.length}{" "}
-            {visibleChains.length === 1 ? "asset" : "assets"}
+            Texas Stable Dollar
           </p>
-
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="mx-auto mt-3 flex items-center gap-1 rounded-full px-3 py-1 text-xs text-muted-foreground transition hover:text-foreground"
-          >
-            {expanded ? "Hide detail" : "Show detail"}
-            <ChevronDown className={`h-3.5 w-3.5 transition ${expanded ? "rotate-180" : ""}`} />
-          </button>
-
-          {expanded && (
-            <div className="mt-3 space-y-2 text-left">
-              {visibleChains.length === 0 && (
-                <p className="text-center text-xs text-muted-foreground">
-                  All assets hidden — turn them back on in settings.
-                </p>
-              )}
-              {visibleChains.map((c) => {
-                const v = balances[c.id];
-                return (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2"
-                  >
-                    <div>
-                      <p className="font-display text-sm font-semibold uppercase">{c.label}</p>
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {c.chain}
-                      </p>
-                    </div>
-                    <p className="font-mono text-sm">
-                      {v === null ? "—" : v.toFixed(c.decimals)}
-                    </p>
-                  </div>
-                );
-              })}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full rounded-full"
-                onClick={refresh}
-                disabled={loading}
-              >
-                <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-                Refresh
-              </Button>
-            </div>
-          )}
         </Card>
+
 
         {/* Top up (VectorPay handoff) */}
         <Button
