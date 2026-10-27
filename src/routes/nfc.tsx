@@ -10,15 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
-import {
-  type NfcCard,
-  loadCards,
-  saveCards,
-  nextIndex,
-  normalizeUid,
-  pocketAddress,
-  nfcPocketPath,
-} from "@/lib/wallet/nfc-cards";
+import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
+import { nfcLinkCard, nfcListCards, nfcUpdateCard, nfcKillCard } from "@/lib/nfc-cards.functions";
+import { normalizeUid, pocketAddress, pocketKeyHex, ownerEnvelope, signPocketSend, nfcPocketPath } from "@/lib/wallet/nfc-cards";
 import { nfcReadAvailable, readCardId } from "@/lib/native/nfc";
 
 export const Route = createFileRoute("/nfc")({
@@ -36,44 +30,51 @@ export const Route = createFileRoute("/nfc")({
   component: NfcPage,
 });
 
+type ListRes = Awaited<ReturnType<typeof nfcListCards>>;
+type CardRow = ListRes["cards"][number];
 type Bal = { tsd: number | null; txc: number | null };
 
 function NfcPage() {
-  const { status, mnemonic } = useWallet();
+  const { status, mnemonic, address } = useWallet();
   const fetchSummary = useServerFn(getAddressChainSummary);
-  const [cards, setCards] = useState<NfcCard[]>([]);
+  const list = useServerFn(nfcListCards);
+  const linkFn = useServerFn(nfcLinkCard);
+  const updateFn = useServerFn(nfcUpdateCard);
+  const killFn = useServerFn(nfcKillCard);
+  const prep = useServerFn(prepareSend);
+  const bcast = useServerFn(broadcastSignedTx);
+
+  const [data, setData] = useState<ListRes | null>(null);
   const [bals, setBals] = useState<Record<number, Bal>>({});
   const [uid, setUid] = useState("");
   const [label, setLabel] = useState("");
+  const [pin, setPin] = useState("");
+  const [busy, setBusy] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [nfcOk, setNfcOk] = useState(false);
   const [fundIdx, setFundIdx] = useState<number | null>(null);
 
-  useEffect(() => {
-    setCards(loadCards());
-    setNfcOk(nfcReadAvailable());
-  }, []);
-
-  const update = (next: NfcCard[]) => {
-    setCards(next);
-    saveCards(next);
-  };
+  useEffect(() => setNfcOk(nfcReadAvailable()), []);
 
   const refresh = useCallback(async () => {
     if (!mnemonic) return;
-    const out: Record<number, Bal> = {};
-    await Promise.all(
-      cards.map(async (c) => {
+    try {
+      const res = await list({ data: ownerEnvelope(mnemonic, "list", {}) });
+      setData(res);
+      const out: Record<number, Bal> = {};
+      await Promise.all(res.cards.map(async (c) => {
         try {
-          const s = await fetchSummary({ data: { address: pocketAddress(mnemonic, c.index) } });
+          const s = await fetchSummary({ data: { address: c.address } });
           out[c.index] = { tsd: s.tsd, txc: s.txc };
         } catch {
           out[c.index] = { tsd: null, txc: null };
         }
-      }),
-    );
-    setBals(out);
-  }, [cards, mnemonic, fetchSummary]);
+      }));
+      setBals(out);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't load cards");
+    }
+  }, [mnemonic, list, fetchSummary]);
 
   useEffect(() => {
     refresh();
@@ -91,22 +92,71 @@ function NfcPage() {
     }
   }
 
-  function link() {
+  async function link() {
+    if (!mnemonic || !address || !data) return;
     const id = normalizeUid(uid);
     if (id.length < 4) return toast.error("Card ID looks too short");
-    if (cards.some((c) => c.uid === id && !c.lost)) return toast.error("That card is already linked");
-    const card: NfcCard = {
-      index: nextIndex(cards),
-      uid: id,
-      label: label.trim() || `Card ${cards.length + 1}`,
-      enabled: true,
-      lost: false,
-      createdAt: Date.now(),
-    };
-    update([...cards, card]);
-    setUid("");
-    setLabel("");
-    toast.success("Card linked to a new pocket");
+    if (!/^\d{4,8}$/.test(pin)) return toast.error("PIN must be 4–8 digits");
+    const index = data.usedIndices.reduce((m, i) => Math.max(m, i + 1), 0);
+    setBusy(true);
+    try {
+      await linkFn({
+        data: ownerEnvelope(mnemonic, "link", {
+          uid: id, label: label.trim() || `Card ${data.cards.length + 1}`, pin,
+          perTapUsd: 100, dailyUsd: 500, pocketIndex: index,
+          pocketAddress: pocketAddress(mnemonic, index), pocketKeyHex: pocketKeyHex(mnemonic, index),
+          returnAddress: address,
+        }),
+      });
+      setUid(""); setLabel(""); setPin("");
+      toast.success("Card linked");
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't link card");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function update(c: CardRow, patch: Record<string, unknown>, ok?: string) {
+    if (!mnemonic) return;
+    try {
+      await updateFn({ data: ownerEnvelope(mnemonic, "update", { id: c.id, ...patch }) });
+      if (ok) toast.success(ok);
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Update failed");
+    }
+  }
+
+  async function withdraw(c: CardRow) {
+    if (!mnemonic || !address) return;
+    const b = bals[c.index];
+    if (!b?.tsd) return toast("No TSD in this pocket");
+    try {
+      const intent = { asset: "tsd" as const, to: address, amount: b.tsd };
+      const built = await prep({ data: { ...intent, from: c.address } });
+      const raw = signPocketSend(built.psbtBase64, mnemonic, c.index, intent);
+      const r = await bcast({ data: { rawHex: raw } });
+      if (!r.ok) throw new Error(r.error);
+      toast.success("TSD moved back to your wallet");
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't move funds");
+    }
+  }
+
+  async function kill(c: CardRow) {
+    if (!mnemonic) return;
+    if (!confirm(`Shut down "${c.label}" as lost? Taps stop immediately and it can never be turned back on.`)) return;
+    try {
+      await killFn({ data: ownerEnvelope(mnemonic, "kill", { id: c.id }) });
+      toast("Card shut down. Its funds are still yours — use Move back if any remain.");
+      await withdraw(c);
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't shut down card");
+    }
   }
 
   if (status === "loading") return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
@@ -119,15 +169,13 @@ function NfcPage() {
       </div>
     );
 
-  const active = cards.filter((c) => !c.lost);
-
   return (
     <div className="mx-auto max-w-md space-y-4 p-4 pb-28">
       <div>
         <p className="font-mono text-xs uppercase text-muted-foreground">Test area</p>
         <h1 className="font-display text-4xl">NFC Cards</h1>
         <p className="text-sm text-muted-foreground">
-          Each card gets its own TSD pocket. Your main balance is never touched.
+          Each card has its own TSD pocket. Taps need the card's PIN; over $100 a tap or $500 a day needs your Telegram OK.
         </p>
       </div>
 
@@ -139,34 +187,33 @@ function NfcPage() {
           </Button>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Card reading works in the POP Wallet app and in Chrome on Android. On this device, type the card ID instead.
+            Card reading works in the POP Wallet app and in Chrome on Android. Here, type the card ID instead.
           </p>
         )}
         <Input placeholder="Card ID" value={uid} onChange={(e) => setUid(e.target.value)} />
         <Input placeholder="Name (e.g. Blue card)" maxLength={40} value={label} onChange={(e) => setLabel(e.target.value)} />
-        <Button variant="secondary" onClick={link} className="w-full" disabled={!uid}>
-          Link card
+        <Input placeholder="Card PIN (4–8 digits)" inputMode="numeric" type="password" autoComplete="off" maxLength={8}
+          value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
+        <Button variant="secondary" onClick={link} className="w-full" disabled={!uid || busy || !data}>
+          {busy ? "Linking…" : "Link card"}
         </Button>
       </Card>
 
-      {active.length === 0 && <p className="text-center text-sm text-muted-foreground">No cards yet.</p>}
+      {data && data.cards.length === 0 && <p className="text-center text-sm text-muted-foreground">No cards yet.</p>}
 
-      {active.map((c) => {
-        const addr = pocketAddress(mnemonic, c.index);
+      {data?.cards.map((c) => {
         const b = bals[c.index];
         return (
-          <Card key={c.index} className="space-y-3 p-4">
+          <Card key={c.id} className="space-y-3 p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-display text-2xl">{c.label}</p>
-                <p className="font-mono text-xs text-muted-foreground">ID {c.uid} · pocket {c.index}</p>
+                <p className="font-mono text-xs text-muted-foreground">…{c.uidHint} · pocket {c.index}</p>
+                {c.locked && <p className="text-xs text-destructive">Locked after wrong PINs</p>}
               </div>
               <div className="flex items-center gap-2 text-xs">
                 {c.enabled ? "On" : "Off"}
-                <Switch
-                  checked={c.enabled}
-                  onCheckedChange={(v) => update(cards.map((x) => (x.index === c.index ? { ...x, enabled: v } : x)))}
-                />
+                <Switch checked={c.enabled} onCheckedChange={(v) => update(c, { enabled: v })} />
               </div>
             </div>
             <div className="flex gap-6">
@@ -179,35 +226,62 @@ function NfcPage() {
                 <p className="font-mono text-xs text-muted-foreground">TXC for fees</p>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground">Limits: ${c.perTapUsd} a tap · ${c.dailyUsd} a day without approval</p>
+
             {fundIdx === c.index && (
               <div className="space-y-2 rounded-md bg-muted p-3 text-center">
                 <div className="mx-auto w-fit rounded bg-foreground p-2">
-                  <QRCodeSVG value={addr} size={140} />
+                  <QRCodeSVG value={c.address} size={140} />
                 </div>
-                <p className="break-all font-mono text-xs">{addr}</p>
-                <p className="text-xs text-muted-foreground">Send TSD plus a little TXC (for fees) here. {nfcPocketPath(c.index)}</p>
-                <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(addr).then(() => toast.success("Copied"))}>
+                <p className="break-all font-mono text-xs">{c.address}</p>
+                <p className="text-xs text-muted-foreground">Send TSD plus a little TXC (for fees). {nfcPocketPath(c.index)}</p>
+                <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(c.address).then(() => toast.success("Copied"))}>
                   Copy address
                 </Button>
               </div>
             )}
-            <div className="flex gap-2">
-              <Button size="sm" className="flex-1" onClick={() => setFundIdx(fundIdx === c.index ? null : c.index)}>
-                Fund
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="flex-1"
-                onClick={() => {
-                  if (!confirm(`Shut down "${c.label}" as lost? It can never be turned back on.`)) return;
-                  update(cards.map((x) => (x.index === c.index ? { ...x, lost: true, enabled: false } : x)));
-                  toast("Card shut down. Move its remaining funds back to your wallet.");
-                }}
-              >
-                Lost — shut down
-              </Button>
+
+            <div className="rounded-md border border-border p-3 text-xs">
+              {c.telegramLinked ? (
+                <div className="flex items-center justify-between">
+                  <span>Telegram alerts on</span>
+                  <Button size="sm" variant="ghost" onClick={() => update(c, { clearTelegram: true }, "Telegram unlinked")}>Unlink</Button>
+                </div>
+              ) : c.telegramCode ? (
+                <div className="space-y-1">
+                  <p>Open Telegram and send this to the bot:</p>
+                  {data.botName ? (
+                    <a className="font-mono underline" href={`https://t.me/${data.botName}?start=${c.telegramCode}`} target="_blank" rel="noreferrer">
+                      Open @{data.botName} (code {c.telegramCode})
+                    </a>
+                  ) : (
+                    <p className="font-mono">/start {c.telegramCode}</p>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={refresh}>I've done it</Button>
+                </div>
+              ) : (
+                <Button size="sm" variant="outline" onClick={() => update(c, { newTelegramCode: true })}>Connect Telegram alerts</Button>
+              )}
             </div>
+
+            {c.locked && <Button size="sm" variant="outline" onClick={() => update(c, { unlock: true }, "Card unlocked")}>Unlock card</Button>}
+
+            <div className="grid grid-cols-3 gap-2">
+              <Button size="sm" onClick={() => setFundIdx(fundIdx === c.index ? null : c.index)}>Fund</Button>
+              <Button size="sm" variant="outline" onClick={() => withdraw(c)}>Move back</Button>
+              <Button size="sm" variant="destructive" onClick={() => kill(c)}>Lost</Button>
+            </div>
+
+            {c.payments.length > 0 && (
+              <div className="space-y-1 border-t border-border pt-2">
+                {c.payments.map((p) => (
+                  <div key={p.id} className="flex justify-between text-xs">
+                    <span>{p.merchant ?? "NectarPay"} · {new Date(p.at).toLocaleString()}</span>
+                    <span className="font-mono">${p.usd.toFixed(2)} {p.status}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         );
       })}

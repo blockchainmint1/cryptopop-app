@@ -1005,6 +1005,151 @@ export type Database = {
         }
         Relationships: []
       }
+      nfc_card_keys: {
+        Row: {
+          card_id: string
+          created_at: string
+          enc_key: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          enc_key: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          enc_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfc_card_keys_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: true
+            referencedRelation: "nfc_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nfc_card_payments: {
+        Row: {
+          amount_usd: number
+          card_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          merchant_name: string | null
+          reason: string | null
+          recipient: string
+          status: string
+          tsd_amount: number
+          txid: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_usd: number
+          card_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          merchant_name?: string | null
+          reason?: string | null
+          recipient: string
+          status: string
+          tsd_amount: number
+          txid?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_usd?: number
+          card_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          merchant_name?: string | null
+          reason?: string | null
+          recipient?: string
+          status?: string
+          tsd_amount?: number
+          txid?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfc_card_payments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "nfc_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nfc_cards: {
+        Row: {
+          created_at: string
+          daily_usd: number
+          enabled: boolean
+          id: string
+          killed_at: string | null
+          label: string
+          owner_address: string
+          per_tap_usd: number
+          pin_fails: number
+          pin_hash: string
+          pin_salt: string
+          pocket_address: string
+          pocket_index: number
+          return_address: string
+          tg_chat_id: string | null
+          tg_code: string | null
+          uid_hash: string
+          uid_hint: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_usd?: number
+          enabled?: boolean
+          id?: string
+          killed_at?: string | null
+          label: string
+          owner_address: string
+          per_tap_usd?: number
+          pin_fails?: number
+          pin_hash: string
+          pin_salt: string
+          pocket_address: string
+          pocket_index: number
+          return_address: string
+          tg_chat_id?: string | null
+          tg_code?: string | null
+          uid_hash: string
+          uid_hint: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_usd?: number
+          enabled?: boolean
+          id?: string
+          killed_at?: string | null
+          label?: string
+          owner_address?: string
+          per_tap_usd?: number
+          pin_fails?: number
+          pin_hash?: string
+          pin_salt?: string
+          pocket_address?: string
+          pocket_index?: number
+          return_address?: string
+          tg_chat_id?: string | null
+          tg_code?: string | null
+          uid_hash?: string
+          uid_hint?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       onramp_orders: {
         Row: {
           account_mask: string | null
@@ -1943,6 +2088,47 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      nfc_claim_approval: {
+        Args: { p_approve: boolean; p_chat: string; p_payment: string }
+        Returns: {
+          amount_usd: number
+          card_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          merchant_name: string | null
+          reason: string | null
+          recipient: string
+          status: string
+          tsd_amount: number
+          txid: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "nfc_card_payments"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      nfc_record_pin: {
+        Args: { p_card: string; p_ok: boolean }
+        Returns: number
+      }
+      nfc_reserve_payment: {
+        Args: {
+          p_card: string
+          p_invoice: string
+          p_merchant: string
+          p_recipient: string
+          p_tsd: number
+          p_usd: number
+        }
+        Returns: {
+          payment_id: string
+          status: string
+        }[]
       }
       pop_address_rank: {
         Args: { _address: string }

@@ -44,8 +44,10 @@ import { Route as ApiPublicNectarpaySyncRouteImport } from './routes/api/public/
 import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/public/vectorpay-status'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as WalletOrderIdRouteImport } from './routes/wallet.order.$id'
+import { Route as ApiPublicCardPayRouteImport } from './routes/api/public/card/pay'
 import { Route as ApiPublicHooksBlastDrainRouteImport } from './routes/api/public/hooks/blast-drain'
 import { Route as ApiPublicRewardsProgramRouteImport } from './routes/api/public/rewards/program'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -229,6 +231,11 @@ const WalletOrderIdRoute = WalletOrderIdRouteImport.update({
   path: '/wallet/order/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCardPayRoute = ApiPublicCardPayRouteImport.update({
+  id: '/api/public/card/pay',
+  path: '/api/public/card/pay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksBlastDrainRoute =
   ApiPublicHooksBlastDrainRouteImport.update({
     id: '/api/public/hooks/blast-drain',
@@ -240,6 +247,12 @@ const ApiPublicRewardsProgramRoute = ApiPublicRewardsProgramRouteImport.update({
   path: '/api/public/rewards/program',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTelegramWebhookRoute =
+  ApiPublicTelegramWebhookRouteImport.update({
+    id: '/api/public/telegram/webhook',
+    path: '/api/public/telegram/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -304,8 +317,10 @@ export interface FileRoutesByFullPath {
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
+  '/api/public/card/pay': typeof ApiPublicCardPayRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/api/public/rewards/program': typeof ApiPublicRewardsProgramRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -347,8 +362,10 @@ export interface FileRoutesByTo {
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
+  '/api/public/card/pay': typeof ApiPublicCardPayRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/api/public/rewards/program': typeof ApiPublicRewardsProgramRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -392,8 +409,10 @@ export interface FileRoutesById {
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
+  '/api/public/card/pay': typeof ApiPublicCardPayRoute
   '/api/public/hooks/blast-drain': typeof ApiPublicHooksBlastDrainRoute
   '/api/public/rewards/program': typeof ApiPublicRewardsProgramRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -437,8 +456,10 @@ export interface FileRouteTypes {
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
+    | '/api/public/card/pay'
     | '/api/public/hooks/blast-drain'
     | '/api/public/rewards/program'
+    | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -480,8 +501,10 @@ export interface FileRouteTypes {
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
+    | '/api/public/card/pay'
     | '/api/public/hooks/blast-drain'
     | '/api/public/rewards/program'
+    | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -524,8 +547,10 @@ export interface FileRouteTypes {
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
+    | '/api/public/card/pay'
     | '/api/public/hooks/blast-drain'
     | '/api/public/rewards/program'
+    | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -565,8 +590,10 @@ export interface RootRouteChildren {
   ApiPublicVectorpayStatusRoute: typeof ApiPublicVectorpayStatusRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   WalletOrderIdRoute: typeof WalletOrderIdRoute
+  ApiPublicCardPayRoute: typeof ApiPublicCardPayRoute
   ApiPublicHooksBlastDrainRoute: typeof ApiPublicHooksBlastDrainRoute
   ApiPublicRewardsProgramRoute: typeof ApiPublicRewardsProgramRoute
+  ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -821,6 +848,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/card/pay': {
+      id: '/api/public/card/pay'
+      path: '/api/public/card/pay'
+      fullPath: '/api/public/card/pay'
+      preLoaderRoute: typeof ApiPublicCardPayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/blast-drain': {
       id: '/api/public/hooks/blast-drain'
       path: '/api/public/hooks/blast-drain'
@@ -833,6 +867,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/rewards/program'
       fullPath: '/api/public/rewards/program'
       preLoaderRoute: typeof ApiPublicRewardsProgramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/preview': {
@@ -932,8 +973,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicVectorpayStatusRoute: ApiPublicVectorpayStatusRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   WalletOrderIdRoute: WalletOrderIdRoute,
+  ApiPublicCardPayRoute: ApiPublicCardPayRoute,
   ApiPublicHooksBlastDrainRoute: ApiPublicHooksBlastDrainRoute,
   ApiPublicRewardsProgramRoute: ApiPublicRewardsProgramRoute,
+  ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
