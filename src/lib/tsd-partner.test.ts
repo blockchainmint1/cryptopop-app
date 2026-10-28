@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { interpretPartnerReply, parsePartnerAccount } from "./tsd-partner.server";
-import { tsdLinkMessage } from "./tsd-link-message";
+import { tsdLinkMessage, TSD_TICKET_LOGIN_URL } from "./tsd-link-message";
 
 const good = {
   depositAddress: "0x1111111111111111111111111111111111111111",
