@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { interpretPartnerReply, parsePartnerAccount } from "./tsd-partner.server";
-import { tsdLinkMessage } from "./tsd-link-message";
+import { tsdLinkMessage, TSD_TICKET_LOGIN_URL } from "./tsd-link-message";
 
 const good = {
   depositAddress: "0x1111111111111111111111111111111111111111",
@@ -37,5 +37,17 @@ describe("TSD signed message", () => {
   it("includes member, destination, TSD Bridge, pop-wallet, nonce and time", () => {
     const m = tsdLinkMessage("mem-1", "TXCdest", "nonce12345", "2026-10-28T11:00:00.000Z");
     for (const s of ["mem-1", "TXCdest", "TSD Bridge", "pop-wallet", "nonce12345", "2026-10-28T11:00:00.000Z"]) expect(m).toContain(s);
+  });
+});
+
+describe("Honest Money handoff URL (v2)", () => {
+  it("carries purpose, a fresh state, and the exact registered callback", () => {
+    expect(TSD_TICKET_LOGIN_URL).not.toBeNull();
+    const u = new URL(TSD_TICKET_LOGIN_URL!("https://app.cryptopop.org/sso-tsd", "state-abc123XYZ"));
+    expect(u.origin).toBe("https://honest.money");
+    expect(u.searchParams.get("to")).toBe("tsd");
+    expect(u.searchParams.get("purpose")).toBe("receiving_setup");
+    expect(u.searchParams.get("state")).toBe("state-abc123XYZ");
+    expect(u.searchParams.get("return_to")).toBe("https://app.cryptopop.org/sso-tsd");
   });
 });

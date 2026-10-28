@@ -21,6 +21,7 @@ export const linkTsdBridge = createServerFn({ method: "POST" })
     nonce: z.string().regex(/^[A-Za-z0-9_-]{8,128}$/),
     signature: z.string().min(40).max(200),
     ssoTicket: z.string().min(20).max(4096),
+    state: z.string().regex(/^[A-Za-z0-9_-]{16,128}$/),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const member = context.claims?.app_metadata?.["hme_member_id"];
@@ -33,5 +34,5 @@ export const linkTsdBridge = createServerFn({ method: "POST" })
     if (!verifyTxcMessage(data.address, message, data.signature))
       return { status: "not_ready" as const, reason: "Your wallet's approval didn't check out. Try again." };
     const { linkTsdAccount } = await import("./tsd-partner.server");
-    return linkTsdAccount({ ssoTicket: data.ssoTicket, destination: data.address, message, signature: data.signature, nonce: data.nonce, issuedAt: data.issuedAt });
+    return linkTsdAccount({ ssoTicket: data.ssoTicket, state: data.state, destination: data.address, message, signature: data.signature, nonce: data.nonce, issuedAt: data.issuedAt });
   });

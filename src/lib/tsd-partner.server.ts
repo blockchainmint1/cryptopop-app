@@ -92,7 +92,7 @@ export async function getTsdNonce(): Promise<{ nonce: string } | { status: "not_
 }
 
 export async function linkTsdAccount(input: {
-  ssoTicket: string; destination: string; message: string; signature: string; nonce: string; issuedAt: string;
+  ssoTicket: string; state: string; destination: string; message: string; signature: string; nonce: string; issuedAt: string;
 }): Promise<PartnerResult> {
   const secret = process.env["TSD_PARTNER_SECRET"];
   if (!secret) return { status: "not_ready", reason: "Automatic setup isn't switched on yet." };
