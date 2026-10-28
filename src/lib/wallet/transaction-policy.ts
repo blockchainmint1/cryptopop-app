@@ -121,17 +121,48 @@ const toCents = (amount: number) => {
  * Church and platform round down; the merchant gets every leftover cent so
  * the three parts always add up to exactly the purchase price.
  */
-export function splitGiving(total: number, churchPct = 8, platformPct = 2) {
+/** eGiving: the store's discount is shared 80% church / 20% eGiving. */
+export const GIVE_CHURCH_SHARE = 0.8;
+export const GIVE_MIN_DISCOUNT_PCT = 1;
+export const GIVE_MAX_DISCOUNT_PCT = 50;
+/** Most recipients a split may have (Omni payload must stay under the 80-byte relay limit). */
+export const MAX_SPLIT_RECIPIENTS = 3;
+
+/**
+ * Split a purchase in whole cents. The church and eGiving shares round down;
+ * leftover cents go to the merchant, so the merchant always receives at least
+ * (100 - discount)% and the three parts always total the price.
+ */
+export function splitGiving(total: number, discountPct = 10) {
+  if (!Number.isFinite(discountPct) || discountPct < GIVE_MIN_DISCOUNT_PCT || discountPct > GIVE_MAX_DISCOUNT_PCT)
+    throw new Error("Unsupported store discount");
   const cents = toCents(total);
-  const church = Math.floor((cents * churchPct) / 100);
-  const platform = Math.floor((cents * platformPct) / 100);
+  const church = Math.floor((cents * discountPct * GIVE_CHURCH_SHARE) / 100 + 1e-9);
+  const platform = Math.floor((cents * discountPct * (1 - GIVE_CHURCH_SHARE)) / 100 + 1e-9);
   const merchant = cents - church - platform;
-  return { merchant: merchant / 100, church: church / 100, platform: platform / 100, total: cents / 100 };
+  return { merchant: merchant / 100, church: church / 100, platform: platform / 100, total: cents / 100, discountPct };
+}
+
+/**
+ * The only Omni payloads the relay forwards: a TSD (property 39) simple send
+ * (type 0, 20 bytes) or a TSD Send-To-Many (type 7) with 1..MAX_SPLIT_RECIPIENTS.
+ */
+export function isRelayableOmniPayload(payload: Uint8Array): boolean {
+  if (payload.length < 12) return false;
+  const v = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+  if (v.getUint32(0) !== 0x6f6d6e69 || v.getUint16(4) !== 0 || v.getUint32(8) !== 39) return false;
+  const type = v.getUint16(6);
+  if (type === 0) return payload.length === 20;
+  if (type === 7) {
+    const n = payload[12];
+    return n >= 1 && n <= MAX_SPLIT_RECIPIENTS && payload.length === 13 + 9 * n;
+  }
+  return false;
 }
 
 /** Omni Send-To-Many payload script for the locally pinned TSD property (39). */
 export function tsdSendToManyScript(allocations: { vout: number; amount: number }[]): Uint8Array {
-  if (allocations.length < 1 || allocations.length > 10) throw new Error("Too many recipients");
+  if (allocations.length < 1 || allocations.length > MAX_SPLIT_RECIPIENTS) throw new Error("Too many recipients");
   const data = new Uint8Array(13 + allocations.length * 9);
   data.set([0x6f, 0x6d, 0x6e, 0x69]);
   const view = new DataView(data.buffer);
@@ -149,7 +180,7 @@ export function tsdSendToManyScript(allocations: { vout: number; amount: number 
 /** Validate a split TSD payment completely before any key is used. */
 export function validateSplitSend(psbt: string, intent: SplitIntent, ownedAddresses: string[]) {
   if (!ownedAddresses.includes(intent.from)) throw new Error("The payment source isn't your wallet");
-  if (intent.recipients.length < 1 || intent.recipients.length > 10) throw new Error("Invalid recipients");
+  if (intent.recipients.length < 1 || intent.recipients.length > MAX_SPLIT_RECIPIENTS) throw new Error("Invalid recipients");
   const seen = new Set<string>();
   for (const r of intent.recipients) {
     if (r.to === intent.from) throw new Error("Cannot send to the same address");

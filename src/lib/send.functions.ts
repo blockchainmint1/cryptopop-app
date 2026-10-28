@@ -52,7 +52,7 @@ export const broadcastSignedTx = createServerFn({ method: "POST" })
 
 const SplitInput = z.object({
   from: Addr,
-  recipients: z.array(z.object({ to: Addr, amount: z.number().positive().finite().max(1_000_000) })).min(1).max(10),
+  recipients: z.array(z.object({ to: Addr, amount: z.number().positive().finite().max(1_000_000) })).min(1).max(3),
   exclude: z.array(z.string().regex(/^[0-9a-f]{64}:\d+$/)).max(200).optional(),
 });
 
