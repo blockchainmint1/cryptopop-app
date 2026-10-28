@@ -1,0 +1,1 @@
+ALTER TABLE public.nfc_card_payments ADD COLUMN IF NOT EXISTS give_discount_pct numeric;
