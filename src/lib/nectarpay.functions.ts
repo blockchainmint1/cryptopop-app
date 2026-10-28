@@ -47,7 +47,11 @@ function egivingOf(raw: RawInvoice): NectarInvoice["egiving"] | null {
   const e = raw.egiving as Record<string, unknown> | null | undefined;
   if (!e || typeof e !== "object") return null;
   const pct = Number(e.discountPct ?? e.discount_pct);
-  return e.accepted === true && Number.isFinite(pct) ? { accepted: true, discountPct: pct } : { accepted: false, discountPct: null };
+  const minRaw = e.merchantMinimumUsd ?? e.merchant_minimum_usd ?? raw.merchantMinimumUsd;
+  const min = minRaw == null ? null : Number(minRaw);
+  return e.accepted === true && Number.isFinite(pct)
+    ? { accepted: true, discountPct: pct, merchantMinimumUsd: min != null && Number.isFinite(min) ? min : null }
+    : { accepted: false, discountPct: null };
 }
 
 export function normalize(raw: RawInvoice, fallback?: NectarInvoice | null): NectarInvoice {
