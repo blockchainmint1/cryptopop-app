@@ -24,12 +24,20 @@ export function QrScanDialog({
   onResult,
   title = "Scan QR code",
   description,
+  manualLabel = "Type or paste the text instead",
+  manualPlaceholder = "Paste the code or address here",
+  manualButton = "Use this text",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onResult: (text: string) => void;
   title?: string;
   description?: string;
+  // Copy for the no-camera fallback. Never worded like a recovery phrase:
+  // this dialog scans card IDs, passes and addresses, never seed words.
+  manualLabel?: string;
+  manualPlaceholder?: string;
+  manualButton?: string;
 }) {
   const [manual, setManual] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -73,13 +81,16 @@ export function QrScanDialog({
           {error && <p className="text-xs text-destructive">{error}</p>}
 
           <details className="text-xs text-muted-foreground">
-            <summary className="cursor-pointer">Type the words instead</summary>
+            <summary className="cursor-pointer">{manualLabel}</summary>
             <Textarea
-              rows={3}
+              rows={2}
               className="mt-2 font-mono text-[11px]"
               value={manual}
               onChange={(e) => setManual(e.target.value)}
-              placeholder="word word word …"
+              placeholder={manualPlaceholder}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
             <Button
               size="sm"
@@ -87,7 +98,7 @@ export function QrScanDialog({
               disabled={!manual.trim()}
               onClick={() => finish(manual)}
             >
-              Use these words
+              {manualButton}
             </Button>
           </details>
 
