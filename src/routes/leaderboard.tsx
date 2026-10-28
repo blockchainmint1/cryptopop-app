@@ -7,6 +7,7 @@ import {
   Check,
   ChevronRight,
   Copy,
+  Heart,
   Loader2,
   ShoppingBag,
   Trophy,
