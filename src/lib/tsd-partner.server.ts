@@ -1,14 +1,12 @@
 /**
- * TSD Bridge partner link (server-only). CryptoPOP vouches for a verified
- * Honest Money member and a wallet-signed TSD/TXC address; the bridge creates
- * or reuses the member's account and returns their EVM deposit address.
- *
- * Contract proposed to the TSD team (see /mnt/documents/tsd-partner-request.md):
- *   POST {TSD_ORIGIN}/api/public/partner/v1/accounts
- *   GET  {TSD_ORIGIN}/api/public/partner/v1/accounts/{memberId}/status
- *   Headers: X-Partner: pop-wallet, X-Timestamp: unix seconds,
+ * TSD Bridge partner link (server-only). Contract agreed with the TSD team
+ * (tsd-reply-to-cryptopop.md):
+ *   GET  {TSD}/api/public/partner/v1/nonce      -> { nonce } (10 min, single use)
+ *   POST {TSD}/api/public/partner/v1/accounts   -> 200 ready | 202 pending_confirmation
+ *   Headers: X-Partner: pop-wallet, X-Timestamp: unix seconds (5-min window),
  *            X-Signature: hex HMAC-SHA256(secret, `${timestamp}.${rawBody}`)
- * Until the secret is set and the bridge answers, callers get "not_ready".
+ * TSD verifies the member's Honest Money ticket itself and ignores any member
+ * fields we send. Until the secret is set and the bridge answers, callers get "not_ready".
  */
 const TSD = "https://tsd.honest.money";
 const PARTNER = "pop-wallet";
@@ -20,7 +18,8 @@ export type PartnerAccount = {
   networks: PartnerNetwork[];
   destination: string;
 };
-export type PartnerResult = PartnerAccount | { status: "not_ready"; reason: string };
+export type PartnerPending = { status: "pending_confirmation"; onFile: string };
+export type PartnerResult = PartnerAccount | PartnerPending | { status: "not_ready"; reason: string; code?: string };
 
 async function hmacHex(key: string, body: string): Promise<string> {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -54,20 +53,55 @@ export function parsePartnerAccount(raw: unknown, destination: string): PartnerA
   return { status: "ready", depositAddress: r.depositAddress, networks, destination };
 }
 
+const ERRORS: Record<string, string> = {
+  partner_auth: "TSD Bridge didn't recognise CryptoPOP. We're on it.",
+  sso_invalid: "Your Honest Money approval expired. Tap set up again.",
+  bad_signature: "Your wallet's approval didn't check out. Try again.",
+  replay: "That approval was already used. Tap set up again.",
+};
+
+/** Map a bridge reply to what the wallet shows. Never trusts a ready reply for another address. */
+export function interpretPartnerReply(status: number, raw: unknown, destination: string, retryAfter?: string | null): PartnerResult {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  if (status === 200) return parsePartnerAccount(raw, destination);
+  if (status === 202 && r.status === "pending_confirmation") {
+    const onFile = typeof r.destination === "string" ? r.destination.slice(0, 64) : "";
+    return { status: "pending_confirmation", onFile };
+  }
+  if (status === 404) return { status: "not_ready", reason: "TSD Bridge hasn't turned on automatic setup yet." };
+  if (status === 429) {
+    const s = Number(retryAfter);
+    return { status: "not_ready", code: "rate_limited", reason: `Too many tries. Wait ${Number.isFinite(s) && s > 0 ? Math.ceil(s / 60) : 1} min and try again.` };
+  }
+  const code = typeof r.error === "string" ? r.error : "";
+  return { status: "not_ready", code: code || undefined, reason: ERRORS[code] ?? "TSD Bridge couldn't set up your account right now." };
+}
+
+export async function getTsdNonce(): Promise<{ nonce: string } | { status: "not_ready"; reason: string }> {
+  const secret = process.env["TSD_PARTNER_SECRET"];
+  if (!secret) return { status: "not_ready", reason: "Automatic setup isn't switched on yet." };
+  try {
+    const res = await fetch(`${TSD}/api/public/partner/v1/nonce`, { headers: await partnerHeaders(secret, "") });
+    if (!res.ok) return { status: "not_ready", reason: res.status === 404 ? "TSD Bridge hasn't turned on automatic setup yet." : "TSD Bridge didn't answer. Try again in a minute." };
+    const j = (await res.json()) as { nonce?: unknown };
+    if (typeof j.nonce !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(j.nonce)) return { status: "not_ready", reason: "TSD Bridge sent something unexpected." };
+    return { nonce: j.nonce };
+  } catch {
+    return { status: "not_ready", reason: "TSD Bridge didn't answer. Try again in a minute." };
+  }
+}
+
 export async function linkTsdAccount(input: {
-  memberId: string; email: string; destination: string; message: string; signature: string;
+  ssoTicket: string; destination: string; message: string; signature: string; nonce: string; issuedAt: string;
 }): Promise<PartnerResult> {
   const secret = process.env["TSD_PARTNER_SECRET"];
   if (!secret) return { status: "not_ready", reason: "Automatic setup isn't switched on yet." };
   const body = JSON.stringify(input);
   try {
     const res = await fetch(`${TSD}/api/public/partner/v1/accounts`, { method: "POST", headers: await partnerHeaders(secret, body), body });
-    if (res.status === 404) return { status: "not_ready", reason: "TSD Bridge hasn't turned on automatic setup yet." };
-    if (!res.ok) {
-      console.warn("[tsd partner] link failed", res.status, (await res.text()).slice(0, 300));
-      return { status: "not_ready", reason: "TSD Bridge couldn't set up your account right now." };
-    }
-    return parsePartnerAccount(await res.json(), input.destination);
+    const raw = await res.json().catch(() => null);
+    if (!res.ok && res.status !== 202) console.warn("[tsd partner] link failed", res.status, JSON.stringify(raw)?.slice(0, 200));
+    return interpretPartnerReply(res.status, raw, input.destination, res.headers.get("Retry-After"));
   } catch (e) {
     console.warn("[tsd partner] link error", e);
     return { status: "not_ready", reason: "TSD Bridge didn't answer. Try again in a minute." };
