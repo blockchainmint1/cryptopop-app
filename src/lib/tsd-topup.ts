@@ -4,8 +4,8 @@ export const TSD_ORIGIN = "https://tsd.honest.money";
 export const TOPUP_PROTOCOL = "tsd-topup-v1";
 export const TOPUP_TTL_MS = 300_000;
 export const TOPUP_REFRESH_MS = 30_000;
-// Release only after TSD is published and live member connection checks pass.
-export const TOPUP_DEPOSITS_ENABLED = false;
+// Released Oct 28, 2026 after TSD confirmed the $10 min / $100,000 max for permanent deposit addresses.
+export const TOPUP_DEPOSITS_ENABLED = true;
 
 const uuid = z.string().uuid();
 const receivingAddress = z.string().regex(/^T[1-9A-HJ-NP-Za-km-z]{25,34}$/);

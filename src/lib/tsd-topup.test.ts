@@ -89,5 +89,5 @@ describe("TSD receiving-only connection", () => {
     expect(validateTopupConnection({ ...connection, orders: [order] }, request).orders[0]?.complete).toBe(false);
   });
   it("refreshes no more often than 30 seconds", () => { expect(TOPUP_REFRESH_MS).toBe(30_000); });
-  it("keeps deposits release-gated until live acceptance", () => { expect(TOPUP_DEPOSITS_ENABLED).toBe(false); });
+  it("deposits are released", () => { expect(TOPUP_DEPOSITS_ENABLED).toBe(true); });
 });
