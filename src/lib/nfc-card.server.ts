@@ -5,7 +5,8 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { Transaction } from "@scure/btc-signer";
 import { base64, hex } from "@scure/base";
 import { pubkeyToTxcAddress, verifyTxcMessage } from "@/lib/wallet/txc-message";
-import { validateSend } from "@/lib/wallet/transaction-policy";
+import { splitGiving, validateSend, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
+import { GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
 
 const enc = new TextEncoder();
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
@@ -179,10 +180,17 @@ export async function executePayment(
   if (!c || !k || !c.enabled || c.killed_at) return fail("Card is off");
   try {
     const key = await decryptKey(k.enc_key);
-    const { buildUnsignedSend, broadcastRaw } = await import("@/lib/send.server");
-    const intent = { asset: "tsd" as const, from: c.pocket_address, to: p.recipient, amount: Number(p.tsd_amount) };
-    const built = await buildUnsignedSend(intent);
-    validateSend(built.psbtBase64, intent, [c.pocket_address]);
+    const { buildUnsignedSend, buildUnsignedSplitSend, broadcastRaw } = await import("@/lib/send.server");
+    const plan = givingPlan(p.give_discount_pct, Number(p.tsd_amount), p.recipient, c.pocket_address);
+    let built;
+    if (plan) {
+      built = await buildUnsignedSplitSend(plan.intent);
+      validateSplitSend(built.psbtBase64, plan.intent, [c.pocket_address]);
+    } else {
+      const intent = { asset: "tsd" as const, from: c.pocket_address, to: p.recipient, amount: Number(p.tsd_amount) };
+      built = await buildUnsignedSend(intent);
+      validateSend(built.psbtBase64, intent, [c.pocket_address]);
+    }
     const tx = Transaction.fromPSBT(base64.decode(built.psbtBase64), { allowUnknownOutputs: true });
     if (tx.sign(key) === 0) throw new Error("Card key didn't match its pocket");
     tx.finalize();
@@ -190,11 +198,32 @@ export async function executePayment(
     const txid = await broadcastRaw(tx.hex);
     await Promise.all([
       sb.from("nfc_card_payments").update({ status: "sent", txid }).eq("id", paymentId),
-      notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.`).catch(() => undefined),
+      notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.` +
+        (plan ? ` 💛 $${plan.church.toFixed(2)} went to ${esc(GIVE_CHURCH.name)}.` : "")).catch(() => undefined),
     ]);
     return { status: "sent", txid };
   } catch (e) {
     console.error("[nfc pay]", e);
     return fail(e instanceof Error ? e.message : "Payment failed");
   }
+}
+
+/**
+ * eGiving split for a card tap. Uses the demo church for every card until
+ * per-wallet church selection exists. Church/fee addresses come from the
+ * GIVE_CHURCH / GIVE_FEE secrets but must match the pinned addresses, so a
+ * changed secret fails closed instead of redirecting money.
+ */
+export function givingPlan(pct: unknown, total: number, merchant: string, from: string):
+  { intent: SplitIntent; church: number } | null {
+  if (pct == null) return null;
+  const church = process.env.GIVE_CHURCH?.trim() || GIVE_CHURCH.address;
+  const fee = process.env.GIVE_FEE?.trim() || GIVE_PLATFORM_ADDRESS;
+  if (church !== GIVE_CHURCH.address || fee !== GIVE_PLATFORM_ADDRESS) throw new Error("eGiving addresses don't match the app");
+  const sp = splitGiving(total, Number(pct));
+  if (sp.church <= 0 || sp.platform <= 0) return null;
+  return {
+    church: sp.church,
+    intent: { from, recipients: [{ to: merchant, amount: sp.merchant }, { to: church, amount: sp.church }, { to: fee, amount: sp.platform }] },
+  };
 }

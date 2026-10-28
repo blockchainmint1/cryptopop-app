@@ -1160,6 +1160,7 @@ export type Database = {
           amount_usd: number
           card_id: string
           created_at: string
+          give_discount_pct: number | null
           id: string
           invoice_id: string
           merchant_name: string | null
@@ -1174,6 +1175,7 @@ export type Database = {
           amount_usd: number
           card_id: string
           created_at?: string
+          give_discount_pct?: number | null
           id?: string
           invoice_id: string
           merchant_name?: string | null
@@ -1188,6 +1190,7 @@ export type Database = {
           amount_usd?: number
           card_id?: string
           created_at?: string
+          give_discount_pct?: number | null
           id?: string
           invoice_id?: string
           merchant_name?: string | null
@@ -2279,6 +2282,7 @@ export type Database = {
           amount_usd: number
           card_id: string
           created_at: string
+          give_discount_pct: number | null
           id: string
           invoice_id: string
           merchant_name: string | null
