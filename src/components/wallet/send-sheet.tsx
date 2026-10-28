@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowUpRight, Camera, Loader2, ShieldCheck, Store } from "lucide-react";
+import { ArrowUpRight, Camera, ChevronDown, Loader2, ShieldCheck, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,8 +66,13 @@ export function SendSheet({
 
   // POP / phPOP are scoreboard points for now — not spendable/tradeable.
   const SENDABLE_ASSETS = ASSETS.filter((a) => a.id !== "pop" && a.id !== "phpop");
+  // TSD is the native send asset for this wallet. Anything else (TXC) sits
+  // behind an "Advanced" disclosure so the screen reads as a TSD wallet first.
+  const PRIMARY_ASSETS = SENDABLE_ASSETS.filter((a) => a.id === "tsd");
+  const ADVANCED_ASSETS = SENDABLE_ASSETS.filter((a) => a.id !== "tsd");
 
   const [asset, setAsset] = useState<"tsd" | "txc">("tsd");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [review, setReview] = useState<{ built: Awaited<ReturnType<typeof prepare>>; from: string; to: string; amount: number; asset: "tsd" | "txc"; feeSats: number } | null>(null);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
@@ -90,8 +95,10 @@ export function SendSheet({
   useEffect(() => {
     if (!open || !prefill) return;
     if (prefill.to) setTo(prefill.to);
-    if (prefill.asset && prefill.asset !== "pop" && prefill.asset !== "phpop")
+    if (prefill.asset && prefill.asset !== "pop" && prefill.asset !== "phpop") {
       setAsset(prefill.asset);
+      if (prefill.asset !== "tsd") setAdvancedOpen(true);
+    }
     if (prefill.amount != null) setAmount(String(prefill.amount));
     setRequest(prefill.merchant || prefill.memo || prefill.amount != null ? prefill : null);
   }, [open, prefill]);
@@ -111,6 +118,7 @@ export function SendSheet({
       setTo(intent.to);
       if (intent.asset !== "tsd" && intent.asset !== "txc") return toast.error("POP rewards cannot be sent or spent");
       setAsset(intent.asset);
+      if (intent.asset !== "tsd") setAdvancedOpen(true);
       if (intent.amount != null) setAmount(String(intent.amount));
       setRequest(intent);
       toast.success(intent.merchant ? `Payment request from ${intent.merchant}` : "Payment request loaded");
@@ -239,24 +247,81 @@ export function SendSheet({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2">
-              {SENDABLE_ASSETS.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => { if (a.id === "tsd" || a.id === "txc") setAsset(a.id); }}
-                  className={`rounded-2xl border px-2 py-3 text-center transition ${
-                    asset === a.id
-                      ? "border-primary bg-primary/15"
-                      : "border-white/12 bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  <p className="font-display text-sm font-semibold uppercase">{a.name}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {balances[a.id] === null ? "—" : balances[a.id]?.toFixed(a.decimals)}
-                  </p>
-                </button>
-              ))}
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-2">
+                {PRIMARY_ASSETS.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setAsset(a.id)}
+                    className={`rounded-2xl border px-3 py-3 text-left transition ${
+                      asset === a.id
+                        ? "border-primary bg-primary/15"
+                        : "border-white/12 bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    <p className="font-display text-sm font-semibold uppercase">{a.name}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {balances[a.id] === null ? "—" : balances[a.id]?.toFixed(a.decimals)}
+                    </p>
+                  </button>
+                ))}
+              </div>
+
+              {ADVANCED_ASSETS.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    aria-expanded={advancedOpen}
+                    onClick={() => {
+                      const next = !advancedOpen;
+                      setAdvancedOpen(next);
+                      // Collapsing must not leave a hidden asset still selected.
+                      if (!next && asset !== "tsd") {
+                        setAsset("tsd");
+                        setReview(null);
+                      }
+                    }}
+                    className="flex w-full items-center justify-between rounded-xl border border-white/12 bg-white/5 px-3 py-2"
+                  >
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Advanced
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 text-muted-foreground transition-transform ${
+                        advancedOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {advancedOpen && (
+                    <div className="space-y-2 rounded-2xl border border-white/12 bg-white/5 p-2">
+                      <p className="px-1 text-xs text-muted-foreground">
+                        Send the base coin directly — usually only needed to fund another wallet.
+                      </p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {ADVANCED_ASSETS.map((a) => (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => setAsset(a.id)}
+                            className={`rounded-xl border px-3 py-2 text-left transition ${
+                              asset === a.id
+                                ? "border-primary bg-primary/15"
+                                : "border-white/12 bg-white/5 hover:bg-white/10"
+                            }`}
+                          >
+                            <p className="font-display text-sm font-semibold uppercase">{a.name}</p>
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                              {balances[a.id] === null ? "—" : balances[a.id]?.toFixed(a.decimals)}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="space-y-2">
