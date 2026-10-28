@@ -43,6 +43,13 @@ function storeIdOf(raw: RawInvoice): string | null {
   return id ? String(id) : null;
 }
 
+function egivingOf(raw: RawInvoice): NectarInvoice["egiving"] | null {
+  const e = raw.egiving as Record<string, unknown> | null | undefined;
+  if (!e || typeof e !== "object") return null;
+  const pct = Number(e.discountPct ?? e.discount_pct);
+  return e.accepted === true && Number.isFinite(pct) ? { accepted: true, discountPct: pct } : { accepted: false, discountPct: null };
+}
+
 export function normalize(raw: RawInvoice, fallback?: NectarInvoice | null): NectarInvoice {
   const options = (raw.options ?? raw.availableOptions ?? []) as Array<Record<string, unknown>>;
   const acceptsTsd =
@@ -72,6 +79,7 @@ export function normalize(raw: RawInvoice, fallback?: NectarInvoice | null): Nec
     tsdAmount: pinnedTsd && crypto != null ? Number(crypto) : null,
     acceptsTsd: acceptsTsd || !!fallback?.acceptsTsd,
     storeId: storeIdOf(raw) ?? fallback?.storeId ?? null,
+    egiving: egivingOf(raw) ?? fallback?.egiving ?? { accepted: false, discountPct: null },
   };
 }
 

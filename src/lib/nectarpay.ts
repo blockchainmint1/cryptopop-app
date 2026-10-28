@@ -27,6 +27,8 @@ export type NectarInvoice = {
   acceptsTsd: boolean;
   /** NectarPay store id — links to the store's rewards program. */
   storeId: string | null;
+  /** eGiving: whether the store accepts community split payments, and its discount. */
+  egiving: { accepted: boolean; discountPct: number | null };
 };
 
 export type NectarMerchant = {

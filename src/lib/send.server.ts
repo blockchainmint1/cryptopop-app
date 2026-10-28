@@ -4,6 +4,7 @@
 import * as bitcoin from "bitcoinjs-lib";
 import * as ecc from "@bitcoinerlab/secp256k1";
 import { TXC_NETWORK } from "./txc.server";
+import { isRelayableOmniPayload } from "./wallet/transaction-policy";
 
 bitcoin.initEccLib(ecc);
 
@@ -366,9 +367,7 @@ export async function broadcastRaw(rawHex: string): Promise<string> {
     if (output.script[0] !== bitcoin.opcodes.OP_RETURN) continue;
     const chunks = bitcoin.script.decompile(output.script);
     const payload = chunks?.[1];
-    if (!(payload instanceof Uint8Array) || payload.length !== 20 ||
-        Buffer.from(payload).subarray(0, 8).toString("hex") !== "6f6d6e6900000000" ||
-        Buffer.from(payload).readUInt32BE(8) !== 39) {
+    if (!(payload instanceof Uint8Array) || !isRelayableOmniPayload(payload)) {
       throw new Error("This wallet only relays TSD or TXC payments; POP rewards cannot be sent or spent.");
     }
   }
