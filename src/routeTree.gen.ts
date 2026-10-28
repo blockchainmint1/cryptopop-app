@@ -25,6 +25,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SsoRouteImport } from './routes/sso'
+import { Route as SsoTsdRouteImport } from './routes/sso-tsd'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated.app'
 import { Route as AuthenticatedRecoverWalletRouteImport } from './routes/_authenticated.recover-wallet'
@@ -134,6 +135,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SsoRoute = SsoRouteImport.update({
   id: '/sso',
   path: '/sso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SsoTsdRoute = SsoTsdRouteImport.update({
+  id: '/sso-tsd',
+  path: '/sso-tsd',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -316,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sso': typeof SsoRoute
+  '/sso-tsd': typeof SsoTsdRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sso': typeof SsoRoute
+  '/sso-tsd': typeof SsoTsdRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
   '/recover-wallet': typeof AuthenticatedRecoverWalletRoute
@@ -414,6 +422,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sso': typeof SsoRoute
+  '/sso-tsd': typeof SsoTsdRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/recover-wallet': typeof AuthenticatedRecoverWalletRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/sso'
+    | '/sso-tsd'
     | '/terms'
     | '/app'
     | '/recover-wallet'
@@ -512,6 +522,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/sso'
+    | '/sso-tsd'
     | '/terms'
     | '/app'
     | '/recover-wallet'
@@ -561,6 +572,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/sso'
+    | '/sso-tsd'
     | '/terms'
     | '/_authenticated/app'
     | '/_authenticated/recover-wallet'
@@ -611,6 +623,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SsoRoute: typeof SsoRoute
+  SsoTsdRoute: typeof SsoTsdRoute
   TermsRoute: typeof TermsRoute
   AdminDirectoryRoute: typeof AdminDirectoryRoute
   AdminPushRoute: typeof AdminPushRoute
@@ -752,6 +765,13 @@ declare module '@tanstack/react-router' {
       path: '/sso'
       fullPath: '/sso'
       preLoaderRoute: typeof SsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sso-tsd': {
+      id: '/sso-tsd'
+      path: '/sso-tsd'
+      fullPath: '/sso-tsd'
+      preLoaderRoute: typeof SsoTsdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1018,6 +1038,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SsoRoute: SsoRoute,
+  SsoTsdRoute: SsoTsdRoute,
   TermsRoute: TermsRoute,
   AdminDirectoryRoute: AdminDirectoryRoute,
   AdminPushRoute: AdminPushRoute,
