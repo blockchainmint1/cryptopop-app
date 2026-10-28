@@ -1,12 +1,22 @@
-import { useState } from "react";
-import { Scanner, setZXingModuleOverrides } from "@yudiel/react-qr-scanner";
-
-// The QR decoder normally downloads from a public CDN, which this wallet's
-// security policy blocks. Serve it from our own site instead.
-setZXingModuleOverrides({
-  locateFile: (path: string, prefix: string) => (path.endsWith(".wasm") ? `/zxing/${path}` : prefix + path),
-});
+import { useEffect, useState } from "react";
 import { ScanLine, X } from "lucide-react";
+
+type ScannerModule = typeof import("@yudiel/react-qr-scanner");
+
+/**
+ * The camera decoder is browser-only: importing it at module scope breaks
+ * server rendering, so it is loaded lazily when the dialog opens. Its wasm
+ * file is served from our own site (public/zxing) because this wallet's
+ * security policy blocks the CDN it would otherwise download from.
+ */
+async function loadScanner(): Promise<ScannerModule> {
+  const mod = await import("@yudiel/react-qr-scanner");
+  mod.setZXingModuleOverrides({
+    locateFile: (path: string, prefix: string) =>
+      path.endsWith(".wasm") ? `/zxing/${path}` : prefix + path,
+  });
+  return mod;
+}
 import {
   Dialog,
   DialogContent,
@@ -41,6 +51,20 @@ export function QrScanDialog({
 }) {
   const [manual, setManual] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [scanner, setScanner] = useState<ScannerModule | null>(null);
+
+  useEffect(() => {
+    if (!open || scanner) return;
+    let alive = true;
+    loadScanner()
+      .then((mod) => {
+        if (alive) setScanner(mod);
+      })
+      .catch(() => setError("The camera decoder couldn't load — type the code instead."));
+    return () => {
+      alive = false;
+    };
+  }, [open, scanner]);
 
   function finish(text: string) {
     setManual("");
@@ -60,8 +84,8 @@ export function QrScanDialog({
 
         <div className="space-y-3">
           <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-black">
-            {open && (
-              <Scanner
+            {open && scanner && (
+              <scanner.Scanner
                 onScan={(codes) => {
                   const value = codes[0]?.rawValue;
                   if (value) finish(value);
