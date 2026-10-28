@@ -524,6 +524,9 @@ export function WalletDashboard() {
         onResult={onScan}
         title="Scan"
         description="Scan a CryptoPOP code, event pass or address."
+        manualLabel="Type or paste the code instead"
+        manualPlaceholder="cryptopop://… or an address"
+        manualButton="Use this code"
       />
 
       <Sheet open={receiveOpen} onOpenChange={setReceiveOpen}>

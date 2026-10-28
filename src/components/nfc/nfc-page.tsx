@@ -351,6 +351,9 @@ export function NfcPage({ cardId }: { cardId?: string }) {
           onOpenChange={setQrOpen}
           title="Scan card ID"
           description="Scan a QR code of the card's UID (e.g. 04:A2:3B:1C:5D:80:00)."
+          manualLabel="Type the card ID instead"
+          manualPlaceholder="04:A2:3B:1C:5D:80:00"
+          manualButton="Use this card ID"
           onResult={(text) => {
             const m = text.match(/uid[=:]\s*([0-9A-Fa-f:\s-]+)/i);
             const id = normalizeUid(m ? m[1] : text);
