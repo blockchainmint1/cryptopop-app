@@ -11,7 +11,7 @@ import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { QrScanDialog } from "@/components/wallet/qr-scan-dialog";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { deriveLegacyTxcAddress, deriveTxcAddress, isValidTxcAddress } from "@/lib/wallet";
-import { splitGiving, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
+import { splitGiving, givingMinimumUsd, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
 import { signSplitPsbt } from "@/lib/wallet/sign";
 import { broadcastSignedTx, prepareSplitSend } from "@/lib/send.functions";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
@@ -69,7 +69,7 @@ function Gate({ title, children }: { title: string; children: React.ReactNode })
 
 type Review = { psbt: string; inputs: string[]; feeSats: number; intent: SplitIntent };
 
-type Invoice = { id: string; nonce: string | null; discountPct: number };
+type Invoice = { id: string; nonce: string | null; discountPct: number; merchantMinimumUsd: number | null };
 
 function GiveDashboard() {
   const serverCfg = Route.useLoaderData();
@@ -113,7 +113,7 @@ function GiveDashboard() {
       if (!inv.egiving.accepted || inv.egiving.discountPct == null)
         return toast.error(`${inv.merchant?.name ?? "This store"} doesn't accept eGiving payments yet. Pay from the main wallet instead.`);
       try { splitGiving(inv.tsdAmount, inv.egiving.discountPct); } catch { return toast.error("This store's eGiving discount isn't supported."); }
-      setInvoice({ id, nonce, discountPct: inv.egiving.discountPct });
+      setInvoice({ id, nonce, discountPct: inv.egiving.discountPct, merchantMinimumUsd: inv.egiving.merchantMinimumUsd ?? null });
       setMerchant(inv.address);
       setAmount(inv.tsdAmount.toFixed(2));
       setMerchantName(inv.merchant?.name ?? null);
@@ -144,7 +144,9 @@ function GiveDashboard() {
     if (!isValidTxcAddress(to) || /^txc1/i.test(to)) return toast.error("Enter the merchant's T… address");
     if ([address, cfg.church.address, cfg.platformAddress].includes(to)) return toast.error("That address can't be the merchant");
     if (!split) return toast.error("Enter an amount (up to 2 decimals)");
-    if (split.church <= 0 || split.platform <= 0) return toast.error("Minimum purchase is $0.50");
+    if (split.church <= 0 || split.platform <= 0) return toast.error(`Minimum purchase at a ${split.discountPct}% store is $${givingMinimumUsd(split.discountPct).toFixed(2)}`);
+    if (invoice?.merchantMinimumUsd != null && split.merchant + 1e-9 < invoice.merchantMinimumUsd)
+      return toast.error("The store's share doesn't match what NectarPay expects. Payment stopped before anything was sent.");
     if (tsd !== null && split.total > tsd) return toast.error(`You only have ${tsd.toFixed(2)} TSD`);
     const intent: SplitIntent = {
       from: address,

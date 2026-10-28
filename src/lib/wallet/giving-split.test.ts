@@ -110,3 +110,15 @@ describe("split payment safety check", () => {
   it("rejects duplicate recipients", () =>
     expect(() => validateSplitSend(build(recipients), { from, recipients: [recipients[0], recipients[0], recipients[2]] }, [from])).toThrow());
 });
+
+import { givingMinimumUsd as minUsd, splitGiving as split2 } from "./transaction-policy";
+describe("giving minimum per discount (500 cents / %)", () => {
+  it.each([[10, 0.5], [5, 1], [1, 5], [50, 0.1]])("%d%% store minimum is $%d", (pct, usd) => {
+    expect(minUsd(pct)).toBe(usd);
+    const s = split2(usd, pct);
+    expect(s.church).toBeGreaterThan(0);
+    expect(s.platform).toBeGreaterThan(0);
+    const below = split2(usd - 0.01, pct);
+    expect(below.church <= 0 || below.platform <= 0).toBe(true);
+  });
+});

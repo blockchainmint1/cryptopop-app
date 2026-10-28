@@ -143,6 +143,12 @@ export function splitGiving(total: number, discountPct = 10) {
   return { merchant: merchant / 100, church: church / 100, platform: platform / 100, total: cents / 100, discountPct };
 }
 
+/** Smallest purchase (USD) where both church and program shares are at least one cent: 500 cents / discount %. */
+export function givingMinimumUsd(discountPct: number): number {
+  const c = Math.ceil(100 / (discountPct * (1 - GIVE_CHURCH_SHARE)) - 1e-9);
+  return Math.max(c, Math.ceil(100 / (discountPct * GIVE_CHURCH_SHARE) - 1e-9)) / 100;
+}
+
 /**
  * The only Omni payloads the relay forwards: a TSD (property 39) simple send
  * (type 0, 20 bytes) or a TSD Send-To-Many (type 7) with 1..MAX_SPLIT_RECIPIENTS.
