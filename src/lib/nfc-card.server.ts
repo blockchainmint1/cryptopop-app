@@ -179,10 +179,17 @@ export async function executePayment(
   if (!c || !k || !c.enabled || c.killed_at) return fail("Card is off");
   try {
     const key = await decryptKey(k.enc_key);
-    const { buildUnsignedSend, broadcastRaw } = await import("@/lib/send.server");
-    const intent = { asset: "tsd" as const, from: c.pocket_address, to: p.recipient, amount: Number(p.tsd_amount) };
-    const built = await buildUnsignedSend(intent);
-    validateSend(built.psbtBase64, intent, [c.pocket_address]);
+    const { buildUnsignedSend, buildUnsignedSplitSend, broadcastRaw } = await import("@/lib/send.server");
+    const plan = givingPlan(p.give_discount_pct, Number(p.tsd_amount), p.recipient, c.pocket_address);
+    let built;
+    if (plan) {
+      built = await buildUnsignedSplitSend(plan.intent);
+      validateSplitSend(built.psbtBase64, plan.intent, [c.pocket_address]);
+    } else {
+      const intent = { asset: "tsd" as const, from: c.pocket_address, to: p.recipient, amount: Number(p.tsd_amount) };
+      built = await buildUnsignedSend(intent);
+      validateSend(built.psbtBase64, intent, [c.pocket_address]);
+    }
     const tx = Transaction.fromPSBT(base64.decode(built.psbtBase64), { allowUnknownOutputs: true });
     if (tx.sign(key) === 0) throw new Error("Card key didn't match its pocket");
     tx.finalize();

@@ -77,6 +77,16 @@ export const Route = createFileRoute("/api/public/card/pay")({
           const off = /card is off/i.test(msg);
           return json({ status: "declined", reason: dup ? "This invoice is already being paid" : off ? "Card is off" : "Card payment couldn't start — try again" });
         }
+        // eGiving: if the store accepts it, the tap splits store / church / eGiving.
+        const pct = inv.egiving?.accepted ? Number(inv.egiving.discountPct) : NaN;
+        if (Number.isFinite(pct)) {
+          const { splitGiving } = await import("@/lib/wallet/transaction-policy");
+          try {
+            const sp = splitGiving(inv.tsdAmount, pct);
+            if (sp.church > 0 && sp.platform > 0)
+              await sb.from("nfc_card_payments").update({ give_discount_pct: pct }).eq("id", row.payment_id);
+          } catch { /* unsupported discount → plain payment */ }
+        }
         if (row.status === "approval_required") {
           if (!ownerChat) {
             await sb.from("nfc_card_payments").update({ status: "declined", reason: "Over limit and no Telegram approver" }).eq("id", row.payment_id);
