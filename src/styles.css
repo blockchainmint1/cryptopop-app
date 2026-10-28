@@ -470,3 +470,33 @@ html.native [contenteditable="true"] {
   .poptiles-tile,
   .poptiles-tile-selected { animation: none; transition: none; }
 }
+
+/* eGiving (/give): warm, light church/nonprofit look, scoped to its subtree. */
+.give-theme {
+  --give-cream: oklch(0.975 0.015 85);
+  --give-ink: oklch(0.27 0.04 260);
+  --give-gold: oklch(0.72 0.14 70);
+  --give-sage: oklch(0.62 0.08 150);
+  --background: var(--give-cream);
+  --foreground: var(--give-ink);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--give-ink);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--give-ink);
+  --primary: oklch(0.52 0.13 45);
+  --primary-foreground: oklch(0.99 0.01 85);
+  --secondary: oklch(0.94 0.03 80);
+  --secondary-foreground: var(--give-ink);
+  --muted: oklch(0.95 0.02 85);
+  --muted-foreground: oklch(0.5 0.03 260);
+  --accent: var(--give-sage);
+  --accent-foreground: oklch(0.99 0.01 85);
+  --border: oklch(0.88 0.02 80);
+  --input: oklch(0.86 0.02 80);
+  --ring: oklch(0.52 0.13 45);
+  --gradient-give: linear-gradient(135deg, oklch(0.52 0.13 45), var(--give-gold));
+  --shadow-give: 0 12px 30px -14px color-mix(in oklab, oklch(0.52 0.13 45) 45%, transparent);
+  background: var(--background);
+  color: var(--foreground);
+}
+.give-theme .font-give { font-family: "Fraunces", Georgia, serif; letter-spacing: -0.01em; text-transform: none; }
