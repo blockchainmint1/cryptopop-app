@@ -20,12 +20,15 @@ export const Route = createFileRoute("/sso-tsd")({
 });
 
 function SsoTsd() {
-  const { token } = Route.useSearch();
+  const { token: queryToken } = Route.useSearch();
   const [msg, setMsg] = useState("Finishing your approval…");
   useEffect(() => {
+    // Honest Money returns the ticket in the fragment; read it, then wipe it from the address bar.
+    const token = new URLSearchParams(window.location.hash.slice(1)).get("hm_handoff") ?? queryToken;
+    if (window.location.hash) history.replaceState(null, "", window.location.pathname);
     if (!token || !window.opener || window.opener === window) { setMsg("This approval window can be closed."); return; }
     try { window.opener.postMessage({ type: "tsd-ticket", token }, window.location.origin); } catch { /* ignore */ }
     window.close();
-  }, [token]);
+  }, [queryToken]);
   return <main className="grid min-h-screen place-items-center p-6 text-center text-muted-foreground">{msg}</main>;
 }
