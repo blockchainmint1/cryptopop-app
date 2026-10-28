@@ -82,7 +82,12 @@ export async function getTsdNonce(): Promise<{ nonce: string } | { status: "not_
   if (!secret) return { status: "not_ready", reason: "Automatic setup isn't switched on yet." };
   try {
     const res = await fetch(`${TSD}/api/public/partner/v1/nonce`, { headers: await partnerHeaders(secret, "") });
-    if (!res.ok) return { status: "not_ready", reason: res.status === 404 ? "TSD Bridge hasn't turned on automatic setup yet." : "TSD Bridge didn't answer. Try again in a minute." };
+    if (!res.ok) {
+      const err = ((await res.json().catch(() => ({}))) as { error?: unknown }).error;
+      if (res.status === 404 || err === "partner_disabled") return { status: "not_ready", reason: "TSD Bridge hasn't switched on automatic setup for CryptoPOP yet." };
+      if (err === "partner_auth") return { status: "not_ready", reason: ERRORS.partner_auth };
+      return { status: "not_ready", reason: "TSD Bridge didn't answer. Try again in a minute." };
+    }
     const j = (await res.json()) as { nonce?: unknown };
     if (typeof j.nonce !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(j.nonce)) return { status: "not_ready", reason: "TSD Bridge sent something unexpected." };
     return { nonce: j.nonce };

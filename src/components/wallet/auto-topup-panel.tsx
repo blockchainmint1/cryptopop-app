@@ -62,7 +62,7 @@ export function AutoTopupPanel({ address }: { address: string | null }) {
     if (!memberId || !address || !wallet.mnemonic || wallet.status !== "unlocked" || wallet.address !== address) {
       setNote("Unlock your wallet first."); return;
     }
-    if (!TSD_TICKET_LOGIN_URL) { setNote("Instant setup is almost ready. Use Connect to TSD below for now."); return; }
+    if (!TSD_TICKET_LOGIN_URL) { setNote("Instant setup is almost ready."); return; }
     setBusy(true); setNote(null); setPending(null);
     let key: Uint8Array | null = null;
     try {
