@@ -96,6 +96,7 @@ export function AutoTopupPanel({ address }: { address: string | null }) {
     return <div className="space-y-3 rounded-2xl border border-primary/40 bg-card p-4">
       <p className="font-display text-xl uppercase">Your TSD deposit address</p>
       <p className="text-muted-foreground">Send {net.tokens.map(t => t.symbol).join(" or ")} on {account.networks.map(n => n.label).join(", ")}. TSD lands in this wallet.</p>
+      <p className="text-sm text-muted-foreground">Minimum $10 · maximum $100,000 per deposit.</p>
       <div className="flex justify-center rounded-xl bg-foreground p-3"><QRCodeSVG value={account.depositAddress} size={168} /></div>
       <button type="button" className="w-full break-all rounded-xl border border-border p-3 text-left font-mono text-sm"
         onClick={() => { void navigator.clipboard.writeText(account.depositAddress); toast.success("Address copied"); }}>
