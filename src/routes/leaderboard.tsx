@@ -7,6 +7,7 @@ import {
   Check,
   ChevronRight,
   Copy,
+  Heart,
   Loader2,
   ShoppingBag,
   Trophy,
@@ -443,6 +444,32 @@ function PopPage() {
               {showAll ? "Show less" : `See more (${leaders.length - 3})`}
             </button>
           ) : null}
+        </section>
+
+        {/* 6. GIVE — the eGiving wallet */}
+        <section>
+          {sectionTitle("Give")}
+          <Link to="/give" className="mt-2 block">
+            <Card className="flex items-center gap-4 border-white/12 bg-white/5 p-4 transition hover:bg-white/10">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <Heart className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-display text-base font-semibold uppercase tracking-wide">
+                  eGiving
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Pay a merchant and a little goes to the church
+                </span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block font-display text-sm font-semibold text-primary">
+                  90 / 8 / 2
+                </span>
+                <ChevronRight className="ml-auto mt-1 h-4 w-4 text-muted-foreground" />
+              </span>
+            </Card>
+          </Link>
         </section>
       </main>
       <BottomNavSpacer />
