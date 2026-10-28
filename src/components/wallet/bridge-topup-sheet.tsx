@@ -262,11 +262,6 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
               </button>
             ))}
           </div>
-          <Button className="min-h-12 w-full rounded-full" disabled={loading || waiting} onClick={connect}>
-            {waiting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-            {waiting ? "Waiting for TSD…" : error ? "Reconnect to TSD" : "Connect to TSD"}
-          </Button>
-          {waiting && <Button variant="outline" className="w-full" onClick={() => disconnect()}>Cancel connection</Button>}
         </>}
         {!connection && !challenge && provider && <div className="space-y-4">
           <button type="button" onClick={() => setProvider(null)} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -280,7 +275,7 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
             <img src={provider.still} alt={`${provider.name} top-up illustration`} className="w-full" loading="lazy" />
           </div>
           <ol className="space-y-2">
-            <GuideStep n={1} text="Tap Connect to TSD below and sign in with Honest Money in the TSD window." />
+            <GuideStep n={1} text="Go back and tap Set up my TSD account, then approve with Honest Money." />
             <GuideStep n={2} text={`Back here, pick ${provider.network} and ${provider.coin}, then copy the deposit address this wallet shows you.`} />
             {provider.steps.map((s, i) => <GuideStep key={i} n={i + 3} text={s} />)}
             <GuideStep n={provider.steps.length + 3} text="Come back here. TSD usually lands in a few minutes and progress shows on this screen." />
@@ -288,14 +283,9 @@ export function BridgeTopUpSheet({ open, onOpenChange, address }: {
           <p className="rounded-lg border-2 border-destructive/60 bg-destructive/10 p-3 text-xs text-destructive">
             <strong>{provider.network} only.</strong> If {provider.name} sends on a different network, the bridge won't see it.
           </p>
-          <Button className="min-h-12 w-full rounded-full" disabled={loading || waiting} onClick={connect}>
-            {waiting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-            {waiting ? "Waiting for TSD…" : error ? "Reconnect to TSD" : "Connect to TSD"}
-          </Button>
           <Button variant="outline" className="w-full" onClick={() => openProviderApp(provider)}>
             Open {provider.name} <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
-          {waiting && <Button variant="outline" className="w-full" onClick={() => disconnect()}>Cancel connection</Button>}
         </div>}
         {challenge && <div className="space-y-4">
           <ShieldCheck className="h-8 w-8 text-neon-cyan" />
