@@ -7,8 +7,10 @@ export function tsdLinkMessage(memberId: string, address: string, nonce: string,
 }
 
 /**
- * NOT YET CONFIRMED by Honest Money: how CryptoPOP gets a sign-in ticket
- * addressed to TSD Bridge. Until they confirm, this stays null and the
- * instant setup button explains it's waiting.
+ * Honest Money delegated hand-off (confirmed Oct 28, 2026). The member approves on
+ * honest.money and the one-time, 5-minute ticket comes back in the URL fragment
+ * (#hm_handoff=...) so it never reaches server logs. return_to must be an https
+ * page on a host registered to pop-wallet.
  */
-export const TSD_TICKET_LOGIN_URL: ((returnTo: string) => string) | null = null;
+export const TSD_TICKET_LOGIN_URL: ((returnTo: string) => string) | null = (returnTo) =>
+  `https://honest.money/handoff?to=tsd&purpose=receiving_setup&return_to=${encodeURIComponent(returnTo)}`;
