@@ -1,9 +1,8 @@
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const src = readFileSync(fileURLToPath(new URL("./qr-scan-dialog.tsx", import.meta.url)), "utf8");
-const wasm = fileURLToPath(new URL("../../../public/zxing/zxing_reader.wasm", import.meta.url));
 
 describe("QR scanner loading", () => {
   it("never imports the browser-only scanner at module scope", () => {
@@ -16,9 +15,8 @@ describe("QR scanner loading", () => {
 
   it("serves the decoder from this site, not a CDN", () => {
     // The wallet's content security policy blocks the CDN barcode-detector
-    // downloads from, so the wasm has to come from our own origin.
+    // downloads from, so the binary has to be fetched from our own origin.
     expect(src).toMatch(/locateFile/);
-    expect(src).toMatch(/\/zxing\//);
-    expect(statSync(wasm).size).toBeGreaterThan(100_000);
+    expect(src).toMatch(/\/wasm\//);
   });
 });

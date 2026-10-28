@@ -6,14 +6,14 @@ type ScannerModule = typeof import("@yudiel/react-qr-scanner");
 /**
  * The camera decoder is browser-only: importing it at module scope breaks
  * server rendering, so it is loaded lazily when the dialog opens. Its wasm
- * file is served from our own site (public/zxing) because this wallet's
+ * file is served from our own site (public/wasm) because this wallet's
  * security policy blocks the CDN it would otherwise download from.
  */
 async function loadScanner(): Promise<ScannerModule> {
   const mod = await import("@yudiel/react-qr-scanner");
   mod.setZXingModuleOverrides({
     locateFile: (path: string, prefix: string) =>
-      path.endsWith(".wasm") ? `/zxing/${path}` : prefix + path,
+      path.endsWith(".wasm") ? `/wasm/${path}` : prefix + path,
   });
   return mod;
 }
