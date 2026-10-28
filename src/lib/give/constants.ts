@@ -1,7 +1,9 @@
 /**
  * eGiving recipients are pinned in the app itself so a compromised server
- * cannot redirect the church or eGiving shares. The server config is compared
- * against these and the wallet refuses to pay on any mismatch.
+ * cannot redirect the church or eGiving shares. The server supplies the live
+ * addresses from the GIVE_CHURCH / GIVE_FEE secrets; the wallet compares them
+ * against these pinned values and refuses to pay on any mismatch. These pins
+ * must match the secrets, or every payment fails closed.
  */
 export const GIVE_CHURCH = {
   name: "Christ Church of the Valley",
