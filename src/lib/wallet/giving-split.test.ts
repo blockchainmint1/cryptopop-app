@@ -15,7 +15,7 @@ describe("eGiving split (90% merchant / 8% church / 2% platform)", () => {
   it("splits $100 into 90 / 8 / 2", () => expect(splitGiving(100)).toEqual({ merchant: 90, church: 8, platform: 2, total: 100 }));
   it("gives leftover cents to the merchant so parts always total the price", () => {
     const s = splitGiving(4.99);
-    expect(s).toEqual({ merchant: 4.5, church: 0.39, platform: 0.09, total: 4.99 });
+    expect(s).toEqual({ merchant: 4.51, church: 0.39, platform: 0.09, total: 4.99 });
   });
 });
 
