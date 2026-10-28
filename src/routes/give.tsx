@@ -11,7 +11,7 @@ import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { QrScanDialog } from "@/components/wallet/qr-scan-dialog";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { deriveLegacyTxcAddress, deriveTxcAddress, isValidTxcAddress } from "@/lib/wallet";
-import { splitGiving, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
+import { splitGiving, givingMinimumUsd, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
 import { signSplitPsbt } from "@/lib/wallet/sign";
 import { broadcastSignedTx, prepareSplitSend } from "@/lib/send.functions";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
