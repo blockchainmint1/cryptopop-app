@@ -304,7 +304,7 @@ export function SendSheet({
                           <button
                             key={a.id}
                             type="button"
-                            onClick={() => { if (a.id === "tsd" || a.id === "txc") setAsset(a.id); }}
+                            onClick={() => setAsset(a.id)}
                             className={`rounded-xl border px-3 py-2 text-left transition ${
                               asset === a.id
                                 ? "border-primary bg-primary/15"
