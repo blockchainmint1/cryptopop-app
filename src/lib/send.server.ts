@@ -287,6 +287,72 @@ export async function buildUnsignedSend(opts: {
   };
 }
 
+/**
+ * Build an unsigned Omni Send-To-Many (type 7) TSD payment: one transaction
+ * paying several recipients exact amounts. Layout:
+ *   [OP_RETURN payload, recipient 1..n (dust), change]
+ */
+export async function buildUnsignedSplitSend(opts: {
+  from: string;
+  recipients: { to: string; amount: number }[];
+  exclude?: string[];
+}): Promise<UnsignedSend> {
+  const network = TXC_NETWORK;
+  const n = opts.recipients.length;
+  if (n < 1 || n > 10) throw new Error("A split payment needs 1–10 recipients");
+  const id = tsdPropertyId();
+  const feeRatePromise = getFeeRate();
+  const utxosPromise = getSpendableUtxos(opts.from, new Set(opts.exclude ?? []));
+  const data = Buffer.alloc(13 + n * 9);
+  data.write("omni", 0, "ascii");
+  data.writeUInt16BE(7, 6);
+  data.writeUInt32BE(id, 8);
+  data.writeUInt8(n, 12);
+  opts.recipients.forEach((r, i) => {
+    if (/^txc1/i.test(r.to.trim())) throw new Error("Token sends need a T… address");
+    const cents = Math.round(r.amount * 100);
+    if (!(cents > 0) || Math.abs(r.amount * 100 - cents) > 1e-6) throw new Error("Invalid split amount");
+    data.writeUInt8(i + 1, 13 + i * 9);
+    data.writeBigUInt64BE(BigInt(cents) * 1_000_000n, 14 + i * 9);
+  });
+  const embedded = bitcoin.payments.embed({ data: [data] }).output;
+  if (!embedded) throw new Error("Could not build the token payload");
+
+  const utxos = await utxosPromise;
+  if (utxos.length === 0) throw new Error("This address has no TXC to pay the network fee.");
+  const rate = await feeRatePromise;
+  const outSats = DUST_SATS * n;
+  const vsizeFor = (k: number) => 10 + 148 * k + 34 * (n + 1) + 11 + data.length;
+  const used: Utxo[] = [];
+  let inputSats = 0;
+  for (const u of utxos) {
+    used.push(u);
+    inputSats += u.value;
+    if (inputSats >= outSats + vsizeFor(used.length) * rate + DUST_SATS) break;
+  }
+  const psbt = new bitcoin.Psbt({ network });
+  const hexes = await Promise.all(used.map((u) => getTxHex(u.txid)));
+  used.forEach((u, i) => {
+    const previous = hexes[i];
+    if (!previous) throw new Error("Missing previous transaction");
+    psbt.addInput({ hash: u.txid, index: u.vout, nonWitnessUtxo: Buffer.from(previous, "hex") });
+  });
+  const fee = vsizeFor(used.length) * rate;
+  const change = inputSats - outSats - fee;
+  if (change < 0) throw new Error("Not enough TXC to cover the network fee.");
+  psbt.addOutput({ script: Buffer.from(embedded), value: 0n });
+  for (const r of opts.recipients) psbt.addOutput({ address: r.to, value: BigInt(DUST_SATS) });
+  if (change >= DUST_SATS) psbt.addOutput({ address: opts.from, value: BigInt(change) });
+  return {
+    psbtBase64: psbt.toBase64(),
+    feeSats: fee,
+    inputCount: used.length,
+    totalSats: outSats + fee,
+    inputs: used.map((u) => `${u.txid}:${u.vout}`),
+    feeRate: rate,
+  };
+}
+
 export class CoinsSpentError extends Error {
   constructor(public outpoints: string[]) {
     super("Some coins you were spending were just used by another send. Please try again.");

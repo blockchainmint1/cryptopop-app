@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as ArcadeRouteImport } from './routes/arcade'
+import { Route as GiveRouteImport } from './routes/give'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
@@ -68,6 +69,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const ArcadeRoute = ArcadeRouteImport.update({
   id: '/arcade',
   path: '/arcade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GiveRoute = GiveRouteImport.update({
+  id: '/give',
+  path: '/give',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -297,6 +303,7 @@ const LovableEmailTransactionalSendRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/arcade': typeof ArcadeRoute
+  '/give': typeof GiveRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -344,6 +351,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/arcade': typeof ArcadeRoute
+  '/give': typeof GiveRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/arcade': typeof ArcadeRoute
+  '/give': typeof GiveRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -442,6 +451,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/arcade'
+    | '/give'
     | '/leaderboard'
     | '/login'
     | '/logout'
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/arcade'
+    | '/give'
     | '/leaderboard'
     | '/login'
     | '/logout'
@@ -537,6 +548,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/arcade'
+    | '/give'
     | '/leaderboard'
     | '/login'
     | '/logout'
@@ -586,6 +598,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ArcadeRoute: typeof ArcadeRoute
+  GiveRoute: typeof GiveRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
@@ -648,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/arcade'
       fullPath: '/arcade'
       preLoaderRoute: typeof ArcadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/give': {
+      id: '/give'
+      path: '/give'
+      fullPath: '/give'
+      preLoaderRoute: typeof GiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -985,6 +1005,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ArcadeRoute: ArcadeRoute,
+  GiveRoute: GiveRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,

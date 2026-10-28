@@ -8,7 +8,7 @@ import { mnemonicToSeedSync } from "@scure/bip39";
 import { Transaction } from "@scure/btc-signer";
 import { base64 } from "@scure/base";
 import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
-import { validateSend, type SendIntent } from "./transaction-policy";
+import { validateSend, validateSplitSend, type SendIntent, type SplitIntent } from "./transaction-policy";
 
 /** TEXITcoin's registered SLIP-0044 coin type (texitcoin.org/build). */
 const DERIVATION_PATH = "m/44'/696969'/0'/0/0";
@@ -50,3 +50,16 @@ export function signPsbt(psbtBase64: string, mnemonic: string, intent: SendInten
   return tx.hex;
 }
 
+
+/** Sign a validated giving-split (Send-To-Many) PSBT. */
+export function signSplitPsbt(psbtBase64: string, mnemonic: string, intent: SplitIntent): string {
+  validateSplitSend(psbtBase64, intent, [deriveTxcAddress(mnemonic), deriveLegacyTxcAddress(mnemonic)]);
+  const tx = Transaction.fromPSBT(base64.decode(psbtBase64), { allowUnknownOutputs: true });
+  let signed = 0;
+  for (const path of [DERIVATION_PATH, LEGACY_DERIVATION_PATH]) {
+    try { signed += tx.sign(derivePrivateKeyAtPath(mnemonic, path)); } catch { /* next path */ }
+  }
+  if (signed === 0) throw new Error("No inputs matched this wallet's keys");
+  tx.finalize();
+  return tx.hex;
+}
