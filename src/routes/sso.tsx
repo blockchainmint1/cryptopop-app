@@ -50,7 +50,12 @@ function SsoPage() {
         navigate({ to: "/", replace: true });
       } catch (e) {
         console.error(e);
-        setError("That sign-in link didn't work or has expired. Please try again.");
+        const msg = e instanceof Error ? e.message : "";
+        setError(
+          msg.startsWith("Sign in to your existing") || msg.startsWith("Existing account ownership")
+            ? "This email already has a CryptoPOP account. Sign in to that account first, then connect Honest Money."
+            : "That sign-in link didn't work or has expired. Please try again.",
+        );
       }
     })();
     return () => { done = true; };
