@@ -16,6 +16,8 @@ import { signSplitPsbt } from "@/lib/wallet/sign";
 import { broadcastSignedTx, prepareSplitSend } from "@/lib/send.functions";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
 import { getGiveConfig } from "@/lib/give/config.functions";
+import { configMatchesPinned, GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
+import { selectNectarTsd } from "@/lib/nectarpay.functions";
 import { parseScan } from "@/lib/wallet/scan-parse";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
 
@@ -25,7 +27,7 @@ export const Route = createFileRoute("/give")({
       { title: "eGiving — Shop local, give to your church" },
       { name: "description", content: "eGiving turns everyday purchases at participating merchants into gifts for Christ Church of the Valley." },
       { property: "og:title", content: "eGiving — Shop local, give to your church" },
-      { property: "og:description", content: "Every purchase at a participating merchant sends 8% to Christ Church of the Valley." },
+      { property: "og:description", content: "Every purchase at a participating merchant supports Christ Church of the Valley." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -67,8 +69,14 @@ function Gate({ title, children }: { title: string; children: React.ReactNode })
 
 type Review = { psbt: string; inputs: string[]; feeSats: number; intent: SplitIntent };
 
+type Invoice = { id: string; nonce: string | null; discountPct: number };
+
 function GiveDashboard() {
-  const cfg = Route.useLoaderData();
+  const serverCfg = Route.useLoaderData();
+  const pinnedOk = configMatchesPinned(serverCfg);
+  const cfg = { church: GIVE_CHURCH, platformAddress: GIVE_PLATFORM_ADDRESS };
+  const selectTsd = useServerFn(selectNectarTsd);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
   const { address, mnemonic } = useWallet();
   const summary = useServerFn(getAddressChainSummary);
   const prepare = useServerFn(prepareSplitSend);
@@ -92,13 +100,35 @@ function GiveDashboard() {
 
   const value = Number(amount);
   const split = useMemo(() => {
-    try { return value > 0 ? splitGiving(value, cfg.churchPct, cfg.platformPct) : null; } catch { return null; }
-  }, [value, cfg.churchPct, cfg.platformPct]);
+    const pct = invoice?.discountPct ?? serverCfg.defaultDiscountPct;
+    try { return value > 0 ? splitGiving(value, pct) : null; } catch { return null; }
+  }, [value, invoice, serverCfg.defaultDiscountPct]);
+
+  async function loadInvoice(id: string, nonce: string | null) {
+    setBusy(true);
+    try {
+      const res = await selectTsd({ data: { id, nonce } });
+      const inv = res.invoice;
+      if (!inv || !inv.address || !inv.tsdAmount) return toast.error(res.error ?? "This store isn't accepting TSD right now.");
+      if (!inv.egiving.accepted || inv.egiving.discountPct == null)
+        return toast.error(`${inv.merchant?.name ?? "This store"} doesn't accept eGiving payments yet. Pay from the main wallet instead.`);
+      try { splitGiving(inv.tsdAmount, inv.egiving.discountPct); } catch { return toast.error("This store's eGiving discount isn't supported."); }
+      setInvoice({ id, nonce, discountPct: inv.egiving.discountPct });
+      setMerchant(inv.address);
+      setAmount(inv.tsdAmount.toFixed(2));
+      setMerchantName(inv.merchant?.name ?? null);
+    } finally { setBusy(false); }
+  }
 
   function onScan(text: string) {
     setScan(false);
+    setReview(null);
+    setInvoice(null);
     const intent = parseScan(text);
-    if (intent.kind === "payment") {
+    if (intent.kind === "nectarpay") {
+      void loadInvoice(intent.invoiceId, intent.nonce);
+    } else if (intent.kind === "payment") {
+      if (intent.asset !== "tsd") return toast.error("eGiving only pays in TSD. This code asks for a different coin.");
       setMerchant(intent.to);
       if (intent.amount != null) setAmount(String(intent.amount));
       setMerchantName(intent.merchant);
@@ -109,6 +139,7 @@ function GiveDashboard() {
 
   async function prepareReview() {
     if (!address || !mnemonic) return toast.error("Wallet is locked");
+    if (!pinnedOk) return toast.error("eGiving settings from the server don't match this app. Payment blocked for your safety.");
     const to = merchant.trim();
     if (!isValidTxcAddress(to) || /^txc1/i.test(to)) return toast.error("Enter the merchant's T… address");
     if ([address, cfg.church.address, cfg.platformAddress].includes(to)) return toast.error("That address can't be the merchant");
@@ -158,7 +189,7 @@ function GiveDashboard() {
   }
 
   function reset() {
-    setTxid(null); setAmount(""); setMerchant(""); setMerchantName(null);
+    setTxid(null); setAmount(""); setMerchant(""); setMerchantName(null); setInvoice(null);
   }
 
   return (
@@ -183,7 +214,7 @@ function GiveDashboard() {
           <p className="text-xs text-muted-foreground">You're supporting</p>
           <p className="font-give text-lg leading-tight">{cfg.church.name}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {cfg.churchPct}% of every purchase at a participating merchant goes to {cfg.church.short}.
+            Part of every purchase at a participating merchant goes to {cfg.church.short}.
           </p>
           <p className="mt-2 text-sm"><span className="font-semibold text-primary">${given.toFixed(2)}</span> given from this phone</p>
         </div>
@@ -207,13 +238,13 @@ function GiveDashboard() {
             <div>
               <Label htmlFor="give-merchant">Merchant address</Label>
               <div className="mt-1 flex gap-2">
-                <Input id="give-merchant" value={merchant} onChange={(e) => { setMerchant(e.target.value); setReview(null); }} placeholder="T…" autoComplete="off" />
+                <Input id="give-merchant" value={merchant} readOnly={!!invoice} onChange={(e) => { setMerchant(e.target.value); setReview(null); }} placeholder="T…" autoComplete="off" />
                 <Button type="button" variant="outline" size="icon" aria-label="Scan merchant QR" onClick={() => setScan(true)}><Camera className="h-4 w-4" /></Button>
               </div>
             </div>
             <div>
               <Label htmlFor="give-amount">Purchase amount ($)</Label>
-              <Input id="give-amount" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value); setReview(null); }} placeholder="0.00" className="mt-1" />
+              <Input id="give-amount" inputMode="decimal" value={amount} readOnly={!!invoice} onChange={(e) => { setAmount(e.target.value); setReview(null); }} placeholder="0.00" className="mt-1" />
             </div>
           </div>
 
@@ -223,12 +254,19 @@ function GiveDashboard() {
               <Row label={`${cfg.church.short} (church)`} value={split.church} accent />
               <Row label="eGiving" value={split.platform} />
               <div className="border-t pt-2"><Row label="You pay" value={split.total} bold /></div>
-              <p className="pt-1 text-xs text-muted-foreground">The merchant counts this as paid in full — the church share is their community discount.</p>
+              <p className="pt-1 text-xs text-muted-foreground">
+                {invoice ? `This store gives a ${split.discountPct}% community discount, so it counts this as paid in full.` : `Plain address payment with a ${split.discountPct}% split. Scan a NectarPay code so the store counts it as paid in full.`}
+              </p>
             </dl>
           ) : null}
 
           {review ? (
             <div className="mt-4 space-y-2">
+              <div className="space-y-1 rounded-2xl border p-3 font-mono text-[11px] break-all text-muted-foreground">
+                <p>Merchant: {review.intent.recipients[0].to}</p>
+                <p>{cfg.church.short}: {review.intent.recipients[1].to}</p>
+                <p>eGiving: {review.intent.recipients[2].to}</p>
+              </div>
               <p className="flex items-center gap-1 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4 text-accent" /> Checked on this phone · network fee {(review.feeSats / 1e8).toFixed(5)} TXC</p>
               <Button className="w-full" disabled={busy} onClick={confirm}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />} Confirm & pay ${split?.total.toFixed(2)}</Button>
               <Button variant="ghost" className="w-full" onClick={() => setReview(null)}>Cancel</Button>
