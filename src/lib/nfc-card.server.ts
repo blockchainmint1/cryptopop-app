@@ -5,7 +5,8 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { Transaction } from "@scure/btc-signer";
 import { base64, hex } from "@scure/base";
 import { pubkeyToTxcAddress, verifyTxcMessage } from "@/lib/wallet/txc-message";
-import { validateSend } from "@/lib/wallet/transaction-policy";
+import { splitGiving, validateSend, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
+import { GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
 
 const enc = new TextEncoder();
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
@@ -204,4 +205,24 @@ export async function executePayment(
     console.error("[nfc pay]", e);
     return fail(e instanceof Error ? e.message : "Payment failed");
   }
+}
+
+/**
+ * eGiving split for a card tap. Uses the demo church for every card until
+ * per-wallet church selection exists. Church/fee addresses come from the
+ * GIVE_CHURCH / GIVE_FEE secrets but must match the pinned addresses, so a
+ * changed secret fails closed instead of redirecting money.
+ */
+export function givingPlan(pct: unknown, total: number, merchant: string, from: string):
+  { intent: SplitIntent; church: number } | null {
+  if (pct == null) return null;
+  const church = process.env.GIVE_CHURCH?.trim() || GIVE_CHURCH.address;
+  const fee = process.env.GIVE_FEE?.trim() || GIVE_PLATFORM_ADDRESS;
+  if (church !== GIVE_CHURCH.address || fee !== GIVE_PLATFORM_ADDRESS) throw new Error("eGiving addresses don't match the app");
+  const sp = splitGiving(total, Number(pct));
+  if (sp.church <= 0 || sp.platform <= 0) return null;
+  return {
+    church: sp.church,
+    intent: { from, recipients: [{ to: merchant, amount: sp.merchant }, { to: church, amount: sp.church }, { to: fee, amount: sp.platform }] },
+  };
 }

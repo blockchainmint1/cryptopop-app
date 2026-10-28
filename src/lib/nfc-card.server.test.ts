@@ -59,3 +59,20 @@ describe("NFC card service", () => {
     expect(await s.verifyPartner(String(Number(ts) - 400), sig, body)).toBe(false);
   });
 });
+
+describe("card tap eGiving split", async () => {
+  const { givingPlan } = await import("./nfc-card.server");
+  const { GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } = await import("./give/constants");
+  const M = "TmerchantXXXXXXXXXXXXXXXXXXXXXXXXX", F = "TpocketXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+  it("no discount means a plain payment", () => expect(givingPlan(null, 100, M, F)).toBeNull());
+  it("10% store discount sends 90 / 8 / 2 to store, church, eGiving", () => {
+    expect(givingPlan(10, 100, M, F)!.intent.recipients).toEqual([
+      { to: M, amount: 90 }, { to: GIVE_CHURCH.address, amount: 8 }, { to: GIVE_PLATFORM_ADDRESS, amount: 2 },
+    ]);
+  });
+  it("refuses if the church secret differs from the app", () => {
+    process.env.GIVE_CHURCH = "TsomeoneElseXXXXXXXXXXXXXXXXXXXXXX";
+    expect(() => givingPlan(10, 100, M, F)).toThrow();
+    delete process.env.GIVE_CHURCH;
+  });
+});
