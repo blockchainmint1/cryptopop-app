@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Scanner } from "@yudiel/react-qr-scanner";
+import { Scanner, setZXingModuleOverrides } from "@yudiel/react-qr-scanner";
+
+// The QR decoder normally downloads from a public CDN, which this wallet's
+// security policy blocks. Serve it from our own site instead.
+setZXingModuleOverrides({
+  locateFile: (path: string, prefix: string) => (path.endsWith(".wasm") ? `/zxing/${path}` : prefix + path),
+});
 import { ScanLine, X } from "lucide-react";
 import {
   Dialog,

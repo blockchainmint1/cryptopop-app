@@ -88,7 +88,7 @@ export default {
         const development = import.meta.env.DEV;
         headers.set("Content-Security-Policy", [
           "default-src 'self'",
-          `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""} https://maps.googleapis.com https://maps.gstatic.com`,
+          `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${development ? " 'unsafe-eval'" : ""} https://maps.googleapis.com https://maps.gstatic.com`,
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com data:",
           "img-src 'self' https: data: blob:",
