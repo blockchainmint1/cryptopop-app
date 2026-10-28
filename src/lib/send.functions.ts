@@ -49,3 +49,18 @@ export const broadcastSignedTx = createServerFn({ method: "POST" })
       return { ok: false as const, spent: conflict ? null : undefined, error: msg };
     }
   });
+
+const SplitInput = z.object({
+  from: Addr,
+  recipients: z.array(z.object({ to: Addr, amount: z.number().positive().finite().max(1_000_000) })).min(1).max(10),
+  exclude: z.array(z.string().regex(/^[0-9a-f]{64}:\d+$/)).max(200).optional(),
+});
+
+/** Unsigned TSD Send-To-Many (giving split). The phone validates and signs. */
+export const prepareSplitSend = createServerFn({ method: "POST" })
+  .inputValidator((input) => SplitInput.parse(input))
+  .handler(async ({ data }) => {
+    const { buildUnsignedSplitSend } = await import("./send.server");
+    const built = await buildUnsignedSplitSend(data);
+    return { psbtBase64: built.psbtBase64, feeSats: built.feeSats, inputs: built.inputs };
+  });
