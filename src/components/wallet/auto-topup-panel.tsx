@@ -16,18 +16,26 @@ import { TOPUP_DEPOSITS_ENABLED } from "@/lib/tsd-topup";
 type LinkResult = Awaited<ReturnType<typeof linkTsdBridge>>;
 type PartnerAccount = Extract<LinkResult, { status: "ready" }>;
 
-/** Opens the Honest Money approval popup and resolves with a one-time ticket for TSD Bridge. */
-function getTsdTicket(): Promise<string> {
+/** Fresh random `state` for one setup attempt; Honest Money signs it into the ticket and TSD matches it. */
+function newHandoffState(): string {
+  const b = new Uint8Array(18);
+  crypto.getRandomValues(b);
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** Opens the Honest Money approval popup and resolves with a one-time ticket for TSD Bridge plus its `state`. */
+function getTsdTicket(): Promise<{ ticket: string; state: string }> {
   return new Promise((resolve, reject) => {
     if (!TSD_TICKET_LOGIN_URL) { reject(new Error("ticket_unavailable")); return; }
-    const w = window.open(TSD_TICKET_LOGIN_URL(`${window.location.origin}/sso-tsd`), "hme-tsd", "width=460,height=680");
+    const state = newHandoffState();
+    const w = window.open(TSD_TICKET_LOGIN_URL(`${window.location.origin}/sso-tsd`, state), "hme-tsd", "width=460,height=680");
     if (!w) { reject(new Error("popup_blocked")); return; }
     const timer = window.setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 3 * 60_000);
     function onMsg(e: MessageEvent) {
       if (e.origin !== window.location.origin || e.source !== w) return;
       const d = e.data as { type?: string; token?: unknown };
       if (d?.type !== "tsd-ticket" || typeof d.token !== "string") return;
-      cleanup(); resolve(d.token);
+      cleanup(); resolve({ ticket: d.token, state });
     }
     function cleanup() { window.clearTimeout(timer); window.removeEventListener("message", onMsg); }
     window.addEventListener("message", onMsg);
@@ -60,11 +68,11 @@ export function AutoTopupPanel({ address }: { address: string | null }) {
     try {
       const n = await nonceFn();
       if (!("nonce" in n)) { setNote(n.reason); return; }
-      const ssoTicket = await getTsdTicket();
+      const { ticket: ssoTicket, state } = await getTsdTicket();
       const issuedAt = new Date().toISOString();
       key = derivePrivateKey(wallet.mnemonic);
       const signature = signTxcMessage(key, tsdLinkMessage(memberId, address, n.nonce, issuedAt));
-      const r = await link({ data: { address, issuedAt, nonce: n.nonce, signature, ssoTicket } });
+      const r = await link({ data: { address, issuedAt, nonce: n.nonce, signature, ssoTicket, state } });
       if (r.status === "ready") setAccount(r);
       else if (r.status === "pending_confirmation") setPending(r.onFile);
       else setNote(r.reason);
