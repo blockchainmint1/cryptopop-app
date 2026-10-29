@@ -41,7 +41,7 @@ function GivePage() {
     toast.success(`You're supporting ${c.name}`);
   }
 
-  function useCode() {
+  function applyCode() {
     const c = findByCode(code);
     if (!c) return toast.error("We couldn't find that code. Check it and try again.");
     setCode("");
@@ -76,8 +76,8 @@ function GivePage() {
         <section className="space-y-2">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Have a code?</p>
           <div className="flex gap-2">
-            <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. CCV" className="uppercase" onKeyDown={(e) => e.key === "Enter" && useCode()} />
-            <Button onClick={useCode} disabled={!code.trim()}>Use code</Button>
+            <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. CCV" className="uppercase" onKeyDown={(e) => e.key === "Enter" && applyCode()} />
+            <Button onClick={applyCode} disabled={!code.trim()}>Use code</Button>
           </div>
         </section>
 
