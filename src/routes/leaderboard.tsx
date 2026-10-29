@@ -7,6 +7,7 @@ import {
   Check,
   ChevronRight,
   Copy,
+  Heart,
   Loader2,
   ShoppingBag,
   Trophy,
@@ -354,6 +355,26 @@ function PopPage() {
                   <span className="block font-display text-sm font-semibold text-primary">
                     1 POP / $1
                   </span>
+                  <ChevronRight className="ml-auto mt-1 h-4 w-4 text-muted-foreground" />
+                </span>
+              </Card>
+            </Link>
+
+            <Link to="/give" className="block">
+              <Card className="flex items-center gap-4 border-white/12 bg-white/5 p-4 transition hover:bg-white/10">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <Heart className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-base font-semibold uppercase tracking-wide">
+                    Give
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Pick a church or charity to support
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block font-display text-sm font-semibold text-primary">8% back</span>
                   <ChevronRight className="ml-auto mt-1 h-4 w-4 text-muted-foreground" />
                 </span>
               </Card>
