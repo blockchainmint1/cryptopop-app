@@ -258,3 +258,36 @@ export const claimNectarReward = createServerFn({ method: "POST" })
     }
     return { awarded: res.pop, status: res.status, rewards };
   });
+
+/** Message a wallet signs to claim POP for a merchant payment made from the Send screen. */
+export function sendRewardMessage(txid: string) {
+  return `CryptoPOP POP claim for payment ${txid.toLowerCase()}`;
+}
+
+/**
+ * Claim POP for a merchant payment sent from the regular Send screen (scanned
+ * store code). NectarPay matches the sale by txid and decides the POP; we only
+ * accept the claim from the wallet that signed and paid the transaction.
+ * Safe to call repeatedly — a sale pays once.
+ */
+export const claimSendReward = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        txid: z.string().trim().regex(/^[0-9a-f]{64}$/i),
+        address: z.string().trim().min(26).max(48),
+        signature: z.string().trim().min(40).max(200),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }): Promise<{ awarded: number; status: string }> => {
+    const { verifyTxcMessage } = await import("./wallet/txc-message");
+    if (!verifyTxcMessage(data.address, sendRewardMessage(data.txid), data.signature)) {
+      throw new Error("bad_signature");
+    }
+    const { assertPaymentOwner } = await import("./payment-owner.server");
+    await assertPaymentOwner(data.txid, data.address);
+    const { startClaim } = await import("./pop-claim.server");
+    const res = await startClaim({ txid: data.txid, wallet: data.address, payers: [data.address], origin: "qr" });
+    return { awarded: res.pop, status: res.status };
+  });
