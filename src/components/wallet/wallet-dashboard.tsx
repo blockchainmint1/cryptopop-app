@@ -68,7 +68,7 @@ import { isEcosystemSite, loginSiteName } from "@/lib/ecosystem/hosts";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { loadContacts, type Contact } from "@/lib/wallet/address-book";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
-import { NectarPaySheet } from "./nectarpay-sheet";
+import { NectarPaySheet, type StoreRequest } from "./nectarpay-sheet";
 import { WalletLoginSheet, type WalletLoginRequest } from "./wallet-login-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { TopUpSheet } from "./topup-sheet";
@@ -126,7 +126,7 @@ export function WalletDashboard() {
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendPrefill, setSendPrefill] = useState<SendPrefill | null>(null);
-  const [nectarReq, setNectarReq] = useState<{ invoiceId: string; nonce: string | null } | null>(null);
+  const [nectarReq, setNectarReq] = useState<StoreRequest | null>(null);
   const [loginReq, setLoginReq] = useState<WalletLoginRequest | null>(null);
   const [addValueOpen, setAddValueOpen] = useState(false);
 
@@ -230,6 +230,11 @@ export function WalletDashboard() {
           toast.info("POP is a scoreboard token — it can't be sent or spent.");
           return;
         }
+        // Store pay codes (named, in TSD) all use the one store checkout.
+        if (intent.merchant && intent.asset === "tsd") {
+          setNectarReq({ direct: { to: intent.to, amount: intent.amount, merchant: intent.merchant, memo: intent.memo } });
+          return;
+        }
         setSendPrefill({
           to: intent.to,
           amount: intent.amount,
@@ -238,9 +243,6 @@ export function WalletDashboard() {
           memo: intent.memo,
         });
         setSendOpen(true);
-        toast.success(
-          intent.merchant ? `Paying ${intent.merchant}` : "Payment request loaded",
-        );
         return;
       case "address":
         setSendPrefill({ to: intent.address, asset: "tsd" });
