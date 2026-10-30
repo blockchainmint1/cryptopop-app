@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { rateLimitForPath } from "./lib/rate-limit.server";
+import { runWithExecutionContext } from "./lib/background.server";
 
 type ServerEntry = {
   fetch: (request: Request, options?: { context: { nonce: string } }) => Promise<Response> | Response;
@@ -77,7 +78,7 @@ export default {
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set("x-cryptopop-csp-nonce", nonce);
       const securedRequest = new Request(request.url, { method: request.method, headers: requestHeaders, body: request.body, ...(request.body ? { duplex: "half" } : {}) } as RequestInit);
-      const response = await handler.fetch(securedRequest, { context: { nonce } });
+      const response = await runWithExecutionContext(ctx, () => handler.fetch(securedRequest, { context: { nonce } }));
       const normalized = await normalizeCatastrophicSsrResponse(response);
       const headers = new Headers(normalized.headers);
       headers.set("Referrer-Policy", "no-referrer");
