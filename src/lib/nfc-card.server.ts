@@ -201,6 +201,11 @@ export async function executePayment(
       notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.` +
         (plan ? ` 💛 $${plan.church.toFixed(2)} went to ${esc(GIVE_CHURCH.name)}.` : "")).catch(() => undefined),
     ]);
+    // POP for spending at a NectarPay store goes to the card owner's main wallet.
+    try {
+      const { startClaim } = await import("./pop-claim.server");
+      await startClaim({ txid, wallet: c.owner_address, payers: [c.pocket_address], origin: "card" });
+    } catch (e) { console.error("[pop claim]", e); }
     return { status: "sent", txid };
   } catch (e) {
     console.error("[nfc pay]", e);
