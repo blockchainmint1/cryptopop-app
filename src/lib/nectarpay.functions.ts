@@ -10,7 +10,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
   NECTARPAY_ORIGIN,
-  NECTARPAY_POP_PER_USD,
   isPaidStatus,
   rewardMessage,
   type NectarInvoice,
