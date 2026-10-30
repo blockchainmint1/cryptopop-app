@@ -77,15 +77,12 @@ export const Route = createFileRoute("/api/public/card/pay")({
           const off = /card is off/i.test(msg);
           return json({ status: "declined", reason: dup ? "This invoice is already being paid" : off ? "Card is off" : "Card payment couldn't start — try again" });
         }
-        // eGiving: if the store accepts it, the tap splits store / church / eGiving.
-        const pct = inv.egiving?.accepted ? Number(inv.egiving.discountPct) : NaN;
-        if (Number.isFinite(pct)) {
-          const { splitGiving } = await import("@/lib/wallet/transaction-policy");
-          try {
-            const sp = splitGiving(inv.tsdAmount, pct);
-            if (sp.church > 0 && sp.platform > 0)
-              await sb.from("nfc_card_payments").update({ give_discount_pct: pct }).eq("id", row.payment_id);
-          } catch { /* unsupported discount → plain payment */ }
+        // eGiving: split only if the store is in Give AND the card owner picked a Give recipient.
+        if (inv.egiving?.accepted) {
+          const { data: gr } = await sb.from("give_recipients").select("charity_code").eq("owner_address", card.owner_address).maybeSingle();
+          const { giveSplitFor } = await import("@/lib/give/split-rule");
+          const sp = giveSplitFor({ egiving: inv.egiving, recipientCode: gr?.charity_code ?? null, total: inv.tsdAmount, merchant: inv.address });
+          if (sp) await sb.from("nfc_card_payments").update({ give_discount_pct: sp.discountPct }).eq("id", row.payment_id);
         }
         if (row.status === "approval_required") {
           if (!ownerChat) {
