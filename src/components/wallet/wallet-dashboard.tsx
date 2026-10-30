@@ -68,7 +68,7 @@ import { isEcosystemSite, loginSiteName } from "@/lib/ecosystem/hosts";
 import { loadTxLabels, type TxLabel } from "@/lib/wallet/tx-labels";
 import { loadContacts, type Contact } from "@/lib/wallet/address-book";
 import { SendSheet, type SendPrefill, type SendSource } from "./send-sheet";
-import { NectarPaySheet } from "./nectarpay-sheet";
+import { NectarPaySheet, type StoreRequest } from "./nectarpay-sheet";
 import { WalletLoginSheet, type WalletLoginRequest } from "./wallet-login-sheet";
 import { QrScanDialog } from "./qr-scan-dialog";
 import { TopUpSheet } from "./topup-sheet";
