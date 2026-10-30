@@ -218,7 +218,7 @@ export function NectarPaySheet({
       if (direct && (!Number.isFinite(directAmount) || directAmount <= 0)) throw new Error("Enter an amount");
       const sel = direct
         ? { invoice: { address: direct.to, tsdAmount: Math.round(directAmount * 100) / 100, merchant: inv.merchant } as Partial<NectarInvoice> & { address: string; tsdAmount: number }, error: null as string | null }
-        : await selectTsd({ data: { id: request.invoiceId, nonce: request.nonce } });
+        : "invoiceId" in request ? await selectTsd({ data: { id: request.invoiceId, nonce: request.nonce } }) : { invoice: null, error: "Unknown checkout" };
       if (!sel.invoice?.address || !sel.invoice.tsdAmount) {
         throw new Error(sel.error ?? "This store isn't accepting TSD right now.");
       }
@@ -261,7 +261,7 @@ export function NectarPaySheet({
           logoUrl: inv.merchant?.logoUrl ?? null,
         },
       });
-      setInv({ ...inv, ...sel.invoice, merchant: inv.merchant ?? sel.invoice.merchant });
+      setInv({ ...inv, ...sel.invoice, merchant: inv.merchant ?? sel.invoice.merchant ?? null } as NectarInvoice);
       setTxid(res.txid);
       if (direct) {
         setInv({ ...inv, fiatAmount: amount });
