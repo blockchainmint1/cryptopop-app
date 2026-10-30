@@ -18,11 +18,13 @@ import {
   selectNectarTsd,
 } from "@/lib/nectarpay.functions";
 import { isPaidStatus, nectarReceiptUrl, type NectarInvoice } from "@/lib/nectarpay";
-import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
+import { prepareSend, prepareSplitSend, broadcastSignedTx } from "@/lib/send.functions";
+import { giveSplitFor } from "@/lib/give/split-rule";
+import { CHOSEN_CHARITY_KEY } from "@/lib/give/charities";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
-import { validateSend } from "@/lib/wallet/transaction-policy";
+import { validateSend, validateSplitSend } from "@/lib/wallet/transaction-policy";
 import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
-import { derivePrivateKey, signPsbt } from "@/lib/wallet/sign";
+import { derivePrivateKey, signPsbt, signSplitPsbt } from "@/lib/wallet/sign";
 import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { saveTxLabel, updateReceipt } from "@/lib/wallet/tx-labels";
 import { getCheckoutRewards, payWithRewards } from "@/lib/store-rewards.functions";
@@ -68,6 +70,7 @@ export function NectarPaySheet({
   const [amountInput, setAmountInput] = useState("");
   const [rewardWaiting, setRewardWaiting] = useState(false);
   const prepare = useServerFn(prepareSend);
+  const prepareSplit = useServerFn(prepareSplitSend);
   const broadcast = useServerFn(broadcastSignedTx);
   const fetchRewardOpts = useServerFn(getCheckoutRewards);
   const redeem = useServerFn(payWithRewards);
@@ -75,7 +78,7 @@ export function NectarPaySheet({
   const [earned, setEarned] = useState<{ amount: number; storeName: string } | null>(null);
   const [paidWithRewards, setPaidWithRewards] = useState<number | null>(null);
 
-  const [review, setReview] = useState<{ built: Awaited<ReturnType<typeof prepare>>; from: string; to: string; amount: number; feeSats: number } | null>(null);
+  const [review, setReview] = useState<{ built: Awaited<ReturnType<typeof prepare>>; from: string; to: string; amount: number; feeSats: number; split: ReturnType<typeof giveSplitFor> } | null>(null);
   const [stage, setStage] = useState<Stage>("loading");
   const [inv, setInv] = useState<NectarInvoice | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -186,17 +189,29 @@ export function NectarPaySheet({
       const from = sources.find((s) => (s.balances.tsd ?? 0) >= amount)?.address ?? address;
       let res: { txid: string } | null = null;
       for (let attempt = 0; attempt < 2 && !res; attempt++) {
-        const built = confirm && review && attempt === 0 ? review.built : await prepare({
-          data: { asset: "tsd", from, to: sel.invoice.address, amount, exclude: reservedOutpoints() },
+        // Give: split only if this store is in Give AND the payer picked a recipient.
+        const split = direct ? null : giveSplitFor({
+          egiving: (sel.invoice as Partial<NectarInvoice>).egiving ?? inv.egiving,
+          recipientCode: localStorage.getItem(CHOSEN_CHARITY_KEY),
+          total: amount,
+          merchant: sel.invoice.address,
         });
+        const splitIntent = split ? { from, recipients: split.recipients } : null;
         const intent = { asset: "tsd" as const, from, to: sel.invoice.address, amount };
-        const checked = validateSend(built.psbtBase64, intent, [deriveTxcAddress(mnemonic), deriveLegacyTxcAddress(mnemonic)]);
-        if (!confirm) { setReview({ built, from, to: sel.invoice.address, amount, feeSats: checked.feeSats }); setStage("review"); return; }
-        if (!review || review.to !== sel.invoice.address || review.amount !== amount || review.from !== from || checked.feeSats > review.feeSats) {
-          setReview({ built, from, to: sel.invoice.address, amount, feeSats: checked.feeSats });
+        const owned = [deriveTxcAddress(mnemonic), deriveLegacyTxcAddress(mnemonic)];
+        const sameSplit = (a: typeof split, b: typeof split) => JSON.stringify(a?.recipients ?? null) === JSON.stringify(b?.recipients ?? null);
+        const built = confirm && review && attempt === 0 && sameSplit(review.split, split) ? review.built
+          : splitIntent ? await prepareSplit({ data: { ...splitIntent, exclude: reservedOutpoints() } })
+          : await prepare({ data: { asset: "tsd", from, to: sel.invoice.address, amount, exclude: reservedOutpoints() } });
+        const checked = splitIntent ? validateSplitSend(built.psbtBase64, splitIntent, owned) : validateSend(built.psbtBase64, intent, owned);
+        const next = { built, from, to: sel.invoice.address, amount, feeSats: checked.feeSats, split };
+        if (!confirm) { setReview(next); setStage("review"); return; }
+        if (!review || review.to !== sel.invoice.address || review.amount !== amount || review.from !== from || !sameSplit(review.split, split) || checked.feeSats > review.feeSats) {
+          setReview(next);
           throw new Error("Payment or fee changed — review and confirm again");
         }
-        const r = await broadcast({ data: { rawHex: signPsbt(built.psbtBase64, mnemonic, intent) } });
+        const rawHex = splitIntent ? signSplitPsbt(built.psbtBase64, mnemonic, splitIntent) : signPsbt(built.psbtBase64, mnemonic, intent);
+        const r = await broadcast({ data: { rawHex } });
         if (r.ok) {
           reserveOutpoints(built.inputs);
           res = { txid: r.txid };
@@ -362,6 +377,11 @@ export function NectarPaySheet({
                 <div className="space-y-2 border-t border-border pt-3">
                   <p>{review.amount.toFixed(2)} TSD</p>
                   <p className="break-all font-mono text-xs">To: {review.to}</p>
+                  {review.split && (
+                    <p className="text-sm">
+                      💛 Store {review.split.merchant.toFixed(2)} · {review.split.recipientName} {review.split.church.toFixed(2)} · Give program {review.split.platform.toFixed(2)}
+                    </p>
+                  )}
                   <p className="text-sm">Network fee: {(review.feeSats / 1e8).toFixed(8)} TXC</p>
                   <Button className="w-full" disabled={stage === "paying"} onClick={() => void pay(true)}>Confirm and pay</Button>
                   <Button variant="ghost" className="w-full" disabled={stage === "paying"} onClick={() => setReview(null)}>Cancel</Button>
