@@ -7,6 +7,7 @@ import { base64, hex } from "@scure/base";
 import { pubkeyToTxcAddress, verifyTxcMessage } from "@/lib/wallet/txc-message";
 import { splitGiving, validateSend, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
 import { GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
+import { afterResponse } from "@/lib/background.server";
 
 const enc = new TextEncoder();
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
@@ -174,7 +175,7 @@ export async function executePayment(
   const chat = knownChat !== undefined ? knownChat : c ? await walletChat(c.owner_address) : null;
   const fail = async (reason: string) => {
     await sb.from("nfc_card_payments").update({ status: "failed", reason }).eq("id", paymentId);
-    await notify(chat, `⚠️ Tap payment of $${Number(p.amount_usd).toFixed(2)} failed: ${esc(reason)}`);
+    afterResponse(() => notify(chat, `⚠️ Tap payment of $${Number(p.amount_usd).toFixed(2)} failed: ${esc(reason)}`), "card alert");
     return { status: "failed", reason };
   };
   if (!c || !k || !c.enabled || c.killed_at) return fail("Card is off");
@@ -196,15 +197,14 @@ export async function executePayment(
     tx.finalize();
     key.fill(0);
     const txid = await broadcastRaw(tx.hex);
-    await Promise.all([
-      sb.from("nfc_card_payments").update({ status: "sent", txid }).eq("id", paymentId),
-      notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.` +
-        (plan ? ` 💛 $${plan.church.toFixed(2)} went to ${esc(GIVE_CHURCH.name)}.` : "")).catch(() => undefined),
-    ]);
-    // POP for spending at a NectarPay store goes to the card owner's main wallet.
+    await sb.from("nfc_card_payments").update({ status: "sent", txid }).eq("id", paymentId);
+    // Money is out and the sale is recorded: that is the terminal's answer.
+    // The alert and the reward follow after the reply so the tap never waits.
+    afterResponse(() => notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.` +
+      (plan ? ` 💛 $${plan.church.toFixed(2)} went to ${esc(GIVE_CHURCH.name)}.` : "")), "card alert");
     try {
-      const { startClaim } = await import("./pop-claim.server");
-      await startClaim({ txid, wallet: c.owner_address, payers: [c.pocket_address], origin: "card" });
+      const { queueClaim } = await import("./pop-claim.server");
+      await queueClaim({ txid, wallet: c.owner_address, payers: [c.pocket_address], origin: "card" });
     } catch (e) { console.error("[pop claim]", e); }
     return { status: "sent", txid };
   } catch (e) {

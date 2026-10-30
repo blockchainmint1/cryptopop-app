@@ -4,6 +4,8 @@
  * HMAC-signed with NFC_PAY_SECRET); we send the POP once per invoice.
  * Sales that aren't confirmed yet (or are held) are queued in pop_claims and retried.
  */
+import { afterResponse } from "./background.server";
+
 const CLAIM_URL = "https://app.nectar-pay.com/api/public/v1/pop/claim";
 export const SHOPPER_DAILY_POP_CAP = 1000;
 const GIVE_UP_MS = 24 * 3600 * 1000;
@@ -128,14 +130,32 @@ export async function processClaim(txid: string): Promise<{ pop: number; status:
   return { pop: 0, status: "pending", decision: d };
 }
 
-/** Record a sale we just paid and try to claim it straight away. */
-export async function startClaim(opts: { txid: string; wallet: string; payers: string[]; origin: "card" | "qr" }) {
+async function recordClaim(opts: { txid: string; wallet: string; payers: string[]; origin: "card" | "qr" }) {
+  const txid = opts.txid.toLowerCase();
   const sb = await db();
   await sb.from("pop_claims").upsert(
-    { txid: opts.txid.toLowerCase(), wallet_address: opts.wallet, payer_addresses: opts.payers, origin: opts.origin },
+    { txid, wallet_address: opts.wallet, payer_addresses: opts.payers, origin: opts.origin },
     { onConflict: "txid", ignoreDuplicates: true },
   );
-  const r = await processClaim(opts.txid.toLowerCase());
+  return txid;
+}
+
+/**
+ * Write down a sale we just paid, then chase the reward after the caller's
+ * response is on its way. A point-of-sale reply must not wait on NectarPay
+ * or on broadcasting the POP, so this only does the one quick database write.
+ */
+export async function queueClaim(opts: { txid: string; wallet: string; payers: string[]; origin: "card" | "qr" }) {
+  const txid = await recordClaim(opts);
+  afterResponse(() => processClaim(txid), "pop claim");
+  afterResponse(() => retryDueClaims(), "pop claim queue");
+  return { queued: true as const, txid };
+}
+
+/** Record a sale and wait for the answer, for callers that show the reward on screen. */
+export async function startClaim(opts: { txid: string; wallet: string; payers: string[]; origin: "card" | "qr" }) {
+  const txid = await recordClaim(opts);
+  const r = await processClaim(txid);
   retryDueClaims().catch(() => undefined);
   return r;
 }
