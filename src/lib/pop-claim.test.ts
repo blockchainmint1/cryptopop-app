@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { interpretClaim, claimHeaders, SHOPPER_DAILY_POP_CAP } from "./pop-claim.server";
+import { interpretClaim, claimHeaders, purchaseLabel, SHOPPER_DAILY_POP_CAP } from "./pop-claim.server";
 
 describe("NectarPay POP claims", () => {
   it("eligible sale sends the POP NectarPay says (69 for $68.75)", () => {
@@ -19,6 +19,13 @@ describe("NectarPay POP claims", () => {
     expect(interpretClaim(200, { status: "eligible", pop: 0, invoice_id: "x" }).kind).toBe("denied");
   });
   it("our per-shopper cap is 1,000 POP a day", () => expect(SHOPPER_DAILY_POP_CAP).toBe(1000));
+  it("a store sale reads as 'Purchase @ <store>' in point history", () => {
+    expect(purchaseLabel("honest.money")).toBe("Purchase @ honest.money");
+  });
+  it("a sale with no store name still says what it was", () => {
+    expect(purchaseLabel(null)).toBe("NectarPay purchase");
+    expect(purchaseLabel("   ")).toBe("NectarPay purchase");
+  });
   it("signs timestamp.body with HMAC-SHA256", async () => {
     const h = await claimHeaders("k", "{}", 100);
     expect(h["X-HME-Timestamp"]).toBe("100");

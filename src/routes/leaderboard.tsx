@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import coin from "@/assets/cryptopop-coin.png";
 import { getPopLeaderboard, type LeaderRow } from "@/lib/leaderboard.functions";
 import { getAddressRewards, type WalletReward } from "@/lib/wallet-activity.functions";
+import { nectarReceiptUrl } from "@/lib/nectarpay";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { Card } from "@/components/ui/card";
@@ -49,8 +50,11 @@ function fmt(n: number) {
   return n.toLocaleString();
 }
 
-/** Turn a ledger source key into something a person would read. */
-function rewardLabel(source: string) {
+/** Turn a ledger entry into something a person would read. */
+function rewardLabel(r: WalletReward) {
+  const stored = r.label?.trim();
+  if (stored) return stored;
+  const source = r.source;
   switch (source) {
     case "event_signup":
       return "Event signup";
@@ -255,7 +259,7 @@ function PopPage() {
               rewards.map((r) => (
                 <div key={r.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm">{rewardLabel(r.source)}</p>
+                    <p className="truncate text-sm">{rewardLabel(r)}</p>
                     <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                       {new Date(r.created_at).toLocaleDateString()}
                       {r.status === "pending" && " · settling"}
@@ -270,6 +274,19 @@ function PopPage() {
                             className="text-primary hover:underline"
                           >
                             tx
+                          </a>
+                        </>
+                      )}
+                      {r.source === "nectarpay" && r.source_id && (
+                        <>
+                          {" · "}
+                          <a
+                            href={nectarReceiptUrl(r.source_id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            receipt
                           </a>
                         </>
                       )}

@@ -28,6 +28,9 @@ export type WalletReward = {
   id: string;
   amount: number;
   source: string;
+  /** Store name captured at award time, e.g. "Purchase @ honest.money". */
+  label: string | null;
+  source_id: string | null;
   status: string;
   tx_hash: string | null;
   created_at: string;
@@ -206,7 +209,7 @@ export const getAddressRewards = createServerFn({ method: "POST" })
       const [rewardsRes, rankRes] = await Promise.all([
         supabaseAdmin
           .from("pop_awards")
-          .select("id, amount, source, status, tx_hash, created_at")
+          .select("id, amount, source, source_id, label, status, tx_hash, created_at")
           .ilike("wallet_address", data.address)
           .order("created_at", { ascending: false })
           .limit(50),

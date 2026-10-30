@@ -1496,6 +1496,7 @@ export type Database = {
           email: string
           error: string | null
           id: string
+          label: string | null
           org_id: string
           sent_at: string | null
           source: string
@@ -1511,6 +1512,7 @@ export type Database = {
           email: string
           error?: string | null
           id?: string
+          label?: string | null
           org_id?: string
           sent_at?: string | null
           source: string
@@ -1526,6 +1528,7 @@ export type Database = {
           email?: string
           error?: string | null
           id?: string
+          label?: string | null
           org_id?: string
           sent_at?: string | null
           source?: string
@@ -2278,6 +2281,7 @@ export type Database = {
           email: string
           error: string | null
           id: string
+          label: string | null
           org_id: string
           sent_at: string | null
           source: string
