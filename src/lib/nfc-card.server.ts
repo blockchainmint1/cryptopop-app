@@ -7,6 +7,7 @@ import { base64, hex } from "@scure/base";
 import { pubkeyToTxcAddress, verifyTxcMessage } from "@/lib/wallet/txc-message";
 import { splitGiving, validateSend, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
 import { GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
+import { afterResponse } from "@/lib/background.server";
 
 const enc = new TextEncoder();
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
