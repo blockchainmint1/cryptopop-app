@@ -43,6 +43,8 @@ export async function awardPop(opts: {
   source: string;
   sourceId?: string | null;
   memo?: string;
+  /** What the shopper reads in their point history, e.g. "Purchase @ honest.money". */
+  label?: string | null;
   /**
    * Required for all awards; email-derived custodial wallets are retired.
    */
@@ -63,6 +65,7 @@ export async function awardPop(opts: {
       amount: opts.amount,
       source: opts.source,
       source_id: opts.sourceId ?? null,
+      label: opts.label?.trim() ? opts.label.trim().slice(0, 80) : null,
       status: "pending",
     })
     .select("id")
