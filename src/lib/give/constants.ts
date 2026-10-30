@@ -11,7 +11,7 @@ export const GIVE_CHURCH = {
   address: "Tst3dVnJbFrnx5ChmK6qj9F3M8YNsHWR44",
 } as const;
 
-export const GIVE_PLATFORM_ADDRESS = "TmmoqqhcfBZWRG8feCTE2c4N4BsADgwD1m";
+export const GIVE_PLATFORM_ADDRESS = "ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu";
 
 /** Discount used when paying a plain address (no NectarPay invoice). */
 export const GIVE_DEFAULT_DISCOUNT_PCT = 10;
