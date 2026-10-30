@@ -44,6 +44,17 @@ export function interpretClaim(httpStatus: number, j: Record<string, any> | null
   return { kind: "retry", reason: `http_${httpStatus}` };
 }
 
+/**
+ * The line a shopper reads in their point history for a store sale.
+ * NectarPay names the store on an eligible claim; without a name we say
+ * what it was rather than the raw "nectarpay" source key.
+ */
+export function purchaseLabel(storeName: string | null | undefined) {
+  const name = storeName?.trim();
+  return name ? `Purchase @ ${name}`.slice(0, 80) : "NectarPay purchase";
+}
+
+
 async function askNectarPay(txid: string, wallet: string, payers: string[]): Promise<ClaimDecision> {
   const secret = process.env.NFC_PAY_SECRET;
   if (!secret) return { kind: "retry", reason: "no_secret" };
@@ -103,6 +114,7 @@ export async function processClaim(txid: string): Promise<{ pop: number; status:
       source: "nectarpay",
       sourceId: d.invoiceId, // one award per sale, even if claimed twice
       memo: d.storeName ? `Shopping at ${d.storeName}` : "NectarPay purchase",
+      label: purchaseLabel(d.storeName),
       walletOverride: row.wallet_address,
     });
     if (res.status === "failed") {
