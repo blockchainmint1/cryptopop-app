@@ -14,8 +14,8 @@ type ExecutionContext = { waitUntil?: (p: Promise<unknown>) => void };
 const store = new AsyncLocalStorage<ExecutionContext | undefined>();
 
 /** Record the platform's context for everything handled inside `fn`. */
-export function runWithExecutionContext<T>(ctx: unknown, fn: () => Promise<T>): Promise<T> {
-  return store.run((ctx ?? undefined) as ExecutionContext | undefined, fn);
+export function runWithExecutionContext<T>(ctx: unknown, fn: () => T | Promise<T>): Promise<T> {
+  return Promise.resolve(store.run((ctx ?? undefined) as ExecutionContext | undefined, fn));
 }
 
 /**
