@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CHARITIES, CHOSEN_CHARITY_KEY, findByCode, parseSignedCauses, searchCharities, type Charity } from "@/lib/give/charities";
 import { getSignedCauses } from "@/lib/give/causes.functions";
+import { getGiveRecipient, setGiveRecipient } from "@/lib/give/recipient.functions";
+import { pinnedRecipient } from "@/lib/give/split-rule";
+import { ownerEnvelope } from "@/lib/wallet/nfc-cards";
+import { useWallet } from "@/lib/wallet/wallet-context";
 
 export const Route = createFileRoute("/give")({
   head: () => ({
@@ -29,6 +33,20 @@ function GivePage() {
   const [code, setCode] = useState("");
 
   const [list, setList] = useState<Charity[]>(CHARITIES);
+  const { mnemonic } = useWallet();
+  const [saving, setSaving] = useState(false);
+
+  // The saved choice (used by card taps too) wins over this phone's copy.
+  useEffect(() => {
+    if (!mnemonic) return;
+    getGiveRecipient({ data: ownerEnvelope(mnemonic, "give-get", {}) })
+      .then((r) => {
+        if (r.code) localStorage.setItem(CHOSEN_CHARITY_KEY, r.code);
+        else localStorage.removeItem(CHOSEN_CHARITY_KEY);
+        setChosen(r.code);
+      })
+      .catch(() => {});
+  }, [mnemonic]);
 
   useEffect(() => {
     setChosen(localStorage.getItem(CHOSEN_CHARITY_KEY));
@@ -44,11 +62,23 @@ function GivePage() {
   const suggestions = list.filter((c) => c.featured);
   const current = list.find((c) => c.code === chosen) ?? null;
 
-  function choose(c: Charity) {
-    localStorage.setItem(CHOSEN_CHARITY_KEY, c.code);
-    setChosen(c.code);
-    toast.success(`You're supporting ${c.name}`);
+  async function save(c: Charity | null) {
+    if (!mnemonic) return toast.error("Unlock your wallet first to save your Give choice");
+    if (c && !pinnedRecipient(c.code)) return toast.error(`${c.name} can't receive Give payments yet`);
+    setSaving(true);
+    try {
+      const r = await setGiveRecipient({ data: ownerEnvelope(mnemonic, "give-set", { code: c?.code ?? null }) });
+      if (r.code) localStorage.setItem(CHOSEN_CHARITY_KEY, r.code);
+      else localStorage.removeItem(CHOSEN_CHARITY_KEY);
+      setChosen(r.code);
+      toast.success(c ? `You're supporting ${c.name}` : "Give is off. Store payments go fully to the store.");
+    } catch (e) {
+      toast.error((e as Error).message || "Couldn't save");
+    } finally {
+      setSaving(false);
+    }
   }
+  const choose = (c: Charity) => void save(c);
 
   function applyCode() {
     const c = findByCode(code, list);
@@ -79,7 +109,13 @@ function GivePage() {
           )}
           <p className="mt-3 text-xs text-muted-foreground">
             When you pay at a store in the giving program, 8% goes to your cause, 2% supports the program, and the store gets 90%. It's paid in full.
+            With no cause picked, your payments go fully to the store.
           </p>
+          {current && (
+            <Button size="sm" variant="ghost" className="mt-2 px-0" disabled={saving} onClick={() => void save(null)}>
+              Stop giving
+            </Button>
+          )}
         </Card>
 
         <section className="space-y-2">
