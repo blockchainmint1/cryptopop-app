@@ -245,18 +245,9 @@ export const claimNectarReward = createServerFn({ method: "POST" })
     await assertPaymentOwner(data.txid, data.address);
     const fiat = Number(raw.fiat_amount ?? raw.fiatAmount ?? 0);
     const usd = currency === "USD" ? fiat : 0;
-    const amount = Math.floor(usd * NECTARPAY_POP_PER_USD);
-    if (amount < 1) return { awarded: 0, status: "too_small" };
-
-    const { awardPop } = await import("./email-wallet.server");
-    const res = await awardPop({
-      email: `${data.address.toLowerCase()}@wallet.cryptopop.org`,
-      amount,
-      source: "nectarpay",
-      sourceId: data.invoiceId,
-      memo: "NectarPay purchase",
-      walletOverride: data.address,
-    });
+    // NectarPay decides POP for every merchant sale; queued and retried if not confirmed yet.
+    const { startClaim } = await import("./pop-claim.server");
+    const res = await startClaim({ txid: data.txid, wallet: data.address, payers: [data.address], origin: "qr" });
     const storeId = storeIdOf(raw);
     let rewards: { amount: number; kind: "store" | "community"; storeName: string } | null = null;
     if (storeId && usd > 0) {
@@ -266,5 +257,5 @@ export const claimNectarReward = createServerFn({ method: "POST" })
         return null;
       });
     }
-    return { awarded: res.status === "sent" ? amount : 0, status: res.status, rewards };
+    return { awarded: res.pop, status: res.status, rewards };
   });
