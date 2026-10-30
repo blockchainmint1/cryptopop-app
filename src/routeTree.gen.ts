@@ -45,6 +45,7 @@ import { Route as ApiPublicApkRouteImport } from './routes/api/public/apk'
 import { Route as ApiPublicBuildIdRouteImport } from './routes/api/public/build-id'
 import { Route as ApiPublicLatestReleaseRouteImport } from './routes/api/public/latest-release'
 import { Route as ApiPublicNectarpaySyncRouteImport } from './routes/api/public/nectarpay-sync'
+import { Route as ApiPublicPopClaimsRetryRouteImport } from './routes/api/public/pop-claims-retry'
 import { Route as ApiPublicVectorpayStatusRouteImport } from './routes/api/public/vectorpay-status'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as WalletOrderIdRouteImport } from './routes/wallet.order.$id'
@@ -239,6 +240,11 @@ const ApiPublicNectarpaySyncRoute = ApiPublicNectarpaySyncRouteImport.update({
   path: '/api/public/nectarpay-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPopClaimsRetryRoute = ApiPublicPopClaimsRetryRouteImport.update({
+  id: '/api/public/pop-claims-retry',
+  path: '/api/public/pop-claims-retry',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVectorpayStatusRoute =
   ApiPublicVectorpayStatusRouteImport.update({
     id: '/api/public/vectorpay-status',
@@ -342,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
   '/api/public/nectarpay-sync': typeof ApiPublicNectarpaySyncRoute
+  '/api/public/pop-claims-retry': typeof ApiPublicPopClaimsRetryRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
   '/api/public/nectarpay-sync': typeof ApiPublicNectarpaySyncRoute
+  '/api/public/pop-claims-retry': typeof ApiPublicPopClaimsRetryRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -442,6 +450,7 @@ export interface FileRoutesById {
   '/api/public/build-id': typeof ApiPublicBuildIdRoute
   '/api/public/latest-release': typeof ApiPublicLatestReleaseRoute
   '/api/public/nectarpay-sync': typeof ApiPublicNectarpaySyncRoute
+  '/api/public/pop-claims-retry': typeof ApiPublicPopClaimsRetryRoute
   '/api/public/vectorpay-status': typeof ApiPublicVectorpayStatusRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/wallet/order/$id': typeof WalletOrderIdRoute
@@ -493,6 +502,7 @@ export interface FileRouteTypes {
     | '/api/public/build-id'
     | '/api/public/latest-release'
     | '/api/public/nectarpay-sync'
+    | '/api/public/pop-claims-retry'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/api/public/build-id'
     | '/api/public/latest-release'
     | '/api/public/nectarpay-sync'
+    | '/api/public/pop-claims-retry'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -592,6 +603,7 @@ export interface FileRouteTypes {
     | '/api/public/build-id'
     | '/api/public/latest-release'
     | '/api/public/nectarpay-sync'
+    | '/api/public/pop-claims-retry'
     | '/api/public/vectorpay-status'
     | '/lovable/email/suppression'
     | '/wallet/order/$id'
@@ -639,6 +651,7 @@ export interface RootRouteChildren {
   ApiPublicBuildIdRoute: typeof ApiPublicBuildIdRoute
   ApiPublicLatestReleaseRoute: typeof ApiPublicLatestReleaseRoute
   ApiPublicNectarpaySyncRoute: typeof ApiPublicNectarpaySyncRoute
+  ApiPublicPopClaimsRetryRoute: typeof ApiPublicPopClaimsRetryRoute
   ApiPublicVectorpayStatusRoute: typeof ApiPublicVectorpayStatusRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   WalletOrderIdRoute: typeof WalletOrderIdRoute
@@ -907,6 +920,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNectarpaySyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pop-claims-retry': {
+      id: '/api/public/pop-claims-retry'
+      path: '/api/public/pop-claims-retry'
+      fullPath: '/api/public/pop-claims-retry'
+      preLoaderRoute: typeof ApiPublicPopClaimsRetryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/vectorpay-status': {
       id: '/api/public/vectorpay-status'
       path: '/api/public/vectorpay-status'
@@ -1054,6 +1074,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBuildIdRoute: ApiPublicBuildIdRoute,
   ApiPublicLatestReleaseRoute: ApiPublicLatestReleaseRoute,
   ApiPublicNectarpaySyncRoute: ApiPublicNectarpaySyncRoute,
+  ApiPublicPopClaimsRetryRoute: ApiPublicPopClaimsRetryRoute,
   ApiPublicVectorpayStatusRoute: ApiPublicVectorpayStatusRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   WalletOrderIdRoute: WalletOrderIdRoute,
