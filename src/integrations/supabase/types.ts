@@ -1547,6 +1547,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pop_claims: {
+        Row: {
+          attempts: number
+          created_at: string
+          invoice_id: string | null
+          next_try_at: string
+          origin: string
+          payer_addresses: string[]
+          pop: number | null
+          reason: string | null
+          status: string
+          txid: string
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          invoice_id?: string | null
+          next_try_at?: string
+          origin: string
+          payer_addresses: string[]
+          pop?: number | null
+          reason?: string | null
+          status?: string
+          txid: string
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          invoice_id?: string | null
+          next_try_at?: string
+          origin?: string
+          payer_addresses?: string[]
+          pop?: number | null
+          reason?: string | null
+          status?: string
+          txid?: string
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       pop_markets: {
         Row: {
           city: string
