@@ -6,7 +6,8 @@ import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CHARITIES, CHOSEN_CHARITY_KEY, findByCode, searchCharities, type Charity } from "@/lib/give/charities";
+import { CHARITIES, CHOSEN_CHARITY_KEY, findByCode, parseSignedCauses, searchCharities, type Charity } from "@/lib/give/charities";
+import { getSignedCauses } from "@/lib/give/causes.functions";
 
 export const Route = createFileRoute("/give")({
   head: () => ({
@@ -27,13 +28,21 @@ function GivePage() {
   const [q, setQ] = useState("");
   const [code, setCode] = useState("");
 
+  const [list, setList] = useState<Charity[]>(CHARITIES);
+
   useEffect(() => {
     setChosen(localStorage.getItem(CHOSEN_CHARITY_KEY));
+    getSignedCauses()
+      .then((r) => {
+        const verified = parseSignedCauses(r);
+        if (verified && verified.length) setList(verified);
+      })
+      .catch(() => {});
   }, []);
 
-  const results = useMemo(() => searchCharities(q), [q]);
-  const suggestions = CHARITIES.filter((c) => c.featured);
-  const current = CHARITIES.find((c) => c.code === chosen) ?? null;
+  const results = useMemo(() => searchCharities(q, list), [q, list]);
+  const suggestions = list.filter((c) => c.featured);
+  const current = list.find((c) => c.code === chosen) ?? null;
 
   function choose(c: Charity) {
     localStorage.setItem(CHOSEN_CHARITY_KEY, c.code);
@@ -42,7 +51,7 @@ function GivePage() {
   }
 
   function applyCode() {
-    const c = findByCode(code);
+    const c = findByCode(code, list);
     if (!c) return toast.error("We couldn't find that code. Check it and try again.");
     setCode("");
     choose(c);
