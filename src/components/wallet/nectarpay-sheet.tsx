@@ -438,7 +438,7 @@ export function NectarPaySheet({
               )}
               {rewardWaiting && (
                 <p className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Checking for your POP reward…
+                  <Loader2 className="h-3 w-3 animate-spin" /> Claiming your POP reward…
                 </p>
               )}
               {inv && !isDirect && (
