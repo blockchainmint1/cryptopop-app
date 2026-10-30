@@ -1,4 +1,29 @@
 import { GIVE_CHURCH } from "./constants";
+import { verifyTxcMessage } from "@/lib/wallet/txc-message";
+
+/** NectarPay's church-list signing address, pinned in the app. */
+export const NECTARPAY_CAUSES_SIGNER = "TmFtZmNYbLmK9uiS3zcXdWUrShB9WqxVdQ";
+
+/** Verify NectarPay's signed list; returns null if unsigned, wrong signer, or altered. */
+export function parseSignedCauses(r: { signed_payload: string; signer: string; signature: string }): Charity[] | null {
+  if (r.signer !== NECTARPAY_CAUSES_SIGNER) return null;
+  try {
+    if (!verifyTxcMessage(NECTARPAY_CAUSES_SIGNER, r.signed_payload, r.signature)) return null;
+    const p = JSON.parse(r.signed_payload) as { causes?: Array<Record<string, unknown>> };
+    return (p.causes ?? [])
+      .filter((c) => typeof c.address === "string" && typeof c.name === "string")
+      .map((c) => ({
+        code: typeof c.code === "string" && c.code ? c.code : String(c.address),
+        name: String(c.name),
+        city: typeof c.city === "string" ? c.city : "",
+        blurb: typeof c.blurb === "string" ? c.blurb : "",
+        address: String(c.address),
+        featured: c.featured === true,
+      }));
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Charities a member can choose to support. NectarPay owns the real list
