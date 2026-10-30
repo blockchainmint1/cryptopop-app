@@ -78,7 +78,7 @@ export function NectarPaySheet({
   const [earned, setEarned] = useState<{ amount: number; storeName: string } | null>(null);
   const [paidWithRewards, setPaidWithRewards] = useState<number | null>(null);
 
-  const [review, setReview] = useState<{ built: Awaited<ReturnType<typeof prepare>>; from: string; to: string; amount: number; feeSats: number; split: ReturnType<typeof giveSplitFor> } | null>(null);
+  const [review, setReview] = useState<{ built: { psbtBase64: string; feeSats: number; inputs: string[] }; from: string; to: string; amount: number; feeSats: number; split: ReturnType<typeof giveSplitFor> } | null>(null);
   const [stage, setStage] = useState<Stage>("loading");
   const [inv, setInv] = useState<NectarInvoice | null>(null);
   const [error, setError] = useState<string | null>(null);
