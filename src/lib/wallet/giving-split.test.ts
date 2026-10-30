@@ -9,7 +9,7 @@ const PHRASE = "abandon abandon abandon abandon abandon abandon abandon abandon 
 const from = deriveTxcAddress(PHRASE);
 const merchant = deriveTxcAddress("legal winner thank year wave sausage worth useful legal winner thank yellow");
 const church = "Tst3dVnJbFrnx5ChmK6qj9F3M8YNsHWR44";
-const platform = "TmmoqqhcfBZWRG8feCTE2c4N4BsADgwD1m";
+const platform = "ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu";
 const network = { messagePrefix: "", bech32: "txc", bip32: { public: 0x0488b21e, private: 0x0488ade4 }, pubKeyHash: 0x42, scriptHash: 0x32, wif: 0xc1 };
 
 describe("eGiving split: store discount shared 80% church / 20% eGiving", () => {
@@ -121,4 +121,10 @@ describe("giving minimum per discount (500 cents / %)", () => {
     const below = split2(usd - 0.01, pct);
     expect(below.church <= 0 || below.platform <= 0).toBe(true);
   });
+});
+
+describe("eGiving program wallet", () => {
+  it("is ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu", () => expect(GIVE_PLATFORM_ADDRESS).toBe("ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu"));
+  it("rejects the old program address", () =>
+    expect(configMatchesPinned({ church: { address: GIVE_CHURCH.address }, platformAddress: "TmmoqqhcfBZWRG8feCTE2c4N4BsADgwD1m" })).toBe(false));
 });
