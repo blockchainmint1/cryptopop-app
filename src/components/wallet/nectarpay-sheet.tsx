@@ -12,14 +12,12 @@ import {
 } from "@/components/ui/sheet";
 import coin from "@/assets/cryptopop-coin.png";
 import {
-  claimNectarReward,
   claimSendReward,
   sendRewardMessage,
   getNectarInvoice,
-  getNectarInvoiceStatus,
   selectNectarTsd,
 } from "@/lib/nectarpay.functions";
-import { isPaidStatus, nectarReceiptUrl, rewardMessage, type NectarInvoice } from "@/lib/nectarpay";
+import { isPaidStatus, nectarReceiptUrl, type NectarInvoice } from "@/lib/nectarpay";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
 import { validateSend } from "@/lib/wallet/transaction-policy";
@@ -66,8 +64,6 @@ export function NectarPaySheet({
 }) {
   const fetchInvoice = useServerFn(getNectarInvoice);
   const selectTsd = useServerFn(selectNectarTsd);
-  const pollStatus = useServerFn(getNectarInvoiceStatus);
-  const claim = useServerFn(claimNectarReward);
   const claimByTx = useServerFn(claimSendReward);
   const [amountInput, setAmountInput] = useState("");
   const [rewardWaiting, setRewardWaiting] = useState(false);
@@ -142,31 +138,8 @@ export function NectarPaySheet({
     };
   }, [request, fetchInvoice, fetchRewardOpts, address]);
 
-  useEffect(() => () => stopPoll(), []);
-
-  function stopPoll() {
-    if (pollRef.current) window.clearInterval(pollRef.current);
-    pollRef.current = null;
-  }
-
-  async function claimReward(invoiceId: string, tx: string) {
-    if (!mnemonic || !address) return;
-    try {
-      const signature = signTxcMessage(derivePrivateKey(mnemonic), rewardMessage(invoiceId, tx));
-      const r = await claim({ data: { invoiceId, txid: tx, address, signature } });
-      if (r.awarded > 0) {
-        setPop(r.awarded);
-        popFireworks();
-        updateReceipt(tx, { popEarned: r.awarded });
-      }
-      if (r.rewards) setEarned({ amount: r.rewards.amount, storeName: r.rewards.storeName });
-    } catch (e) {
-      console.warn("[nectarpay] reward", e);
-    }
-  }
-
-  /** Plain store code: no invoice to watch, so ask NectarPay by transaction until it sees the sale. */
-  async function chaseDirectReward(tx: string, payer: string) {
+  /** Every store payment: ask NectarPay by transaction until it has seen the sale, then show POP + rewards. */
+  async function chaseReward(tx: string, payer: string) {
     if (!mnemonic) return;
     const signature = signTxcMessage(derivePrivateKey(mnemonic), sendRewardMessage(tx));
     setRewardWaiting(true);
@@ -180,6 +153,7 @@ export function NectarPaySheet({
             updateReceipt(tx, { popEarned: r.awarded });
             popFireworks();
           }
+          if (r.rewards) setEarned({ amount: r.rewards.amount, storeName: r.rewards.storeName });
           break;
         }
         if (r.status === "denied" || r.status === "expired" || r.status === "held") break;
@@ -188,23 +162,6 @@ export function NectarPaySheet({
       }
     }
     setRewardWaiting(false);
-  }
-
-  function startPoll(invoiceId: string, tx: string) {
-    stopPoll();
-    let tries = 0;
-    pollRef.current = window.setInterval(async () => {
-      tries += 1;
-      const r = await pollStatus({ data: { id: invoiceId } }).catch(() => ({ status: null }));
-      if (isPaidStatus(r.status)) {
-        stopPoll();
-        setStage("paid");
-        onPaid();
-        void claimReward(invoiceId, tx);
-      } else if (tries > 100) {
-        stopPoll(); // ~5 min — keep "waiting" copy, merchant will still see it
-      }
-    }, 3000);
   }
 
   async function pay(confirm = false) {
@@ -263,15 +220,10 @@ export function NectarPaySheet({
       });
       setInv({ ...inv, ...sel.invoice, merchant: inv.merchant ?? sel.invoice.merchant ?? null } as NectarInvoice);
       setTxid(res.txid);
-      if (direct) {
-        setInv({ ...inv, fiatAmount: amount });
-        setStage("paid");
-        onPaid();
-        if (from === address) void chaseDirectReward(res.txid, from);
-      } else {
-        setStage("waiting");
-        startPoll(inv.id, res.txid);
-      }
+      if (direct) setInv({ ...inv, fiatAmount: amount });
+      setStage("paid");
+      onPaid();
+      if (from === address) void chaseReward(res.txid, from);
     } catch (e) {
       console.error("[nectarpay] pay", e);
       toast.error((e as Error).message || "Payment failed");
@@ -311,7 +263,6 @@ export function NectarPaySheet({
       open={!!request}
       onOpenChange={(v) => {
         if (!v) {
-          stopPoll();
           onClose();
         }
       }}
@@ -483,8 +434,7 @@ export function NectarPaySheet({
               variant="secondary"
               className="w-full rounded-full"
               onClick={() => {
-                stopPoll();
-                onClose();
+                      onClose();
               }}
             >
               Done
