@@ -231,6 +231,10 @@ export function WalletDashboard() {
           return;
         }
         // Store pay codes (named, in TSD) all use the one store checkout.
+        if (intent.invoiceId && intent.asset === "tsd") {
+          setNectarReq({ invoiceId: intent.invoiceId, nonce: null });
+          return;
+        }
         if (intent.merchant && intent.asset === "tsd") {
           setNectarReq({ direct: { to: intent.to, amount: intent.amount, merchant: intent.merchant, memo: intent.memo } });
           return;
