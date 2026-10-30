@@ -24,7 +24,8 @@ import { CHOSEN_CHARITY_KEY } from "@/lib/give/charities";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
 import { validateSend, validateSplitSend } from "@/lib/wallet/transaction-policy";
 import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
-import { derivePrivateKey, signPsbt, signSplitPsbt } from "@/lib/wallet/sign";
+import { derivePrivateKey, derivePrivateKeyAtPath, signPsbt, signSplitPsbt } from "@/lib/wallet/sign";
+import { rewardKeyPath } from "@/lib/wallet/reward-key";
 import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { saveTxLabel, updateReceipt } from "@/lib/wallet/tx-labels";
 import { getCheckoutRewards, payWithRewards } from "@/lib/store-rewards.functions";
@@ -144,10 +145,14 @@ export function NectarPaySheet({
   /** Every store payment: ask NectarPay by transaction until it has seen the sale, then show POP + rewards. */
   async function chaseReward(tx: string, payer: string) {
     if (!mnemonic) return;
-    const signature = signTxcMessage(derivePrivateKey(mnemonic), sendRewardMessage(tx));
+    // Sign with whichever of our keys actually paid (new 696969' or older 0' address).
+    const path = rewardKeyPath(mnemonic, payer);
+    if (!path) return;
+    const signature = signTxcMessage(derivePrivateKeyAtPath(mnemonic, path), sendRewardMessage(tx));
     setRewardWaiting(true);
     for (let i = 0; i < 12; i++) {
-      await new Promise((r) => setTimeout(r, i === 0 ? 4000 : 15000));
+      // First try right away so the sale is written down even if this screen closes.
+      await new Promise((r) => setTimeout(r, i === 0 ? 1500 : 15000));
       try {
         const r = await claimByTx({ data: { txid: tx, address: payer, signature } });
         if (r.awarded > 0 || r.status === "awarded" || r.status === "sent") {
@@ -238,7 +243,7 @@ export function NectarPaySheet({
       if (direct) setInv({ ...inv, fiatAmount: amount });
       setStage("paid");
       onPaid();
-      if (from === address) void chaseReward(res.txid, from);
+      void chaseReward(res.txid, from);
     } catch (e) {
       console.error("[nectarpay] pay", e);
       toast.error((e as Error).message || "Payment failed");
