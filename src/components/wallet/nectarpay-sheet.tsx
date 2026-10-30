@@ -13,6 +13,8 @@ import {
 import coin from "@/assets/cryptopop-coin.png";
 import {
   claimNectarReward,
+  claimSendReward,
+  sendRewardMessage,
   getNectarInvoice,
   getNectarInvoiceStatus,
   selectNectarTsd,
@@ -28,6 +30,12 @@ import { saveTxLabel, updateReceipt } from "@/lib/wallet/tx-labels";
 import { getCheckoutRewards, payWithRewards } from "@/lib/store-rewards.functions";
 import { redeemMessage, type InvoiceRewardOptions, type RewardKind } from "@/lib/store-rewards";
 import type { SendSource } from "./send-sheet";
+import { popFireworks, shopNameSize } from "@/lib/wallet/fireworks";
+
+/** A store checkout: a NectarPay invoice link, or a store's plain pay code (address + amount + name). */
+export type StoreRequest =
+  | { invoiceId: string; nonce: string | null }
+  | { direct: { to: string; amount: number | null; merchant: string | null; memo: string | null } };
 
 type Stage = "loading" | "review" | "paying" | "waiting" | "paid" | "error";
 
@@ -48,7 +56,7 @@ export function NectarPaySheet({
   tsdBalance,
   onPaid,
 }: {
-  request: { invoiceId: string; nonce: string | null } | null;
+  request: StoreRequest | null;
   onClose: () => void;
   address: string | null;
   sources: SendSource[];
@@ -60,6 +68,9 @@ export function NectarPaySheet({
   const selectTsd = useServerFn(selectNectarTsd);
   const pollStatus = useServerFn(getNectarInvoiceStatus);
   const claim = useServerFn(claimNectarReward);
+  const claimByTx = useServerFn(claimSendReward);
+  const [amountInput, setAmountInput] = useState("");
+  const [rewardWaiting, setRewardWaiting] = useState(false);
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
   const fetchRewardOpts = useServerFn(getCheckoutRewards);
@@ -88,6 +99,17 @@ export function NectarPaySheet({
     setRewardOpts(null);
     setEarned(null);
     setPaidWithRewards(null);
+    setRewardWaiting(false);
+    if ("direct" in request) {
+      const d = request.direct;
+      setAmountInput(d.amount != null ? String(d.amount) : "");
+      setInv({
+        id: "", status: "new", fiatAmount: d.amount ?? 0, currency: "USD", acceptsTsd: true,
+        description: d.memo, merchant: { name: d.merchant ?? "Store", logoUrl: null },
+      } as unknown as NectarInvoice);
+      setStage("review");
+      return;
+    }
     (async () => {
       const r = await fetchInvoice({ data: { id: request.invoiceId, nonce: request.nonce } });
       if (cancelled) return;
@@ -134,12 +156,38 @@ export function NectarPaySheet({
       const r = await claim({ data: { invoiceId, txid: tx, address, signature } });
       if (r.awarded > 0) {
         setPop(r.awarded);
+        popFireworks();
         updateReceipt(tx, { popEarned: r.awarded });
       }
       if (r.rewards) setEarned({ amount: r.rewards.amount, storeName: r.rewards.storeName });
     } catch (e) {
       console.warn("[nectarpay] reward", e);
     }
+  }
+
+  /** Plain store code: no invoice to watch, so ask NectarPay by transaction until it sees the sale. */
+  async function chaseDirectReward(tx: string, payer: string) {
+    if (!mnemonic) return;
+    const signature = signTxcMessage(derivePrivateKey(mnemonic), sendRewardMessage(tx));
+    setRewardWaiting(true);
+    for (let i = 0; i < 12; i++) {
+      await new Promise((r) => setTimeout(r, i === 0 ? 4000 : 15000));
+      try {
+        const r = await claimByTx({ data: { txid: tx, address: payer, signature } });
+        if (r.awarded > 0 || r.status === "awarded" || r.status === "sent") {
+          if (r.awarded > 0) {
+            setPop(r.awarded);
+            updateReceipt(tx, { popEarned: r.awarded });
+            popFireworks();
+          }
+          break;
+        }
+        if (r.status === "denied" || r.status === "expired" || r.status === "held") break;
+      } catch (e) {
+        console.warn("[store] reward", e);
+      }
+    }
+    setRewardWaiting(false);
   }
 
   function startPoll(invoiceId: string, tx: string) {
@@ -165,7 +213,12 @@ export function NectarPaySheet({
     if (confirm && !review) return;
     setStage("paying");
     try {
-      const sel = await selectTsd({ data: { id: request.invoiceId, nonce: request.nonce } });
+      const direct = "direct" in request ? request.direct : null;
+      const directAmount = Number(amountInput);
+      if (direct && (!Number.isFinite(directAmount) || directAmount <= 0)) throw new Error("Enter an amount");
+      const sel = direct
+        ? { invoice: { address: direct.to, tsdAmount: Math.round(directAmount * 100) / 100, merchant: inv.merchant } as Partial<NectarInvoice> & { address: string; tsdAmount: number }, error: null as string | null }
+        : await selectTsd({ data: { id: request.invoiceId, nonce: request.nonce } });
       if (!sel.invoice?.address || !sel.invoice.tsdAmount) {
         throw new Error(sel.error ?? "This store isn't accepting TSD right now.");
       }
@@ -200,7 +253,7 @@ export function NectarPaySheet({
         merchant: inv.merchant?.name ?? "NectarPay store",
         memo: inv.description,
         address: sel.invoice.address,
-        receipt: {
+        receipt: direct ? undefined : {
           invoiceId: inv.id,
           fiatAmount: inv.fiatAmount,
           currency: inv.currency,
@@ -210,8 +263,15 @@ export function NectarPaySheet({
       });
       setInv({ ...inv, ...sel.invoice, merchant: inv.merchant ?? sel.invoice.merchant });
       setTxid(res.txid);
-      setStage("waiting");
-      startPoll(inv.id, res.txid);
+      if (direct) {
+        setInv({ ...inv, fiatAmount: amount });
+        setStage("paid");
+        onPaid();
+        if (from === address) void chaseDirectReward(res.txid, from);
+      } else {
+        setStage("waiting");
+        startPoll(inv.id, res.txid);
+      }
     } catch (e) {
       console.error("[nectarpay] pay", e);
       toast.error((e as Error).message || "Payment failed");
@@ -220,7 +280,7 @@ export function NectarPaySheet({
   }
 
   async function payRewards(kind: RewardKind) {
-    if (!request || !inv) return;
+    if (!request || !inv || "direct" in request) return;
     if (!address || !mnemonic) return toast.error("Unlock your wallet first");
     setStage("paying");
     try {
@@ -244,6 +304,7 @@ export function NectarPaySheet({
     !!rewardOpts && usdBill > 0 && rewardOpts.acceptsCommunity && rewardOpts.communityBalance + 1e-6 >= usdBill;
 
   const name = inv?.merchant?.name ?? "NectarPay store";
+  const isDirect = !!request && "direct" in request;
 
   return (
     <Sheet
@@ -276,12 +337,14 @@ export function NectarPaySheet({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-lg font-semibold uppercase">{name}</p>
+                <p className="truncate font-display font-semibold uppercase" style={{ fontSize: shopNameSize(name) }}>{name}</p>
                 {inv.description && (
                   <p className="truncate text-xs text-muted-foreground">{inv.description}</p>
                 )}
               </div>
-              <p className="font-display text-2xl font-bold">{money(inv.fiatAmount, inv.currency)}</p>
+              {(!isDirect || inv.fiatAmount > 0) && (
+                <p className="shrink-0 font-display text-2xl font-bold">{money(inv.fiatAmount, inv.currency)}</p>
+              )}
             </div>
           )}
 
@@ -299,6 +362,15 @@ export function NectarPaySheet({
 
           {(stage === "review" || stage === "paying") && inv && (
             <>
+              {isDirect && request && "direct" in request && request.direct.amount == null && (
+                <input
+                  inputMode="decimal"
+                  placeholder="Amount in TSD"
+                  value={amountInput}
+                  onChange={(e) => { setAmountInput(e.target.value); setReview(null); }}
+                  className="h-12 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-lg"
+                />
+              )}
               <p className="text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                 Paying in TSD · you have {tsdBalance === null ? "—" : tsdBalance.toFixed(2)} TSD
               </p>
@@ -344,7 +416,7 @@ export function NectarPaySheet({
                   <Button variant="ghost" className="w-full" disabled={stage === "paying"} onClick={() => setReview(null)}>Cancel</Button>
                 </div>
               )}
-              <Button
+              {!review && <Button
                 className="h-12 w-full rounded-full"
                 disabled={stage === "paying"}
                 onClick={() => void pay()}
@@ -354,9 +426,9 @@ export function NectarPaySheet({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Paying…
                   </>
                 ) : (
-                  `Review ${money(inv.fiatAmount, inv.currency)} payment`
+                  isDirect ? "Review payment" : `Review ${money(inv.fiatAmount, inv.currency)} payment`
                 )}
-              </Button>
+              </Button>}
             </>
           )}
 
@@ -384,11 +456,16 @@ export function NectarPaySheet({
                 <p className="mt-2 text-sm">+${earned.amount.toFixed(2)} rewards at {earned.storeName}</p>
               )}
               {pop > 0 && (
-                <p className="mt-2 flex items-center justify-center gap-2 text-sm">
-                  <img src={coin} alt="" className="h-5 w-5" /> +{pop} POP earned
+                <p className="mt-2 flex items-center justify-center gap-2 font-display text-2xl uppercase text-primary">
+                  <img src={coin} alt="" className="h-7 w-7" /> +{pop} POP earned
                 </p>
               )}
-              {inv && (
+              {rewardWaiting && (
+                <p className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Checking for your POP reward…
+                </p>
+              )}
+              {inv && !isDirect && (
                 <a
                   href={nectarReceiptUrl(inv.id)}
                   target="_blank"
