@@ -28,7 +28,7 @@ export function pocketKeyHex(mnemonic: string, index: number): string {
 }
 
 /** Signed envelope for card settings requests. */
-export function ownerEnvelope(mnemonic: string, action: "link" | "list" | "update" | "kill", body: object) {
+export function ownerEnvelope(mnemonic: string, action: "link" | "list" | "update" | "kill" | "give-set" | "give-get", body: object) {
   const owner = deriveTxcAddressAtPath(mnemonic, NFC_OWNER_PATH);
   const ts = Math.floor(Date.now() / 1000);
   const b = JSON.stringify(body);

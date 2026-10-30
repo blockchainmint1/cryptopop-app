@@ -845,6 +845,24 @@ export type Database = {
         }
         Relationships: []
       }
+      give_recipients: {
+        Row: {
+          charity_code: string
+          owner_address: string
+          updated_at: string
+        }
+        Insert: {
+          charity_code: string
+          owner_address: string
+          updated_at?: string
+        }
+        Update: {
+          charity_code?: string
+          owner_address?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hme_member_identities: {
         Row: {
           created_at: string
