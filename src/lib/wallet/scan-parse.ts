@@ -30,6 +30,8 @@ export type ScanIntent =
       asset: AssetId;
       merchant: string | null;
       memo: string | null;
+      /** NectarPay invoice id when a store code carries one (inv=…) — marks it as a NectarPay sale. */
+      invoiceId?: string | null;
       raw: string;
     }
   | { kind: "award"; token: string; path: string; raw: string }
@@ -88,6 +90,7 @@ function fromParams(
       "tsd",
     merchant: p.get("label") ?? p.get("merchant") ?? p.get("name"),
     memo: p.get("memo") ?? p.get("message") ?? p.get("note"),
+    invoiceId: (() => { const v = p.get("inv") ?? p.get("invoice"); return v && INVOICE_ID.test(v) ? v : null; })(),
     raw,
   };
 }

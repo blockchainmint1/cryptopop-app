@@ -280,7 +280,7 @@ export const claimSendReward = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }): Promise<{ awarded: number; status: string }> => {
+  .handler(async ({ data }): Promise<{ awarded: number; status: string; rewards: { amount: number; kind: "store" | "community"; storeName: string } | null }> => {
     const { verifyTxcMessage } = await import("./wallet/txc-message");
     if (!verifyTxcMessage(data.address, sendRewardMessage(data.txid), data.signature)) {
       throw new Error("bad_signature");
@@ -289,5 +289,14 @@ export const claimSendReward = createServerFn({ method: "POST" })
     await assertPaymentOwner(data.txid, data.address);
     const { startClaim } = await import("./pop-claim.server");
     const res = await startClaim({ txid: data.txid, wallet: data.address, payers: [data.address], origin: "qr" });
-    return { awarded: res.pop, status: res.status };
+    let rewards: { amount: number; kind: "store" | "community"; storeName: string } | null = null;
+    const d = res.decision;
+    if (d?.kind === "eligible" && d.storeId && d.saleUsd > 0) {
+      const { issueRewards } = await import("./store-rewards.server");
+      rewards = await issueRewards({ storeId: d.storeId, address: data.address, usd: d.saleUsd, invoiceId: d.invoiceId, txid: data.txid }).catch((e) => {
+        console.error("[rewards] issue", e);
+        return null;
+      });
+    }
+    return { awarded: res.pop, status: res.status, rewards };
   });
