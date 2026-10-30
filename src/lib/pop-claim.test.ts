@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { interpretClaim, claimHeaders, SHOPPER_DAILY_POP_CAP } from "./pop-claim.server";
+import { interpretClaim, claimHeaders, purchaseLabel, SHOPPER_DAILY_POP_CAP } from "./pop-claim.server";
 
 describe("NectarPay POP claims", () => {
   it("eligible sale sends the POP NectarPay says (69 for $68.75)", () => {

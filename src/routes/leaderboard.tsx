@@ -277,6 +277,19 @@ function PopPage() {
                           </a>
                         </>
                       )}
+                      {r.source === "nectarpay" && r.source_id && (
+                        <>
+                          {" · "}
+                          <a
+                            href={nectarReceiptUrl(r.source_id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            receipt
+                          </a>
+                        </>
+                      )}
                     </p>
                   </div>
                   <span
