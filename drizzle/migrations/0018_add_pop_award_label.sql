@@ -1,0 +1,1 @@
+ALTER TABLE public.pop_awards ADD COLUMN label text;
