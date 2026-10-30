@@ -17,6 +17,10 @@ import { validateSend } from "@/lib/wallet/transaction-policy";
 import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
 import { signPsbt } from "@/lib/wallet/sign";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
+import { claimSendReward, sendRewardMessage } from "@/lib/nectarpay.functions";
+import { derivePrivateKey } from "@/lib/wallet/sign";
+import { signTxcMessage } from "@/lib/wallet/txc-message";
+import confetti from "canvas-confetti";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
 import { ASSETS, assetMeta, type AssetId } from "@/lib/wallet/assets";
 import { parseScan } from "@/lib/wallet/scan-parse";
@@ -63,6 +67,38 @@ export function SendSheet({
 
   const prepare = useServerFn(prepareSend);
   const broadcast = useServerFn(broadcastSignedTx);
+  const claimReward = useServerFn(claimSendReward);
+  const [popEarned, setPopEarned] = useState<number | null>(null);
+  const [rewardWaiting, setRewardWaiting] = useState(false);
+
+  /** Ask for POP on a store payment; NectarPay may need a minute to see the sale. */
+  async function chaseReward(tx: string, payer: string) {
+    if (!mnemonic) return;
+    const signature = signTxcMessage(derivePrivateKey(mnemonic), sendRewardMessage(tx));
+    setRewardWaiting(true);
+    for (let i = 0; i < 12; i++) {
+      await new Promise((r) => setTimeout(r, i === 0 ? 4000 : 15000));
+      try {
+        const r = await claimReward({ data: { txid: tx, address: payer, signature } });
+        if (r.awarded > 0 || r.status === "awarded" || r.status === "sent") {
+          setPopEarned(r.awarded);
+          setRewardWaiting(false);
+          if (r.awarded > 0) {
+            const base = { spread: 90, ticks: 220, colors: ["#FF3DBE", "#00E5FF", "#8B3DFF", "#CCF695"] };
+            confetti({ ...base, particleCount: 120, origin: { x: 0.5, y: 0.6 } });
+            setTimeout(() => confetti({ ...base, particleCount: 80, angle: 60, origin: { x: 0, y: 0.7 } }), 200);
+            setTimeout(() => confetti({ ...base, particleCount: 80, angle: 120, origin: { x: 1, y: 0.7 } }), 350);
+            toast.success(`You earned ${r.awarded} POP`);
+          }
+          return;
+        }
+        if (r.status === "denied" || r.status === "expired" || r.status === "held") break;
+      } catch (e) {
+        console.warn("[send] reward", e);
+      }
+    }
+    setRewardWaiting(false);
+  }
 
   // POP / phPOP are scoreboard points for now — not spendable/tradeable.
   const SENDABLE_ASSETS = ASSETS.filter((a) => a.id !== "pop" && a.id !== "phpop");
@@ -109,6 +145,8 @@ export function SendSheet({
     setTxid(null);
     setReview(null);
     setRequest(null);
+    setPopEarned(null);
+    setRewardWaiting(false);
   }
 
   function applyScan(text: string) {
@@ -190,6 +228,8 @@ export function SendSheet({
       });
       setTxid(txidOut);
       toast.success("Sent — waiting for confirmation");
+      // Store payment from the main wallet address: claim POP from NectarPay.
+      if (request?.merchant && asset === "tsd" && from === address) void chaseReward(txidOut, from);
       onSent();
     } catch (e) {
       console.error("[send]", e);
@@ -223,6 +263,14 @@ export function SendSheet({
               <p className="mt-2 font-display text-lg font-semibold uppercase">Broadcast</p>
               <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">{txid}</p>
             </div>
+            {popEarned != null && popEarned > 0 && (
+              <p className="text-center font-display text-2xl uppercase text-primary">+{popEarned} POP earned</p>
+            )}
+            {rewardWaiting && (
+              <p className="flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" /> Checking for your POP reward…
+              </p>
+            )}
             {asset !== "txc" && (
               <p className="text-center text-xs text-muted-foreground">
                 Token transfers show in balances once the network confirms them, usually within a few
@@ -237,9 +285,14 @@ export function SendSheet({
           <div className="space-y-4 pb-6">
             {request && (
               <div className="rounded-2xl border border-primary/40 bg-primary/10 p-3">
-                <p className="flex items-center gap-2 font-display text-sm font-semibold uppercase">
-                  <Store className="h-4 w-4 text-primary" />
-                  {request.merchant ?? "Payment request"}
+                <p className="flex min-w-0 items-center gap-2 font-display font-semibold uppercase">
+                  <Store className="h-5 w-5 shrink-0 text-primary" />
+                  <span
+                    className="truncate"
+                    style={{ fontSize: (() => { const n = (request.merchant ?? "Payment request").length; return n <= 14 ? "1.75rem" : n <= 22 ? "1.4rem" : n <= 32 ? "1.1rem" : "0.95rem"; })() }}
+                  >
+                    {request.merchant ?? "Payment request"}
+                  </span>
                 </p>
                 {request.memo && (
                   <p className="mt-1 text-xs text-muted-foreground">{request.memo}</p>
@@ -392,6 +445,7 @@ export function SendSheet({
                 <Button variant="ghost" className="w-full" disabled={busy} onClick={() => setReview(null)}>Cancel</Button>
               </div>
             )}
+            {!review && (
             <Button className="h-12 w-full rounded-full" onClick={() => void submit()} disabled={busy}>
               {busy ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -400,6 +454,7 @@ export function SendSheet({
               )}
               {busy ? (progress ?? "Sending…") : `Review ${asset.toUpperCase()} payment`}
             </Button>
+            )}
           </div>
         )}
 
