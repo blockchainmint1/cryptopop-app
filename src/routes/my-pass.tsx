@@ -13,7 +13,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteFooter } from "@/components/site-footer";
 import { getMyEventMemberships, type MyEventMembership } from "@/lib/my-events.functions";
 import { getSignupById } from "@/lib/signups.functions";
 
@@ -221,7 +220,6 @@ function MyPassPage() {
         )}
       </main>
 
-      <SiteFooter />
     </div>
   );
 }

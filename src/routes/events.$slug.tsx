@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { SiteFooter } from "@/components/site-footer";
 import { getPublicEventBySlug } from "@/lib/public-event.functions";
 import { createEventSignup } from "@/lib/signups.functions";
 import { useWallet } from "@/lib/wallet/wallet-context";
@@ -290,7 +289,6 @@ function EventRsvpPage() {
           </>
         )}
       </main>
-      <SiteFooter />
     </div>
   );
 }

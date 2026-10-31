@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { SiteFooter } from "@/components/site-footer";
 export const Route = createFileRoute("/_authenticated/recover-wallet")({
   head: () => ({ meta: [
     { title: "Wallet Recovery — CryptoPOP" },
@@ -15,5 +14,5 @@ export const Route = createFileRoute("/_authenticated/recover-wallet")({
       <h1 className="font-display text-4xl uppercase">Your on-device wallet</h1>
       <p className="text-muted-foreground">Email-managed wallets and server key exports have been retired. Your current wallet is protected by your device password and recovery phrase.</p>
       <Button asChild><Link to="/">Open wallet</Link></Button>
-    </main><SiteFooter /></div>,
+    </main></div>,
 });
