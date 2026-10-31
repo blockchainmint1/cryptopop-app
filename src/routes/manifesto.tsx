@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/manifesto")({
   head: () => ({
@@ -97,7 +96,6 @@ function ManifestoPage() {
         </p>
       </main>
 
-      <SiteFooter />
     </div>
   );
 }

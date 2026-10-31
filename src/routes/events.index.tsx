@@ -29,7 +29,6 @@ import { DiscoveryMap, type MapDiscoveryItem } from "@/components/discovery-map"
 import { Car, Footprints, LocateFixed } from "lucide-react";
 import { directionsUrl } from "@/lib/directions";
 import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
-import { SiteFooter } from "@/components/site-footer";
 
 const eventsQuery = queryOptions({
   queryKey: ["public-events"],
@@ -519,7 +518,6 @@ function EventsPage() {
         ) : null}
       </section>
 
-      <SiteFooter />
       <BottomNavSpacer />
       <BottomNav />
     </div>

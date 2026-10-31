@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { BottomNavSpacer } from "@/components/bottom-nav";
-import { SiteFooter } from "@/components/site-footer";
 import { OnboardScreen } from "@/components/wallet/onboard-screen";
 import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { WalletDashboard } from "@/components/wallet/wallet-dashboard";
@@ -51,7 +50,6 @@ function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">{body}</div>
-      <SiteFooter />
       {status === "unlocked" ? <BottomNavSpacer /> : null}
     </div>
   );
