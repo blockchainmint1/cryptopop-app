@@ -115,7 +115,7 @@ export function InstallInstructionsAutoPopup() {
 
 /** "Add POP Wallet to your home screen" card for iPhone and Android browsers. */
 export function InstallAppPrompt({ dismissible = true }: { dismissible?: boolean }) {
-  const [mode, setMode] = useState<"hidden" | "android" | "ios" | "other">("hidden");
+  const [mode, setMode] = useState<"hidden" | "ios" | "other">("hidden");
   const [showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export function InstallAppPrompt({ dismissible = true }: { dismissible?: boolean
       }
     }
     const os = platform();
-    const pick = () => setMode(deferred ? "android" : os === "ios" ? "ios" : os === "android" ? "other" : "hidden");
+    const pick = () => setMode(os === "ios" ? "ios" : os === "android" ? "other" : "hidden");
     pick();
     window.addEventListener("cp-install-ready", pick);
     return () => window.removeEventListener("cp-install-ready", pick);
@@ -164,24 +164,6 @@ export function InstallAppPrompt({ dismissible = true }: { dismissible?: boolean
           <p className="flex items-center gap-2 pr-8 font-display text-base uppercase">
             <Download className="h-4 w-4 text-primary" /> Put POP Wallet on your home screen
           </p>
-          {mode === "android" && (
-            <>
-              <p className="mt-1 text-muted-foreground">Opens full-screen like an app. No download store needed.</p>
-              <Button
-                size="sm"
-                className="mt-3 w-full rounded-full"
-                onClick={async () => {
-                  if (!deferred) return;
-                  await deferred.prompt();
-                  const c = await deferred.userChoice;
-                  deferred = null;
-                  if (c.outcome === "accepted") setMode("hidden");
-                }}
-              >
-                Install app
-              </Button>
-            </>
-          )}
           {mode === "ios" && (
             <>
               <p className="mt-1 text-muted-foreground">
