@@ -465,6 +465,13 @@ export function WalletSettings({
 
       <div className="space-y-2 border-t border-white/10 pt-3">
         <nav className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <a
+            href="https://app.cryptopop.org/api/public/apk"
+            className="font-semibold text-foreground/80 transition hover:text-foreground hover:underline"
+          >
+            Get the Android app
+          </a>
+          <Link to="/events" className="transition hover:text-foreground">Events</Link>
           <Link to="/privacy" className="transition hover:text-foreground">Privacy policy</Link>
           <Link to="/terms" className="transition hover:text-foreground">Terms</Link>
           <Link to="/manifesto" className="transition hover:text-foreground">Manifesto</Link>
@@ -480,6 +487,9 @@ export function WalletSettings({
             honest.money
           </a>{" "}
           ecosystem
+        </p>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          © {new Date().getFullYear()} CryptoPOP — small business support, gamified.
         </p>
       </div>
     </Card>
