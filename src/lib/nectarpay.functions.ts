@@ -319,3 +319,12 @@ export const startNectarSticker = createServerFn({ method: "POST" })
     const { callSticker } = await import("./nectarpay-sticker.server");
     return callSticker("invoice", { code: data.code, amount: Math.round(data.amount * 100) / 100 });
   });
+
+/** After paying a sticker bill: ask NectarPay to check the chain now so the sale settles. */
+export const reportNectarStickerPaid = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ code: stickerCode, invoiceId: z.string().min(1).max(100), txid: z.string().regex(/^[0-9a-f]{64}$/) }).parse(d))
+  .handler(async ({ data }) => {
+    const { reportStickerPaid } = await import("./nectarpay-sticker.server");
+    return reportStickerPaid({ code: data.code, invoice_id: data.invoiceId, txid: data.txid });
+  });
