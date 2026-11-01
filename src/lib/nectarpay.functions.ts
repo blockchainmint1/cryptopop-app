@@ -300,3 +300,22 @@ export const claimSendReward = createServerFn({ method: "POST" })
     }
     return { awarded: res.pop, status: res.status, rewards };
   });
+
+const stickerCode = z.string().regex(/^[0-9A-Za-z]{6}$/);
+
+/** Printed store sticker → store name, logo, TSD wallet and Give status (signed by NectarPay). */
+export const lookupNectarSticker = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ code: stickerCode }).parse(d))
+  .handler(async ({ data }) => {
+    const { callSticker } = await import("./nectarpay-sticker.server");
+    return callSticker("lookup", { code: data.code });
+  });
+
+/** Sticker + typed amount → a NectarPay bill with the exact address to pay. */
+export const startNectarSticker = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ code: stickerCode, amount: z.number().finite().min(0.5).max(250) }).parse(d))
+  .handler(async ({ data }) => {
+    const { callSticker } = await import("./nectarpay-sticker.server");
+    return callSticker("invoice", { code: data.code, amount: Math.round(data.amount * 100) / 100 });
+  });

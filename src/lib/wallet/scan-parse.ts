@@ -42,6 +42,7 @@ export type ScanIntent =
   | { kind: "link"; path: string; raw: string }
   | { kind: "ecosystem_link"; raw: string }
   | { kind: "nectarpay"; invoiceId: string; nonce: string | null; raw: string }
+  | { kind: "nectar_sticker"; code: string; raw: string }
   | {
       kind: "wallet_login";
       host: string;
@@ -186,6 +187,9 @@ function nectarFrom(raw: string): ScanIntent | null {
     try {
       const url = new URL(raw);
       if (NECTAR_HOSTS.test(url.hostname)) {
+        // Printed store sticker: https://app.nectar-pay.com/s/<6-char code>
+        const sm = url.pathname.match(/^\/s\/([0-9A-Za-z]{6})\/?$/);
+        if (sm) return { kind: "nectar_sticker", code: sm[1], raw };
         const pm = url.pathname.match(/^\/(?:pay|i)\/([^/?#]+)\/?$/);
         if (pm && INVOICE_ID.test(pm[1])) {
           return { kind: "nectarpay", invoiceId: pm[1], nonce: url.searchParams.get("t"), raw };
