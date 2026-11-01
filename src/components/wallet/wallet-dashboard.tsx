@@ -219,6 +219,9 @@ export function WalletDashboard() {
     const intent = parseScan(text);
 
     switch (intent.kind) {
+      case "nectar_sticker":
+        setNectarReq({ sticker: { code: intent.code } });
+        return;
       case "nectarpay":
         setNectarReq({ invoiceId: intent.invoiceId, nonce: intent.nonce });
         return;

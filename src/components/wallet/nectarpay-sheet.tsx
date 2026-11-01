@@ -16,6 +16,8 @@ import {
   sendRewardMessage,
   getNectarInvoice,
   selectNectarTsd,
+  lookupNectarSticker,
+  startNectarSticker,
 } from "@/lib/nectarpay.functions";
 import { isPaidStatus, nectarReceiptUrl, type NectarInvoice } from "@/lib/nectarpay";
 import { prepareSend, prepareSplitSend, broadcastSignedTx } from "@/lib/send.functions";
@@ -36,7 +38,8 @@ import { popFireworks, shopNameSize } from "@/lib/wallet/fireworks";
 /** A store checkout: a NectarPay invoice link, or a store's plain pay code (address + amount + name). */
 export type StoreRequest =
   | { invoiceId: string; nonce: string | null }
-  | { direct: { to: string; amount: number | null; merchant: string | null; memo: string | null } };
+  | { direct: { to: string; amount: number | null; merchant: string | null; memo: string | null } }
+  | { sticker: { code: string } };
 
 type Stage = "loading" | "review" | "paying" | "waiting" | "paid" | "error";
 
@@ -67,6 +70,9 @@ export function NectarPaySheet({
 }) {
   const fetchInvoice = useServerFn(getNectarInvoice);
   const selectTsd = useServerFn(selectNectarTsd);
+  const lookupSticker = useServerFn(lookupNectarSticker);
+  const startSticker = useServerFn(startNectarSticker);
+  const stickerBill = useRef<{ code: string; amount: number; id: string; address: string; tsdAmount: number; egiving: NectarInvoice["egiving"] } | null>(null);
   const claimByTx = useServerFn(claimSendReward);
   const [amountInput, setAmountInput] = useState("");
   const [rewardWaiting, setRewardWaiting] = useState(false);
@@ -110,6 +116,27 @@ export function NectarPaySheet({
       setStage("review");
       return;
     }
+    if ("sticker" in request) {
+      setAmountInput("");
+      stickerBill.current = null;
+      (async () => {
+        const r = await lookupSticker({ data: { code: request.sticker.code } });
+        if (cancelled) return;
+        if (r.error !== undefined) { setError(r.error); setStage("error"); return; }
+        setInv({
+          id: "", status: "new", fiatAmount: 0, currency: "USD", acceptsTsd: true, description: null,
+          merchant: { name: r.name, website: null, logoUrl: r.logoUrl }, address: r.address, tsdAmount: null,
+          storeId: r.storeId, egiving: r.egiving, expiresAt: null,
+        } as NectarInvoice);
+        setStage("review");
+        if (r.storeId) {
+          fetchRewardOpts({ data: { storeId: r.storeId, address } })
+            .then((o) => !cancelled && setRewardOpts(o.options))
+            .catch(() => undefined);
+        }
+      })();
+      return () => { cancelled = true; };
+    }
     (async () => {
       const r = await fetchInvoice({ data: { id: request.invoiceId, nonce: request.nonce } });
       if (cancelled) return;
@@ -140,7 +167,7 @@ export function NectarPaySheet({
     return () => {
       cancelled = true;
     };
-  }, [request, fetchInvoice, fetchRewardOpts, address]);
+  }, [request, fetchInvoice, fetchRewardOpts, lookupSticker, address]);
 
   /** Every store payment: ask NectarPay by transaction until it has seen the sale, then show POP + rewards. */
   async function chaseReward(tx: string, payer: string) {
@@ -179,9 +206,29 @@ export function NectarPaySheet({
     setStage("paying");
     try {
       const direct = "direct" in request ? request.direct : null;
+      const sticker = "sticker" in request ? request.sticker : null;
       const directAmount = Number(amountInput);
-      if (direct && (!Number.isFinite(directAmount) || directAmount <= 0)) throw new Error("Enter an amount");
-      const sel = direct
+      if ((direct || sticker) && (!Number.isFinite(directAmount) || directAmount <= 0)) throw new Error("Enter an amount");
+      let invId = inv.id;
+      let bill = inv.fiatAmount;
+      if (sticker) {
+        const want = Math.round(directAmount * 100) / 100;
+        if (want < 0.5 || want > 250) throw new Error("Amount must be between $0.50 and $250");
+        let b = stickerBill.current;
+        if (!b || b.code !== sticker.code || b.amount !== want) {
+          const r = await startSticker({ data: { code: sticker.code, amount: want } });
+          if (r.error !== undefined) throw new Error(r.error);
+          if (!r.invoiceId || !r.tsdAmount) throw new Error("NectarPay didn't start the bill. Don't send; try again.");
+          b = { code: sticker.code, amount: want, id: r.invoiceId, address: r.address, tsdAmount: r.tsdAmount, egiving: r.egiving };
+          stickerBill.current = b;
+          setInv((cur) => cur && { ...cur, id: b!.id, fiatAmount: want, egiving: b!.egiving });
+        }
+        invId = b.id;
+        bill = want;
+      }
+      const sel = sticker && stickerBill.current
+        ? { invoice: { address: stickerBill.current.address, tsdAmount: stickerBill.current.tsdAmount, egiving: stickerBill.current.egiving, merchant: inv.merchant } as Partial<NectarInvoice> & { address: string; tsdAmount: number }, error: null as string | null }
+        : direct
         ? { invoice: { address: direct.to, tsdAmount: Math.round(directAmount * 100) / 100, merchant: inv.merchant } as Partial<NectarInvoice> & { address: string; tsdAmount: number }, error: null as string | null }
         : "invoiceId" in request ? await selectTsd({ data: { id: request.invoiceId, nonce: request.nonce } }) : { invoice: null, error: "Unknown checkout" };
       if (!sel.invoice?.address || !sel.invoice.tsdAmount) {
@@ -231,14 +278,14 @@ export function NectarPaySheet({
         memo: inv.description,
         address: sel.invoice.address,
         receipt: direct ? undefined : {
-          invoiceId: inv.id,
-          fiatAmount: inv.fiatAmount,
+          invoiceId: invId,
+          fiatAmount: bill,
           currency: inv.currency,
-          url: nectarReceiptUrl(inv.id),
+          url: nectarReceiptUrl(invId),
           logoUrl: inv.merchant?.logoUrl ?? null,
         },
       });
-      setInv({ ...inv, ...sel.invoice, merchant: inv.merchant ?? sel.invoice.merchant ?? null } as NectarInvoice);
+      setInv({ ...inv, ...sel.invoice, id: invId, fiatAmount: bill, merchant: inv.merchant ?? sel.invoice.merchant ?? null } as NectarInvoice);
       setTxid(res.txid);
       if (direct) setInv({ ...inv, fiatAmount: amount });
       setStage("paid");
@@ -252,7 +299,7 @@ export function NectarPaySheet({
   }
 
   async function payRewards(kind: RewardKind) {
-    if (!request || !inv || "direct" in request) return;
+    if (!request || !inv || !("invoiceId" in request)) return;
     if (!address || !mnemonic) return toast.error("Unlock your wallet first");
     setStage("paying");
     try {
@@ -276,7 +323,8 @@ export function NectarPaySheet({
     !!rewardOpts && usdBill > 0 && rewardOpts.acceptsCommunity && rewardOpts.communityBalance + 1e-6 >= usdBill;
 
   const name = inv?.merchant?.name ?? "NectarPay store";
-  const isDirect = !!request && "direct" in request;
+  const isDirect = !!request && ("direct" in request || "sticker" in request);
+  const needsAmount = !!request && ("sticker" in request || ("direct" in request && request.direct.amount == null));
 
   return (
     <Sheet
@@ -333,10 +381,10 @@ export function NectarPaySheet({
 
           {(stage === "review" || stage === "paying") && inv && (
             <>
-              {isDirect && request && "direct" in request && request.direct.amount == null && (
+              {needsAmount && (
                 <input
                   inputMode="decimal"
-                  placeholder="Amount in TSD"
+                  placeholder="Amount in USD"
                   value={amountInput}
                   onChange={(e) => { setAmountInput(e.target.value); setReview(null); }}
                   className="h-12 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-lg"
