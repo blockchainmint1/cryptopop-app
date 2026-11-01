@@ -13,6 +13,7 @@ import {
 import coin from "@/assets/cryptopop-coin.png";
 import {
   claimSendReward,
+  reportNectarStickerPaid,
   sendRewardMessage,
   getNectarInvoice,
   selectNectarTsd,
@@ -74,6 +75,7 @@ export function NectarPaySheet({
   const startSticker = useServerFn(startNectarSticker);
   const stickerBill = useRef<{ code: string; amount: number; id: string; address: string; tsdAmount: number; egiving: NectarInvoice["egiving"] } | null>(null);
   const claimByTx = useServerFn(claimSendReward);
+  const reportPaid = useServerFn(reportNectarStickerPaid);
   const [amountInput, setAmountInput] = useState("");
   const [rewardWaiting, setRewardWaiting] = useState(false);
   const prepare = useServerFn(prepareSend);
@@ -290,6 +292,20 @@ export function NectarPaySheet({
       if (direct) setInv({ ...inv, fiatAmount: amount });
       setStage("paid");
       onPaid();
+      const paidBill = stickerBill.current;
+      if (paidBill) {
+        // NectarPay only settles sticker bills when told; retry a few times while the tx propagates.
+        const tx = res.txid;
+        void (async () => {
+          for (let i = 0; i < 6; i++) {
+            try {
+              const r = await reportPaid({ data: { code: paidBill.code, invoiceId: paidBill.id, txid: tx } });
+              if (r.paid || r.status === "confirmed" || r.status === "overpaid") break;
+            } catch (e) { console.warn("[sticker] paid", e); }
+            await new Promise((ok) => setTimeout(ok, 10000));
+          }
+        })();
+      }
       void chaseReward(res.txid, from);
     } catch (e) {
       console.error("[nectarpay] pay", e);

@@ -72,3 +72,26 @@ export async function callSticker(kind: "lookup" | "invoice", input: { code: str
     maxAmount: Number(j.max_amount ?? 250),
   };
 }
+
+/** Tell NectarPay we paid a sticker bill so it settles now (txid is a hint; NectarPay re-verifies on chain). */
+export async function reportStickerPaid(input: { code: string; invoice_id: string; txid: string }): Promise<{ paid: boolean; status: string | null; error?: string }> {
+  const secret = process.env["NFC_PAY_SECRET"];
+  if (!secret) return { paid: false, status: null, error: "not configured" };
+  const body = JSON.stringify({ ...input, request_id: crypto.randomUUID() });
+  try {
+    const res = await fetch(`${BASE}/paid`, {
+      method: "POST",
+      headers: { ...(await claimHeaders(secret, body)), Accept: "application/json", "User-Agent": "Mozilla/5.0 (CryptoPOP wallet)" },
+      body,
+    });
+    const text = await res.text();
+    const ts = res.headers.get("x-hme-timestamp") ?? "";
+    const sig = res.headers.get("x-hme-signature") ?? "";
+    if (!ts || sig !== (await stickerResponseSignature(secret, body, text, ts))) return { paid: false, status: null, error: `unverified ${res.status}` };
+    const j = JSON.parse(text);
+    if (!res.ok || j.error) return { paid: false, status: null, error: String(j.error ?? res.status) };
+    return { paid: j.paid === true, status: j.status ?? null };
+  } catch (e) {
+    return { paid: false, status: null, error: (e as Error).message };
+  }
+}
