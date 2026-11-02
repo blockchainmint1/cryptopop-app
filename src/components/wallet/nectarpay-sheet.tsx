@@ -396,7 +396,7 @@ export function NectarPaySheet({
                 {inv.egiving?.accepted ? (
                   <p className="font-mono text-[10px] uppercase tracking-widest text-neon-lime">Give store</p>
                 ) : isDirect ? (
-                  <p className="text-[11px] text-muted-foreground">This code doesn't say if the store is in Give</p>
+                  <p className="text-[11px] text-muted-foreground">Plain store code · Give uses the standard 90/8/2 split</p>
                 ) : null}
                 {inv.description && (
                   <p className="truncate text-xs text-muted-foreground">{inv.description}</p>
