@@ -584,6 +584,7 @@ export function WalletDashboard() {
         mnemonic={mnemonic}
         tsdBalance={tsd}
         onPaid={() => void refresh()}
+        onSwitch={setNectarReq}
       />
       <WalletLoginSheet
         request={loginReq}
