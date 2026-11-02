@@ -9,7 +9,7 @@ describe("Give split happens only when store is in Give AND payer picked a recip
     const s = giveSplitFor({ egiving: inGive, recipientCode: "CCV", total: 100, merchant: M })!;
     expect(s.recipients).toEqual([
       { to: M, amount: 90 },
-      { to: "Tst3dVnJbFrnx5ChmK6qj9F3M8YNsHWR44", amount: 8 },
+      { to: "TrWxgEwo2HuhCSEJXfhD2fJnJbUzpTnU9t", amount: 8 },
       { to: "ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu", amount: 2 },
     ]);
   });
