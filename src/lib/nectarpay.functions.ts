@@ -328,3 +328,17 @@ export const reportNectarStickerPaid = createServerFn({ method: "POST" })
     const { reportStickerPaid } = await import("./nectarpay-sticker.server");
     return reportStickerPaid({ code: data.code, invoice_id: data.invoiceId, txid: data.txid });
   });
+
+/** NectarPay register QR (inv=… or a bare store address) → signed sale details. */
+export const lookupNectarQr = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ invoiceId: z.string().regex(/^[0-9a-fA-F-]{8,64}$/).nullable(), address: z.string().min(20).max(80) }).parse(d))
+  .handler(async ({ data }) => {
+    const { lookupRegisterQr } = await import("./nectarpay-sticker.server");
+    const r = await lookupRegisterQr(data.invoiceId ? { invoice_id: data.invoiceId } : { address: data.address });
+    // The address we pay must be the one NectarPay signed, and it must match the scanned code.
+    if (r.kind === "invoice" && r.address !== data.address) {
+      return { kind: "none" as const, reason: "error" as const, error: "This code's wallet doesn't match the store's. Don't pay it." };
+    }
+    return r;
+  });

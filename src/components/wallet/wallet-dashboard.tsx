@@ -234,12 +234,9 @@ export function WalletDashboard() {
           return;
         }
         // Store pay codes (named, in TSD) all use the one store checkout.
-        if (intent.invoiceId && intent.asset === "tsd") {
-          setNectarReq({ invoiceId: intent.invoiceId, nonce: null });
-          return;
-        }
-        if (intent.merchant && intent.asset === "tsd") {
-          setNectarReq({ direct: { to: intent.to, amount: intent.amount, merchant: intent.merchant, memo: intent.memo } });
+        // Store pay codes in TSD: ask NectarPay (signed) who the store is, the sale and Give status.
+        if (intent.asset === "tsd" && (intent.invoiceId || intent.merchant)) {
+          setNectarReq({ qr: { invoiceId: intent.invoiceId ?? null, to: intent.to, amount: intent.amount, merchant: intent.merchant, memo: intent.memo } });
           return;
         }
         setSendPrefill({
@@ -587,6 +584,7 @@ export function WalletDashboard() {
         mnemonic={mnemonic}
         tsdBalance={tsd}
         onPaid={() => void refresh()}
+        onSwitch={setNectarReq}
       />
       <WalletLoginSheet
         request={loginReq}
