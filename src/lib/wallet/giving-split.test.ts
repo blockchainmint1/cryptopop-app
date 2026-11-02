@@ -8,7 +8,7 @@ import { signSplitPsbt } from "./sign";
 const PHRASE = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 const from = deriveTxcAddress(PHRASE);
 const merchant = deriveTxcAddress("legal winner thank year wave sausage worth useful legal winner thank yellow");
-const church = "Tst3dVnJbFrnx5ChmK6qj9F3M8YNsHWR44";
+const church = "TrWxgEwo2HuhCSEJXfhD2fJnJbUzpTnU9t";
 const platform = "ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu";
 const network = { messagePrefix: "", bech32: "txc", bip32: { public: 0x0488b21e, private: 0x0488ade4 }, pubKeyHash: 0x42, scriptHash: 0x32, wif: 0xc1 };
 

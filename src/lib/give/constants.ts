@@ -8,7 +8,7 @@
 export const GIVE_CHURCH = {
   name: "Christ Church of the Valley",
   short: "CCV",
-  address: "Tst3dVnJbFrnx5ChmK6qj9F3M8YNsHWR44",
+  address: "TrWxgEwo2HuhCSEJXfhD2fJnJbUzpTnU9t",
 } as const;
 
 export const GIVE_PLATFORM_ADDRESS = "ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu";
