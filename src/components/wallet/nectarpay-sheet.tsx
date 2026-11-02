@@ -384,7 +384,17 @@ export function NectarPaySheet({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display font-semibold uppercase" style={{ fontSize: shopNameSize(name) }}>{name}</p>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <p className="truncate font-display font-semibold uppercase" style={{ fontSize: shopNameSize(name) }}>{name}</p>
+                  {inv.egiving?.accepted && (
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-neon-lime" aria-label="Give store" />
+                  )}
+                </div>
+                {inv.egiving?.accepted ? (
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-neon-lime">Give store</p>
+                ) : isDirect ? (
+                  <p className="text-[11px] text-muted-foreground">This code doesn't say if the store is in Give</p>
+                ) : null}
                 {inv.description && (
                   <p className="truncate text-xs text-muted-foreground">{inv.description}</p>
                 )}
