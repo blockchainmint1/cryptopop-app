@@ -18,6 +18,7 @@ import {
   getNectarInvoice,
   selectNectarTsd,
   lookupNectarSticker,
+  lookupNectarQr,
   startNectarSticker,
 } from "@/lib/nectarpay.functions";
 import { isPaidStatus, nectarReceiptUrl, type NectarInvoice } from "@/lib/nectarpay";
