@@ -136,7 +136,8 @@ export function NectarPaySheet({
         if (r.kind === "sticker") { onSwitch?.({ sticker: { code: r.code } }); return; }
         if (r.kind === "none") {
           // Old plain code NectarPay doesn't know: pay it as a plain store code (no Give split).
-          if (!q.invoiceId && r.reason === "not_found" && onSwitch) {
+          // Also used while NectarPay's lookup is unreachable, so register payments never get stuck.
+          if (r.reason !== "ambiguous" && onSwitch) {
             onSwitch({ direct: { to: q.to, amount: q.amount, merchant: q.merchant, memo: q.memo } });
             return;
           }
