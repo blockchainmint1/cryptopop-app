@@ -299,12 +299,18 @@ export function NectarPaySheet({
           if (r.code) localStorage.setItem(CHOSEN_CHARITY_KEY, r.code); else localStorage.removeItem(CHOSEN_CHARITY_KEY);
         } catch { /* offline: fall back to this phone's copy */ }
       }
+      // Cause wallets come fresh from NectarPay's signed list every payment; never saved.
+      let causes: Charity[] | null = null;
+      if (!direct && recipientCode) {
+        try { causes = parseSignedCauses(await getSignedCauses()); } catch { causes = null; }
+      }
       let res: { txid: string } | null = null;
       for (let attempt = 0; attempt < 2 && !res; attempt++) {
         // Give: split only if this store is in Give AND the payer picked a recipient.
         const split = direct ? null : giveSplitFor({
           egiving: (sel.invoice as Partial<NectarInvoice>).egiving ?? inv.egiving,
           recipientCode,
+          causes,
           total: amount,
           merchant: sel.invoice.address,
         });

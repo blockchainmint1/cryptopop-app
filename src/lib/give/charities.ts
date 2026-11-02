@@ -1,4 +1,3 @@
-import { GIVE_CHURCH } from "./constants";
 import { verifyTxcMessage } from "@/lib/wallet/txc-message";
 
 /** NectarPay's church-list signing address, pinned in the app. */
@@ -40,16 +39,7 @@ export type Charity = {
   featured: boolean;
 };
 
-export const CHARITIES: Charity[] = [
-  {
-    code: GIVE_CHURCH.short,
-    name: GIVE_CHURCH.name,
-    city: "Arizona",
-    blurb: "Our first eGiving church partner.",
-    address: GIVE_CHURCH.address,
-    featured: true,
-  },
-];
+export const CHARITIES: Charity[] = [];
 
 export const CHOSEN_CHARITY_KEY = "cryptopop.give.charity";
 
