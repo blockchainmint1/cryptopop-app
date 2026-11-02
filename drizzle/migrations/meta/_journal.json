@@ -134,6 +134,13 @@
       "when": 1793386237110,
       "tag": "0018_add_pop_award_label",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793649094047,
+      "tag": "0019_give_recipient_on_card_payment",
+      "breakpoints": true
     }
   ]
 }

@@ -6,7 +6,7 @@ import { Transaction } from "@scure/btc-signer";
 import { base64, hex } from "@scure/base";
 import { pubkeyToTxcAddress, verifyTxcMessage } from "@/lib/wallet/txc-message";
 import { splitGiving, validateSend, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
-import { GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
+import { GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
 import { afterResponse } from "@/lib/background.server";
 
 const enc = new TextEncoder();
@@ -182,7 +182,7 @@ export async function executePayment(
   try {
     const key = await decryptKey(k.enc_key);
     const { buildUnsignedSend, buildUnsignedSplitSend, broadcastRaw } = await import("@/lib/send.server");
-    const plan = givingPlan(p.give_discount_pct, Number(p.tsd_amount), p.recipient, c.pocket_address);
+    const plan = givingPlan(p.give_discount_pct, Number(p.tsd_amount), p.recipient, c.pocket_address, p.give_recipient_address);
     let built;
     if (plan) {
       built = await buildUnsignedSplitSend(plan.intent);
@@ -201,7 +201,7 @@ export async function executePayment(
     // Money is out and the sale is recorded: that is the terminal's answer.
     // The alert and the reward follow after the reply so the tap never waits.
     afterResponse(() => notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.` +
-      (plan ? ` 💛 $${plan.church.toFixed(2)} went to ${esc(GIVE_CHURCH.name)}.` : "")), "card alert");
+      (plan ? ` 💛 $${plan.church.toFixed(2)} went to ${esc(p.give_recipient_name ?? "your Give cause")}.` : "")), "card alert");
     try {
       const { queueClaim } = await import("./pop-claim.server");
       await queueClaim({ txid, wallet: c.owner_address, payers: [c.pocket_address], origin: "card" });
@@ -214,17 +214,16 @@ export async function executePayment(
 }
 
 /**
- * eGiving split for a card tap. Uses the demo church for every card until
- * per-wallet church selection exists. Church/fee addresses come from the
- * GIVE_CHURCH / GIVE_FEE secrets but must match the pinned addresses, so a
- * changed secret fails closed instead of redirecting money.
+ * eGiving split for a card tap. The cause wallet was taken from NectarPay's
+ * signed list at tap time; with no such address the tap fails rather than guess.
  */
-export function givingPlan(pct: unknown, total: number, merchant: string, from: string):
+export function givingPlan(pct: unknown, total: number, merchant: string, from: string, churchAddress?: string | null):
   { intent: SplitIntent; church: number } | null {
   if (pct == null) return null;
-  const church = process.env.GIVE_CHURCH?.trim() || GIVE_CHURCH.address;
+  const church = churchAddress?.trim();
+  if (!church || !/^T[1-9A-HJ-NP-Za-km-z]{25,40}$/.test(church)) throw new Error("No approved Give cause wallet for this tap");
   const fee = process.env.GIVE_FEE?.trim() || GIVE_PLATFORM_ADDRESS;
-  if (church !== GIVE_CHURCH.address || fee !== GIVE_PLATFORM_ADDRESS) throw new Error("eGiving addresses don't match the app");
+  if (fee !== GIVE_PLATFORM_ADDRESS) throw new Error("eGiving addresses don't match the app");
   const sp = splitGiving(total, Number(pct));
   if (sp.church <= 0 || sp.platform <= 0) return null;
   return {

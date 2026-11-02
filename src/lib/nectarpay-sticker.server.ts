@@ -12,7 +12,7 @@ export type StickerResult = {
   logoUrl: string | null;
   storeId: string | null;
   address: string;
-  egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd: number | null };
+  egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd: number | null; programAddress?: string | null };
   invoiceId: string | null;
   tsdAmount: number | null;
   minAmount: number;
@@ -65,6 +65,7 @@ export async function callSticker(kind: "lookup" | "invoice", input: { code: str
       accepted: e.accepted === true,
       discountPct: Number.isFinite(Number(e.discountPct)) ? Number(e.discountPct) : null,
       merchantMinimumUsd: min != null && Number.isFinite(Number(min)) ? Number(min) : null,
+      programAddress: progAddr(e.program_address),
     },
     invoiceId: j.invoice_id ?? null,
     tsdAmount: j.crypto_amount != null ? Number(j.crypto_amount) : null,
@@ -99,7 +100,7 @@ export async function reportStickerPaid(input: { code: string; invoice_id: strin
 export type QrLookupResult =
   | { kind: "invoice"; invoiceId: string; status: string; fiatAmount: number; currency: string; tsdAmount: number; address: string;
       name: string; logoUrl: string | null; storeId: string | null;
-      egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd: number | null } }
+      egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd: number | null; programAddress?: string | null } }
   | { kind: "sticker"; code: string }
   | { kind: "none"; reason: "not_found" | "ambiguous" | "error"; error: string };
 
@@ -147,6 +148,11 @@ export async function lookupRegisterQr(input: { invoice_id?: string; address?: s
     name: String(j.merchant?.name ?? "Store"),
     logoUrl: j.merchant?.logo_url ?? null,
     storeId: j.merchant?.id ?? null,
-    egiving: { accepted: e.accepted === true, discountPct: num(e.discountPct), merchantMinimumUsd: num(e.merchantMinimumUsd) },
+    egiving: { accepted: e.accepted === true, discountPct: num(e.discountPct), merchantMinimumUsd: num(e.merchantMinimumUsd), programAddress: progAddr(e.program_address) },
   };
+}
+
+/** Program wallet as NectarPay states it in its signed answer (null if absent or malformed). */
+function progAddr(v: unknown): string | null {
+  return typeof v === "string" && /^T[1-9A-HJ-NP-Za-km-z]{25,40}$/.test(v) ? v : null;
 }

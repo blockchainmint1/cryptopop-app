@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { CHARITIES, CHOSEN_CHARITY_KEY, findByCode, parseSignedCauses, searchCharities, type Charity } from "@/lib/give/charities";
 import { getSignedCauses } from "@/lib/give/causes.functions";
 import { getGiveRecipient, setGiveRecipient } from "@/lib/give/recipient.functions";
-import { pinnedRecipient } from "@/lib/give/split-rule";
 import { ownerEnvelope } from "@/lib/wallet/nfc-cards";
 import { useWallet } from "@/lib/wallet/wallet-context";
 
@@ -64,7 +63,6 @@ function GivePage() {
 
   async function save(c: Charity | null) {
     if (!mnemonic) return toast.error("Unlock your wallet first to save your Give choice");
-    if (c && !pinnedRecipient(c.code)) return toast.error(`${c.name} can't receive Give payments yet`);
     setSaving(true);
     try {
       const r = await setGiveRecipient({ data: ownerEnvelope(mnemonic, "give-set", { code: c?.code ?? null }) });

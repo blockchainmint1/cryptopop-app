@@ -18,14 +18,17 @@ export const setGiveRecipient = createServerFn({ method: "POST" })
     const s = await import("@/lib/nfc-card.server");
     s.verifyOwner(data, "give-set");
     const { code } = z.object({ code: z.string().max(20).nullable() }).parse(JSON.parse(data.body));
-    const { pinnedRecipient } = await import("./split-rule");
+    const { resolveRecipient } = await import("./split-rule");
+    const { fetchVerifiedCauses } = await import("./causes.server");
     const sb = await s.admin();
     if (code === null) {
       await sb.from("give_recipients").delete().eq("owner_address", data.owner);
       return { code: null };
     }
-    const r = pinnedRecipient(code);
-    if (!r) throw new Error("That cause can't receive Give payments yet");
+    const causes = await fetchVerifiedCauses();
+    if (!causes) throw new Error("Couldn't reach NectarPay's Give list — try again");
+    const r = resolveRecipient(code, causes);
+    if (!r) throw new Error("That cause isn't on NectarPay's approved Give list");
     const { error } = await sb.from("give_recipients")
       .upsert({ owner_address: data.owner, charity_code: r.code, updated_at: new Date().toISOString() });
     if (error) throw new Error("Couldn't save your Give choice");

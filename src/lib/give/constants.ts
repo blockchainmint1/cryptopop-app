@@ -1,21 +1,10 @@
 /**
- * eGiving recipients are pinned in the app itself so a compromised server
- * cannot redirect the church or eGiving shares. The server supplies the live
- * addresses from the GIVE_CHURCH / GIVE_FEE secrets; the wallet compares them
- * against these pinned values and refuses to pay on any mismatch. These pins
- * must match the secrets, or every payment fails closed.
+ * Give causes (churches, nonprofits) and their wallets come ONLY from
+ * NectarPay's signed causes list, fetched fresh before every Give payment —
+ * never saved or built into the app, so retired addresses stop at once.
+ * The program's 2% wallet stays pinned here (it is ours, not NectarPay's).
  */
-export const GIVE_CHURCH = {
-  name: "Christ Church of the Valley",
-  short: "CCV",
-  address: "TrWxgEwo2HuhCSEJXfhD2fJnJbUzpTnU9t",
-} as const;
-
 export const GIVE_PLATFORM_ADDRESS = "ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu";
 
 /** Discount used when paying a plain address (no NectarPay invoice). */
 export const GIVE_DEFAULT_DISCOUNT_PCT = 10;
-
-export function configMatchesPinned(cfg: { church: { address: string }; platformAddress: string }) {
-  return cfg.church.address === GIVE_CHURCH.address && cfg.platformAddress === GIVE_PLATFORM_ADDRESS;
-}

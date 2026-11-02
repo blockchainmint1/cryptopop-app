@@ -1,10 +1,12 @@
-import { GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "./constants";
+import { GIVE_PLATFORM_ADDRESS } from "./constants";
+import type { Charity } from "./charities";
 import { givingMinimumUsd, splitGiving } from "@/lib/wallet/transaction-policy";
 
-/** Pinned address for a Give recipient code, or null if that cause can't receive splits yet. */
-export function pinnedRecipient(code: string | null | undefined): { code: string; name: string; address: string } | null {
-  if (!code) return null;
-  return code.trim().toUpperCase() === GIVE_CHURCH.short ? { code: GIVE_CHURCH.short, name: GIVE_CHURCH.name, address: GIVE_CHURCH.address } : null;
+/** The cause for a code, taken only from NectarPay's verified signed list (null if not on it). */
+export function resolveRecipient(code: string | null | undefined, causes: Charity[] | null | undefined): { code: string; name: string; address: string } | null {
+  if (!code || !causes?.length) return null;
+  const c = causes.find((x) => x.code.toUpperCase() === code.trim().toUpperCase());
+  return c ? { code: c.code, name: c.name, address: c.address } : null;
 }
 
 /**
@@ -12,12 +14,13 @@ export function pinnedRecipient(code: string | null | undefined): { code: string
  * Give recipient set. Otherwise the whole amount goes to the store.
  */
 export function giveSplitFor(opts: {
-  egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd?: number | null } | null | undefined;
+  egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd?: number | null; programAddress?: string | null } | null | undefined;
   recipientCode: string | null | undefined;
+  causes: Charity[] | null | undefined;
   total: number;
   merchant: string;
 }) {
-  const r = pinnedRecipient(opts.recipientCode);
+  const r = resolveRecipient(opts.recipientCode, opts.causes);
   const pct = opts.egiving?.accepted ? Number(opts.egiving.discountPct) : NaN;
   if (!r || !Number.isFinite(pct)) return null;
   try {
@@ -27,10 +30,11 @@ export function giveSplitFor(opts: {
     return {
       ...sp,
       recipientName: r.name,
+      recipientAddress: r.address,
       recipients: [
         { to: opts.merchant, amount: sp.merchant },
         { to: r.address, amount: sp.church },
-        { to: GIVE_PLATFORM_ADDRESS, amount: sp.platform },
+        { to: opts.egiving?.programAddress || GIVE_PLATFORM_ADDRESS, amount: sp.platform },
       ],
     };
   } catch {

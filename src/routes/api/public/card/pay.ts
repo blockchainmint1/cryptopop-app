@@ -81,8 +81,10 @@ export const Route = createFileRoute("/api/public/card/pay")({
         if (inv.egiving?.accepted) {
           const { data: gr } = await sb.from("give_recipients").select("charity_code").eq("owner_address", card.owner_address).maybeSingle();
           const { giveSplitFor } = await import("@/lib/give/split-rule");
-          const sp = giveSplitFor({ egiving: inv.egiving, recipientCode: gr?.charity_code ?? null, total: inv.tsdAmount, merchant: inv.address });
-          if (sp) await sb.from("nfc_card_payments").update({ give_discount_pct: sp.discountPct }).eq("id", row.payment_id);
+          const { fetchVerifiedCauses } = await import("@/lib/give/causes.server");
+          const causes = gr?.charity_code ? await fetchVerifiedCauses() : null;
+          const sp = giveSplitFor({ egiving: inv.egiving, recipientCode: gr?.charity_code ?? null, causes, total: inv.tsdAmount, merchant: inv.address });
+          if (sp) await sb.from("nfc_card_payments").update({ give_discount_pct: sp.discountPct, give_recipient_address: sp.recipientAddress, give_recipient_name: sp.recipientName }).eq("id", row.payment_id);
         }
         if (row.status === "approval_required") {
           if (!ownerChat) {
