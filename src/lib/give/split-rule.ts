@@ -14,7 +14,7 @@ export function resolveRecipient(code: string | null | undefined, causes: Charit
  * Give recipient set. Otherwise the whole amount goes to the store.
  */
 export function giveSplitFor(opts: {
-  egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd?: number | null } | null | undefined;
+  egiving: { accepted: boolean; discountPct: number | null; merchantMinimumUsd?: number | null; programAddress?: string | null } | null | undefined;
   recipientCode: string | null | undefined;
   causes: Charity[] | null | undefined;
   total: number;
@@ -34,7 +34,7 @@ export function giveSplitFor(opts: {
       recipients: [
         { to: opts.merchant, amount: sp.merchant },
         { to: r.address, amount: sp.church },
-        { to: GIVE_PLATFORM_ADDRESS, amount: sp.platform },
+        { to: opts.egiving?.programAddress || GIVE_PLATFORM_ADDRESS, amount: sp.platform },
       ],
     };
   } catch {
