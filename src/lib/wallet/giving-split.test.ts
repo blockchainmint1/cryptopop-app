@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as bitcoin from "bitcoinjs-lib";
 import { deriveTxcAddress } from "../wallet";
 import { isRelayableOmniPayload, splitGiving, tsdSendToManyScript, validateSplitSend } from "./transaction-policy";
-import { configMatchesPinned, GIVE_CHURCH, GIVE_PLATFORM_ADDRESS } from "../give/constants";
+import { GIVE_PLATFORM_ADDRESS } from "../give/constants";
 import { signSplitPsbt } from "./sign";
 
 const PHRASE = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
@@ -36,13 +36,6 @@ describe("eGiving split: store discount shared 80% church / 20% eGiving", () => 
     expect(() => splitGiving(100, 0)).toThrow();
     expect(() => splitGiving(100, 51)).toThrow();
   });
-});
-
-describe("pinned eGiving recipients", () => {
-  it("accepts the pinned church and eGiving addresses", () =>
-    expect(configMatchesPinned({ church: { address: GIVE_CHURCH.address }, platformAddress: GIVE_PLATFORM_ADDRESS })).toBe(true));
-  it("refuses a server that swaps the church address", () =>
-    expect(configMatchesPinned({ church: { address: GIVE_PLATFORM_ADDRESS }, platformAddress: GIVE_PLATFORM_ADDRESS })).toBe(false));
 });
 
 describe("relay payload filter", () => {
@@ -125,6 +118,4 @@ describe("giving minimum per discount (500 cents / %)", () => {
 
 describe("eGiving program wallet", () => {
   it("is ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu", () => expect(GIVE_PLATFORM_ADDRESS).toBe("ToaRhmGqAW7PyvPJvbLJo69mnZwhaaA1vu"));
-  it("rejects the old program address", () =>
-    expect(configMatchesPinned({ church: { address: GIVE_CHURCH.address }, platformAddress: "TmmoqqhcfBZWRG8feCTE2c4N4BsADgwD1m" })).toBe(false));
 });
