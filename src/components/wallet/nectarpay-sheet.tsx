@@ -24,6 +24,8 @@ import { isPaidStatus, nectarReceiptUrl, type NectarInvoice } from "@/lib/nectar
 import { prepareSend, prepareSplitSend, broadcastSignedTx } from "@/lib/send.functions";
 import { giveSplitFor } from "@/lib/give/split-rule";
 import { CHOSEN_CHARITY_KEY } from "@/lib/give/charities";
+import { getGiveRecipient } from "@/lib/give/recipient.functions";
+import { ownerEnvelope } from "@/lib/wallet/nfc-cards";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
 import { validateSend, validateSplitSend } from "@/lib/wallet/transaction-policy";
 import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
@@ -241,12 +243,22 @@ export function NectarPaySheet({
         throw new Error(`You need ${amount.toFixed(2)} TSD — you have ${tsdBalance.toFixed(2)}.`);
       }
       const from = sources.find((s) => (s.balances.tsd ?? 0) >= amount)?.address ?? address;
+      // The account's saved Give choice (same one card taps use) wins over this phone's copy,
+      // which is wiped when the app is reinstalled.
+      let recipientCode = localStorage.getItem(CHOSEN_CHARITY_KEY);
+      if (!direct) {
+        try {
+          const r = await getGiveRecipient({ data: ownerEnvelope(mnemonic, "give-get", {}) });
+          recipientCode = r.code;
+          if (r.code) localStorage.setItem(CHOSEN_CHARITY_KEY, r.code); else localStorage.removeItem(CHOSEN_CHARITY_KEY);
+        } catch { /* offline: fall back to this phone's copy */ }
+      }
       let res: { txid: string } | null = null;
       for (let attempt = 0; attempt < 2 && !res; attempt++) {
         // Give: split only if this store is in Give AND the payer picked a recipient.
         const split = direct ? null : giveSplitFor({
           egiving: (sel.invoice as Partial<NectarInvoice>).egiving ?? inv.egiving,
-          recipientCode: localStorage.getItem(CHOSEN_CHARITY_KEY),
+          recipientCode,
           total: amount,
           merchant: sel.invoice.address,
         });
