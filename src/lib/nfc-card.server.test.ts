@@ -70,9 +70,11 @@ describe("card tap eGiving split", async () => {
       { to: M, amount: 90 }, { to: GIVE_CHURCH.address, amount: 8 }, { to: GIVE_PLATFORM_ADDRESS, amount: 2 },
     ]);
   });
-  it("refuses if the church secret differs from the app", () => {
-    process.env.GIVE_CHURCH = "TsomeoneElseXXXXXXXXXXXXXXXXXXXXXX";
-    expect(() => givingPlan(10, 100, M, F)).toThrow();
+  it("never sends the church share to the retired CCV address", () => {
+    process.env.GIVE_CHURCH = "Tst3dVnJbFrnx5ChmK6qj9F3M8YNsHWR44";
+    const to = givingPlan(10, 100, M, F)!.intent.recipients.map((r) => r.to);
+    expect(to).toContain("TrWxgEwo2HuhCSEJXfhD2fJnJbUzpTnU9t");
+    expect(to).not.toContain("Tst3dVnJbFrnx5ChmK6qj9F3M8YNsHWR44");
     delete process.env.GIVE_CHURCH;
   });
 });

@@ -222,7 +222,7 @@ export async function executePayment(
 export function givingPlan(pct: unknown, total: number, merchant: string, from: string):
   { intent: SplitIntent; church: number } | null {
   if (pct == null) return null;
-  const church = process.env.GIVE_CHURCH?.trim() || GIVE_CHURCH.address;
+  const church = GIVE_CHURCH.address; // pinned to NectarPay's signed causes list; the old GIVE_CHURCH secret is no longer trusted
   const fee = process.env.GIVE_FEE?.trim() || GIVE_PLATFORM_ADDRESS;
   if (church !== GIVE_CHURCH.address || fee !== GIVE_PLATFORM_ADDRESS) throw new Error("eGiving addresses don't match the app");
   const sp = splitGiving(total, Number(pct));
