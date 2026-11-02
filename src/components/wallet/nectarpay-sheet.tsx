@@ -24,6 +24,7 @@ import { isPaidStatus, nectarReceiptUrl, type NectarInvoice } from "@/lib/nectar
 import { prepareSend, prepareSplitSend, broadcastSignedTx } from "@/lib/send.functions";
 import { giveSplitFor } from "@/lib/give/split-rule";
 import { CHOSEN_CHARITY_KEY } from "@/lib/give/charities";
+import { GIVE_DEFAULT_DISCOUNT_PCT } from "@/lib/give/constants";
 import { getGiveRecipient } from "@/lib/give/recipient.functions";
 import { ownerEnvelope } from "@/lib/wallet/nfc-cards";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
@@ -246,7 +247,7 @@ export function NectarPaySheet({
       // The account's saved Give choice (same one card taps use) wins over this phone's copy,
       // which is wiped when the app is reinstalled.
       let recipientCode = localStorage.getItem(CHOSEN_CHARITY_KEY);
-      if (!direct) {
+      {
         try {
           const r = await getGiveRecipient({ data: ownerEnvelope(mnemonic, "give-get", {}) });
           recipientCode = r.code;
@@ -256,8 +257,10 @@ export function NectarPaySheet({
       let res: { txid: string } | null = null;
       for (let attempt = 0; attempt < 2 && !res; attempt++) {
         // Give: split only if this store is in Give AND the payer picked a recipient.
-        const split = direct ? null : giveSplitFor({
-          egiving: (sel.invoice as Partial<NectarInvoice>).egiving ?? inv.egiving,
+        // Plain register codes carry no Give info; like the original /give wallet,
+        // assume the standard Give discount so NectarPay counts 90% as paid in full.
+        const split = giveSplitFor({
+          egiving: direct ? { accepted: true, discountPct: GIVE_DEFAULT_DISCOUNT_PCT } : (sel.invoice as Partial<NectarInvoice>).egiving ?? inv.egiving,
           recipientCode,
           total: amount,
           merchant: sel.invoice.address,
@@ -393,7 +396,7 @@ export function NectarPaySheet({
                 {inv.egiving?.accepted ? (
                   <p className="font-mono text-[10px] uppercase tracking-widest text-neon-lime">Give store</p>
                 ) : isDirect ? (
-                  <p className="text-[11px] text-muted-foreground">This code doesn't say if the store is in Give</p>
+                  <p className="text-[11px] text-muted-foreground">Plain store code · Give uses the standard 90/8/2 split</p>
                 ) : null}
                 {inv.description && (
                   <p className="truncate text-xs text-muted-foreground">{inv.description}</p>
