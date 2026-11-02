@@ -24,7 +24,8 @@ import {
 import { isPaidStatus, nectarReceiptUrl, type NectarInvoice } from "@/lib/nectarpay";
 import { prepareSend, prepareSplitSend, broadcastSignedTx } from "@/lib/send.functions";
 import { giveSplitFor } from "@/lib/give/split-rule";
-import { CHOSEN_CHARITY_KEY } from "@/lib/give/charities";
+import { CHOSEN_CHARITY_KEY, parseSignedCauses, type Charity } from "@/lib/give/charities";
+import { getSignedCauses } from "@/lib/give/causes.functions";
 import { getGiveRecipient } from "@/lib/give/recipient.functions";
 import { ownerEnvelope } from "@/lib/wallet/nfc-cards";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
