@@ -42,7 +42,8 @@ import { popFireworks, shopNameSize } from "@/lib/wallet/fireworks";
 export type StoreRequest =
   | { invoiceId: string; nonce: string | null }
   | { direct: { to: string; amount: number | null; merchant: string | null; memo: string | null } }
-  | { sticker: { code: string } };
+  | { sticker: { code: string } }
+  | { qr: { invoiceId: string | null; to: string; amount: number | null; merchant: string | null; memo: string | null } };
 
 type Stage = "loading" | "review" | "paying" | "waiting" | "paid" | "error";
 
@@ -62,6 +63,7 @@ export function NectarPaySheet({
   mnemonic,
   tsdBalance,
   onPaid,
+  onSwitch,
 }: {
   request: StoreRequest | null;
   onClose: () => void;
@@ -70,6 +72,8 @@ export function NectarPaySheet({
   mnemonic: string | null;
   tsdBalance: number | null;
   onPaid: () => void;
+  /** Replace the request (a register QR that turns out to be a sticker, or an unknown plain code). */
+  onSwitch?: (r: StoreRequest) => void;
 }) {
   const fetchInvoice = useServerFn(getNectarInvoice);
   const selectTsd = useServerFn(selectNectarTsd);
@@ -77,6 +81,8 @@ export function NectarPaySheet({
   const startSticker = useServerFn(startNectarSticker);
   const stickerBill = useRef<{ code: string; amount: number; id: string; address: string; tsdAmount: number; egiving: NectarInvoice["egiving"] } | null>(null);
   const claimByTx = useServerFn(claimSendReward);
+  const lookupQr = useServerFn(lookupNectarQr);
+  const qrBill = useRef<{ id: string; address: string; tsdAmount: number; fiat: number; egiving: NectarInvoice["egiving"] } | null>(null);
   const reportPaid = useServerFn(reportNectarStickerPaid);
   const [amountInput, setAmountInput] = useState("");
   const [rewardWaiting, setRewardWaiting] = useState(false);
@@ -119,6 +125,36 @@ export function NectarPaySheet({
       } as unknown as NectarInvoice);
       setStage("review");
       return;
+    }
+    if ("qr" in request) {
+      const q = request.qr;
+      qrBill.current = null;
+      (async () => {
+        const r = await lookupQr({ data: { invoiceId: q.invoiceId, address: q.to } });
+        if (cancelled) return;
+        if (r.kind === "sticker") { onSwitch?.({ sticker: { code: r.code } }); return; }
+        if (r.kind === "none") {
+          // Old plain code NectarPay doesn't know: pay it as a plain store code (no Give split).
+          if (!q.invoiceId && r.reason === "not_found" && onSwitch) {
+            onSwitch({ direct: { to: q.to, amount: q.amount, merchant: q.merchant, memo: q.memo } });
+            return;
+          }
+          setError(r.error); setStage("error"); return;
+        }
+        qrBill.current = { id: r.invoiceId, address: r.address, tsdAmount: r.tsdAmount, fiat: r.fiatAmount, egiving: r.egiving };
+        setInv({
+          id: r.invoiceId, status: r.status, fiatAmount: r.fiatAmount, currency: r.currency, acceptsTsd: true, description: q.memo,
+          merchant: { name: r.name, website: null, logoUrl: r.logoUrl }, address: r.address, tsdAmount: r.tsdAmount,
+          storeId: r.storeId, egiving: r.egiving, expiresAt: null,
+        } as NectarInvoice);
+        setStage(isPaidStatus(r.status) ? "paid" : "review");
+        if (r.storeId) {
+          fetchRewardOpts({ data: { storeId: r.storeId, address } })
+            .then((o) => !cancelled && setRewardOpts(o.options))
+            .catch(() => undefined);
+        }
+      })();
+      return () => { cancelled = true; };
     }
     if ("sticker" in request) {
       setAmountInput("");
@@ -171,7 +207,7 @@ export function NectarPaySheet({
     return () => {
       cancelled = true;
     };
-  }, [request, fetchInvoice, fetchRewardOpts, lookupSticker, address]);
+  }, [request, fetchInvoice, fetchRewardOpts, lookupSticker, lookupQr, onSwitch, address]);
 
   /** Every store payment: ask NectarPay by transaction until it has seen the sale, then show POP + rewards. */
   async function chaseReward(tx: string, payer: string) {
@@ -230,7 +266,15 @@ export function NectarPaySheet({
         invId = b.id;
         bill = want;
       }
-      const sel = sticker && stickerBill.current
+      const qb = "qr" in request ? qrBill.current : null;
+      if ("qr" in request) {
+        if (!qb) throw new Error("Store details aren't loaded yet");
+        invId = qb.id;
+        bill = qb.fiat;
+      }
+      const sel = qb
+        ? { invoice: { address: qb.address, tsdAmount: qb.tsdAmount, egiving: qb.egiving, merchant: inv.merchant } as Partial<NectarInvoice> & { address: string; tsdAmount: number }, error: null as string | null }
+        : sticker && stickerBill.current
         ? { invoice: { address: stickerBill.current.address, tsdAmount: stickerBill.current.tsdAmount, egiving: stickerBill.current.egiving, merchant: inv.merchant } as Partial<NectarInvoice> & { address: string; tsdAmount: number }, error: null as string | null }
         : direct
         ? { invoice: { address: direct.to, tsdAmount: Math.round(directAmount * 100) / 100, merchant: inv.merchant } as Partial<NectarInvoice> & { address: string; tsdAmount: number }, error: null as string | null }
