@@ -1,3 +1,4 @@
+import { nectarPayPartnerKey } from "@/lib/nectarpay-key.server";
 /**
  * NectarPay printed-sticker partner API (POST /api/public/v1/stickers/{lookup,invoice}).
  * Requests are HMAC-signed with NFC_PAY_SECRET; replies are signed back and bound
@@ -31,7 +32,7 @@ export async function stickerResponseSignature(secret: string, reqRaw: string, r
 }
 
 export async function callSticker(kind: "lookup" | "invoice", input: { code: string; amount?: number }): Promise<StickerResult> {
-  const secret = process.env["NFC_PAY_SECRET"];
+  const secret = nectarPayPartnerKey();
   if (!secret) return { error: "Store lookup isn't set up." };
   const body = JSON.stringify({ ...input, request_id: crypto.randomUUID() });
   let res: Response;
@@ -76,7 +77,7 @@ export async function callSticker(kind: "lookup" | "invoice", input: { code: str
 
 /** Tell NectarPay we paid a sticker bill so it settles now (txid is a hint; NectarPay re-verifies on chain). */
 export async function reportStickerPaid(input: { code: string; invoice_id: string; txid: string }): Promise<{ paid: boolean; status: string | null; error?: string }> {
-  const secret = process.env["NFC_PAY_SECRET"];
+  const secret = nectarPayPartnerKey();
   if (!secret) return { paid: false, status: null, error: "not configured" };
   const body = JSON.stringify({ ...input, request_id: crypto.randomUUID() });
   try {
@@ -106,7 +107,7 @@ export type QrLookupResult =
 
 /** Register QR (inv=… or bare address) → signed NectarPay sale details. The QR itself is never trusted. */
 export async function lookupRegisterQr(input: { invoice_id?: string; address?: string }): Promise<QrLookupResult> {
-  const secret = process.env["NFC_PAY_SECRET"];
+  const secret = nectarPayPartnerKey();
   if (!secret) return { kind: "none", reason: "error", error: "Store lookup isn't set up." };
   const body = JSON.stringify({ request_id: crypto.randomUUID(), ...input });
   let res: Response;

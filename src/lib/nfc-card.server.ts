@@ -1,3 +1,4 @@
+import { nectarPayPartnerKey } from "@/lib/nectarpay-key.server";
 // NFC tap-to-pay card service (server only).
 // Holds ONLY per-card pocket keys (m/44'/696969'/1110'/0/N), encrypted at rest.
 // Main wallet keys never reach the server.
@@ -49,7 +50,7 @@ async function secretPrint(secret: string): Promise<string> {
 }
 
 export async function verifyPartner(ts: string | null, sig: string | null, content: string): Promise<boolean> {
-  const secret = process.env.NFC_PAY_SECRET;
+  const secret = nectarPayPartnerKey();
   const reject = async (why: string) => {
     console.warn(`[card/pay] rejected: ${why}`, {
       ts, sigLen: sig?.length ?? 0, bodyLen: content.length,
@@ -58,7 +59,7 @@ export async function verifyPartner(ts: string | null, sig: string | null, conte
     });
     return false;
   };
-  if (!secret) return reject("NFC_PAY_SECRET missing on server");
+  if (!secret) return reject("NectarPay partner key missing on server");
   if (!ts || !/^\d{9,11}$/.test(ts)) return reject("x-hme-timestamp missing or not unix seconds");
   if (!sig || !/^[0-9a-f]{64}$/i.test(sig)) return reject("x-hme-signature missing or not 64 hex chars");
   if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return reject("timestamp more than 5 minutes off");
