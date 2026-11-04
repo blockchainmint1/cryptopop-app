@@ -7,7 +7,7 @@ import { ownerEnvelope, pocketAddress, pocketKeyHex, nfcPocketPath } from "./wal
 
 beforeAll(() => {
   process.env.CARD_KEY_ENC = "test-card-key-secret";
-  process.env.NFC_PAY_SECRET = "test-pay-secret";
+  process.env.NECTARPAY_PARTNER_KEY = "test-pay-secret";
 });
 
 describe("NFC card service", () => {

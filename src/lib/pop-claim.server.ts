@@ -1,3 +1,4 @@
+import { nectarPayPartnerKey } from "@/lib/nectarpay-key.server";
 /**
  * POP for spending at NectarPay merchants.
  * NectarPay decides how many POP a sale earned (POST /api/public/v1/pop/claim,
@@ -56,7 +57,7 @@ export function purchaseLabel(storeName: string | null | undefined) {
 
 
 async function askNectarPay(txid: string, wallet: string, payers: string[]): Promise<ClaimDecision> {
-  const secret = process.env.NFC_PAY_SECRET;
+  const secret = nectarPayPartnerKey();
   if (!secret) return { kind: "retry", reason: "no_secret" };
   const body = JSON.stringify({ txid, shopper_ref: wallet, payer_addresses: payers });
   try {
