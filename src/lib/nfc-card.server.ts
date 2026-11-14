@@ -9,6 +9,7 @@ import { pubkeyToTxcAddress, verifyTxcMessage } from "@/lib/wallet/txc-message";
 import { splitGiving, validateSend, validateSplitSend, type SplitIntent } from "@/lib/wallet/transaction-policy";
 import { GIVE_PLATFORM_ADDRESS } from "@/lib/give/constants";
 import { afterResponse } from "@/lib/background.server";
+import { telegramConnectionKey } from "@/lib/telegram.server";
 
 const enc = new TextEncoder();
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
@@ -109,7 +110,7 @@ export function verifyOwner(env: { owner: string; ts: number; action: string; bo
 const TG = "https://connector-gateway.lovable.dev/telegram";
 export async function tg(method: string, body: Record<string, unknown>) {
   const L = process.env.LOVABLE_API_KEY;
-  const T = process.env.TELEGRAM_API_KEY;
+  const T = telegramConnectionKey();
   if (!L || !T) return null;
   const res = await fetch(`${TG}/${method}`, {
     method: "POST",
@@ -126,7 +127,7 @@ export async function tg(method: string, body: Record<string, unknown>) {
 }
 
 export async function telegramSecret(): Promise<string> {
-  const k = process.env.TELEGRAM_API_KEY ?? "";
+  const k = telegramConnectionKey() ?? "";
   const d = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(`telegram-webhook:${k}`)));
   return base64.encode(d).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }

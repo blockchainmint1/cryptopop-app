@@ -1,13 +1,18 @@
 // Server-only Telegram notifier via Lovable connector gateway.
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/telegram";
 
+/** Linked bot key: the CryptoPOP Notifications connection (suffixed when another bot was linked first). */
+export function telegramConnectionKey(): string | undefined {
+  return process.env.TELEGRAM_API_KEY_1 || process.env.TELEGRAM_API_KEY || undefined;
+}
+
 export async function sendTelegramMessage(opts: {
   chatId: string | number;
   text: string;
   parseMode?: "HTML" | "MarkdownV2";
 }) {
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-  const TELEGRAM_API_KEY = process.env.TELEGRAM_API_KEY;
+  const TELEGRAM_API_KEY = telegramConnectionKey();
   if (!LOVABLE_API_KEY || !TELEGRAM_API_KEY) {
     console.warn("[telegram] missing keys, skipping send");
     return;
