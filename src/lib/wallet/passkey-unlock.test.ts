@@ -106,7 +106,7 @@ describe("passkey answer checks", () => {
   it("new copies are version 2 (key bound to the passkey id); relabelling the version is refused", async () => {
     const rec = await sealed();
     expect(rec.v).toBe(2);
-    await expect(openPayload(prf, { ...rec, v: 1 })).rejects.toThrow();
+    await expect(openPayload(prf, { ...rec, v: 1 as unknown as 2 })).rejects.toThrow();
   });
 
   it("transport hint: drops the cross-device QR route, keeps what the phone reported", () => {
