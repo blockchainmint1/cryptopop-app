@@ -38,6 +38,7 @@
 - [x] Auditor verified all seven fixes in v3 and signed off pending hardware runs
 - [x] Auditor follow-ups: v1 passkey record support removed (refused in loadPasskeyRecord, HKDF salt always bound to credId); restore-drops-flag documented in brief 2.4
 - [x] Publish requested (Nov 16, 23:28 UTC) — live at https://cryptopop-wallet.lovable.app
+- [x] Live-site check after publish: page serves on phone + desktop, production frame-ancestors confirmed in the real header; release feed found reaching two hosts the CSP/CORS refused, fixed to own origin + database only and re-published
 - [ ] Bobby: real payment on iPhone and Android (incl. iPhone with non-Apple password manager)
 
 ## NFC tap-to-pay cards
