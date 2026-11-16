@@ -52,12 +52,12 @@ export type AppRelease = {
   released_at: string;
 };
 
-/** Fixed, key-free places to ask "what's the newest build?". */
-export const RELEASE_FEED_HOSTS = [
-  "https://app.cryptopop.org",
-  "https://cryptopop-app.lovable.app",
-] as const;
-
+/**
+ * Where to ask "what's the newest build?": this app's own origin, then the
+ * database. Cross-origin feeds were removed — the wallet's CSP refused
+ * `app.cryptopop.org` and the other host's CORS refused `cryptopop-app.lovable.app`,
+ * and both read the same `app_releases` table the database fallback below reads.
+ */
 const RELEASE_FEED_PATH = "/api/public/latest-release";
 
 async function fetchFeed(base: string, platform: ReleasePlatform): Promise<AppRelease | null> {
@@ -80,14 +80,8 @@ async function fetchFeed(base: string, platform: ReleasePlatform): Promise<AppRe
 
 /** Newest published release for a platform, or null if no source answers. */
 export async function fetchLatestRelease(platform: ReleasePlatform): Promise<AppRelease | null> {
-  const bases: string[] = [];
   if (typeof window !== "undefined" && window.location.origin.startsWith("http")) {
-    bases.push(window.location.origin);
-  }
-  for (const h of RELEASE_FEED_HOSTS) if (!bases.includes(h)) bases.push(h);
-
-  for (const base of bases) {
-    const rel = await fetchFeed(base, platform);
+    const rel = await fetchFeed(window.location.origin, platform);
     if (rel) return rel;
   }
 
