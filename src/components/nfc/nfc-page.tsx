@@ -14,6 +14,7 @@ import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { signPsbt } from "@/lib/wallet/sign";
+import { approvePayment, PAYMENT_NOT_APPROVED } from "@/lib/wallet/payment-approval";
 import { nfcLinkCard, nfcListCards, nfcUpdateCard, nfcKillCard } from "@/lib/nfc-cards.functions";
 import { normalizeUid, pocketAddress, pocketKeyHex, ownerEnvelope, signPocketSend, nfcPocketPath } from "@/lib/wallet/nfc-cards";
 import { nfcReadAvailable, readCardId } from "@/lib/native/nfc";
@@ -140,6 +141,8 @@ export function NfcPage({ cardId }: { cardId?: string }) {
     if (!mnemonic || !address) return;
     const tsd = Number(fundTsd), txc = Number(fundTxc);
     if (!(tsd >= 0 && txc >= 0) || (!tsd && !txc)) return toast.error("Enter an amount");
+    // Face ID / fingerprint first, while the tap still counts on phone browsers.
+    if (!(await approvePayment(mnemonic, "Approve loading this card"))) return toast.error(PAYMENT_NOT_APPROVED);
     if (!window.confirm(`Send ${tsd ? `${tsd} TSD` : ""}${tsd && txc ? " and " : ""}${txc ? `${txc} TXC` : ""} from your wallet to “${c.label}”?`)) return;
     setFunding(true);
     try {

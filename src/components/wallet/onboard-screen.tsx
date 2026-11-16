@@ -26,7 +26,7 @@ import { peekHmAction } from "@/lib/wallet/hm-backup";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { createMnemonic, isValidMnemonic, normalizeMnemonic, type VaultOrigin } from "@/lib/wallet/vault";
 import { enableBiometric, isBiometricAvailable } from "@/lib/native/biometric";
-import { nativePlatform } from "@/lib/native/platform";
+import { isNative, nativePlatform } from "@/lib/native/platform";
 import { useServerFn } from "@tanstack/react-start";
 import { claimWelcomePop } from "@/lib/welcome.functions";
 import { hmeRef } from "@/lib/hme";
@@ -87,9 +87,10 @@ export function OnboardScreen() {
 
   function goPassword(next: VaultOrigin) {
     setOrigin(next);
+    // Native app only; the web app turns on Face ID / fingerprint in Settings.
     void isBiometricAvailable().then((v) => {
-      setBioAvailable(v);
-      setUseBio(v);
+      setBioAvailable(v && isNative());
+      setUseBio(v && isNative());
     });
     setStep("password");
   }

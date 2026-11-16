@@ -14,8 +14,10 @@ import {
   type ReactNode,
 } from "react";
 import { deriveLegacyTxcAddress, deriveTxcAddress } from "@/lib/wallet";
+import { unlockWithPasskey } from "./passkey-unlock";
 import {
   AUTO_LOCK_MS,
+  cacheSession,
   clearSession,
   createVault,
   deleteVault,
@@ -41,6 +43,8 @@ interface WalletContextValue {
 
   origin: VaultOrigin | null;
   unlock: (password: string) => Promise<boolean>;
+  /** Face ID / fingerprint unlock (installed web app). False when cancelled. */
+  unlockPasskey: () => Promise<boolean>;
   create: (mnemonic: string, password: string, origin: VaultOrigin) => Promise<void>;
   lock: () => void;
   forget: () => void;
@@ -73,6 +77,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const unlock = useCallback(async (password: string) => {
     const p = await unlockVault(password);
     if (!p) return false;
+    setPayload(p);
+    setStatus("unlocked");
+    return true;
+  }, []);
+
+  const unlockPasskey = useCallback(async () => {
+    const p = await unlockWithPasskey();
+    if (!p) return false;
+    cacheSession(p);
     setPayload(p);
     setStatus("unlocked");
     return true;
@@ -193,12 +206,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       legacyAddress,
       origin: payload?.origin ?? vaultMeta()?.origin ?? null,
       unlock,
+      unlockPasskey,
       create,
       lock,
       forget,
       refresh,
     }),
-    [status, payload, address, legacyAddress, unlock, create, lock, forget, refresh],
+    [status, payload, address, legacyAddress, unlock, unlockPasskey, create, lock, forget, refresh],
   );
 
 

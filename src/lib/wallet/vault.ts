@@ -14,6 +14,17 @@ const SESSION_KEY = "cryptopop.wallet.session.v1";
 const BACKUP_KEY = "cryptopop.wallet.backed-up.v1";
 /** Legacy custodial-era mnemonic key — migrated in on first load. */
 const LEGACY_MNEMONIC_KEY = "cryptopop:mnemonic";
+/** Face ID / fingerprint copy of the vault (see passkey-unlock.ts). */
+export const PASSKEY_KEY = "cryptopop.wallet.passkey.v1";
+
+/** Any vault rewrite or removal invalidates the passkey copy. */
+export function clearPasskeyRecord(): void {
+  try {
+    localStorage.removeItem(PASSKEY_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 /** Idle time before the wallet auto-locks. */
 export const AUTO_LOCK_MS = 10 * 60 * 1000;
@@ -59,6 +70,7 @@ export function deleteVault(): void {
   localStorage.removeItem(VAULT_KEY);
   localStorage.removeItem(BACKUP_KEY);
   localStorage.removeItem(LEGACY_MNEMONIC_KEY);
+  clearPasskeyRecord();
   clearSession();
 }
 
@@ -115,6 +127,7 @@ export async function createVault(
   if (password.length < 8) throw new Error("Password must be at least 8 characters.");
   const payload: VaultPayload = { mnemonic: normalized, origin, createdAt: Date.now() };
   const blob = await encryptJson(payload, password);
+  clearPasskeyRecord();
   localStorage.setItem(
     VAULT_KEY,
     JSON.stringify({ blob, meta: { origin, createdAt: payload.createdAt } } satisfies StoredVault),

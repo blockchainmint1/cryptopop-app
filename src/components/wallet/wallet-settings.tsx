@@ -33,7 +33,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { unlockVault, markBackedUp } from "@/lib/wallet/vault";
+import { unlockVault, markBackedUp, type VaultPayload } from "@/lib/wallet/vault";
+import {
+  cancelPasskeyEnroll,
+  disablePasskeyUnlock,
+  finishPasskeyEnroll,
+  startPasskeyEnroll,
+} from "@/lib/wallet/passkey-unlock";
+import { deriveTxcAddress } from "@/lib/wallet";
 import {
   disableBiometric,
   enableBiometric,
@@ -94,7 +101,15 @@ export function WalletSettings({
   const [confirmingReveal, setConfirmingReveal] = useState(false);
   const [hideIn, setHideIn] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [bio, setBio] = useState({ available: false, enabled: false });
+  const [bio, setBio] = useState<{ available: boolean; enabled: boolean; kind: "native" | "passkey" }>({
+    available: false,
+    enabled: false,
+    kind: "native",
+  });
+  // Web passkey setup: password checked → tap to create → (sometimes) one more tap.
+  const [bioStep, setBioStep] = useState<"idle" | "ready" | "finish">("idle");
+  const [bioPayload, setBioPayload] = useState<VaultPayload | null>(null);
+  const [bioBusy, setBioBusy] = useState(false);
   const [notifs, setNotifs] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { user, signOut } = useAuth();
@@ -214,16 +229,73 @@ export function WalletSettings({
     return () => clearTimeout(t);
   }, [phrase, hideIn]);
 
-  async function toggleBiometric() {
-    if (bio.enabled) {
-      await disableBiometric();
-      setBio({ ...bio, enabled: false });
-      toast.success("Biometric unlock turned off");
-      return;
+  function resetBioSetup() {
+    cancelPasskeyEnroll();
+    setBioStep("idle");
+    setBioPayload(null);
+  }
+
+  async function runPasskeyStep() {
+    setBioBusy(true);
+    try {
+      let result: "done" | "needs-tap";
+      if (bioStep === "finish") {
+        await finishPasskeyEnroll();
+        result = "done";
+      } else {
+        if (!bioPayload) return resetBioSetup();
+        let label = "POP Wallet";
+        try {
+          const a = deriveTxcAddress(bioPayload.mnemonic);
+          label = `POP Wallet ${a.slice(0, 4)}…${a.slice(-4)}`;
+        } catch {
+          /* keep default */
+        }
+        result = await startPasskeyEnroll(bioPayload, label);
+      }
+      if (result === "needs-tap") {
+        setBioStep("finish");
+        return;
+      }
+      setBioStep("idle");
+      setBioPayload(null);
+      setBio((b) => ({ ...b, enabled: true }));
+      toast.success("Face ID / fingerprint is on for unlocking and payments");
+    } catch (e) {
+      const name = (e as { name?: string })?.name;
+      toast.error(
+        name === "NotAllowedError" || name === "AbortError"
+          ? "Setup was cancelled."
+          : e instanceof Error
+            ? e.message
+            : "Setup didn't finish.",
+      );
+      resetBioSetup();
+    } finally {
+      setBioBusy(false);
     }
+  }
+
+  async function toggleBiometric() {
+    // Turning it off needs the password too, so a grabbed unlocked phone
+    // can't simply switch off the payment check.
     if (!password) return toast.error("Enter your password first");
     const payload = await unlockVault(password);
     if (!payload) return toast.error("Wrong password");
+    if (bio.enabled) {
+      if (bio.kind === "passkey") disablePasskeyUnlock();
+      else await disableBiometric();
+      setBio({ ...bio, enabled: false });
+      setPassword("");
+      toast.success("Face ID / fingerprint turned off");
+      return;
+    }
+    if (bio.kind === "passkey") {
+      setBioPayload(payload);
+      setBioStep("ready");
+      setPassword("");
+      return;
+    }
     try {
       await enableBiometric(password);
       setBio({ ...bio, enabled: true });
@@ -341,12 +413,57 @@ export function WalletSettings({
           >
             <Eye className="mr-1.5 h-4 w-4" /> Reveal phrase
           </Button>
-          {bio.available && (
-            <Button variant="secondary" className="flex-1 rounded-full" onClick={toggleBiometric}>
-              <Fingerprint className="mr-1.5 h-4 w-4" /> {bio.enabled ? "Turn off" : "Enable"}
-            </Button>
-          )}
         </div>
+        {bio.available && (
+          <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Fingerprint className="h-4 w-4 shrink-0" /> Face ID / fingerprint
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {bio.enabled
+                    ? "On — used to unlock and to approve payments."
+                    : "Unlock and approve payments without typing your password."}
+                </p>
+              </div>
+              {bioStep === "idle" && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="shrink-0 rounded-full"
+                  disabled={!password || busy}
+                  onClick={toggleBiometric}
+                >
+                  {bio.enabled ? "Turn off" : "Turn on"}
+                </Button>
+              )}
+            </div>
+            {bioStep === "idle" && !password && (
+              <p className="text-[11px] text-muted-foreground">
+                Type your wallet password above to turn this {bio.enabled ? "off" : "on"}.
+              </p>
+            )}
+            {bioStep !== "idle" && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {bioStep === "ready"
+                    ? "Password OK. Tap below and your phone will ask for your face or fingerprint."
+                    : "Almost done — tap once more to confirm with your face or fingerprint."}
+                </p>
+                <div className="flex gap-2">
+                  <Button className="flex-1 rounded-full" disabled={bioBusy} onClick={runPasskeyStep}>
+                    {bioBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="mr-1.5 h-4 w-4" />}
+                    {bioStep === "ready" ? "Set up Face ID / fingerprint" : "Finish setup"}
+                  </Button>
+                  <Button variant="ghost" className="rounded-full" disabled={bioBusy} onClick={resetBioSetup}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <Dialog open={confirmingReveal} onOpenChange={setConfirmingReveal}>

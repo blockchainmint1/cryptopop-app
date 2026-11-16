@@ -7,10 +7,12 @@
  * secure store (iOS Keychain / Android Keystore) and only read it back after
  * a successful biometric prompt. The password always remains a fallback.
  *
- * On the web everything here is a no-op: `isBiometricAvailable()` is false and
- * `enableBiometric()` throws.
+ * On the web (installed home-screen app) Face ID / fingerprint uses a passkey
+ * instead — see src/lib/wallet/passkey-unlock.ts. `getBiometricStatus()` reports
+ * that path with kind "passkey"; the other functions here stay native-only.
  */
 import { isNative } from "./platform";
+import { hasPasskeyUnlock, passkeySupported } from "@/lib/wallet/passkey-unlock";
 
 const SECURE_KEY = "cryptopop.wallet.bio.password.v1";
 const FLAG_KEY = "cryptopop.wallet.bio.enabled.v1";
@@ -18,6 +20,7 @@ const FLAG_KEY = "cryptopop.wallet.bio.enabled.v1";
 export interface BiometricStatus {
   available: boolean;
   enabled: boolean;
+  kind: "native" | "passkey";
 }
 
 async function loadPlugins() {
@@ -64,9 +67,13 @@ export function isBiometricEnabled(): boolean {
 }
 
 export async function getBiometricStatus(): Promise<BiometricStatus> {
+  if (!isNative()) {
+    const enabled = hasPasskeyUnlock();
+    return { available: enabled || (await passkeySupported()), enabled, kind: "passkey" };
+  }
   const available = await isBiometricAvailable();
   const enabled = available ? await readFlag() : false;
-  return { available, enabled };
+  return { available, enabled, kind: "native" };
 }
 
 /** Store the wallet password in the OS secure store behind a biometric gate. */

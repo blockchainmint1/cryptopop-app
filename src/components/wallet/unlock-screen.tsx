@@ -6,15 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/lib/wallet/wallet-context";
 import { getBiometricStatus, unlockWithBiometric } from "@/lib/native/biometric";
+import { hasPasskeyUnlock } from "@/lib/wallet/passkey-unlock";
 import logo from "@/assets/cryptopop-logo.png";
 
 /** Password / biometric unlock for an existing on-device vault. */
 export function UnlockScreen() {
-  const { unlock, forget } = useWallet();
+  const { unlock, unlockPasskey, forget } = useWallet();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bio, setBio] = useState({ available: false, enabled: false });
+  const [bio, setBio] = useState<{ available: boolean; enabled: boolean; kind: "native" | "passkey" }>({
+    available: false,
+    enabled: false,
+    kind: "native",
+  });
 
   useEffect(() => {
     getBiometricStatus()
@@ -26,18 +31,26 @@ export function UnlockScreen() {
     setError(null);
     setBusy(true);
     try {
+      if (bio.kind === "passkey") {
+        await unlockPasskey();
+        return;
+      }
       const pw = await unlockWithBiometric();
       if (!pw) return;
       const ok = await unlock(pw);
       if (!ok) setError("Saved biometric password no longer works. Use your password.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Face ID / fingerprint unlock didn't work. Use your password.");
+      if (bio.kind === "passkey") setBio((b) => ({ ...b, enabled: hasPasskeyUnlock() }));
     } finally {
       setBusy(false);
     }
-  }, [unlock]);
+  }, [unlock, unlockPasskey, bio.kind]);
 
-  // Auto-prompt biometrics once when it's enabled on this device.
+  // Auto-prompt once in the native app. Phone browsers only allow the face /
+  // fingerprint prompt straight after a tap, so the web app shows a button.
   useEffect(() => {
-    if (bio.enabled) void tryBiometric();
+    if (bio.enabled && bio.kind === "native") void tryBiometric();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bio.enabled]);
 
@@ -81,7 +94,7 @@ export function UnlockScreen() {
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="mr-1.5 h-4 w-4" />}
             {busy ? "Unlocking…" : "Unlock"}
           </Button>
-          {bio.available && bio.enabled && (
+          {bio.enabled && (
             <Button
               type="button"
               variant="secondary"
@@ -89,7 +102,7 @@ export function UnlockScreen() {
               onClick={tryBiometric}
               disabled={busy}
             >
-              <Fingerprint className="mr-1.5 h-4 w-4" /> Use biometrics
+              <Fingerprint className="mr-1.5 h-4 w-4" /> Unlock with Face ID / fingerprint
             </Button>
           )}
         </form>
