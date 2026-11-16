@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Fingerprint, Loader2, Lock } from "lucide-react";
@@ -108,6 +109,9 @@ export function UnlockScreen() {
         >
           Set up a different wallet
         </button>
+        <Link to="/help" className="mt-4 block text-center text-xs text-muted-foreground underline underline-offset-4">
+          How CryptoPOP works (Help)
+        </Link>
       </main>
     </div>
   );

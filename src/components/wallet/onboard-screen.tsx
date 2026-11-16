@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -440,6 +441,9 @@ export function OnboardScreen() {
             Get a Cold Storage Coin
           </a>
         </p>
+        <Link to="/help" className="mt-4 block text-center text-xs text-muted-foreground underline underline-offset-4">
+          How CryptoPOP works (Help)
+        </Link>
       </main>
 
       <QrScanDialog
