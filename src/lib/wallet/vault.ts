@@ -17,10 +17,30 @@ const LEGACY_MNEMONIC_KEY = "cryptopop:mnemonic";
 /** Face ID / fingerprint copy of the vault (see passkey-unlock.ts). */
 export const PASSKEY_KEY = "cryptopop.wallet.passkey.v1";
 
-/** Any vault rewrite or removal invalidates the passkey copy. */
+/** Best effort: tell the phone's password manager to hide a passkey we no longer use. */
+export function signalForgottenPasskey(rpId: string, credentialId: string): void {
+  try {
+    const pkc = (globalThis as { PublicKeyCredential?: unknown }).PublicKeyCredential as
+      | { signalUnknownCredential?: (o: { rpId: string; credentialId: string }) => Promise<void> }
+      | undefined;
+    void pkc?.signalUnknownCredential?.({ rpId, credentialId })?.catch(() => undefined);
+  } catch {
+    /* unsupported */
+  }
+}
+
+/**
+ * Any vault rewrite (new wallet, password change) or removal invalidates the
+ * passkey copy, and the phone's password manager is told to drop the passkey.
+ */
 export function clearPasskeyRecord(): void {
   try {
+    const raw = localStorage.getItem(PASSKEY_KEY);
     localStorage.removeItem(PASSKEY_KEY);
+    if (raw) {
+      const r = JSON.parse(raw) as { rpId?: unknown; credId?: unknown };
+      if (typeof r?.rpId === "string" && typeof r?.credId === "string") signalForgottenPasskey(r.rpId, r.credId);
+    }
   } catch {
     /* ignore */
   }
@@ -38,6 +58,12 @@ export interface VaultMeta {
 
 export interface VaultPayload extends VaultMeta {
   mnemonic: string;
+  /**
+   * "passkey" = every payment / sensitive change needs a fresh Face ID /
+   * fingerprint check (or the password). Lives inside the password-encrypted
+   * payload, so deleting the passkey copy can't switch the check off.
+   */
+  approval?: "passkey";
 }
 
 interface StoredVault {
@@ -151,6 +177,38 @@ export async function unlockVault(password: string): Promise<VaultPayload | null
   }
 }
 
+/** Check the password without touching the unlocked session. */
+export async function checkVaultPassword(password: string): Promise<VaultPayload | null> {
+  const stored = loadVault();
+  if (!stored || !password) return null;
+  try {
+    return await decryptJson<VaultPayload>(stored.blob, password);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Turn the "approval required" flag on or off inside the password vault.
+ * Needs the password. Leaves the passkey copy alone (the caller writes or
+ * clears it right after). Returns the new payload and vault ciphertext.
+ */
+export async function setVaultApproval(
+  password: string,
+  approval: "passkey" | null,
+): Promise<{ payload: VaultPayload; ct: string }> {
+  const stored = loadVault();
+  if (!stored) throw new Error("No wallet on this phone.");
+  const current = await checkVaultPassword(password);
+  if (!current || !isValidMnemonic(current.mnemonic)) throw new Error("Wrong password");
+  const payload: VaultPayload = { mnemonic: normalizeMnemonic(current.mnemonic), origin: current.origin, createdAt: current.createdAt };
+  if (approval) payload.approval = approval;
+  const blob = await encryptJson(payload, password);
+  localStorage.setItem(VAULT_KEY, JSON.stringify({ blob, meta: stored.meta } satisfies StoredVault));
+  cacheSession(payload);
+  return { payload, ct: blob.ct };
+}
+
 /** Re-encrypt the vault under a new password. */
 export async function changeVaultPassword(current: string, next: string): Promise<void> {
   const payload = await unlockVault(current);
@@ -179,7 +237,12 @@ export function loadSession(): VaultPayload | null {
       clearSession();
       return null;
     }
-    return { mnemonic: entry.mnemonic, origin: entry.origin, createdAt: entry.createdAt };
+    return {
+      mnemonic: entry.mnemonic,
+      origin: entry.origin,
+      createdAt: entry.createdAt,
+      ...(entry.approval ? { approval: entry.approval } : {}),
+    };
   } catch {
     return null;
   }

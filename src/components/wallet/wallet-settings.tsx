@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { unlockVault, markBackedUp, type VaultPayload } from "@/lib/wallet/vault";
+import { unlockVault, markBackedUp, setVaultApproval, type VaultPayload } from "@/lib/wallet/vault";
 import {
   cancelPasskeyEnroll,
   disablePasskeyUnlock,
@@ -109,6 +109,8 @@ export function WalletSettings({
   // Web passkey setup: password checked → tap to create → (sometimes) one more tap.
   const [bioStep, setBioStep] = useState<"idle" | "ready" | "finish">("idle");
   const [bioPayload, setBioPayload] = useState<VaultPayload | null>(null);
+  // Password held only between "password checked" and the setup tap; cleared after.
+  const bioPassword = useRef<string | null>(null);
   const [bioBusy, setBioBusy] = useState(false);
   const [notifs, setNotifs] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -231,6 +233,7 @@ export function WalletSettings({
 
   function resetBioSetup() {
     cancelPasskeyEnroll();
+    bioPassword.current = null;
     setBioStep("idle");
     setBioPayload(null);
   }
@@ -243,7 +246,7 @@ export function WalletSettings({
         await finishPasskeyEnroll();
         result = "done";
       } else {
-        if (!bioPayload) return resetBioSetup();
+        if (!bioPayload || !bioPassword.current) return resetBioSetup();
         let label = "POP Wallet";
         try {
           const a = deriveTxcAddress(bioPayload.mnemonic);
@@ -251,12 +254,13 @@ export function WalletSettings({
         } catch {
           /* keep default */
         }
-        result = await startPasskeyEnroll(bioPayload, label);
+        result = await startPasskeyEnroll(bioPayload, bioPassword.current, label);
       }
       if (result === "needs-tap") {
         setBioStep("finish");
         return;
       }
+      bioPassword.current = null;
       setBioStep("idle");
       setBioPayload(null);
       setBio((b) => ({ ...b, enabled: true }));
@@ -283,14 +287,22 @@ export function WalletSettings({
     const payload = await unlockVault(password);
     if (!payload) return toast.error("Wrong password");
     if (bio.enabled) {
-      if (bio.kind === "passkey") disablePasskeyUnlock();
-      else await disableBiometric();
+      if (bio.kind === "passkey") {
+        // Clear the "approval required" flag in the password vault, then the copy.
+        try {
+          await setVaultApproval(password, null);
+        } catch (e) {
+          return toast.error((e as Error).message);
+        }
+        disablePasskeyUnlock();
+      } else await disableBiometric();
       setBio({ ...bio, enabled: false });
       setPassword("");
       toast.success("Face ID / fingerprint turned off");
       return;
     }
     if (bio.kind === "passkey") {
+      bioPassword.current = password;
       setBioPayload(payload);
       setBioStep("ready");
       setPassword("");

@@ -27,6 +27,15 @@
 - [ ] NectarPay-side build (blocked: other project)
 - [ ] On-chain reward tokens per store/market (later; ledger works without it)
 
+## Face ID / fingerprint audit fixes (Nov 16)
+- [x] Fail closed: "approval required" flag inside the password-locked wallet; missing/out-of-date Face ID copy asks for password
+- [x] Tell the phone's password manager to drop the passkey on password change / wallet removal
+- [x] Tighter checks: exact 32-byte secret, byte compare of passkey ID, confirm face/fingerprint (UV) flag
+- [x] Clean up half-made passkey on any setup failure
+- [x] Face ID for card setting changes (except turning off / lost) and Give cause changes
+- [x] Auditor's 3 tests + updated audit brief + code bundle for auditor
+- [ ] Bobby: real payment on iPhone and Android (incl. iPhone with non-Apple password manager)
+
 ## NFC tap-to-pay cards
 - [x] /nfc test page: read card (Android Chrome), link, pockets at 1110'/0/N, balances, on/off, fund, lost
 - [x] Server card service: encrypted per-card key, PIN, limits ($100/tap, $500/day)

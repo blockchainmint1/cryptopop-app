@@ -11,6 +11,7 @@ import {
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { WalletProvider } from "@/lib/wallet/wallet-context";
+import { PasswordApprovalDialog } from "@/components/wallet/password-approval-dialog";
 import { initNativeShell } from "@/lib/native/shell";
 import { OfflineGate } from "@/components/offline-gate";
 import { NearbyAlerts } from "@/components/nearby-alerts";
@@ -145,6 +146,7 @@ function RootComponent() {
           <OfflineGate />
           <NearbyAlerts />
           <InstallInstructionsAutoPopup />
+          <PasswordApprovalDialog />
           <Toaster richColors position="top-center" />
         </WalletProvider>
       </AuthProvider>

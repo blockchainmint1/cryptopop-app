@@ -14,7 +14,7 @@ import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { getAddressChainSummary } from "@/lib/chain-public.functions";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { signPsbt } from "@/lib/wallet/sign";
-import { approvePayment, PAYMENT_NOT_APPROVED } from "@/lib/wallet/payment-approval";
+import { approvePayment, CHANGE_NOT_APPROVED, PAYMENT_NOT_APPROVED } from "@/lib/wallet/payment-approval";
 import { nfcLinkCard, nfcListCards, nfcUpdateCard, nfcKillCard } from "@/lib/nfc-cards.functions";
 import { normalizeUid, pocketAddress, pocketKeyHex, ownerEnvelope, signPocketSend, nfcPocketPath } from "@/lib/wallet/nfc-cards";
 import { nfcReadAvailable, readCardId } from "@/lib/native/nfc";
@@ -94,6 +94,8 @@ export function NfcPage({ cardId }: { cardId?: string }) {
     const id = normalizeUid(uid);
     if (id.length < 4) return toast.error("Card ID looks too short");
     if (!/^\d{4,8}$/.test(pin)) return toast.error("PIN must be 4–8 digits");
+    // Face ID / fingerprint first, while the tap still counts on phone browsers.
+    if (!(await approvePayment(mnemonic, "Approve linking this card"))) return toast.error(CHANGE_NOT_APPROVED);
     const index = data.usedIndices.reduce((m, i) => Math.max(m, i + 1), 0);
     setBusy(true);
     try {
@@ -117,6 +119,9 @@ export function NfcPage({ cardId }: { cardId?: string }) {
 
   async function update(c: CardRow, patch: Record<string, unknown>, ok?: string) {
     if (!mnemonic) return;
+    // Turning a card off is always allowed; anything that lets it spend needs Face ID.
+    const turningOff = Object.keys(patch).length === 1 && patch.enabled === false;
+    if (!turningOff && !(await approvePayment(mnemonic, "Approve this card change"))) return toast.error(CHANGE_NOT_APPROVED);
     try {
       await updateFn({ data: ownerEnvelope(mnemonic, "update", { id: c.id, ...patch }) });
       if (ok) toast.success(ok);
@@ -128,6 +133,8 @@ export function NfcPage({ cardId }: { cardId?: string }) {
 
   async function updateWallet(patch: Record<string, unknown>, ok?: string) {
     if (!mnemonic) return;
+    // Telegram alerts approve over-limit taps, so linking / unlinking needs Face ID.
+    if (!(await approvePayment(mnemonic, "Approve this alert change"))) return toast.error(CHANGE_NOT_APPROVED);
     try {
       await updateFn({ data: ownerEnvelope(mnemonic, "update", patch) });
       if (ok) toast.success(ok);
