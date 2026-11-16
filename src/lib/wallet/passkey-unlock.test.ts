@@ -231,6 +231,17 @@ describe("Face ID setup (browser stubs)", () => {
     expect(io.askPassword).toHaveBeenCalled();
   });
 
+  it("refuses an older v1 Face ID copy instead of loading it", async () => {
+    await createVault(A, "right-password", "generated");
+    create.mockResolvedValue(fakeCreated(prf));
+    await startPasskeyEnroll(payload, "right-password", "POP");
+    const rec = loadPasskeyRecord() as PasskeyRecord;
+    expect(rec.v).toBe(2);
+    // An attacker (or stale test data) cannot put a zero-salt v1 copy back in storage.
+    store.set(PASSKEY_KEY, JSON.stringify({ ...rec, v: 1 }));
+    expect(loadPasskeyRecord()).toBeNull();
+  });
+
   it("changing the password drops the Face ID copy and tells the phone", async () => {
     await createVault(A, "right-password", "generated");
     create.mockResolvedValue(fakeCreated(prf));

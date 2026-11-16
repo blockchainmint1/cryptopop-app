@@ -35,8 +35,8 @@ export const PASSKEY_UNSUPPORTED =
   "This phone can't use Face ID / fingerprint for the web app yet. Keep using your password.";
 
 export interface PasskeyRecord {
-  /** 1 = older test setups (zero HKDF salt); 2 = HKDF salt bound to credId. */
-  v: 1 | 2;
+  /** Record format version. Only 2 is accepted: the HKDF salt is bound to credId. */
+  v: 2;
   credId: string;
   rpId: string;
   salt: string;
@@ -116,11 +116,11 @@ export function checkAssertion(rawId: Uint8Array, authData: Uint8Array, credId: 
   if (!userVerified(authData)) throw new Error("The phone didn't confirm your face or fingerprint. Use your password.");
 }
 
-async function keyFromPrf(prf: Uint8Array, r: Pick<PasskeyRecord, "v" | "credId">): Promise<CryptoKey> {
+async function keyFromPrf(prf: Uint8Array, r: Pick<PasskeyRecord, "credId">): Promise<CryptoKey> {
   if (prf.byteLength !== 32) throw new Error("Passkey secret has the wrong size");
   const base = await crypto.subtle.importKey("raw", toAB(prf), "HKDF", false, ["deriveKey"]);
-  // v2 binds the derived key to the passkey id; v1 (older test setups) used a zero salt.
-  const salt = r.v === 2 ? toAB(enc.encode(r.credId)) : new ArrayBuffer(32);
+  // The derived key is bound to the passkey id, so a copy can't be relabelled onto another credential.
+  const salt = toAB(enc.encode(r.credId));
   return crypto.subtle.deriveKey(
     { name: "HKDF", hash: "SHA-256", salt, info: toAB(HKDF_INFO) },
     base,
@@ -201,7 +201,8 @@ export function loadPasskeyRecord(): PasskeyRecord | null {
     const raw = localStorage.getItem(PASSKEY_KEY);
     if (!raw) return null;
     const r = JSON.parse(raw) as PasskeyRecord;
-    if ((r?.v !== 1 && r?.v !== 2) || !r.credId || !r.rpId || !r.salt || !r.iv || !r.ct || !r.vaultTag) return null;
+    // v1 (zero-salt) records are refused outright: the feature never shipped, so none exist in the wild.
+    if (r?.v !== 2 || !r.credId || !r.rpId || !r.salt || !r.iv || !r.ct || !r.vaultTag) return null;
     return r;
   } catch {
     return null;
