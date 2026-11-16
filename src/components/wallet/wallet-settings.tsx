@@ -471,6 +471,7 @@ export function WalletSettings({
           >
             Get the Android app
           </a>
+          <Link to="/help" className="font-semibold text-foreground/80 transition hover:text-foreground">Help & how-to</Link>
           <Link to="/events" className="transition hover:text-foreground">Events</Link>
           <Link to="/privacy" className="transition hover:text-foreground">Privacy policy</Link>
           <Link to="/terms" className="transition hover:text-foreground">Terms</Link>
