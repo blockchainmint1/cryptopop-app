@@ -102,7 +102,7 @@ export function UpdateCheckCard() {
         </p>
       </div>
 
-      {status === "update" && newerRelease && latest && (
+      {native && status === "update" && newerRelease && latest && (
         <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-3">
           <p className="text-sm">
             <span className="font-medium">Version {latest.version}</span> is available

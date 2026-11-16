@@ -41,12 +41,16 @@ export function NfcPage({ cardId }: { cardId?: string }) {
   const [busy, setBusy] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [nfcOk, setNfcOk] = useState(false);
+  const [iosBrowser, setIosBrowser] = useState(false);
   const [fundIdx, setFundIdx] = useState<number | null>(null);
   const [fundTsd, setFundTsd] = useState("100");
   const [fundTxc, setFundTxc] = useState("1");
   const [funding, setFunding] = useState(false);
 
-  useEffect(() => setNfcOk(nfcReadAvailable()), []);
+  useEffect(() => {
+    setNfcOk(nfcReadAvailable());
+    setIosBrowser(/iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }, []);
 
   const refresh = useCallback(async () => {
     if (!mnemonic) return;
@@ -335,8 +339,9 @@ export function NfcPage({ cardId }: { cardId?: string }) {
           <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
             <p className="text-sm font-medium">This device can't read cards directly</p>
             <p className="text-xs text-muted-foreground">
-              iPhones can't read NFC cards in a web browser. Type the card's UID below, or tap the camera to scan a QR code of it — e.g. read the card
-              with an NFC inspector on the terminal and show its UID as a QR.
+              {iosBrowser
+                ? "iPhones can't read NFC cards in a web browser. Type the card's UID below, or tap the camera to scan a QR code of it — e.g. read the card with an NFC inspector on the terminal and show its UID as a QR."
+                : "This browser can't read NFC cards. Type the card's UID below, or tap the camera to scan a QR code of it — e.g. read the card with an NFC inspector on the terminal and show its UID as a QR."}
             </p>
           </div>
         )}

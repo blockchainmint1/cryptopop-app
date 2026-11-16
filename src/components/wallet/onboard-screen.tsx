@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { QrScanDialog } from "./qr-scan-dialog";
+import { InstallHintLine } from "@/components/install-app-prompt";
 import { CloudRestorePanel } from "./cloud-restore-panel";
 import { RESTORE_INTENT_KEY } from "@/lib/wallet/cloud-account";
 import { HmRestorePanel } from "./hm-restore-panel";
@@ -444,6 +445,7 @@ export function OnboardScreen() {
         <Link to="/help" className="mt-4 block text-center text-xs text-muted-foreground underline underline-offset-4">
           How CryptoPOP works (Help)
         </Link>
+        <InstallHintLine />
       </main>
 
       <QrScanDialog

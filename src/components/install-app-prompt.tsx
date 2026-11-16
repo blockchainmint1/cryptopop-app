@@ -113,6 +113,38 @@ export function InstallInstructionsAutoPopup() {
   return <InstallInstructionsDialog os="android" onClose={() => setShow(false)} />;
 }
 
+/** One-line "add to home screen" hint for the welcome screen. */
+export function InstallHintLine() {
+  const [os, setOs] = useState<"ios" | "android" | null>(null);
+
+  useEffect(() => {
+    if (isNative() || isStandalone()) return;
+    const p = platform();
+    if (p === "ios") setOs("ios");
+    else if (p === "android") setOs("android");
+  }, []);
+
+  if (!os) return null;
+
+  return (
+    <p className="mt-4 block text-center text-xs text-muted-foreground">
+      {os === "ios" ? (
+        <>
+          In Safari, tap <Share className="inline h-3 w-3" /> Share, then{" "}
+          <span className="font-semibold text-foreground">Add to Home Screen</span> to install POP
+          Wallet.
+        </>
+      ) : (
+        <>
+          In Chrome, tap the ⋮ menu, then{" "}
+          <span className="font-semibold text-foreground">Install app</span> to put POP Wallet on
+          your home screen.
+        </>
+      )}
+    </p>
+  );
+}
+
 /** "Add POP Wallet to your home screen" card for iPhone and Android browsers. */
 export function InstallAppPrompt({ dismissible = true }: { dismissible?: boolean }) {
   const [mode, setMode] = useState<"hidden" | "ios" | "other">("hidden");
