@@ -39,7 +39,7 @@ import {
   enableBiometric,
   getBiometricStatus,
 } from "@/lib/native/biometric";
-import { CloudBackupCard } from "./cloud-backup-card";
+// import { CloudBackupCard } from "./cloud-backup-card"; // hidden: Google Cloud backup option
 import { HmBackupCard } from "./hm-backup-card";
 import { UpdateCheckCard } from "./update-check-card";
 import { EcosystemLinksCard } from "./ecosystem-links-card";
@@ -418,7 +418,7 @@ export function WalletSettings({
         <Switch checked={nearby} onCheckedChange={toggleNearby} aria-label="Nearby alerts" />
       </div>
 
-      <CloudBackupCard />
+      {/* Cloud backup (Google/Apple) hidden at Bobby's request — component kept for later. */}
       <HmBackupCard />
 
       <EcosystemLinksCard initialPayload={ecosystemLink} />
