@@ -35,8 +35,10 @@
 - [x] Face ID for card setting changes (except turning off / lost) and Give cause changes
 - [x] Auditor's 3 tests + updated audit brief + code bundle for auditor
 - [x] Line-level review (Nov 16): production embedding lock, password change keeps the payment check, phone-app check honours it, 2-min setup timeout, "wallet locked" message, faster prompt hint, credential-bound key; brief v3 + bundle
+- [x] Auditor verified all seven fixes in v3 and signed off pending hardware runs
+- [x] Auditor follow-ups: v1 passkey record support removed (refused in loadPasskeyRecord, HKDF salt always bound to credId); restore-drops-flag documented in brief 2.4
+- [x] Publish requested (Nov 16, 23:28 UTC) — live at https://cryptopop-wallet.lovable.app
 - [ ] Bobby: real payment on iPhone and Android (incl. iPhone with non-Apple password manager)
-- [ ] Auditor sign-off on v3, then publish
 
 ## NFC tap-to-pay cards
 - [x] /nfc test page: read card (Android Chrome), link, pockets at 1110'/0/N, balances, on/off, fund, lost
@@ -44,5 +46,5 @@
 - [x] Telegram approvals over limits (code built; bot webhook pending Bobby's OK)
 - [x] NectarPay tap → pay endpoint /api/public/card/pay
 - [ ] NectarPay builds checkout side + saves NFC_PAY_SECRET
-- [ ] Publish so the endpoint is live
+- [x] Publish so the endpoint is live (requested Nov 16)
 - [ ] Bobby: register 1110' "CryptoPOP NFC cards" in HME path list
