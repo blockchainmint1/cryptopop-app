@@ -14,7 +14,7 @@ import {
   type ReactNode,
 } from "react";
 import { deriveLegacyTxcAddress, deriveTxcAddress } from "@/lib/wallet";
-import { unlockWithPasskey } from "./passkey-unlock";
+import { cancelPasskeyEnroll, unlockWithPasskey } from "./passkey-unlock";
 import {
   AUTO_LOCK_MS,
   cacheSession,
@@ -26,6 +26,7 @@ import {
   touchSession,
   unlockVault,
   vaultMeta,
+  WALLET_LOCKED_EVENT,
   type VaultOrigin,
   type VaultPayload,
 } from "./vault";
@@ -102,6 +103,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const lock = useCallback(() => {
     clearSession();
+    // A half-finished Face ID setup holds the password; drop it on lock.
+    cancelPasskeyEnroll();
     setPayload(null);
     setStatus(hasVault() ? "locked" : "none");
   }, []);
@@ -111,6 +114,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setPayload(null);
     setStatus("none");
   }, []);
+
+  // A payment check that found the session already expired sends us to unlock.
+  useEffect(() => {
+    const onLocked = () => lock();
+    window.addEventListener(WALLET_LOCKED_EVENT, onLocked);
+    return () => window.removeEventListener(WALLET_LOCKED_EVENT, onLocked);
+  }, [lock]);
 
   // Sliding auto-lock on activity + lock shortly after backgrounding.
   useEffect(() => {

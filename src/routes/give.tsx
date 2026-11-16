@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, Heart, Search } from "lucide-react";
 import { toast } from "sonner";
-import { approvePayment, CHANGE_NOT_APPROVED } from "@/lib/wallet/payment-approval";
+import { approvePayment, notApprovedMessage } from "@/lib/wallet/payment-approval";
 import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,7 @@ function GivePage() {
   async function save(c: Charity | null) {
     if (!mnemonic) return toast.error("Unlock your wallet first to save your Give choice");
     // Face ID / fingerprint first, while the tap still counts on phone browsers.
-    if (!(await approvePayment(mnemonic, "Approve your Give choice"))) return toast.error(CHANGE_NOT_APPROVED);
+    if (!(await approvePayment(mnemonic, "Approve your Give choice"))) return toast.error(notApprovedMessage("change"));
     setSaving(true);
     try {
       const r = await setGiveRecipient({ data: ownerEnvelope(mnemonic, "give-set", { code: c?.code ?? null }) });

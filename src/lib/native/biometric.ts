@@ -62,6 +62,12 @@ async function readFlag(): Promise<boolean> {
   }
 }
 
+/** Native shell only: has the person turned on the phone's own biometric lock? */
+export async function isNativeBiometricOn(): Promise<boolean> {
+  if (!isNative()) return false;
+  return readFlag();
+}
+
 export function isBiometricEnabled(): boolean {
   return cachedFlag === true;
 }

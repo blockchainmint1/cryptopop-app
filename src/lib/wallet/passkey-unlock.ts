@@ -35,7 +35,8 @@ export const PASSKEY_UNSUPPORTED =
   "This phone can't use Face ID / fingerprint for the web app yet. Keep using your password.";
 
 export interface PasskeyRecord {
-  v: 1;
+  /** 1 = older test setups (zero HKDF salt); 2 = HKDF salt bound to credId. */
+  v: 1 | 2;
   credId: string;
   rpId: string;
   salt: string;
@@ -44,6 +45,24 @@ export interface PasskeyRecord {
   /** SHA-256 of the password vault ciphertext this copy belongs to. */
   vaultTag: string;
   createdAt: number;
+  /** How the phone said it reaches this passkey (hint only; never "hybrid"). */
+  transports?: string[];
+}
+
+/** Half-finished setup is dropped after this long, so the password isn't kept. */
+export const PENDING_SETUP_MS = 2 * 60_000;
+
+const KNOWN_TRANSPORTS = new Set(["internal", "usb", "nfc", "ble", "smart-card"]);
+
+/**
+ * Transport hint for allowCredentials. Dropping "hybrid" keeps desktop Chrome
+ * from offering the cross-device QR flow for a passkey that lives on this
+ * device; keeping what the phone reported (instead of forcing "internal")
+ * keeps third-party password managers such as 1Password working.
+ */
+export function passkeyTransports(reported: readonly string[] | undefined | null): AuthenticatorTransport[] {
+  const list = (reported ?? []).filter((t) => KNOWN_TRANSPORTS.has(t));
+  return (list.length ? list : ["internal"]) as AuthenticatorTransport[];
 }
 
 /* -------------------------------- encoding -------------------------------- */
@@ -97,11 +116,13 @@ export function checkAssertion(rawId: Uint8Array, authData: Uint8Array, credId: 
   if (!userVerified(authData)) throw new Error("The phone didn't confirm your face or fingerprint. Use your password.");
 }
 
-async function keyFromPrf(prf: Uint8Array): Promise<CryptoKey> {
+async function keyFromPrf(prf: Uint8Array, r: Pick<PasskeyRecord, "v" | "credId">): Promise<CryptoKey> {
   if (prf.byteLength !== 32) throw new Error("Passkey secret has the wrong size");
   const base = await crypto.subtle.importKey("raw", toAB(prf), "HKDF", false, ["deriveKey"]);
+  // v2 binds the derived key to the passkey id; v1 (older test setups) used a zero salt.
+  const salt = r.v === 2 ? toAB(enc.encode(r.credId)) : new ArrayBuffer(32);
   return crypto.subtle.deriveKey(
-    { name: "HKDF", hash: "SHA-256", salt: new ArrayBuffer(32), info: toAB(HKDF_INFO) },
+    { name: "HKDF", hash: "SHA-256", salt, info: toAB(HKDF_INFO) },
     base,
     { name: "AES-GCM", length: 256 },
     false,
@@ -121,14 +142,15 @@ export async function vaultTagOf(vaultCiphertext: string): Promise<string> {
 export async function sealPayload(
   prf: Uint8Array,
   payload: VaultPayload,
-  meta: { credId: string; rpId: string; salt: string; vaultTag: string },
+  meta: { credId: string; rpId: string; salt: string; vaultTag: string; transports?: string[] },
 ): Promise<PasskeyRecord> {
   if (!isValidMnemonic(payload.mnemonic)) throw new Error("Wallet phrase isn't valid");
-  const base = { v: 1 as const, ...meta };
+  const { transports, ...rest } = meta;
+  const base = { v: 2 as const, ...rest };
   const iv = rand(12);
   const ct = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv: toAB(iv), additionalData: aad(base) },
-    await keyFromPrf(prf),
+    await keyFromPrf(prf, base),
     toAB(
       enc.encode(
         JSON.stringify({
@@ -140,14 +162,20 @@ export async function sealPayload(
       ),
     ),
   );
-  return { ...base, iv: b64url(iv), ct: b64url(ct), createdAt: Date.now() };
+  return {
+    ...base,
+    iv: b64url(iv),
+    ct: b64url(ct),
+    createdAt: Date.now(),
+    ...(transports ? { transports: passkeyTransports(transports) } : {}),
+  };
 }
 
 /** Decrypt a passkey copy. Throws on a wrong secret or any tampering. */
 export async function openPayload(prf: Uint8Array, rec: PasskeyRecord): Promise<VaultPayload> {
   const pt = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv: toAB(b64urlDecode(rec.iv)), additionalData: aad(rec) },
-    await keyFromPrf(prf),
+    await keyFromPrf(prf, rec),
     toAB(b64urlDecode(rec.ct)),
   );
   const p = JSON.parse(dec.decode(pt)) as VaultPayload;
@@ -173,7 +201,7 @@ export function loadPasskeyRecord(): PasskeyRecord | null {
     const raw = localStorage.getItem(PASSKEY_KEY);
     if (!raw) return null;
     const r = JSON.parse(raw) as PasskeyRecord;
-    if (r?.v !== 1 || !r.credId || !r.rpId || !r.salt || !r.iv || !r.ct || !r.vaultTag) return null;
+    if ((r?.v !== 1 && r?.v !== 2) || !r.credId || !r.rpId || !r.salt || !r.iv || !r.ct || !r.vaultTag) return null;
     return r;
   } catch {
     return null;
@@ -229,12 +257,12 @@ export async function passkeySupported(): Promise<boolean> {
   }
 }
 
-async function evalPrf(credId: string, rpId: string, salt: string): Promise<Uint8Array | null> {
+async function evalPrf(credId: string, rpId: string, salt: string, transports?: string[]): Promise<Uint8Array | null> {
   const cred = (await navigator.credentials.get({
     publicKey: {
       challenge: toAB(rand(32)),
       rpId,
-      allowCredentials: [{ type: "public-key", id: toAB(b64urlDecode(credId)) }],
+      allowCredentials: [{ type: "public-key", id: toAB(b64urlDecode(credId)), transports: passkeyTransports(transports) }],
       userVerification: "required",
       timeout: 60_000,
       extensions: { prf: { eval: { first: toAB(b64urlDecode(salt)) } } } as AuthenticationExtensionsClientInputs,
@@ -248,12 +276,31 @@ async function evalPrf(credId: string, rpId: string, salt: string): Promise<Uint
   return prf;
 }
 
-let pending: { credId: string; rpId: string; salt: string; payload: VaultPayload; password: string } | null = null;
+let pending: {
+  credId: string;
+  rpId: string;
+  salt: string;
+  transports: string[];
+  payload: VaultPayload;
+  password: string;
+} | null = null;
+let pendingTimer: ReturnType<typeof setTimeout> | null = null;
 
-/** Drop a half-made setup: forget the passkey, write nothing. */
+function clearPendingTimer() {
+  if (pendingTimer) clearTimeout(pendingTimer);
+  pendingTimer = null;
+}
+
+/** Drop a half-made setup: forget the passkey, write nothing, drop the password. */
 function abandonPending() {
+  clearPendingTimer();
   if (pending) forgetCredential(pending.rpId, pending.credId);
   pending = null;
+}
+
+/** True while a setup is waiting for its second tap (password held in memory). */
+export function hasPendingPasskeySetup(): boolean {
+  return pending !== null;
 }
 
 async function savePending(prf: Uint8Array) {
@@ -264,7 +311,7 @@ async function savePending(prf: Uint8Array) {
   try {
     if (!sameWallet(payload, p.payload.mnemonic)) throw new Error("Setup check failed. Try again.");
     const tag = await vaultTagOf(ct);
-    const rec = await sealPayload(prf, payload, { credId: p.credId, rpId: p.rpId, salt: p.salt, vaultTag: tag });
+    const rec = await sealPayload(prf, payload, { credId: p.credId, rpId: p.rpId, salt: p.salt, vaultTag: tag, transports: p.transports });
     // Round-trip check before trusting the copy.
     const back = await openPayload(prf, rec);
     if (!sameWallet(back, p.payload.mnemonic) || back.approval !== "passkey") throw new Error("Setup check failed. Try again.");
@@ -274,6 +321,7 @@ async function savePending(prf: Uint8Array) {
     await setVaultApproval(p.password, null).catch(() => undefined);
     throw e;
   }
+  clearPendingTimer();
   pending = null;
 }
 
@@ -309,9 +357,22 @@ export async function startPasskeyEnroll(payload: VaultPayload, password: string
   })) as PublicKeyCredential | null;
   if (!cred) throw new Error("Setup was cancelled.");
   const credId = b64url(cred.rawId);
-  pending = { credId, rpId, salt, payload, password };
+  const att = cred.response as AuthenticatorAttestationResponse & {
+    getAuthenticatorData?: () => ArrayBuffer;
+    getTransports?: () => string[];
+  };
+  let reported: string[] = [];
   try {
-    const att = cred.response as AuthenticatorAttestationResponse & { getAuthenticatorData?: () => ArrayBuffer };
+    reported = att.getTransports?.() ?? [];
+  } catch {
+    /* older browsers */
+  }
+  const transports = passkeyTransports(reported);
+  pending = { credId, rpId, salt, transports, payload, password };
+  // Never keep the password around for an abandoned second tap.
+  clearPendingTimer();
+  pendingTimer = setTimeout(abandonPending, PENDING_SETUP_MS);
+  try {
     const authData = att.getAuthenticatorData?.();
     if (authData && !userVerified(new Uint8Array(authData))) {
       throw new Error("The phone didn't confirm your face or fingerprint. Try again.");
@@ -324,7 +385,7 @@ export async function startPasskeyEnroll(payload: VaultPayload, password: string
       await savePending(first);
       return "done";
     }
-    const prf = await evalPrf(credId, rpId, salt);
+    const prf = await evalPrf(credId, rpId, salt, transports);
     if (!prf) throw new Error(PASSKEY_UNSUPPORTED);
     await savePending(prf);
     return "done";
@@ -340,7 +401,7 @@ export async function startPasskeyEnroll(payload: VaultPayload, password: string
 export async function finishPasskeyEnroll(): Promise<void> {
   if (!pending) throw new Error("Start Face ID / fingerprint setup again.");
   try {
-    const prf = await evalPrf(pending.credId, pending.rpId, pending.salt);
+    const prf = await evalPrf(pending.credId, pending.rpId, pending.salt, pending.transports);
     if (!prf) throw new Error(PASSKEY_UNSUPPORTED);
     await savePending(prf);
   } catch (e) {
@@ -359,7 +420,7 @@ export async function unlockWithPasskey(): Promise<VaultPayload | null> {
   if (!rec) return null;
   let prf: Uint8Array | null;
   try {
-    prf = await evalPrf(rec.credId, rec.rpId, rec.salt);
+    prf = await evalPrf(rec.credId, rec.rpId, rec.salt, rec.transports);
   } catch (e) {
     if (isCancel(e)) return null;
     throw e;
@@ -436,7 +497,7 @@ export async function passkeyApprove(
     required: unlocked.approval === "passkey",
     unlockedMnemonic: unlocked.mnemonic,
     record: loadPasskeyRecord(),
-    passkey: (rec) => evalPrf(rec.credId, rec.rpId, rec.salt),
+    passkey: (rec) => evalPrf(rec.credId, rec.rpId, rec.salt, rec.transports),
     currentTag: currentVaultTag,
     askPassword: io.askPassword,
     checkPassword: io.checkPassword,

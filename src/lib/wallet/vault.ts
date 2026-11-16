@@ -147,11 +147,13 @@ export async function createVault(
   mnemonic: string,
   password: string,
   origin: VaultOrigin,
+  opts: { approval?: "passkey" } = {},
 ): Promise<VaultPayload> {
   const normalized = normalizeMnemonic(mnemonic);
   if (!isValidMnemonic(normalized)) throw new Error("That recovery phrase isn't valid.");
   if (password.length < 8) throw new Error("Password must be at least 8 characters.");
   const payload: VaultPayload = { mnemonic: normalized, origin, createdAt: Date.now() };
+  if (opts.approval === "passkey") payload.approval = "passkey";
   const blob = await encryptJson(payload, password);
   clearPasskeyRecord();
   localStorage.setItem(
@@ -209,12 +211,26 @@ export async function setVaultApproval(
   return { payload, ct: blob.ct };
 }
 
-/** Re-encrypt the vault under a new password. */
-export async function changeVaultPassword(current: string, next: string): Promise<void> {
+/**
+ * Re-encrypt the vault under a new password. The Face ID copy is dropped (it
+ * belongs to the old vault), but the "approval required" flag is carried over,
+ * so payments ask for the password until Face ID is set up again — a password
+ * change must never switch the payment check off. Returns true when that
+ * happened, so the screen can tell the person.
+ */
+export async function changeVaultPassword(current: string, next: string): Promise<{ faceIdNeedsSetup: boolean }> {
   const payload = await unlockVault(current);
   if (!payload) throw new Error("Current password is wrong.");
-  await createVault(payload.mnemonic, next, payload.origin);
+  const keep = payload.approval === "passkey";
+  await createVault(payload.mnemonic, next, payload.origin, keep ? { approval: "passkey" } : {});
+  return { faceIdNeedsSetup: keep };
 }
+
+/** Fired when a payment check finds the wallet already auto-locked. */
+export const WALLET_LOCKED_EVENT = "cryptopop:wallet-locked";
+
+export const PASSWORD_CHANGED_FACE_ID_NOTE =
+  "Password changed. Face ID / fingerprint was turned off — payments will ask for your password until you turn it on again in Settings.";
 
 /* ------------------------------ session cache ----------------------------- */
 

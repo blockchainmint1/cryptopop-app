@@ -16,7 +16,7 @@ import { isValidTxcAddress } from "@/lib/wallet";
 import { validateSend } from "@/lib/wallet/transaction-policy";
 import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
 import { signPsbt } from "@/lib/wallet/sign";
-import { approvePayment, PAYMENT_NOT_APPROVED } from "@/lib/wallet/payment-approval";
+import { approvePayment, notApprovedMessage } from "@/lib/wallet/payment-approval";
 import { prepareSend, broadcastSignedTx } from "@/lib/send.functions";
 import { shopNameSize } from "@/lib/wallet/fireworks";
 import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoints";
@@ -138,7 +138,7 @@ export function SendSheet({
     if (confirm && !review) return;
     // Face ID / fingerprint first, while the tap still counts on phone browsers.
     if (confirm && !(await approvePayment(mnemonic, "Approve this payment"))) {
-      return toast.error(PAYMENT_NOT_APPROVED);
+      return toast.error(notApprovedMessage("payment"));
     }
     const dest = to.trim();
     if (!isValidTxcAddress(dest)) return toast.error("That doesn't look like a TXC address");

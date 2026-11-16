@@ -34,7 +34,9 @@
 - [x] Clean up half-made passkey on any setup failure
 - [x] Face ID for card setting changes (except turning off / lost) and Give cause changes
 - [x] Auditor's 3 tests + updated audit brief + code bundle for auditor
+- [x] Line-level review (Nov 16): production embedding lock, password change keeps the payment check, phone-app check honours it, 2-min setup timeout, "wallet locked" message, faster prompt hint, credential-bound key; brief v3 + bundle
 - [ ] Bobby: real payment on iPhone and Android (incl. iPhone with non-Apple password manager)
+- [ ] Auditor sign-off on v3, then publish
 
 ## NFC tap-to-pay cards
 - [x] /nfc test page: read card (Android Chrome), link, pockets at 1110'/0/N, balances, on/off, fund, lost

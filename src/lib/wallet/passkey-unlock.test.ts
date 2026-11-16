@@ -8,6 +8,10 @@ import {
   passkeyApprove,
   runApproval,
   startPasskeyEnroll,
+  cancelPasskeyEnroll,
+  hasPendingPasskeySetup,
+  passkeyTransports,
+  PENDING_SETUP_MS,
   userVerified,
   type ApprovalDeps,
   type PasskeyRecord,
@@ -98,6 +102,19 @@ describe("passkey answer checks", () => {
     const rec = await sealPayload(prf, { ...payload, approval: "passkey" }, { credId: "c", rpId: "r", salt: "s", vaultTag: "t" });
     expect((await openPayload(prf, rec)).approval).toBe("passkey");
   });
+
+  it("new copies are version 2 (key bound to the passkey id); relabelling the version is refused", async () => {
+    const rec = await sealed();
+    expect(rec.v).toBe(2);
+    await expect(openPayload(prf, { ...rec, v: 1 })).rejects.toThrow();
+  });
+
+  it("transport hint: drops the cross-device QR route, keeps what the phone reported", () => {
+    expect(passkeyTransports(["hybrid", "internal"])).toEqual(["internal"]);
+    expect(passkeyTransports(["hybrid"])).toEqual(["internal"]);
+    expect(passkeyTransports(undefined)).toEqual(["internal"]);
+    expect(passkeyTransports(["internal", "usb", "made-up"])).toEqual(["internal", "usb"]);
+  });
 });
 
 describe("payment approval rule (fail closed)", () => {
@@ -177,8 +194,16 @@ describe("Face ID setup (browser stubs)", () => {
   function fakeCreated(results?: Uint8Array) {
     return {
       rawId: CRED.buffer.slice(0),
-      response: { getAuthenticatorData: () => authData(0x45).buffer },
+      response: { getAuthenticatorData: () => authData(0x45).buffer, getTransports: () => ["hybrid", "internal"] },
       getClientExtensionResults: () => ({ prf: { enabled: true, ...(results ? { results: { first: results } } : {}) } }),
+    };
+  }
+
+  function fakeAsserted(results: Uint8Array) {
+    return {
+      rawId: CRED.buffer.slice(0),
+      response: { authenticatorData: authData(0x05).buffer },
+      getClientExtensionResults: () => ({ prf: { results: { first: results } } }),
     };
   }
 
@@ -211,8 +236,60 @@ describe("Face ID setup (browser stubs)", () => {
     create.mockResolvedValue(fakeCreated(prf));
     await startPasskeyEnroll(payload, "right-password", "POP");
     const rec = loadPasskeyRecord() as PasskeyRecord;
-    await changeVaultPassword("right-password", "new-password-123");
+    const result = await changeVaultPassword("right-password", "new-password-123");
     expect(store.has(PASSKEY_KEY)).toBe(false);
     expect(signal).toHaveBeenCalledWith({ rpId: rec.rpId, credentialId: rec.credId });
+    expect(result.faceIdNeedsSetup).toBe(true);
+  });
+
+  it("changing the password never switches the payment check off: payments then need the new password", async () => {
+    await createVault(A, "right-password", "generated");
+    create.mockResolvedValue(fakeCreated(prf));
+    await startPasskeyEnroll(payload, "right-password", "POP");
+    await changeVaultPassword("right-password", "new-password-123");
+    const session = loadSession()!;
+    expect(session.approval).toBe("passkey");
+    const { checkVaultPassword } = await import("./vault");
+    expect(await passkeyApprove(session, { askPassword: async () => null, checkPassword: checkVaultPassword })).toBe(false);
+    expect(await passkeyApprove(session, { askPassword: async () => "right-password", checkPassword: checkVaultPassword })).toBe(false);
+    expect(await passkeyApprove(session, { askPassword: async () => "new-password-123", checkPassword: checkVaultPassword })).toBe(true);
+  });
+
+  it("password change without Face ID leaves payments unchecked as before", async () => {
+    await createVault(A, "right-password", "generated");
+    const result = await changeVaultPassword("right-password", "new-password-123");
+    expect(result.faceIdNeedsSetup).toBe(false);
+    expect(loadSession()?.approval).toBeUndefined();
+  });
+
+  it("the passkey prompt uses the phone's own transport hint, without the QR route", async () => {
+    await createVault(A, "right-password", "generated");
+    create.mockResolvedValue(fakeCreated());
+    get.mockResolvedValue(fakeAsserted(prf));
+    expect(await startPasskeyEnroll(payload, "right-password", "POP")).toBe("done");
+    const opts = get.mock.calls[0][0].publicKey;
+    expect(opts.allowCredentials[0].transports).toEqual(["internal"]);
+    expect(loadPasskeyRecord()?.transports).toEqual(["internal"]);
+  });
+
+  it("a half-finished setup forgets the password after 2 minutes", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      await createVault(A, "right-password", "generated");
+      create.mockResolvedValue(fakeCreated());
+      get.mockRejectedValue(Object.assign(new Error("dismissed"), { name: "NotAllowedError" }));
+      expect(await startPasskeyEnroll(payload, "right-password", "POP")).toBe("needs-tap");
+      expect(hasPendingPasskeySetup()).toBe(true);
+      expect(PENDING_SETUP_MS).toBe(120_000);
+      vi.advanceTimersByTime(PENDING_SETUP_MS - 1);
+      expect(hasPendingPasskeySetup()).toBe(true);
+      vi.advanceTimersByTime(1);
+      expect(hasPendingPasskeySetup()).toBe(false);
+      expect(signal).toHaveBeenCalled();
+      expect(store.has(PASSKEY_KEY)).toBe(false);
+    } finally {
+      cancelPasskeyEnroll();
+      vi.useRealTimers();
+    }
   });
 });

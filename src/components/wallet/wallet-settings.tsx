@@ -33,9 +33,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { unlockVault, markBackedUp, setVaultApproval, type VaultPayload } from "@/lib/wallet/vault";
+import { unlockVault, markBackedUp, setVaultApproval, loadSession, type VaultPayload } from "@/lib/wallet/vault";
 import {
   cancelPasskeyEnroll,
+  PENDING_SETUP_MS,
   disablePasskeyUnlock,
   finishPasskeyEnroll,
   startPasskeyEnroll,
@@ -199,11 +200,41 @@ export function WalletSettings({
     }
   }
 
+  // Face ID copy gone but the vault still says "approval required" (e.g. after
+  // a password change): payments ask for the password until it's set up again.
+  const [needsReenroll, setNeedsReenroll] = useState(false);
+
   useEffect(() => {
     getBiometricStatus()
-      .then(setBio)
+      .then((s) => {
+        setBio(s);
+        setNeedsReenroll(s.kind === "passkey" && !s.enabled && loadSession()?.approval === "passkey");
+      })
       .catch(() => undefined);
   }, []);
+
+  // Don't keep the typed password around if setup is left half-finished.
+  useEffect(() => {
+    if (bioStep === "idle") return;
+    const t = setTimeout(() => {
+      resetBioSetup();
+      toast.message("Face ID setup timed out. Start again when you're ready.");
+    }, PENDING_SETUP_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bioStep]);
+
+  async function stopAskingForPassword() {
+    if (!password) return toast.error("Enter your password first");
+    try {
+      await setVaultApproval(password, null);
+    } catch (e) {
+      return toast.error((e as Error).message);
+    }
+    setNeedsReenroll(false);
+    setPassword("");
+    toast.success("Payments won't ask for your password anymore");
+  }
 
   async function reveal() {
     setBusy(true);
@@ -264,6 +295,7 @@ export function WalletSettings({
       setBioStep("idle");
       setBioPayload(null);
       setBio((b) => ({ ...b, enabled: true }));
+      setNeedsReenroll(false);
       toast.success("Face ID / fingerprint is on for unlocking and payments");
     } catch (e) {
       const name = (e as { name?: string })?.name;
@@ -436,7 +468,9 @@ export function WalletSettings({
                 <p className="text-xs text-muted-foreground">
                   {bio.enabled
                     ? "On — used to unlock and to approve payments."
-                    : "Unlock and approve payments without typing your password."}
+                    : needsReenroll
+                      ? "Needs setting up again. Until then, payments ask for your password."
+                      : "Unlock and approve payments without typing your password."}
                 </p>
               </div>
               {bioStep === "idle" && (
@@ -455,6 +489,17 @@ export function WalletSettings({
               <p className="text-[11px] text-muted-foreground">
                 Type your wallet password above to turn this {bio.enabled ? "off" : "on"}.
               </p>
+            )}
+            {bioStep === "idle" && needsReenroll && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto rounded-full px-2 py-1 text-xs text-muted-foreground"
+                disabled={!password || busy}
+                onClick={stopAskingForPassword}
+              >
+                Stop asking for my password on payments
+              </Button>
             )}
             {bioStep !== "idle" && (
               <div className="space-y-2">

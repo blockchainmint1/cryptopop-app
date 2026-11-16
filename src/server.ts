@@ -97,8 +97,14 @@ export default {
           "frame-src 'self' https://*.lovable.dev https://*.lovable.app https://honest.money https://accounts.google.com",
           "worker-src 'self' blob:",
           "object-src 'none'", "base-uri 'self'",
-          // Security audit M1: only our own pages and the Lovable editor may frame the wallet.
-          "frame-ancestors 'self' https://*.lovable.dev https://*.lovable.app", "form-action 'self' https://honest.money",
+          // Security audit M1 + follow-up: only our own pages and the Lovable editor (lovable.dev,
+          // which nobody else can publish on) may frame the live wallet. Anyone can publish on
+          // *.lovable.app, so it may never frame production. The dev preview keeps the wider rule
+          // so the editor's preview frame keeps working.
+          development
+            ? "frame-ancestors 'self' https://*.lovable.dev https://*.lovable.app"
+            : "frame-ancestors 'self' https://lovable.dev https://*.lovable.dev",
+          "form-action 'self' https://honest.money",
         ].join("; "));
       }
       return new Response(normalized.body, { status: normalized.status, statusText: normalized.statusText, headers });

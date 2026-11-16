@@ -32,7 +32,7 @@ import { reservedOutpoints, reserveOutpoints } from "@/lib/wallet/spent-outpoint
 import { validateSend, validateSplitSend } from "@/lib/wallet/transaction-policy";
 import { deriveTxcAddress, deriveLegacyTxcAddress } from "@/lib/wallet";
 import { derivePrivateKey, derivePrivateKeyAtPath, signPsbt, signSplitPsbt } from "@/lib/wallet/sign";
-import { approvePayment, PAYMENT_NOT_APPROVED } from "@/lib/wallet/payment-approval";
+import { approvePayment, notApprovedMessage } from "@/lib/wallet/payment-approval";
 import { rewardKeyPath } from "@/lib/wallet/reward-key";
 import { signTxcMessage } from "@/lib/wallet/txc-message";
 import { saveTxLabel, updateReceipt } from "@/lib/wallet/tx-labels";
@@ -249,7 +249,7 @@ export function NectarPaySheet({
     if (confirm && !review) return;
     // Face ID / fingerprint first, while the tap still counts on phone browsers.
     if (confirm && !(await approvePayment(mnemonic, "Approve this store payment"))) {
-      return toast.error(PAYMENT_NOT_APPROVED);
+      return toast.error(notApprovedMessage("payment"));
     }
     setStage("paying");
     try {
