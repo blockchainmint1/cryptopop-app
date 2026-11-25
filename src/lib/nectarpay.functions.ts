@@ -92,7 +92,15 @@ export const getNectarInvoice = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<{ invoice: NectarInvoice | null; error: string | null }> => {
     try {
       const raw = await fetchJson(invoiceUrl(data.id, data.nonce));
-      return { invoice: normalize(raw), error: null };
+      const invoice = normalize(raw);
+      if (invoice.id && !["paid", "confirmed", "settled", "complete", "completed"].includes(invoice.status.toLowerCase())) {
+        const { afterResponse } = await import("./background.server");
+        afterResponse(async () => {
+          const { notifyPayingProgress } = await import("./nectarpay-progress.server");
+          await notifyPayingProgress(invoice.id);
+        }, "NectarPay paying");
+      }
+      return { invoice, error: null };
     } catch (e) {
       console.error("[nectarpay] invoice read", e);
       return { invoice: null, error: (e as Error).message || "Couldn't load this checkout." };
@@ -320,7 +328,16 @@ export const startNectarSticker = createServerFn({ method: "POST" })
     z.object({ code: stickerCode, amount: z.number().finite().min(0.5).max(250) }).parse(d))
   .handler(async ({ data }) => {
     const { callSticker } = await import("./nectarpay-sticker.server");
-    return callSticker("invoice", { code: data.code, amount: Math.round(data.amount * 100) / 100 });
+    const r = await callSticker("invoice", { code: data.code, amount: Math.round(data.amount * 100) / 100 });
+    if (!("error" in r) && r.invoiceId) {
+      const invoiceId = r.invoiceId;
+      const { afterResponse } = await import("./background.server");
+      afterResponse(async () => {
+        const { notifyPayingProgress } = await import("./nectarpay-progress.server");
+        await notifyPayingProgress(invoiceId);
+      }, "NectarPay paying");
+    }
+    return r;
   });
 
 /** After paying a sticker bill: ask NectarPay to check the chain now so the sale settles. */
@@ -342,6 +359,14 @@ export const lookupNectarQr = createServerFn({ method: "POST" })
     // The address we pay must be the one NectarPay signed, and it must match the scanned code.
     if (r.kind === "invoice" && r.address !== data.address) {
       return { kind: "none" as const, reason: "error" as const, error: "This code's wallet doesn't match the store's. Don't pay it." };
+    }
+    if (r.kind === "invoice" && !["paid", "confirmed", "settled", "complete", "completed"].includes(r.status.toLowerCase())) {
+      const invoiceId = r.invoiceId;
+      const { afterResponse } = await import("./background.server");
+      afterResponse(async () => {
+        const { notifyPayingProgress } = await import("./nectarpay-progress.server");
+        await notifyPayingProgress(invoiceId);
+      }, "NectarPay paying");
     }
     return r;
   });

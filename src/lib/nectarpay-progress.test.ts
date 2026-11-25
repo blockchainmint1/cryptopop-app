@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as bitcoin from "bitcoinjs-lib";
 import { deriveTxcAddress } from "./wallet";
-import { notifyBroadcastProgress, reportPaymentSubmitted } from "./nectarpay-progress.server";
+import { notifyBroadcastProgress, reportPaying, reportPaymentSubmitted } from "./nectarpay-progress.server";
 import { stickerResponseSignature } from "./nectarpay-sticker.server";
 
 const lookup = vi.hoisted(() => vi.fn());
@@ -92,5 +92,16 @@ describe("NectarPay progress hints", () => {
     const bodies = fetchMock.mock.calls.map(call => JSON.parse(call[1].body));
     expect(bodies[0].request_id).toBe(bodies[1].request_id);
     expect(bodies.every(body => body.event === "payment_submitted" && body.txid === tx.id)).toBe(true);
+  });
+  it("sends a signed paying hint on scan without a txid", async () => {
+    fetchMock.mockImplementation((_url, init) => reply(init.body, { accepted: true, event: "paying" }));
+    expect(await reportPaying(invoiceId, requestId)).toBe(true);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("https://app.nectar-pay.com/api/public/v1/payments/progress");
+    expect(JSON.parse(init.body)).toEqual({ request_id: requestId, invoice_id: invoiceId, event: "paying" });
+  });
+  it("rejects a paying acknowledgment with a mismatched event", async () => {
+    fetchMock.mockImplementation((_url, init) => reply(init.body, { accepted: true, event: "payment_submitted" }));
+    expect(await reportPaying(invoiceId, requestId)).toBe(false);
   });
 });

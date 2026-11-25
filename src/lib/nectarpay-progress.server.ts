@@ -6,12 +6,19 @@ import { claimHeaders } from "./pop-claim.server";
 import { lookupRegisterQr, stickerResponseSignature } from "./nectarpay-sticker.server";
 
 const ENDPOINT = "https://app.nectar-pay.com/api/public/v1/payments/progress";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** A broadcast notice is only a hint, never settlement or permission to spend. */
-export async function reportPaymentSubmitted(invoiceId: string, txid: string, requestId: string): Promise<boolean> {
+async function postProgress(
+  invoiceId: string,
+  requestId: string,
+  event: "paying" | "payment_submitted",
+  txid?: string,
+): Promise<boolean> {
   const secret = nectarPayPartnerKey();
   if (!secret) return false;
-  const body = JSON.stringify({ request_id: requestId, invoice_id: invoiceId, event: "payment_submitted", txid });
+  const payload: Record<string, string> = { request_id: requestId, invoice_id: invoiceId, event };
+  if (txid) payload["txid"] = txid;
+  const body = JSON.stringify(payload);
   try {
     const res = await fetch(ENDPOINT, {
       method: "POST", redirect: "manual", signal: AbortSignal.timeout(4000),
@@ -25,16 +32,34 @@ export async function reportPaymentSubmitted(invoiceId: string, txid: string, re
         sig !== await stickerResponseSignature(secret, body, text, ts)) return false;
     const reply = JSON.parse(text) as Record<string, unknown>;
     return reply['request_id'] === requestId && reply['invoice_id'] === invoiceId &&
-      (reply['already_settled'] === true || (reply['accepted'] === true && reply['event'] === "payment_submitted" && reply['txid'] === txid));
+      (reply['already_settled'] === true ||
+        (reply['accepted'] === true && reply['event'] === event && (!txid || reply['txid'] === txid)));
   } catch { return false; }
+}
+
+/** Scan-time hint so the register can show playful progress while the shopper reviews. */
+export function reportPaying(invoiceId: string, requestId: string): Promise<boolean> {
+  return postProgress(invoiceId, requestId, "paying");
+}
+
+/** A broadcast notice is only a hint, never settlement or permission to spend. */
+export function reportPaymentSubmitted(invoiceId: string, txid: string, requestId: string): Promise<boolean> {
+  return postProgress(invoiceId, requestId, "payment_submitted", txid);
+}
+
+/** Single best-effort scan notice; never blocks or delays opening checkout. */
+export async function notifyPayingProgress(invoiceId: string): Promise<void> {
+  if (!UUID_RE.test(invoiceId)) return;
+  const ok = await reportPaying(invoiceId, crypto.randomUUID());
+  if (!ok) console.warn("[NectarPay progress] Scan-time paying notice not accepted.");
 }
 
 /** Only invoked after successful broadcast; binds the hint to that transaction and signed invoice. */
 export async function notifyBroadcastProgress(invoiceId: string, txid: string, rawHex: string): Promise<void> {
   const tx = Transaction.fromRaw(Uint8Array.from(rawHex.match(/../g) ?? [], h => parseInt(h, 16)), { allowUnknownOutputs: true });
-  if (tx.id !== txid) return;
+  if (tx.id !== txid) { console.warn("[NectarPay progress] Skipped: txid mismatch."); return; }
   const invoice = await lookupRegisterQr({ invoice_id: invoiceId });
-  if (invoice.kind !== "invoice" || invoice.invoiceId !== invoiceId) return;
+  if (invoice.kind !== "invoice" || invoice.invoiceId !== invoiceId) { console.warn("[NectarPay progress] Skipped: invoice lookup did not match."); return; }
   const decoded = createBase58check(sha256).decode(invoice.address);
   if (decoded.length !== 21 || decoded[0] !== 0x42) return;
   const script = Uint8Array.from([0x76, 0xa9, 0x14, ...decoded.slice(1), 0x88, 0xac]);
@@ -43,7 +68,7 @@ export async function notifyBroadcastProgress(invoiceId: string, txid: string, r
     const output = tx.getOutput(i).script;
     if (output?.length === script.length && output.every((b, j) => b === script[j])) matches = true;
   }
-  if (!matches) return;
+  if (!matches) { console.warn("[NectarPay progress] Skipped: merchant output not in transaction."); return; }
   const requestId = crypto.randomUUID();
   for (let attempt = 0; attempt < 3; attempt++) {
     if (await reportPaymentSubmitted(invoiceId, txid, requestId)) return;
