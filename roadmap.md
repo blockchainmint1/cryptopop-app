@@ -1,5 +1,5 @@
 # Roadmap
-- [x] NectarPay progress: scan-time `paying` plus post-broadcast notices for wallet/card checkout; post-broadcast notice now starts in the request and waits at most 1.5 seconds while the same work stays alive in the background. Full 213-test suite passed; auditor handoff prepared.
+- [x] NectarPay progress: register scans are recorded inline by NectarPay; invoice/sticker `paying` and wallet post-broadcast notices start directly and wait at most 1.5 seconds while the same work stays alive in the background. Full 213-test suite passed; auditor handoff prepared.
 - [ ] NectarPay progress live acceptance: NectarPay has instant scan updates ready in its commit 08d2a78, but its live site still identifies the earlier d79a770 build; NectarPay needs publish, CryptoPOP needs audit approval/publish, then jointly approved normal/Give register tests. No funds sent automatically.
 - [x] HME affiliate links: protected UUID-based lookup, wallet-specific invite link and 6 tests; 198-test suite passed
 - [ ] HME affiliate live acceptance: HME profile endpoint returns 401 for pop-wallet site key; Bobby's wallet account also needs Honest Money SSO sign-in. Requires HME profiles:read approval/key verification; no personal code guessed.

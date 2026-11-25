@@ -94,11 +94,11 @@ export const getNectarInvoice = createServerFn({ method: "GET" })
       const raw = await fetchJson(invoiceUrl(data.id, data.nonce));
       const invoice = normalize(raw);
       if (invoice.id && !["paid", "confirmed", "settled", "complete", "completed"].includes(invoice.status.toLowerCase())) {
-        const { afterResponse } = await import("./background.server");
-        afterResponse(async () => {
+        const { afterResponseWithin } = await import("./background.server");
+        await afterResponseWithin(async () => {
           const { notifyPayingProgress } = await import("./nectarpay-progress.server");
           await notifyPayingProgress(invoice.id);
-        }, "NectarPay paying");
+        }, 1500, "NectarPay paying");
       }
       return { invoice, error: null };
     } catch (e) {
@@ -331,11 +331,11 @@ export const startNectarSticker = createServerFn({ method: "POST" })
     const r = await callSticker("invoice", { code: data.code, amount: Math.round(data.amount * 100) / 100 });
     if (!("error" in r) && r.invoiceId) {
       const invoiceId = r.invoiceId;
-      const { afterResponse } = await import("./background.server");
-      afterResponse(async () => {
+      const { afterResponseWithin } = await import("./background.server");
+      await afterResponseWithin(async () => {
         const { notifyPayingProgress } = await import("./nectarpay-progress.server");
         await notifyPayingProgress(invoiceId);
-      }, "NectarPay paying");
+      }, 1500, "NectarPay paying");
     }
     return r;
   });
@@ -360,13 +360,7 @@ export const lookupNectarQr = createServerFn({ method: "POST" })
     if (r.kind === "invoice" && r.address !== data.address) {
       return { kind: "none" as const, reason: "error" as const, error: "This code's wallet doesn't match the store's. Don't pay it." };
     }
-    if (r.kind === "invoice" && !["paid", "confirmed", "settled", "complete", "completed"].includes(r.status.toLowerCase())) {
-      const invoiceId = r.invoiceId;
-      const { afterResponse } = await import("./background.server");
-      afterResponse(async () => {
-        const { notifyPayingProgress } = await import("./nectarpay-progress.server");
-        await notifyPayingProgress(invoiceId);
-      }, "NectarPay paying");
-    }
+    // NectarPay's signed register lookup records `paying` inline before it
+    // answers, so a second background notice here would only duplicate work.
     return r;
   });
