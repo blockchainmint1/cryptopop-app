@@ -149,9 +149,9 @@ let merchantCache: { at: number; list: NectarMerchant[] } | null = null;
  * the feed once inline rather than showing an empty page.
  */
 export const listNectarMerchants = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ merchants: NectarMerchant[]; available: boolean }> => {
+  async (): Promise<{ merchants: NectarMerchant[]; available: boolean; giveAvailable: boolean }> => {
     if (merchantCache && Date.now() - merchantCache.at < MERCHANT_TTL_MS) {
-      return { merchants: merchantCache.list, available: true };
+      return { merchants: merchantCache.list, available: true, giveAvailable: true };
     }
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -169,7 +169,9 @@ export const listNectarMerchants = createServerFn({ method: "GET" }).handler(
         return data ?? [];
       };
 
-      let rows = await read();
+      const { fetchDirectoryGiveParticipants } = await import("./merchant-give.server");
+      const [initialRows, giveIds] = await Promise.all([read(), fetchDirectoryGiveParticipants()]);
+      let rows = initialRows;
       if (rows.length === 0) {
         const { runNectarpaySync } = await import("./nectarpay-sync.server");
         await runNectarpaySync();
@@ -189,14 +191,15 @@ export const listNectarMerchants = createServerFn({ method: "GET" }).handler(
           logoUrl: r.logo_url ?? null,
           website: r.website ?? null,
           online: r.presence === "online",
+          giveParticipant: giveIds?.has(r.id) === true,
         }))
         .filter((m) => m.id && Number.isFinite(m.lat) && Number.isFinite(m.lng));
 
-      merchantCache = { at: Date.now(), list };
-      return { merchants: list, available: true };
+      if (giveIds) merchantCache = { at: Date.now(), list };
+      return { merchants: list, available: true, giveAvailable: giveIds !== null };
     } catch (e) {
       console.error("[nectarpay] merchants", e);
-      return { merchants: [], available: false };
+      return { merchants: [], available: false, giveAvailable: false };
     }
   },
 );

@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Directory: Give participants filter, live NectarPay field verification, tests and updated feature guide (3 participants lack full public listings; no API field needed)
 - [ ] eGiving: remix the giving experience as its own app (the /give page and its leaderboard link were removed from CryptoPOP on 2026-10-28; the card-tap 90/8/2 split still runs here)
 - [x] TSD Bridge: implement receiving-only popup connection, verified wallet signatures, release-gated in-wallet deposit address and progress (54 safety tests; controlled popup flow verified without funds)
 - [ ] TSD Bridge: live new/existing-member acceptance (needs TSD publish, approved-origin member sign-in; any funds test requires Bobby's separate approval)

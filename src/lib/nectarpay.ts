@@ -44,6 +44,8 @@ export type NectarMerchant = {
   website: string | null;
   /** Sells online (no walk-in storefront). */
   online?: boolean;
+  /** Public directory flag only; never used to authorize a payment split. */
+  giveParticipant?: boolean;
 };
 
 export const PAID_STATUSES = ["paid", "confirmed", "overpaid", "completed", "settled"];

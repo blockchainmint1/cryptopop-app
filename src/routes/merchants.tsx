@@ -8,6 +8,8 @@ import { listNectarMerchants } from "@/lib/nectarpay.functions";
 import { geocodeZip } from "@/lib/public-events.functions";
 import type { NectarMerchant } from "@/lib/nectarpay";
 import { loadGoogleMaps } from "@/lib/google-maps";
+import { Switch } from "@/components/ui/switch";
+import { filterGiveMerchants } from "@/lib/merchant-give";
 
 export const Route = createFileRoute("/merchants")({
   head: () => ({
@@ -47,6 +49,7 @@ function MerchantsPage() {
   const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
   const [view, setView] = useState<"list" | "map">("list");
   const [showOnline, setShowOnline] = useState(true);
+  const [onlyGive, setOnlyGive] = useState(false);
   const [category, setCategory] = useState("all");
   const [radiusMi, setRadiusMi] = useState(0); // 0 = any distance
   const [zip, setZip] = useState("");
@@ -94,14 +97,15 @@ function MerchantsPage() {
       km: origin ? distanceKm(origin, m) : null,
     }));
     if (!showOnline) list = list.filter((m) => !m.online);
+    list = filterGiveMerchants(list, onlyGive);
     if (category !== "all") list = list.filter((m) => (m.category || "Other") === category);
     if (radiusMi > 0 && origin)
       list = list.filter((m) => m.online || (m.km ?? 0) * 0.621 <= radiusMi);
     if (origin) list.sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
     return list;
-  }, [data, origin, showOnline, category, radiusMi]);
+  }, [data, origin, showOnline, onlyGive, category, radiusMi]);
   const activeFilters =
-    (showOnline ? 0 : 1) + (category !== "all" ? 1 : 0) + (radiusMi > 0 ? 1 : 0) + (zipPoint ? 1 : 0);
+    (showOnline ? 0 : 1) + (onlyGive ? 1 : 0) + (category !== "all" ? 1 : 0) + (radiusMi > 0 ? 1 : 0) + (zipPoint ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -152,6 +156,10 @@ function MerchantsPage() {
           </button>
           {filtersOpen && (
             <div className="space-y-4 border-t border-border px-4 py-4">
+              <label className="flex items-center justify-between gap-3 text-sm">
+                <span>Give participants</span>
+                <Switch checked={onlyGive} onCheckedChange={setOnlyGive} aria-label="Give participants" />
+              </label>
               <label className="flex items-center justify-between gap-3 text-sm">
                 <span>Show online stores</span>
                 <input
@@ -244,9 +252,13 @@ function MerchantsPage() {
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading stores…</p>
+        ) : onlyGive && data?.available && !data.giveAvailable ? (
+          <p className="rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            Give participation is unavailable right now. Try again shortly or turn off Give participants to see all stores.
+          </p>
         ) : data?.available && allCount > 0 && merchants.length === 0 ? (
           <p className="rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-            No stores match these filters. Try a wider distance or another category.
+            {onlyGive ? "No Give participants match these filters. Try a wider distance, another category, or turn off Give participants." : "No stores match these filters. Try a wider distance or another category."}
           </p>
         ) : !data?.available || merchants.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-6 text-center">
