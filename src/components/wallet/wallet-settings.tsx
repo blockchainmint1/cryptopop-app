@@ -57,7 +57,6 @@ import {
 } from "@/lib/native/biometric";
 // import { CloudBackupCard } from "./cloud-backup-card"; // hidden: Google Cloud backup option
 import { HmBackupCard } from "./hm-backup-card";
-import { UpdateCheckCard } from "./update-check-card";
 import { EcosystemLinksCard } from "./ecosystem-links-card";
 import { useAuth } from "@/hooks/use-auth";
 import { openHmeLogin } from "@/lib/hme";
@@ -687,8 +686,6 @@ export function WalletSettings({
       <HmBackupCard />
 
       <EcosystemLinksCard initialPayload={ecosystemLink} />
-
-      <UpdateCheckCard />
 
       <Button variant="ghost" className="w-full justify-start" onClick={onLock}>
         <Lock className="mr-1.5 h-4 w-4" /> Lock wallet
