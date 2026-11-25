@@ -33,7 +33,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { unlockVault, markBackedUp, setVaultApproval, loadSession, type VaultPayload } from "@/lib/wallet/vault";
+import {
+  changeVaultPassword,
+  loadSession,
+  markBackedUp,
+  PASSWORD_CHANGED_FACE_ID_NOTE,
+  setVaultApproval,
+  unlockVault,
+  type VaultPayload,
+} from "@/lib/wallet/vault";
 import {
   cancelPasskeyEnroll,
   PENDING_SETUP_MS,
@@ -100,6 +108,9 @@ export function WalletSettings({
   const [password, setPassword] = useState("");
   const [phrase, setPhrase] = useState<string | null>(null);
   const [confirmingReveal, setConfirmingReveal] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [nextPassword, setNextPassword] = useState("");
+  const [confirmNextPassword, setConfirmNextPassword] = useState("");
   const [hideIn, setHideIn] = useState(0);
   const [busy, setBusy] = useState(false);
   const [bio, setBio] = useState<{ available: boolean; enabled: boolean; kind: "native" | "passkey" }>({
@@ -246,6 +257,26 @@ export function WalletSettings({
     setHideIn(60);
     markBackedUp();
     setPassword("");
+  }
+
+  async function submitPasswordChange() {
+    if (nextPassword.length < 8) return toast.error("New password must be at least 8 characters");
+    if (nextPassword !== confirmNextPassword) return toast.error("New passwords don't match");
+    if (nextPassword === password) return toast.error("Choose a different password");
+    setBusy(true);
+    try {
+      const { faceIdNeedsSetup } = await changeVaultPassword(password, nextPassword);
+      setPassword("");
+      setNextPassword("");
+      setConfirmNextPassword("");
+      setChangingPassword(false);
+      setBio(await getBiometricStatus());
+      toast.success(faceIdNeedsSetup ? PASSWORD_CHANGED_FACE_ID_NOTE : "Wallet password changed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not change password");
+    } finally {
+      setBusy(false);
+    }
   }
 
   // Auto-hide the phrase after 60 seconds, and count down for the user.
@@ -457,6 +488,14 @@ export function WalletSettings({
           >
             <Eye className="mr-1.5 h-4 w-4" /> Reveal phrase
           </Button>
+          <Button
+            variant="secondary"
+            className="flex-1 rounded-full"
+            disabled={!password || busy}
+            onClick={() => setChangingPassword(true)}
+          >
+            <Lock className="mr-1.5 h-4 w-4" /> Change password
+          </Button>
         </div>
         {bio.available && (
           <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-3">
@@ -548,6 +587,58 @@ export function WalletSettings({
             >
               Not now
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={changingPassword}
+        onOpenChange={(open) => {
+          setChangingPassword(open);
+          if (!open) {
+            setNextPassword("");
+            setConfirmNextPassword("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm border-white/12 bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg uppercase">Change wallet password</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Choose a new password (at least 8 characters). If Face ID or fingerprint is on, you'll
+              need to turn it back on afterward.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              type="password"
+              placeholder="New password (min 8 chars)"
+              value={nextPassword}
+              onChange={(e) => setNextPassword(e.target.value)}
+              className="h-11"
+              autoComplete="new-password"
+            />
+            <Input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmNextPassword}
+              onChange={(e) => setConfirmNextPassword(e.target.value)}
+              className="h-11"
+              autoComplete="new-password"
+            />
+            <div className="flex flex-col gap-2">
+              <Button
+                className="rounded-full"
+                disabled={busy || nextPassword.length < 8 || nextPassword !== confirmNextPassword}
+                onClick={() => void submitPasswordChange()}
+              >
+                {busy ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Lock className="mr-1.5 h-4 w-4" />}
+                Save new password
+              </Button>
+              <Button variant="ghost" className="rounded-full" onClick={() => setChangingPassword(false)}>
+                Cancel
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

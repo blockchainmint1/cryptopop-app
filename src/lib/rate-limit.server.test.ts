@@ -35,6 +35,13 @@ describe("rateLimitForPath", () => {
     expect(blocked).toBe(true);
   });
 
+  it("blocks the ecosystem link proxy beyond 30 requests per minute", () => {
+    const headers = new Headers({ "cf-connecting-ip": "203.0.113.11" });
+    const path = "/api/nectar/link";
+    for (let i = 0; i < 30; i++) expect(rateLimitForPath(path, headers)).toBeNull();
+    expect(rateLimitForPath(path, headers)?.status).toBe(429);
+  });
+
   it("leaves the bearer-gated email queue processor untouched", () => {
     expect(rateLimitForPath("/lovable/email/queue/process", new Headers())).toBeNull();
   });

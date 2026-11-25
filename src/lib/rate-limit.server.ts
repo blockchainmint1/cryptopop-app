@@ -66,7 +66,7 @@ export function rateLimitForPath(pathname: string, headers: Headers): Response |
   if (pathname === "/api/public/apk") {
     // Streams a multi-megabyte file from IPFS — keep this tight.
     rule = { limit: 10, windowMs: 60_000 };
-  } else if (pathname.startsWith("/api/nectar.link")) {
+  } else if (pathname.startsWith("/api/nectar/link")) {
     // Proxies external fetches — stricter than ordinary reads.
     rule = { limit: 30, windowMs: 60_000 };
   } else if (pathname.startsWith("/api/public/")) {
