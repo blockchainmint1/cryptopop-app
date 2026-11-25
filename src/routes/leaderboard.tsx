@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CalendarDays,
@@ -26,6 +27,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UnlockScreen } from "@/components/wallet/unlock-screen";
 import { paginatePopHistory } from "@/lib/pop-history-pagination";
+import { useAuth } from "@/hooks/use-auth";
+import { getMyHmeAffiliate } from "@/lib/hme.functions";
+import { openHmeLogin } from "@/lib/hme";
 
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
@@ -106,6 +110,17 @@ function PageHeader() {
 
 function PopPage() {
   const { address, status } = useWallet();
+  const { user, loading: authLoading } = useAuth();
+  const fetchAffiliate = useServerFn(getMyHmeAffiliate);
+  const memberId = user?.app_metadata?.["hme_member_id"];
+  const hasHme = typeof memberId === "string" && memberId.length > 0;
+  const affiliate = useQuery({
+    queryKey: ["my-hme-affiliate", user?.id, memberId],
+    queryFn: () => fetchAffiliate(),
+    enabled: !authLoading && hasHme,
+    staleTime: 60000,
+    retry: false,
+  });
   const fetchLeaders = useServerFn(getPopLeaderboard);
   const fetchRewards = useServerFn(getAddressRewards);
 
@@ -152,7 +167,9 @@ function PopPage() {
   // server render never touches `window`.
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
-  const inviteLink = address && origin ? `${origin}/?ref=${address}` : "";
+  const inviteLink = hasHme
+    ? affiliate.data?.links?.walletLink ?? ""
+    : address && origin ? `${origin}/?ref=${address}` : "";
 
   const copyInvite = async () => {
     if (!inviteLink) return;
@@ -440,11 +457,13 @@ function PopPage() {
                   soon
                 </span>
               </div>
-              {address ? (
-                <button
+              {inviteLink && !authLoading ? (
+                <Button
                   type="button"
                   onClick={copyInvite}
-                  className="mt-3 flex w-full items-center justify-between gap-2 rounded-xl border border-white/12 bg-white/5 px-3 py-2 text-left font-mono text-[11px] text-muted-foreground transition hover:text-foreground"
+                  variant="outline"
+                  aria-label="Copy wallet invite link"
+                  className="mt-3 flex h-auto w-full items-center justify-between gap-2 px-3 py-2 text-left font-mono text-[11px] text-muted-foreground"
                 >
                   <span className="truncate">{inviteLink}</span>
                   {copied ? (
@@ -452,12 +471,29 @@ function PopPage() {
                   ) : (
                     <Copy className="h-3.5 w-3.5 shrink-0" />
                   )}
-                </button>
+                </Button>
               ) : (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Your invite link appears once your wallet is set up.
+                  {authLoading || (hasHme && affiliate.isPending)
+                    ? "Checking your Honest Money affiliate link…"
+                    : hasHme
+                      ? "Your Honest Money affiliate link is temporarily unavailable."
+                      : "Your invite link appears once your wallet is set up."}
                 </p>
               )}
+              {hasHme && affiliate.data?.links ? (
+                <p className="mt-2 break-words text-[11px] text-muted-foreground">
+                  Your Honest Money link: <a href={affiliate.data.links.defaultLink} target="_blank" rel="noopener noreferrer" className="text-primary underline">{affiliate.data.links.defaultLink}</a>
+                </p>
+              ) : !hasHme && !authLoading ? (
+                <Button variant="link" size="sm" onClick={openHmeLogin} className="mt-1 h-auto px-0 text-xs">
+                  Sign in with Honest Money
+                </Button>
+              ) : hasHme && !affiliate.isPending ? (
+                <Button variant="link" size="sm" disabled={affiliate.isFetching} onClick={() => void affiliate.refetch()} className="mt-1 h-auto px-0 text-xs">
+                  Try again
+                </Button>
+              ) : null}
               <p className="mt-2 text-[11px] text-muted-foreground">
                 Referral POP isn't live yet. Keep the link — we will tell you the day it starts
                 crediting.

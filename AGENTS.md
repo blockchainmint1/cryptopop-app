@@ -21,3 +21,4 @@
 - Production CSP frame-ancestors allows only 'self' and lovable.dev, never *.lovable.app. Why: anyone can publish on lovable.app and could overlay the wallet's pay and passkey prompts.
 - POP history pagination slices the existing fetched reward list in the browser through a tested helper; it does not change ledger reads or balances, keeping presentation separate from payment logic.
 - Directory Give participation joins the current public NectarPay directory to mirrored stores by id and filters one shared list for list/map views; missing or failed Give data is never treated as participation, and discovery flags never authorize payment splits.
+- HME affiliate links are fetched server-side for the verified SSO member UUID and return only a matching public affiliate code; use HME's allowlisted wallet redirect, never guess codes from email, cookies or wallet addresses, so attribution cannot cross accounts.

@@ -1,5 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** Caller identity comes from verified auth claims, never an input ID or email. */
+export const getMyHmeAffiliate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { setResponseHeader } = await import("@tanstack/react-start/server");
+    setResponseHeader("Cache-Control", "no-store");
+    const { fetchHmeAffiliate } = await import("./hme-affiliate.server");
+    return fetchHmeAffiliate(context.claims?.app_metadata?.["hme_member_id"]);
+  });
 
 /**
  * Exchanges an honest.money SSO ticket for a one-time sign-in token for this

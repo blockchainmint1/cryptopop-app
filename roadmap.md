@@ -1,4 +1,6 @@
 # Roadmap
+- [x] HME affiliate links: protected UUID-based lookup, wallet-specific invite link and 6 tests; 198-test suite passed
+- [ ] HME affiliate live acceptance: HME profile endpoint returns 401 for pop-wallet site key; Bobby's wallet account also needs Honest Money SSO sign-in. Requires HME profiles:read approval/key verification; no personal code guessed.
 - [x] Directory: Give participants filter, live NectarPay field verification, tests and updated feature guide (3 participants lack full public listings; no API field needed)
 - [ ] eGiving: remix the giving experience as its own app (the /give page and its leaderboard link were removed from CryptoPOP on 2026-10-28; the card-tap 90/8/2 split still runs here)
 - [x] TSD Bridge: implement receiving-only popup connection, verified wallet signatures, release-gated in-wallet deposit address and progress (54 safety tests; controlled popup flow verified without funds)
