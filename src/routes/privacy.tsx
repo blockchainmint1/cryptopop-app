@@ -273,6 +273,15 @@ function PrivacyPage() {
               deliberately turn on encrypted cloud backup — and that backup is
               encrypted with your password before it leaves the device.
             </p>
+            <p>
+              Two optional features share keys for separate sub-pockets only (never
+              your main wallet): (1) Tap-to-Pay NFC cards hold an encrypted per-card
+              pocket key on our server so a card tap can pay without your phone; and
+              (2) Trading-pocket links (such as Seeds) seal a dedicated trading-pocket
+              key on your device for that approved ecosystem site when you explicitly
+              approve trading access — revoking a trading link asks the site to stop
+              using it, but does not take the keys back.
+            </p>
             <ul className="ml-5 list-disc space-y-2">
               <li>
                 <strong className="text-white">Camera</strong> — used only to scan QR

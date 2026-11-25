@@ -256,6 +256,8 @@ export async function sealTo(recipientPub: Uint8Array, plaintext: Uint8Array): P
     out.set(ct, 44);
     return out;
   } finally {
+    // Zero temporary plaintext bytes (note: JS strings and JSON copies cannot be wiped).
+    plaintext.fill(0);
     keyBytes.fill(0);
     shared.fill(0);
     eph.fill(0);

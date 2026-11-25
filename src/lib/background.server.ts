@@ -18,7 +18,7 @@ let warnedMissingWaitUntil = false;
 // On Cloudflare Workers, `import("cloudflare:workers")` exposes `waitUntil`
 // directly without relying on AsyncLocalStorage surviving framework dispatch.
 const cfMod = "cloudflare:workers";
-void import(/* @vite-ignore */ cfMod)
+const cfWaitUntilReady: Promise<void> = import(/* @vite-ignore */ cfMod)
   .then((m: { waitUntil?: unknown }) => {
     cfWaitUntil = typeof m.waitUntil === "function" ? (m.waitUntil as (p: Promise<unknown>) => void) : null;
   })
@@ -39,6 +39,7 @@ export function runWithExecutionContext<T>(ctx: unknown, fn: () => T | Promise<T
  */
 function scheduleAfterResponse(task: () => Promise<unknown>, label: string): Promise<void> {
   const run = Promise.resolve().then(task).then(() => undefined).catch((e) => console.error(`[${label}]`, e));
+  const ctx = store.getStore();
   if (typeof cfWaitUntil === "function") {
     try {
       cfWaitUntil(run);
@@ -47,10 +48,28 @@ function scheduleAfterResponse(task: () => Promise<unknown>, label: string): Pro
       // Outside a Workers request context; fall through to ALS fallback.
     }
   }
-  const ctx = store.getStore();
   if (ctx && typeof ctx.waitUntil === "function") {
     ctx.waitUntil(run);
-  } else if (!warnedMissingWaitUntil) {
+    return run;
+  }
+  if (cfWaitUntil === undefined) {
+    void cfWaitUntilReady.then(() => {
+      if (typeof cfWaitUntil === "function") {
+        try {
+          cfWaitUntil(run);
+          return;
+        } catch {
+          // Outside a Workers request context.
+        }
+      }
+      if (!warnedMissingWaitUntil) {
+        warnedMissingWaitUntil = true;
+        console.warn(`[${label}] No platform waitUntil available; background work may stop after response.`);
+      }
+    });
+    return run;
+  }
+  if (!warnedMissingWaitUntil) {
     warnedMissingWaitUntil = true;
     console.warn(`[${label}] No platform waitUntil available; background work may stop after response.`);
   }

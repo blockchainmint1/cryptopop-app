@@ -53,7 +53,8 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
   const [manifest, setManifest] = useState<NectarManifest | null>(null);
   const [requested, setRequested] = useState<RequestedManifest | null>(null);
   const [delegate, setDelegate] = useState<DelegateManifest | null>(null);
-  const [delegateMode, setDelegateMode] = useState<DelegateMode>("access");
+  const [delegateMode, setDelegateMode] = useState<DelegateMode>("approve");
+  const [ackDelegateAccess, setAckDelegateAccess] = useState(false);
   const [ackHost, setAckHost] = useState(false);
   const [mode, setMode] = useState<ConsentMode>("silent");
   const [ackNewWallet, setAckNewWallet] = useState(false);
@@ -85,6 +86,7 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
     setManifest(null);
     setRequested(null);
     setDelegate(null);
+    setAckDelegateAccess(false);
     setAckHost(false);
     setAckNewWallet(false);
     const url = parseLinkInput(raw);
@@ -98,7 +100,7 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
       const any = await fetchAnyManifest(url, address ?? undefined);
       if (any.kind === "delegate") {
         setDelegate(any);
-        setDelegateMode(any.modes.includes("access") ? "access" : any.modes[0]!);
+        setDelegateMode(any.modes.includes("approve") ? "approve" : any.modes[0]!);
         return;
       }
       if (any.kind === "requested") {
@@ -314,9 +316,12 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
                       size="sm"
                       variant={delegateMode === m ? "default" : "outline"}
                       className="rounded-full text-xs"
-                      onClick={() => setDelegateMode(m)}
+                      onClick={() => {
+                        setDelegateMode(m);
+                        setAckDelegateAccess(false);
+                      }}
                     >
-                      {m === "access" ? "Give trading access" : "Approve each trade"}
+                      {m === "access" ? "Give trading access" : "Watch-only"}
                     </Button>
                   ))}
                 </div>
@@ -341,8 +346,26 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
                   </>
                 )}
               </div>
+              {delegateMode === "access" && (
+                <label className="flex items-start gap-2 text-xs">
+                  <Checkbox
+                    checked={ackDelegateAccess}
+                    onCheckedChange={(v) => setAckDelegateAccess(v === true)}
+                  />
+                  <span>
+                    {delegate.appName} can spend anything in Trading pocket #{delegate.account} on
+                    these {delegate.chains.length + delegate.extraChains.length} chains without
+                    asking me until I revoke, and revoking does not take the keys back.
+                  </span>
+                </label>
+              )}
               <div className="flex gap-2 pt-1">
-                <Button size="sm" className="rounded-full" disabled={busy} onClick={() => void onApproveDelegate()}>
+                <Button
+                  size="sm"
+                  className="rounded-full"
+                  disabled={busy || (delegateMode === "access" && !ackDelegateAccess)}
+                  onClick={() => void onApproveDelegate()}
+                >
                   {busy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : delegateMode === "access" ? (
@@ -414,7 +437,7 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
                 Trading links
               </div>
               {delegateLinks.map((d) => {
-                const hasExtras = (d.extraChains?.length ?? 0) > 0;
+                const needsRevokeAck = d.mode === "access";
                 const confirming = revokingId === d.linkId;
                 return (
                   <div key={d.linkId} className="space-y-2 rounded-lg border border-white/10 bg-black/20 p-2.5 text-xs">
@@ -424,7 +447,7 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
                           {d.appName} · Pocket #{d.account}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          {d.mode === "access" ? "Trading access" : "Approve each trade"} ·{" "}
+                          {d.mode === "access" ? "Trading access" : "Watch-only"} ·{" "}
                           {d.chains.length + (d.extraChains?.length ?? 0)} chains
                         </div>
                       </div>
@@ -445,15 +468,16 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
                     </div>
                     {confirming && (
                       <div className="space-y-2 border-t border-white/10 pt-2">
-                        {hasExtras && (
+                        {needsRevokeAck && (
                           <label className="flex items-start gap-2 text-xs">
                             <Checkbox
                               checked={ackMovedExtras}
                               onCheckedChange={(v) => setAckMovedExtras(v === true)}
                             />
                             <span>
-                              I moved any extra-chain coins ({d.extraChains!.join(", ")}) out of
-                              this pocket on {d.appName}.
+                              I understand revoking does not take the keys back and I have moved
+                              any coins I want to keep out of Trading pocket #{d.account} on{" "}
+                              {d.appName}.
                             </span>
                           </label>
                         )}
@@ -462,7 +486,7 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
                             size="sm"
                             variant="destructive"
                             className="h-7 rounded-full text-xs"
-                            disabled={busy || (hasExtras && !ackMovedExtras)}
+                            disabled={busy || (needsRevokeAck && !ackMovedExtras)}
                             onClick={() => void onRevokeDelegate(d)}
                           >
                             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Confirm revoke"}

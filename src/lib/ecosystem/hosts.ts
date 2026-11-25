@@ -132,6 +132,9 @@ export function setEcosystemSites(sites: RegistrySite[], verified = false): void
     }
     spendingGrants = grants;
     verifiedUntil = Date.now() + 5 * 60 * 1000;
+  } else {
+    spendingGrants = new Map();
+    verifiedUntil = 0;
   }
 }
 

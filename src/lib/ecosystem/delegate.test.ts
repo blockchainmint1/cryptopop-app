@@ -101,8 +101,10 @@ describe("sealTo (X25519 + HKDF-SHA256 + AES-256-GCM)", () => {
   it("seals and decrypts cleanly with the recipient X25519 private key", async () => {
     const recipientPriv = x25519.utils.randomPrivateKey();
     const recipientPub = x25519.getPublicKey(recipientPriv);
-    const plaintext = new TextEncoder().encode(JSON.stringify({ TXC: "xprv-test", SUI: "deadbeef" }));
+    const expected = JSON.stringify({ TXC: "xprv-test", SUI: "deadbeef" });
+    const plaintext = new TextEncoder().encode(expected);
     const sealed = await sealTo(recipientPub, plaintext);
+    expect(plaintext.every((b) => b === 0)).toBe(true);
 
     const ephPub = sealed.slice(0, 32);
     const nonce = sealed.slice(32, 44);
@@ -114,7 +116,7 @@ describe("sealTo (X25519 + HKDF-SHA256 + AES-256-GCM)", () => {
     const keyBytes = hkdf(sha256, shared, salt, new TextEncoder().encode("hm-link-delegate v1"), 32);
     const key = await crypto.subtle.importKey("raw", new Uint8Array(keyBytes), { name: "AES-GCM" }, false, ["decrypt"]);
     const plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, key, new Uint8Array(ct)));
-    expect(new TextDecoder().decode(plain)).toBe(new TextDecoder().decode(plaintext));
+    expect(new TextDecoder().decode(plain)).toBe(expected);
   });
 });
 
@@ -190,5 +192,59 @@ describe("validateDelegate security rules", () => {
     expect(() =>
       validateDelegate(fewer, "https://seeds.honest.money/api/public/hme-link/manifest/abc", {}, [prior]),
     ).toThrow(/drop Dogecoin/i);
+  });
+
+  it("refuses an expired manifest", () => {
+    setEcosystemSites([SEEDS_SITE], true);
+    const expired = makeManifest({ expires_at: new Date(Date.now() - 60_000).toISOString() });
+    expect(() => validateDelegate(expired, "https://seeds.honest.money/api/public/hme-link/manifest/abc")).toThrow(
+      /expired/i,
+    );
+  });
+
+  it("refuses a cross-origin submit URL", () => {
+    setEcosystemSites([SEEDS_SITE], true);
+    const bad = makeManifest({ submit_url: "https://evil.example/api/submit" });
+    expect(() => validateDelegate(bad, "https://seeds.honest.money/api/public/hme-link/manifest/abc")).toThrow(
+      /different server/i,
+    );
+  });
+
+  it("refuses a missing or short recipient key", () => {
+    setEcosystemSites([SEEDS_SITE], true);
+    const bad = makeManifest({ recipient_pubkey: "abcd" });
+    expect(() => validateDelegate(bad, "https://seeds.honest.money/api/public/hme-link/manifest/abc")).toThrow(
+      /encryption key/i,
+    );
+  });
+
+  it("refuses an unverified registry", () => {
+    setEcosystemSites([SEEDS_SITE], false);
+    expect(() => validateDelegate(makeManifest(), "https://seeds.honest.money/api/public/hme-link/manifest/abc")).toThrow(
+      /approved/i,
+    );
+  });
+
+  it("excludes extra chains when only approve mode is allowed", () => {
+    setEcosystemSites([{ ...SEEDS_SITE, delegate_modes: ["approve"] }], true);
+    const v = validateDelegate(makeManifest(), "https://seeds.honest.money/api/public/hme-link/manifest/abc");
+    expect(v.modes).toEqual(["approve"]);
+    expect(v.chains.length).toBe(5);
+  });
+
+  it("refuses a branch already owned by another host", () => {
+    setEcosystemSites([SEEDS_SITE], true);
+    const book = { "1106": { host: "other.honest.money", retired: false } };
+    expect(() =>
+      validateDelegate(makeManifest(), "https://seeds.honest.money/api/public/hme-link/manifest/abc", book),
+    ).toThrow(/already been used/i);
+  });
+
+  it("marks a previously revoked branch as reusesRevoked and disables approve mode", () => {
+    setEcosystemSites([SEEDS_SITE], true);
+    const book = { "1106": { host: "seeds.honest.money", retired: true } };
+    const v = validateDelegate(makeManifest(), "https://seeds.honest.money/api/public/hme-link/manifest/abc", book);
+    expect(v.reusesRevoked).toBe(true);
+    expect(v.modes).toEqual(["access"]);
   });
 });
