@@ -24,8 +24,31 @@ export function runWithExecutionContext<T>(ctx: unknown, fn: () => T | Promise<T
  * capture) the task still starts, and anything it didn't finish is picked up
  * later from the queue instead of being lost.
  */
-export function afterResponse(task: () => Promise<unknown>, label = "background task") {
-  const run = Promise.resolve().then(task).catch((e) => console.error(`[${label}]`, e));
+function scheduleAfterResponse(task: () => Promise<unknown>, label: string): Promise<void> {
+  const run = Promise.resolve().then(task).then(() => undefined).catch((e) => console.error(`[${label}]`, e));
   const ctx = store.getStore();
   if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(run);
+  return run;
+}
+
+export function afterResponse(task: () => Promise<unknown>, label = "background task") {
+  scheduleAfterResponse(task, label);
+}
+
+/**
+ * Start background work now and give it a short chance to finish before the
+ * caller gets its answer. The platform still keeps the same promise alive if
+ * it needs longer. Failures stay out of the caller's payment result.
+ */
+export async function afterResponseWithin(task: () => Promise<unknown>, timeoutMs: number, label = "background task"): Promise<void> {
+  const run = scheduleAfterResponse(task, label);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      run,
+      new Promise<void>((resolve) => { timer = setTimeout(resolve, timeoutMs); }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
