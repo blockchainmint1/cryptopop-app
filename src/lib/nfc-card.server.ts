@@ -200,6 +200,10 @@ export async function executePayment(
     key.fill(0);
     const txid = await broadcastRaw(tx.hex);
     await sb.from("nfc_card_payments").update({ status: "sent", txid }).eq("id", paymentId);
+    afterResponse(async () => {
+      const { notifyBroadcastProgress } = await import("./nectarpay-progress.server");
+      await notifyBroadcastProgress(p.invoice_id, txid, tx.hex);
+    }, "NectarPay card progress");
     // Money is out and the sale is recorded: that is the terminal's answer.
     // The alert and the reward follow after the reply so the tap never waits.
     afterResponse(() => notify(chat, `✅ ${esc(c.label)} paid <b>$${Number(p.amount_usd).toFixed(2)}</b> at ${esc(p.merchant_name ?? "a NectarPay store")}.` +

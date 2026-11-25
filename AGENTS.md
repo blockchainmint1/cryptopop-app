@@ -1,5 +1,6 @@
 
 - NectarPay calls go through src/lib/nectarpay.functions.ts (server-side proxy) — avoids CORS and lets POP rewards be verified with NectarPay before minting.
+- NectarPay submitted-progress notices run after successful broadcast in server background work, bound to the raw transaction and signed invoice merchant; retry notices with one request ID, never rebroadcast or treat acknowledgment as settlement. Why: register updates must not delay payments or authorize unverified funds.
 - Ecosystem wallet links use the exact-host HME allowlist and signed registry through the guarded proxy; only signed watch-only account xpubs leave the device. Never trust localStorage as a registry source, because wallet connections must fail closed to unknown sites.
 - Merchant/community rewards ledger lives in `reward_programs` + `reward_ledger` (database is authoritative, keyed by wallet address); logic in `src/lib/store-rewards.server.ts`. Why: non-custodial wallet has no login, and NectarPay only needs to confirm payments.
 - HME requests use the per-site key and site header only inside server handlers; backup actions require a one-time member-approved pass. HME identities are mapped by stable member id, not mutable email, to prevent account reassignment.

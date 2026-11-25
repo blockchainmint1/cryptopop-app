@@ -18,6 +18,7 @@ const PrepareInput = z.object({
 
 const BroadcastInput = z.object({
   rawHex: z.string().min(20).max(200_000).regex(/^[0-9a-fA-F]+$/),
+  nectarInvoiceId: z.string().uuid().optional(),
 });
 
 export const prepareSend = createServerFn({ method: "POST" })
@@ -41,6 +42,14 @@ export const broadcastSignedTx = createServerFn({ method: "POST" })
     const { broadcastRaw, CoinsSpentError } = await import("./send.server");
     try {
       const txid = await broadcastRaw(data.rawHex);
+      if (data.nectarInvoiceId) {
+        const invoiceId = data.nectarInvoiceId;
+        const { afterResponse } = await import("./background.server");
+        afterResponse(async () => {
+          const { notifyBroadcastProgress } = await import("./nectarpay-progress.server");
+          await notifyBroadcastProgress(invoiceId, txid, data.rawHex);
+        }, "NectarPay progress");
+      }
       return { ok: true as const, txid };
     } catch (e) {
       if (e instanceof CoinsSpentError) return { ok: false as const, spent: e.outpoints, error: e.message };

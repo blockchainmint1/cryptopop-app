@@ -335,7 +335,7 @@ export function NectarPaySheet({
           throw new Error("Payment or fee changed — review and confirm again");
         }
         const rawHex = splitIntent ? signSplitPsbt(built.psbtBase64, mnemonic, splitIntent) : signPsbt(built.psbtBase64, mnemonic, intent);
-        const r = await broadcast({ data: { rawHex } });
+        const r = await broadcast({ data: { rawHex, ...(!direct && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(invId) ? { nectarInvoiceId: invId } : {}) } });
         if (r.ok) {
           reserveOutpoints(built.inputs);
           res = { txid: r.txid };

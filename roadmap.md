@@ -1,4 +1,6 @@
 # Roadmap
+- [x] NectarPay progress: post-broadcast notices for wallet/card checkout; 10 new tests, full 208-test suite passed; auditor brief prepared. Optional pre-send `paying` notice deferred (no unverified public progress writer).
+- [ ] NectarPay progress live acceptance: needs NectarPay publish and jointly approved normal/Give test invoices; no funds sent automatically.
 - [x] HME affiliate links: protected UUID-based lookup, wallet-specific invite link and 6 tests; 198-test suite passed
 - [ ] HME affiliate live acceptance: HME profile endpoint returns 401 for pop-wallet site key; Bobby's wallet account also needs Honest Money SSO sign-in. Requires HME profiles:read approval/key verification; no personal code guessed.
 - [x] Directory: Give participants filter, live NectarPay field verification, tests and updated feature guide (3 participants lack full public listings; no API field needed)
