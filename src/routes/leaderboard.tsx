@@ -131,7 +131,6 @@ function PopPage() {
   const [rank, setRank] = useState<number | null>(null);
   const [points, setPoints] = useState<number | null>(null);
   const [loadingMine, setLoadingMine] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -502,48 +501,6 @@ function PopPage() {
           </div>
         </section>
 
-        {/* Top of the board — the people you're chasing */}
-        <section>
-          {sectionTitle("Top POP")}
-          <div className="mt-2 divide-y divide-border rounded-2xl border border-border bg-card">
-            {leaders === null ? (
-              <div className="flex justify-center p-6">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            ) : leaders.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">
-                No POP awarded yet. Be the first.
-              </p>
-            ) : (
-              (showAll ? leaders : leaders.slice(0, 3)).map((l, i) => {
-                const me = address && l.address.toLowerCase() === address.toLowerCase();
-                return (
-                  <div
-                    key={l.address}
-                    className={`flex items-center gap-3 px-4 py-3 ${me ? "bg-primary/10" : ""}`}
-                  >
-                    <span className="w-6 font-mono text-xs text-muted-foreground">{i + 1}</span>
-                    <span className="flex-1 truncate font-mono text-xs">
-                      {me ? "You" : l.display}
-                    </span>
-                    <span className="font-display text-sm font-semibold tabular-nums">
-                      {fmt(l.total)}
-                    </span>
-                  </div>
-                );
-              })
-            )}
-          </div>
-          {leaders && leaders.length > 3 ? (
-            <button
-              type="button"
-              onClick={() => setShowAll((v) => !v)}
-              className="mt-2 w-full rounded-xl border border-white/12 bg-white/5 py-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition hover:text-foreground"
-            >
-              {showAll ? "Show less" : `See more (${leaders.length - 3})`}
-            </button>
-          ) : null}
-        </section>
       </main>
       <BottomNavSpacer />
       <BottomNav />
