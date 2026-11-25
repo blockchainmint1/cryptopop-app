@@ -288,14 +288,14 @@ html.native .native-scroll {
   padding-right: env(safe-area-inset-right);
 }
 
-/* Installed app (Chrome "Add to Home screen") runs immersive: the manifest
-   asks for fullscreen, so the status bar and the on-screen Back/Home/Recents
-   buttons are hidden and the page is drawn edge-to-edge. Keep the app clear of
-   the camera cutout at the top, and of the system buttons that flash up when
-   the owner swipes from the bottom edge. */
-@media (display-mode: fullscreen) {
+/* Installed app (Android fullscreen & iOS standalone Home Screen PWA) draws
+   edge-to-edge under the status bar / camera cutout. Keep content clear of the
+   top status bar, side notches, and bottom home indicator / system buttons. */
+@media (display-mode: fullscreen), (display-mode: standalone) {
   .native-scroll {
     padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   .bottom-nav {
