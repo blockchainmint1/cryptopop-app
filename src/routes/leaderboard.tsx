@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   CalendarDays,
   Check,
+  ChevronLeft,
   ChevronRight,
   Copy,
   Heart,
@@ -24,6 +25,7 @@ import { BottomNav, BottomNavSpacer } from "@/components/bottom-nav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UnlockScreen } from "@/components/wallet/unlock-screen";
+import { paginatePopHistory } from "@/lib/pop-history-pagination";
 
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
@@ -109,6 +111,8 @@ function PopPage() {
 
   const [leaders, setLeaders] = useState<LeaderRow[] | null>(null);
   const [rewards, setRewards] = useState<WalletReward[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const history = paginatePopHistory(rewards, historyPage);
   const [rank, setRank] = useState<number | null>(null);
   const [points, setPoints] = useState<number | null>(null);
   const [loadingMine, setLoadingMine] = useState(false);
@@ -126,6 +130,7 @@ function PopPage() {
   }, [fetchLeaders]);
 
   useEffect(() => {
+    setHistoryPage(1);
     if (!address) return;
     let alive = true;
     setLoadingMine(true);
@@ -256,7 +261,7 @@ function PopPage() {
                 No POP yet — check in at an event or pay with TSD to earn your first point.
               </p>
             ) : (
-              rewards.map((r) => (
+              history.rows.map((r) => (
                 <div key={r.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">{rewardLabel(r)}</p>
@@ -303,6 +308,33 @@ function PopPage() {
               ))
             )}
           </div>
+          {!loadingMine && rewards.length > 0 && (
+            <nav aria-label="POP history pagination" className="mt-3 flex items-center justify-between gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Previous POP history page"
+                title="Previous page"
+                disabled={history.page === 1}
+                onClick={() => setHistoryPage(history.page - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span aria-live="polite" aria-atomic="true" className="font-mono text-xs tabular-nums text-muted-foreground">
+                Page {history.page} of {history.pageCount}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Next POP history page"
+                title="Next page"
+                disabled={history.page === history.pageCount}
+                onClick={() => setHistoryPage(history.page + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </nav>
+          )}
         </section>
 
         {/* ARCADE — daily games, just for fun (no POP payouts) */}
