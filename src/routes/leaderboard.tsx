@@ -365,7 +365,7 @@ function PopPage() {
         <section>
           {sectionTitle("Ways to earn")}
           <div className="mt-2 space-y-3">
-            <Link to="/events" className="block">
+            <Link to="/scan" search={{ qr: undefined }} className="block">
               <Card className="flex items-center gap-4 border-white/12 bg-white/5 p-4 transition hover:bg-white/10">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <CalendarDays className="h-5 w-5" />
@@ -375,7 +375,7 @@ function PopPage() {
                     Event
                   </span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    Sign up, then check in at the door
+                    Scan the event check-in QR
                   </span>
                 </span>
                 <span className="shrink-0 text-right">
