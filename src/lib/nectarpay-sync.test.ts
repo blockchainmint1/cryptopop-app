@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toRow } from "./nectarpay-sync.server";
+import { directorySchema, removedIdsOf, toRow } from "./nectarpay-sync.server";
 
 const base = {
   id: "200ce096-34e9-4681-9a5b-d7af650e7ef3",
@@ -45,5 +45,31 @@ describe("store directory mirror", () => {
   it("drops a broken timestamp instead of guessing", () => {
     expect(toRow(base).source_updated_at).toBe("2026-10-27T10:57:57.740Z");
     expect(toRow({ ...base, updated_at: "next tuesday" }).source_updated_at).toBeNull();
+  });
+});
+
+const feed = (removed: unknown[]) => ({
+  generated_at: "2026-11-25T15:02:16.081942+00:00",
+  count: 1,
+  stores: [{ ...base, listing: "full", status: "live" }],
+  removed,
+});
+
+describe("retired-store list from the feed", () => {
+  it("accepts NectarPay's newer {id, status, removed_at} objects", () => {
+    const parsed = directorySchema.parse(
+      feed([{ id: "7189bd32-fb81-412b-b544-e95dff1e5fcb", status: "unlisted", removed_at: "2026-11-20T21:44:25.210534+00:00" }]),
+    );
+    expect(removedIdsOf(parsed)).toEqual(["7189bd32-fb81-412b-b544-e95dff1e5fcb"]);
+  });
+
+  it("still accepts the older bare-id list", () => {
+    const parsed = directorySchema.parse(feed(["7189bd32-fb81-412b-b544-e95dff1e5fcb"]));
+    expect(removedIdsOf(parsed)).toEqual(["7189bd32-fb81-412b-b544-e95dff1e5fcb"]);
+  });
+
+  it("keeps a feed with no retirements working", () => {
+    const parsed = directorySchema.parse(feed([]));
+    expect(removedIdsOf(parsed)).toEqual([]);
   });
 });

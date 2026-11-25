@@ -55,13 +55,30 @@ const storeSchema = z.object({
   updated_at: z.string().max(60).nullish(),
 });
 
-const directorySchema = z.object({
+// NectarPay first sent retired stores as bare ids, then switched to
+// {id, status, removed_at} objects. Both shapes must parse: a rejected feed
+// aborts the whole pull, which left our copy frozen for weeks.
+const removedSchema = z.union([
+  z.string().max(64),
+  z.object({
+    id: z.string().max(64),
+    status: z.string().max(20).nullish(),
+    removed_at: z.string().max(60).nullish(),
+  }),
+]);
+
+export const directorySchema = z.object({
   generated_at: z.string().max(60),
   since: z.string().max(60).nullish(),
   count: z.number().int().min(0).max(200000),
   stores: z.array(storeSchema).max(50000),
-  removed: z.array(z.string().max(64)).max(50000).default([]),
+  removed: z.array(removedSchema).max(50000).default([]),
 });
+
+/** Retired store ids, whatever shape the feed sent them in. */
+export function removedIdsOf(feed: { removed: z.infer<typeof directorySchema>["removed"] }): string[] {
+  return feed.removed.map((r) => (typeof r === "string" ? r : r.id));
+}
 
 type FeedStore = z.input<typeof storeSchema>;
 
@@ -196,6 +213,7 @@ export async function runNectarpaySync({ force = false }: { force?: boolean } = 
     const feed = directorySchema.parse(await res.json());
     const isFullPull = !cursor;
     const rows = feed.stores.map(toRow);
+    const removedIds = removedIdsOf(feed);
 
     let written = 0;
     for (const batch of chunks(rows, 100)) {
@@ -205,7 +223,7 @@ export async function runNectarpaySync({ force = false }: { force?: boolean } = 
     }
 
     let retired = 0;
-    for (const batch of chunks(feed.removed, 200)) {
+    for (const batch of chunks(removedIds, 200)) {
       const { data, error } = await sb
         .from("nectarpay_stores")
         .update({ is_active: false, status: "removed" })
@@ -224,7 +242,7 @@ export async function runNectarpaySync({ force = false }: { force?: boolean } = 
       last_status: "ok",
       last_error: null,
       last_count: feed.count,
-      last_removed: feed.removed.length,
+      last_removed: removedIds.length,
     });
 
     return { status: "ok", written, count: feed.count, removed: retired, geocoded };
