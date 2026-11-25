@@ -207,42 +207,36 @@ function PopPage() {
       <PageHeader />
 
       <main className="mx-auto w-full max-w-md space-y-6 px-4 py-6">
-        {/* 1. RANK — who you are on the board right now */}
-        <Card className="border-white/12 bg-white/5 p-5 text-center">
-          <Trophy className="mx-auto h-5 w-5 text-primary" />
-          <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            Your rank
-          </p>
-          <p className="mt-1 font-display text-5xl font-bold leading-none">
-            {rank ? `#${rank}` : "—"}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {rank
-              ? leaders && leaders.length > 1
-                ? `of ${fmt(leaders.length)} POP earners`
-                : "you're on the board"
-              : address
-                ? "earn your first POP to get a rank"
-                : "set up your wallet to get a rank"}
-          </p>
-        </Card>
-
-        {/* 2. POINTS — the number that matters */}
-        <Card className="border-white/12 bg-gradient-to-br from-primary/15 via-primary/5 to-background p-6 text-center">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            Your points
-          </p>
-          <div className="mt-2 flex items-baseline justify-center gap-2">
-            <span className="font-display text-6xl font-bold leading-none tabular-nums">
-              {points === null ? "—" : fmt(points)}
-            </span>
-            <span className="font-display text-lg font-semibold text-muted-foreground">POP</span>
+        {/* Points lead; rank stays secondary in a compact, unframed header. */}
+        <section aria-label="Your POP summary" className="grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-3 border-b border-border pb-5">
+          <div className="min-w-0">
+            <p className="font-mono text-[11px] uppercase text-muted-foreground">POP points</p>
+            <div className="mt-2 flex items-center gap-2">
+              <img src={coin} alt="" aria-hidden className="h-8 w-8 shrink-0" />
+              <span className="min-w-0 break-words font-display text-5xl font-bold leading-none tabular-nums text-primary">
+                {points === null ? "—" : fmt(points)}
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {loadingMine ? "checking your ledger…" : "POP earned, all time"}
+            </p>
           </div>
-          <img src={coin} alt="" aria-hidden className="mx-auto mt-3 h-8 w-8 opacity-80" />
-          <p className="mt-2 text-xs text-muted-foreground">
-            {loadingMine ? "checking your ledger…" : "POP earned, all time"}
-          </p>
-        </Card>
+          <div className="min-w-0 border-l border-border pl-3 text-right">
+            <p className="flex items-center justify-end gap-1 font-mono text-[10px] uppercase text-muted-foreground">
+              <Trophy className="h-3 w-3 shrink-0" /> Your rank
+            </p>
+            <p className="mt-1 break-words font-display text-2xl font-bold leading-none tabular-nums">
+              {rank ? `#${fmt(rank)}` : "—"}
+            </p>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              {rank
+                ? leaders && leaders.length > 1
+                  ? `of ${fmt(leaders.length)} earners`
+                  : "on the board"
+                : "not ranked yet"}
+            </p>
+          </div>
+        </section>
 
         {/* 3. POINT HISTORY — every credit, newest first */}
         <section>
