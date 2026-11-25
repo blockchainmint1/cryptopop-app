@@ -7,6 +7,45 @@ import { nectarPayPartnerKey } from "@/lib/nectarpay-key.server";
 import { claimHeaders } from "./pop-claim.server";
 
 const BASE = "https://app.nectar-pay.com/api/public/v1/stickers";
+const INVOICE_CACHE_TTL_MS = 5 * 60_000;
+const INVOICE_CACHE_MAX = 500;
+const verifiedInvoiceAddresses = new Map<string, { address: string; expiresAt: number }>();
+
+/** Constant-time string compare for hex HMAC signatures (works in Workers + Node). */
+export function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function cacheVerifiedInvoiceAddress(invoiceId: string, address: string): void {
+  const now = Date.now();
+  if (verifiedInvoiceAddresses.size >= INVOICE_CACHE_MAX) {
+    for (const [k, v] of verifiedInvoiceAddresses) if (v.expiresAt <= now) verifiedInvoiceAddresses.delete(k);
+    if (verifiedInvoiceAddresses.size >= INVOICE_CACHE_MAX) {
+      const oldest = verifiedInvoiceAddresses.keys().next().value;
+      if (oldest !== undefined) verifiedInvoiceAddresses.delete(oldest);
+    }
+  }
+  verifiedInvoiceAddresses.set(invoiceId, { address, expiresAt: now + INVOICE_CACHE_TTL_MS });
+}
+
+/** Read a recently signed NectarPay merchant address for an invoice (avoids a second lookup). */
+export function getCachedInvoiceAddress(invoiceId: string): string | null {
+  const entry = verifiedInvoiceAddresses.get(invoiceId);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    verifiedInvoiceAddresses.delete(invoiceId);
+    return null;
+  }
+  return entry.address;
+}
+
+/** Test helper to isolate invoice cache state between unit tests. */
+export function clearCachedInvoiceAddresses(): void {
+  verifiedInvoiceAddresses.clear();
+}
 
 export type StickerResult = {
   name: string;
@@ -48,7 +87,7 @@ export async function callSticker(kind: "lookup" | "invoice", input: { code: str
   const text = await res.text();
   const ts = res.headers.get("x-hme-timestamp") ?? "";
   const sig = res.headers.get("x-hme-signature") ?? "";
-  if (!ts || !sig || sig !== (await stickerResponseSignature(secret, body, text, ts)) || Math.abs(Date.now() / 1000 - Number(ts)) > 300) {
+  if (!ts || !sig || !timingSafeEqualStr(sig, await stickerResponseSignature(secret, body, text, ts)) || Math.abs(Date.now() / 1000 - Number(ts)) > 300) {
     return { error: res.status === 401 ? "NectarPay refused the store lookup." : "Store details couldn't be verified. Don't pay this code." };
   }
   let j: Record<string, any>;
@@ -57,6 +96,7 @@ export async function callSticker(kind: "lookup" | "invoice", input: { code: str
   if (j.chain !== "txc" || j.token_symbol !== "TSD" || typeof j.address !== "string") return { error: "This store isn't accepting TSD." };
   const e = j.egiving ?? {};
   const min = e.merchantMinimumUsd;
+  if (typeof j.invoice_id === "string" && j.invoice_id) cacheVerifiedInvoiceAddress(j.invoice_id, j.address);
   return {
     name: String(j.merchant?.name ?? "Store"),
     logoUrl: j.merchant?.logo_url ?? null,
@@ -89,7 +129,7 @@ export async function reportStickerPaid(input: { code: string; invoice_id: strin
     const text = await res.text();
     const ts = res.headers.get("x-hme-timestamp") ?? "";
     const sig = res.headers.get("x-hme-signature") ?? "";
-    if (!ts || sig !== (await stickerResponseSignature(secret, body, text, ts))) return { paid: false, status: null, error: `unverified ${res.status}` };
+    if (!ts || !timingSafeEqualStr(sig, await stickerResponseSignature(secret, body, text, ts))) return { paid: false, status: null, error: `unverified ${res.status}` };
     const j = JSON.parse(text);
     if (!res.ok || j.error) return { paid: false, status: null, error: String(j.error ?? res.status) };
     return { paid: j.paid === true, status: j.status ?? null };
@@ -106,7 +146,7 @@ export type QrLookupResult =
   | { kind: "none"; reason: "not_found" | "ambiguous" | "error"; error: string };
 
 /** Register QR (inv=… or bare address) → signed NectarPay sale details. The QR itself is never trusted. */
-export async function lookupRegisterQr(input: { invoice_id?: string; address?: string }): Promise<QrLookupResult> {
+export async function lookupRegisterQr(input: { invoice_id?: string; address?: string }, timeoutMs = 4000): Promise<QrLookupResult> {
   const secret = nectarPayPartnerKey();
   if (!secret) return { kind: "none", reason: "error", error: "Store lookup isn't set up." };
   const body = JSON.stringify({ request_id: crypto.randomUUID(), ...input });
@@ -114,6 +154,8 @@ export async function lookupRegisterQr(input: { invoice_id?: string; address?: s
   try {
     res = await fetch("https://app.nectar-pay.com/api/public/v1/qr/lookup", {
       method: "POST",
+      redirect: "manual",
+      signal: AbortSignal.timeout(timeoutMs),
       headers: { ...(await claimHeaders(secret, body)), Accept: "application/json", "User-Agent": "Mozilla/5.0 (CryptoPOP wallet)" },
       body,
     });
@@ -123,7 +165,7 @@ export async function lookupRegisterQr(input: { invoice_id?: string; address?: s
   const text = await res.text();
   const ts = res.headers.get("x-hme-timestamp") ?? "";
   const sig = res.headers.get("x-hme-signature") ?? "";
-  if (!ts || !sig || sig !== (await stickerResponseSignature(secret, body, text, ts)) || Math.abs(Date.now() / 1000 - Number(ts)) > 300) {
+  if (!ts || !sig || !timingSafeEqualStr(sig, await stickerResponseSignature(secret, body, text, ts)) || Math.abs(Date.now() / 1000 - Number(ts)) > 300) {
     return { kind: "none", reason: "error", error: "Store details couldn't be verified. Don't pay this code." };
   }
   if (res.status === 404) return { kind: "none", reason: "not_found", error: "No open sale for this code." };
@@ -138,9 +180,11 @@ export async function lookupRegisterQr(input: { invoice_id?: string; address?: s
   }
   const e = j.egiving ?? {};
   const num = (v: unknown) => (v != null && Number.isFinite(Number(v)) ? Number(v) : null);
+  const invoiceId = String(j.invoice_id);
+  cacheVerifiedInvoiceAddress(invoiceId, j.address);
   return {
     kind: "invoice",
-    invoiceId: String(j.invoice_id),
+    invoiceId,
     status: String(j.status ?? "new"),
     fiatAmount: Number(j.fiat_amount ?? 0),
     currency: String(j.currency ?? "USD"),

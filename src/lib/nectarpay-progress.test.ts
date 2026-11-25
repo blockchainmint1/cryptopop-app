@@ -2,11 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as bitcoin from "bitcoinjs-lib";
 import { deriveTxcAddress } from "./wallet";
 import { notifyBroadcastProgress, reportPaying, reportPaymentSubmitted } from "./nectarpay-progress.server";
-import { stickerResponseSignature } from "./nectarpay-sticker.server";
+import { runWithExecutionContext } from "./background.server";
+import { stickerResponseSignature, timingSafeEqualStr } from "./nectarpay-sticker.server";
 
 const lookup = vi.hoisted(() => vi.fn());
+const cachedAddress = vi.hoisted(() => vi.fn<() => string | null>(() => null));
 vi.mock("./nectarpay-sticker.server", async importOriginal => ({
-  ...await importOriginal<typeof import("./nectarpay-sticker.server")>(), lookupRegisterQr: lookup,
+  ...await importOriginal<typeof import("./nectarpay-sticker.server")>(),
+  lookupRegisterQr: lookup,
+  getCachedInvoiceAddress: cachedAddress,
 }));
 vi.mock("./nectarpay-key.server", () => ({ nectarPayPartnerKey: () => "test-only-partner-key" }));
 
@@ -35,6 +39,7 @@ async function reply(body: string, tweak: Record<string, unknown> = {}, offset =
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
+  cachedAddress.mockReset().mockReturnValue(null);
   lookup.mockReset().mockResolvedValue({ kind: "invoice", invoiceId, address: merchant });
   fetchMock.mockImplementation((_url, init: RequestInit) => reply(String(init.body)));
 });
@@ -86,12 +91,41 @@ describe("NectarPay progress hints", () => {
   });
   it("retries the same request id and never broadcasts money", async () => {
     fetchMock.mockResolvedValueOnce(new Response("unavailable", { status: 503 }));
-    const pending = notifyBroadcastProgress(invoiceId, tx.id, tx.hex);
-    await pending;
+    const kept: Promise<unknown>[] = [];
+    await runWithExecutionContext({ waitUntil: (p: Promise<unknown>) => kept.push(p) }, async () => {
+      await notifyBroadcastProgress(invoiceId, tx.id, tx.hex);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(kept).toHaveLength(1);
+    await kept[0];
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const bodies = fetchMock.mock.calls.map(call => JSON.parse(call[1].body));
     expect(bodies[0].request_id).toBe(bodies[1].request_id);
     expect(bodies.every(body => body.event === "payment_submitted" && body.txid === tx.id)).toBe(true);
+  });
+  it("does not retry when NectarPay refuses with 4xx", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("rejected", { status: 400 }));
+    const kept: Promise<unknown>[] = [];
+    await runWithExecutionContext({ waitUntil: (p: Promise<unknown>) => kept.push(p) }, async () => {
+      await notifyBroadcastProgress(invoiceId, tx.id, tx.hex);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(kept).toHaveLength(0);
+  });
+  it("uses cached signed merchant address without a second NectarPay lookup", async () => {
+    cachedAddress.mockReturnValue(merchant);
+    await notifyBroadcastProgress(invoiceId, tx.id, tx.hex);
+    expect(lookup).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+  it("passes a 1.5-second timeout when falling back to lookupRegisterQr", async () => {
+    await notifyBroadcastProgress(invoiceId, tx.id, tx.hex);
+    expect(lookup).toHaveBeenCalledWith({ invoice_id: invoiceId }, 1500);
+  });
+  it("compares HMAC signatures in constant time", () => {
+    expect(timingSafeEqualStr("abcdef", "abcdef")).toBe(true);
+    expect(timingSafeEqualStr("abcdef", "abcdeg")).toBe(false);
+    expect(timingSafeEqualStr("abcdef", "abcde")).toBe(false);
   });
   it("sends a signed paying hint on scan without a txid", async () => {
     fetchMock.mockImplementation((_url, init) => reply(init.body, { accepted: true, event: "paying" }));

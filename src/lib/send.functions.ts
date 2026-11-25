@@ -47,12 +47,12 @@ export const broadcastSignedTx = createServerFn({ method: "POST" })
         const { afterResponseWithin } = await import("./background.server");
         // NectarPay normally acknowledges in under 200 ms. Start the notice in
         // this request (background-only work was being cut off in production),
-        // but never hold up the wallet for more than 1.5 seconds or turn a
+        // but never hold up the wallet for more than 3 seconds or turn a
         // successful broadcast into a failure because a progress hint failed.
         await afterResponseWithin(async () => {
           const { notifyBroadcastProgress } = await import("./nectarpay-progress.server");
           await notifyBroadcastProgress(invoiceId, txid, data.rawHex);
-        }, 1500, "NectarPay progress");
+        }, 3000, "NectarPay progress");
       }
       return { ok: true as const, txid };
     } catch (e) {

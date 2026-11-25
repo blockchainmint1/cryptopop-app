@@ -91,6 +91,12 @@ export const getNectarInvoice = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ id: idSchema, nonce: nonceSchema }).parse(d))
   .handler(async ({ data }): Promise<{ invoice: NectarInvoice | null; error: string | null }> => {
     try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const { checkRateLimit, clientIp } = await import("./rate-limit.server");
+      const ip = clientIp(getRequest().headers);
+      if (!checkRateLimit(`nectar-invoice-lookup:${ip}`, { limit: 20, windowMs: 60_000 }).allowed) {
+        return { invoice: null, error: "Too many lookups. Please wait a moment." };
+      }
       const raw = await fetchJson(invoiceUrl(data.id, data.nonce));
       const invoice = normalize(raw);
       if (invoice.id && !["paid", "confirmed", "settled", "complete", "completed"].includes(invoice.status.toLowerCase())) {
@@ -354,6 +360,12 @@ export const lookupNectarQr = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ invoiceId: z.string().regex(/^[0-9a-fA-F-]{8,64}$/).nullable(), address: z.string().min(20).max(80) }).parse(d))
   .handler(async ({ data }) => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { checkRateLimit, clientIp } = await import("./rate-limit.server");
+    const ip = clientIp(getRequest().headers);
+    if (!checkRateLimit(`nectar-qr-lookup:${ip}`, { limit: 20, windowMs: 60_000 }).allowed) {
+      return { kind: "none" as const, reason: "error" as const, error: "Too many lookups. Please wait a moment." };
+    }
     const { lookupRegisterQr } = await import("./nectarpay-sticker.server");
     const r = await lookupRegisterQr(data.invoiceId ? { invoice_id: data.invoiceId } : { address: data.address });
     // The address we pay must be the one NectarPay signed, and it must match the scanned code.
