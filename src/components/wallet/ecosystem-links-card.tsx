@@ -30,8 +30,15 @@ import {
 import { isEcosystemSite, loginSiteName } from "@/lib/ecosystem/hosts";
 import { useEcosystemSites } from "@/lib/ecosystem/sites";
 import { submitRequested, type RequestedManifest } from "@/lib/ecosystem/requested";
-
-type Target = { kind: "bundle"; manifest: NectarManifest } | RequestedManifest;
+import {
+  listDelegateLinks,
+  revokeDelegate,
+  submitDelegate,
+  type DelegateLinkRecord,
+  type DelegateManifest,
+  type DelegateMode,
+} from "@/lib/ecosystem/delegate";
+import { approvePayment, notApprovedMessage } from "@/lib/wallet/payment-approval";
 
 export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string }) {
   useEcosystemSites();
@@ -45,13 +52,21 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
   const [notice, setNotice] = useState<string | null>(null);
   const [manifest, setManifest] = useState<NectarManifest | null>(null);
   const [requested, setRequested] = useState<RequestedManifest | null>(null);
+  const [delegate, setDelegate] = useState<DelegateManifest | null>(null);
+  const [delegateMode, setDelegateMode] = useState<DelegateMode>("access");
   const [ackHost, setAckHost] = useState(false);
   const [mode, setMode] = useState<ConsentMode>("silent");
   const [ackNewWallet, setAckNewWallet] = useState(false);
   const [links, setLinks] = useState<NectarLinkRecord[]>([]);
+  const [delegateLinks, setDelegateLinks] = useState<DelegateLinkRecord[]>([]);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [ackMovedExtras, setAckMovedExtras] = useState(false);
 
   useEffect(() => {
-    if (address) setLinks(listLinks(address));
+    if (address) {
+      setLinks(listLinks(address));
+      setDelegateLinks(listDelegateLinks(address));
+    }
   }, [address, mnemonic]);
 
   // A link QR scanned from the main camera arrives here pre-filled.
@@ -69,6 +84,7 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
     setNotice(null);
     setManifest(null);
     setRequested(null);
+    setDelegate(null);
     setAckHost(false);
     setAckNewWallet(false);
     const url = parseLinkInput(raw);
@@ -79,7 +95,12 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
     if (!mnemonic) return;
     setBusy(true);
     try {
-      const any = await fetchAnyManifest(url);
+      const any = await fetchAnyManifest(url, address ?? undefined);
+      if (any.kind === "delegate") {
+        setDelegate(any);
+        setDelegateMode(any.modes.includes("access") ? "access" : any.modes[0]!);
+        return;
+      }
       if (any.kind === "requested") {
         setRequested(any);
         return;
@@ -90,6 +111,49 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
       setManifest(m);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not read that link.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onApproveDelegate() {
+    if (!delegate || !mnemonic || !address) return;
+    setError(null);
+    const ok = await approvePayment(
+      mnemonic,
+      `Link ${delegate.appName} to Trading pocket #${delegate.account}`,
+    );
+    if (!ok) {
+      setError(notApprovedMessage("change"));
+      return;
+    }
+    setBusy(true);
+    try {
+      const rec = await submitDelegate({ walletAddr: address, manifest: delegate, mode: delegateMode, mnemonic });
+      setDelegateLinks(listDelegateLinks(address));
+      const total = rec.chains.length + (rec.extraChains?.length ?? 0);
+      setDelegate(null);
+      setInput("");
+      setNotice(`Linked ${rec.appName} to Trading pocket #${rec.account} (${total} chains).`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Trading link failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRevokeDelegate(rec: DelegateLinkRecord) {
+    if (!mnemonic || !address) return;
+    setError(null);
+    setBusy(true);
+    try {
+      await revokeDelegate({ walletAddr: address, record: rec, mnemonic });
+      setDelegateLinks(listDelegateLinks(address));
+      setRevokingId(null);
+      setAckMovedExtras(false);
+      setNotice(`Revoked ${rec.appName} from Trading pocket #${rec.account}.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Revoke failed.");
     } finally {
       setBusy(false);
     }
@@ -148,9 +212,10 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
         <Link2 className="h-4 w-4" /> Ecosystem links
       </p>
       <p className="text-xs text-muted-foreground">
-        Link this wallet with Nectar Pay, Bonfire, TSD Swap or any site that shows a wallet link
-        code. Sites get watch-only keys — they can see addresses but never spend. You approve every
-        link, and your recovery phrase never leaves this device.
+        Link this wallet with Nectar Pay, Seeds, Bonfire, TSD Swap or any verified honest.money
+        site. Main-wallet links are watch-only; verified trading sites like Seeds use a separate
+        Trading pocket so your main wallet stays untouched. Your recovery phrase never leaves this
+        device.
       </p>
 
       {seedless ? (
@@ -227,6 +292,72 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
             </div>
           )}
 
+          {delegate && (
+            <div className="space-y-2.5 rounded-xl border border-primary/30 bg-black/25 p-3">
+              <div className="font-display text-sm font-semibold uppercase">{delegate.appName}</div>
+              <div className="break-all font-mono text-[10px] text-muted-foreground">{delegate.host}</div>
+              <p className="text-xs text-primary">
+                Verified honest.money trading site · Trading pocket #{delegate.account}
+              </p>
+              {delegate.purpose && <p className="text-xs text-muted-foreground">{delegate.purpose}</p>}
+              {delegate.reusesRevoked && (
+                <p className="text-xs text-destructive">
+                  You revoked this pocket before. Linking again reuses Trading pocket #{delegate.account}.
+                </p>
+              )}
+              {delegate.modes.length > 1 && (
+                <div className="flex gap-2">
+                  {delegate.modes.map((m) => (
+                    <Button
+                      key={m}
+                      type="button"
+                      size="sm"
+                      variant={delegateMode === m ? "default" : "outline"}
+                      className="rounded-full text-xs"
+                      onClick={() => setDelegateMode(m)}
+                    >
+                      {m === "access" ? "Give trading access" : "Approve each trade"}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground">
+                {delegateMode === "access" ? (
+                  <>
+                    Sharing{" "}
+                    <b>{delegate.chains.length + delegate.extraChains.length} chains</b> on pocket #
+                    {delegate.account} (never your main wallet):{" "}
+                    <span className="font-mono text-[11px] text-foreground">
+                      {[...delegate.chains, ...delegate.extraChains].join(", ")}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Watch-only keys for <b>{delegate.chains.length} chains</b> on pocket #
+                    {delegate.account}:{" "}
+                    <span className="font-mono text-[11px] text-foreground">
+                      {delegate.chains.join(", ")}
+                    </span>
+                  </>
+                )}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" className="rounded-full" disabled={busy} onClick={() => void onApproveDelegate()}>
+                  {busy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : delegateMode === "access" ? (
+                    "Approve & share pocket"
+                  ) : (
+                    "Share watch-only"
+                  )}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setDelegate(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
           {manifest && (
             <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-3">
               <div className="font-display text-sm font-semibold uppercase">
@@ -276,6 +407,77 @@ export function EcosystemLinksCard({ initialPayload }: { initialPayload?: string
 
           {error && <p className="text-xs text-destructive">{error}</p>}
           {notice && <p className="text-xs text-muted-foreground">{notice}</p>}
+
+          {delegateLinks.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Trading links
+              </div>
+              {delegateLinks.map((d) => {
+                const hasExtras = (d.extraChains?.length ?? 0) > 0;
+                const confirming = revokingId === d.linkId;
+                return (
+                  <div key={d.linkId} className="space-y-2 rounded-lg border border-white/10 bg-black/20 p-2.5 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">
+                          {d.appName} · Pocket #{d.account}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {d.mode === "access" ? "Trading access" : "Approve each trade"} ·{" "}
+                          {d.chains.length + (d.extraChains?.length ?? 0)} chains
+                        </div>
+                      </div>
+                      {!confirming && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 rounded-full text-xs"
+                          disabled={busy}
+                          onClick={() => {
+                            setRevokingId(d.linkId);
+                            setAckMovedExtras(false);
+                          }}
+                        >
+                          Revoke
+                        </Button>
+                      )}
+                    </div>
+                    {confirming && (
+                      <div className="space-y-2 border-t border-white/10 pt-2">
+                        {hasExtras && (
+                          <label className="flex items-start gap-2 text-xs">
+                            <Checkbox
+                              checked={ackMovedExtras}
+                              onCheckedChange={(v) => setAckMovedExtras(v === true)}
+                            />
+                            <span>
+                              I moved any extra-chain coins ({d.extraChains!.join(", ")}) out of
+                              this pocket on {d.appName}.
+                            </span>
+                          </label>
+                        )}
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-7 rounded-full text-xs"
+                            disabled={busy || (hasExtras && !ackMovedExtras)}
+                            onClick={() => void onRevokeDelegate(d)}
+                          >
+                            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Confirm revoke"}
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setRevokingId(null)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {links.length > 0 && (
             <div className="space-y-1 pt-1">

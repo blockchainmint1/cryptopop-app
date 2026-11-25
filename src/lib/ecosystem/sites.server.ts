@@ -12,11 +12,14 @@ import { createHmac, timingSafeEqual } from "crypto";
 export interface EcosystemSite {
   host: string;
   label: string;
+  delegate: boolean;
+  delegate_modes: ("approve" | "access")[];
+  delegate_branches: number[];
 }
 
 const DEFAULT_URL = "https://honest.money/api/public/v1/trusted-sites";
 let cache: { at: number; sites: EcosystemSite[] } | null = null;
-const TTL_MS = 10 * 60 * 1000;
+const TTL_MS = 5 * 60 * 1000;
 
 export async function loadEcosystemSites(): Promise<EcosystemSite[]> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.sites;
@@ -38,10 +41,29 @@ export async function loadEcosystemSites(): Promise<EcosystemSite[]> {
   if (a.length !== b.length || !timingSafeEqual(a, b)) throw new Error("registry signature invalid");
   // Signed lists are allowed to be served from a cache for up to a day.
   if (Math.abs(Date.now() / 1000 - Number(ts)) > 86400) throw new Error("registry signature stale");
-  const parsed = JSON.parse(body) as { sites?: { host?: unknown; label?: unknown; active?: unknown }[] };
+  const parsed = JSON.parse(body) as {
+    sites?: {
+      host?: unknown;
+      label?: unknown;
+      active?: unknown;
+      delegate?: unknown;
+      delegate_modes?: unknown;
+      delegate_branches?: unknown;
+    }[];
+  };
   const sites = (parsed.sites ?? [])
     .filter((s) => typeof s.host === "string" && isPublicHostname(s.host) && s.active !== false)
-    .map((s) => ({ host: String(s.host).toLowerCase(), label: typeof s.label === "string" ? s.label : "" }))
+    .map((s) => ({
+      host: String(s.host).toLowerCase(),
+      label: typeof s.label === "string" ? s.label : "",
+      delegate: s.delegate === true,
+      delegate_modes: (Array.isArray(s.delegate_modes) ? s.delegate_modes : [])
+        .filter((m): m is "approve" | "access" => m === "approve" || m === "access")
+        .slice(0, 2),
+      delegate_branches: (Array.isArray(s.delegate_branches) ? s.delegate_branches : [])
+        .filter((b): b is number => typeof b === "number" && Number.isInteger(b))
+        .slice(0, 50),
+    }))
     .slice(0, 500);
   cache = { at: Date.now(), sites };
   return sites;

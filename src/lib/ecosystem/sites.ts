@@ -13,9 +13,8 @@ export function useEcosystemSites(): void {
     // Never trust a locally edited registry cache for authorization.
     try { localStorage.removeItem(KEY); } catch { /* optional cleanup */ }
     getEcosystemSites()
-      .then(({ sites }) => {
-
-        setEcosystemSites(sites);
+      .then(({ sites, verified }) => {
+        setEcosystemSites(sites, verified === true);
       })
       .catch(() => {});
   }, []);

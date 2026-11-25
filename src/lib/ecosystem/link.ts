@@ -19,6 +19,14 @@ import {
   validateRequested,
   type RequestedManifest,
 } from "./requested";
+import {
+  isDelegateDialect,
+  listDelegateLinks,
+  refreshSpendingList,
+  validateDelegate,
+  type DelegateManifest,
+} from "./delegate";
+import { loadBranchBook } from "./branches";
 
 const bip32 = BIP32Factory(ecc);
 
@@ -107,10 +115,11 @@ export function parseLinkInput(raw: string): string | null {
   }
 }
 
-/** Fetch a link manifest in either dialect (bundle or requested paths). */
+/** Fetch a link manifest in any dialect (bundle, requested paths, or delegate trading pocket). */
 export async function fetchAnyManifest(
   manifestUrl: string,
-): Promise<(NectarManifest & { kind: "bundle" }) | RequestedManifest> {
+  walletAddr?: string,
+): Promise<(NectarManifest & { kind: "bundle" }) | RequestedManifest | DelegateManifest> {
   const res = await fetch(`${PROXY}?url=${encodeURIComponent(manifestUrl)}`, {
     headers: { Accept: "application/json" },
   });
@@ -119,6 +128,12 @@ export async function fetchAnyManifest(
     throw new Error(
       (body?.["message"] as string) ?? (body?.["error"] as string) ?? "Could not read the link",
     );
+  }
+  if (isDelegateDialect(body)) {
+    await refreshSpendingList();
+    const existing = walletAddr ? listDelegateLinks(walletAddr) : [];
+    const book = walletAddr ? loadBranchBook(walletAddr, existing) : {};
+    return validateDelegate(body, manifestUrl, book, existing);
   }
   if (isRequestedDialect(body)) return validateRequested(body, manifestUrl);
   const manifest = validateManifest(body, new URL(manifestUrl).hostname);

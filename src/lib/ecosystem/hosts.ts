@@ -14,6 +14,7 @@
  * Both the client validator and the server proxy read from this single source.
  * This module must stay dependency-free: it is imported by client bundles.
  */
+import { isDelegableAccount } from "./branch-rules";
 
 export type LoginHostTier = "first-party" | "partner" | "unknown";
 
@@ -76,20 +77,77 @@ export function isPublicHostname(raw: string): boolean {
  * built-in list above stays as the offline fallback.
  */
 let ecosystemNames: Record<string, string> = {};
+let spendingGrants = new Map<string, DelegateGrant>();
+let verifiedUntil = 0;
 
-export function setEcosystemSites(sites: { host: string; label: string }[]): void {
-  const next: Record<string, string> = {};
+export type DelegateGrantMode = "approve" | "access";
+
+export interface DelegateGrant {
+  modes: DelegateGrantMode[];
+  branches: number[];
+}
+
+export interface RegistrySite {
+  host: string;
+  label: string;
+  delegate?: boolean;
+  delegate_modes?: unknown;
+  delegate_branches?: unknown;
+}
+
+function grantOf(s: RegistrySite): DelegateGrant | null {
+  if (s.delegate !== true) return null;
+  const modes = (Array.isArray(s.delegate_modes) ? s.delegate_modes : []).filter(
+    (m, i, a): m is DelegateGrantMode => (m === "approve" || m === "access") && a.indexOf(m) === i,
+  );
+  const branches = (Array.isArray(s.delegate_branches) ? s.delegate_branches : []).filter(
+    (b, i, a): b is number => typeof b === "number" && isDelegableAccount(b) && a.indexOf(b) === i,
+  );
+  return modes.length && branches.length ? { modes, branches } : null;
+}
+
+export function setEcosystemSites(sites: RegistrySite[], verified = false): void {
+  const next: Record<string, string> = Object.create(null);
   for (const s of sites) {
     const host = s.host.trim().toLowerCase();
     if (!isPublicHostname(host)) continue;
     next[host] = (s.label || host).slice(0, 40);
   }
   ecosystemNames = next;
+  if (verified) {
+    const grants = new Map<string, DelegateGrant>();
+    for (const s of sites) {
+      const host = s.host.trim().toLowerCase();
+      const g = grantOf(s);
+      if (g && Object.hasOwn(next, host)) grants.set(host, g);
+    }
+    const owners = new Map<number, Set<string>>();
+    for (const [host, g] of grants) {
+      for (const b of g.branches) owners.set(b, (owners.get(b) ?? new Set()).add(host));
+    }
+    for (const [host, g] of grants) {
+      const branches = g.branches.filter((b) => owners.get(b)!.size === 1);
+      if (branches.length) grants.set(host, { ...g, branches });
+      else grants.delete(host);
+    }
+    spendingGrants = grants;
+    verifiedUntil = Date.now() + 5 * 60 * 1000;
+  }
 }
 
 export function isEcosystemSite(hostname: string): boolean {
   const host = hostname.trim().toLowerCase();
-  return !!ecosystemNames[host] || !!PARTNER_NAMES[host] || isFirstParty(host);
+  return Object.hasOwn(ecosystemNames, host) || Object.hasOwn(PARTNER_NAMES, host) || isFirstParty(host);
+}
+
+/** Spending is authorized ONLY by a fresh server-verified registry entry marked delegate: true. */
+export function spendingGrant(hostname: string): DelegateGrant | null {
+  if (Date.now() >= verifiedUntil) return null;
+  return spendingGrants.get(hostname.trim().toLowerCase()) ?? null;
+}
+
+export function isSpendingSite(hostname: string): boolean {
+  return spendingGrant(hostname) !== null;
 }
 
 /** Tier + display name for a sign-in / link host. */
